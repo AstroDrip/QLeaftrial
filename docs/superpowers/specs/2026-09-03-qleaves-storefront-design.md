@@ -56,6 +56,16 @@ The repository will contain separate React and Node.js applications:
 
 The storefront and API are independently deployable. Shared contracts define request and response shapes without coupling UI components to database internals.
 
+## Local Development Experience
+
+The complete demo must run locally without Supabase, PostgreSQL, S3, or any other cloud account. The repository root will provide documented commands to install dependencies, prepare and seed the local database, and start both applications together. The default local URLs will be:
+
+- Storefront: `http://localhost:5173`
+- API: `http://localhost:3000/api/v1`
+- Admin: `http://localhost:5173/admin`
+
+The local environment will use a file-based SQLite database through Prisma, local media files, sample administrator credentials documented specifically for development, seeded plant products, and the supplied GLB demo asset. A root development command will start the React and Node.js processes concurrently, while separate commands remain available for debugging each application. Environment-variable examples will distinguish local defaults from production-only secrets.
+
 ## Application Modules
 
 ### Storefront
@@ -132,4 +142,4 @@ End-to-end tests cover catalogue-to-confirmation and admin order-management path
 
 ## Success Criteria
 
-The initial demo succeeds when a visitor can experience the approved QLeaves visual direction, browse seeded plants, open a product, interact with the supplied 3D plant, add it to a cart, complete a simulated guest checkout, and receive an order number. An authenticated administrator must be able to manage the seeded catalogue and progress the resulting order. Failure and reduced-motion paths must preserve the ability to shop.
+The initial demo succeeds when a developer can follow the README from a clean checkout, start the entire application locally, and open the storefront and admin area at the documented URLs. A visitor can then experience the approved QLeaves visual direction, browse seeded plants, open a product, interact with the supplied 3D plant, add it to a cart, complete a simulated guest checkout, and receive an order number. An authenticated administrator must be able to manage the seeded catalogue and progress the resulting order. Failure and reduced-motion paths must preserve the ability to shop.
