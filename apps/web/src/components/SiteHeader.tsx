@@ -11,7 +11,7 @@ export function SiteHeader() {
   return (
     <header className="site-header" data-testid="site-header">
       <div className="site-header__inner">
-        <a href="/" className="site-header__brand" aria-label={content.brand}>
+                <a href="/" className="site-header__brand" aria-label="QLeaves home">
           <span className="site-header__wordmark">{content.brand}</span>
           <span className="site-header__tagline sr-only">{content.tagline}</span>
         </a>

@@ -1,10 +1,22 @@
-import { content } from "../../content/en";
+import "./home.css";
+import { useRef } from "react";
+import { AssembledPlantSection } from "./sections/AssembledPlantSection";
+import { FeaturedPlantsSection } from "./sections/FeaturedPlantsSection";
+import { HeroSection } from "./sections/HeroSection";
+import { ShopCtaSection } from "./sections/ShopCtaSection";
+import { useHeroMotion } from "./useHeroMotion";
 
 export function HomePage() {
+  const containerRef = useRef<HTMLElement>(null);
+  useHeroMotion(containerRef);
+
   return (
-    <section className="hero">
-      <h1>{content.home.heroTitle}</h1>
-      <p>{content.home.heroSubtitle}</p>
-    </section>
+    <article className="home" ref={containerRef} data-testid="home-page">
+      <HeroSection />
+      <AssembledPlantSection />
+      <FeaturedPlantsSection />
+      <ShopCtaSection />
+    </article>
   );
 }
+

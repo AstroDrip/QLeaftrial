@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 260" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="leafC" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#3F5138" />
+      <stop offset="1" stop-color="#263126" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M90 15 C130 45, 160 100, 140 190 C120 245, 60 245, 40 190 C20 110, 50 55, 90 15 Z"
+    fill="url(#leafC)"
+    opacity="0.95"
+  />
+</svg>
