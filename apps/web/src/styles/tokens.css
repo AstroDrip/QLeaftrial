@@ -1,0 +1,92 @@
+/* QLeaves design tokens. Generated from docs/superpowers/specs/2026-09-03-qleaves-storefront-design.md */
+:root {
+  /* Deep olive for primary dark backgrounds */
+  --q-color-deep-olive: #263126;
+  /* Forest olive for panels and interactive states */
+  --q-color-forest-olive: #3f5138;
+  /* Moss for secondary accents */
+  --q-color-moss: #748568;
+  /* Sage for borders and muted surfaces */
+  --q-color-sage: #a8b59d;
+  /* Warm ivory for light text and backgrounds */
+  --q-color-warm-ivory: #f1efe5;
+  /* Soft sand for product-information surfaces */
+  --q-color-soft-sand: #d8d0bc;
+  /* Restrained terracotta for important alerts or actions */
+  --q-color-terracotta: #b66f4a;
+
+  /* Derived UI surfaces */
+  --q-color-background: var(--q-color-deep-olive);
+  --q-color-surface: var(--q-color-warm-ivory);
+  --q-color-on-background: var(--q-color-warm-ivory);
+  --q-color-on-surface: var(--q-color-deep-olive);
+  --q-color-border: var(--q-color-sage);
+  --q-color-accent: var(--q-color-terracotta);
+
+  /* Typography */
+  --q-font-display: "DM Mono", "Courier New", monospace;
+  --q-font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --q-font-size-xs: 0.75rem;
+  --q-font-size-sm: 0.875rem;
+  --q-font-size-base: 1rem;
+  --q-font-size-lg: 1.125rem;
+  --q-font-size-xl: 1.25rem;
+  --q-font-size-2xl: 1.5rem;
+  --q-font-size-3xl: 1.875rem;
+  --q-font-size-4xl: 2.25rem;
+  --q-font-size-5xl: 3rem;
+  --q-font-size-6xl: 3.75rem;
+  --q-font-size-7xl: 4.5rem;
+
+  /* Spacing scale (8-point grid) */
+  --q-space-3xs: 0.25rem;
+  --q-space-2xs: 0.5rem;
+  --q-space-xs: 0.75rem;
+  --q-space-sm: 1rem;
+  --q-space-md: 1.25rem;
+  --q-space-lg: 1.5rem;
+  --q-space-xl: 2rem;
+  --q-space-2xl: 2.5rem;
+  --q-space-3xl: 3rem;
+  --q-space-4xl: 4rem;
+
+  /* Border radius */
+  --q-radius-sm: 0.25rem;
+  --q-radius-md: 0.5rem;
+  --q-radius-lg: 0.75rem;
+  --q-radius-xl: 1rem;
+  --q-radius-full: 9999px;
+
+  /* Shadows */
+  --q-shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.2);
+  --q-shadow-md: 0 4px 6px hsl(0 0% 0% / 0.25);
+  --q-shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.3);
+}
+
+/* Light theme flips the deep palette to the ivory surface with olive text */
+@media (prefers-color-scheme: light) {
+  :root {
+    --q-color-background: var(--q-color-warm-ivory);
+    --q-color-surface: var(--q-color-soft-sand);
+    --q-color-on-background: var(--q-color-deep-olive);
+    --q-color-on-surface: var(--q-color-deep-olive);
+    --q-color-border: var(--q-color-sage);
+  }
+}
+
+/* Forced override when the page explicitly requests reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --q-duration-fast: 0ms;
+    --q-duration-base: 0ms;
+    --q-duration-slow: 0ms;
+  }
+}
+
+:root {
+  --q-duration-fast: 150ms;
+  --q-duration-base: 250ms;
+  --q-duration-slow: 650ms;
+  --q-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --q-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -14,5 +14,11 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "allowScripts": {
+    "@prisma/client@6.16.2": true,
+    "@prisma/engines@6.16.2": true,
+    "argon2@0.44.0": true,
+    "esbuild@0.28.2": true
   }
 }

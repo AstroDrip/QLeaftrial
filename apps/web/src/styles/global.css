@@ -1,0 +1,182 @@
+/* QLeaves global styles */
+@import "./tokens.css";
+
+/* Revera: a compact, accessible reset + box model */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--q-font-body);
+  font-size: var(--q-font-size-base);
+  background-color: var(--q-color-background);
+  color: var(--q-color-on-background);
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Typography scale */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--q-font-display);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img,
+svg,
+picture,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Reduced motion respects — nothing animates by default unless opted in */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+:root {
+  /* Data attribute toggled by JavaScript motion hooks */
+}
+
+[data-motion="reduced"] {
+  /* Consumers may hide decorative motion layers */
+}
+
+/* Shell chrome */
+.skip-link {
+  position: absolute;
+  top: -2.5rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.4rem 0.75rem;
+  background: var(--q-color-terracotta);
+  color: var(--q-color-warm-ivory);
+  border-radius: var(--q-radius-sm);
+  transition: top var(--q-duration-fast) var(--q-ease-out);
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 0.0625rem;
+  height: 0.0625rem;
+  padding: 0;
+  margin: -0.0625rem;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--q-color-background);
+  border-bottom: 1px solid var(--q-color-border);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--q-space-sm) var(--q-space-md);
+}
+
+.site-header__brand {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--q-font-display);
+  font-size: var(--q-font-size-xl);
+  color: var(--q-color-on-background);
+}
+
+.site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--q-space-md);
+}
+
+.nav-link {
+  color: var(--q-color-moss);
+  font-size: var(--q-font-size-sm);
+  font-weight: 600;
+}
+
+.nav-link[aria-current="page"],
+.nav-link.active {
+  color: var(--q-color-on-background);
+}
+
+.main-content {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--q-space-lg) var(--q-space-md);
+}
+
+.site-footer {
+  border-top: 1px solid var(--q-color-border);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--q-space-md);
+  color: var(--q-color-sage);
+  font-size: var(--q-font-size-sm);
+}
+

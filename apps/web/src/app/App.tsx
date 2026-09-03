@@ -1,3 +1,12 @@
+import { RouterProvider } from "react-router-dom";
+import { Providers } from "./providers";
+import { router } from "./router";
+
 export function App() {
-  return <main><h1>QLeaves</h1></main>;
+  return (
+    <Providers>
+      <RouterProvider router={router} />
+    </Providers>
+  );
 }
+
