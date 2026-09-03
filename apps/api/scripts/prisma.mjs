@@ -18,6 +18,18 @@ if (process.platform === "win32") {
 
 const prismaCli = require.resolve("prisma/build/index.js");
 const prismaArguments = process.argv.slice(2);
+const productionSchema = prismaArguments.some(
+  (argument, index) =>
+    argument === "--schema" && prismaArguments[index + 1]?.endsWith("schema.postgresql.prisma"),
+);
+
+if (
+  productionSchema &&
+  (prismaArguments[0] === "generate" || prismaArguments[0] === "validate") &&
+  !environment.DATABASE_URL
+) {
+  environment.DATABASE_URL = "postgresql://qleaves:qleaves@localhost:5432/qleaves";
+}
 
 if (prismaArguments[0] === "migrate" && prismaArguments[1] === "dev") {
   const databasePath = fileURLToPath(new URL("../prisma/dev.db", import.meta.url));

@@ -1,3 +1,4 @@
+import argon2 from "argon2";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "../src/lib/prisma";
 import { seedDatabase } from "../prisma/seed";
@@ -24,5 +25,23 @@ describe("seedDatabase", () => {
         where: { email: "admin@qleaves.local" },
       }),
     ).not.toBeNull();
+  });
+
+  it("restores the development password for an existing stale admin", async () => {
+    await prisma.adminUser.create({
+      data: {
+        email: "admin@qleaves.local",
+        name: "Stale Admin",
+        passwordHash: await argon2.hash("not-the-demo-password"),
+      },
+    });
+
+    await seedDatabase();
+
+    const admin = await prisma.adminUser.findUniqueOrThrow({
+      where: { email: "admin@qleaves.local" },
+    });
+
+    expect(await argon2.verify(admin.passwordHash, "QLeavesDemo123!")).toBe(true);
   });
 });

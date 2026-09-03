@@ -6,6 +6,7 @@ node_modules/
 *.db-journal
 *.tsbuildinfo
 dist/
+apps/api/generated/
 coverage/
 playwright-report/
 test-results/

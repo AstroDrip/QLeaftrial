@@ -2,11 +2,16 @@
   "name": "@qleaves/api",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "test": "vitest run --environment node",
-    "prisma:generate": "node scripts/prisma.mjs generate",
+    "prisma:generate": "npm run prisma:generate:local && npm run prisma:generate:production",
+    "prisma:generate:local": "node scripts/prisma.mjs generate --schema prisma/schema.prisma",
+    "prisma:generate:production": "node scripts/prisma.mjs generate --schema prisma/schema.postgresql.prisma",
     "prisma:migrate": "node scripts/prisma.mjs migrate dev --name init",
+    "prisma:deploy:production": "node scripts/prisma.mjs db push --schema prisma/schema.postgresql.prisma",
+    "prisma:validate:production": "node scripts/prisma.mjs validate --schema prisma/schema.postgresql.prisma",
     "prisma:seed": "node --experimental-strip-types prisma/seed.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc"

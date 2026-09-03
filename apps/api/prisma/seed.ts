@@ -116,24 +116,26 @@ export async function seedDatabase(): Promise<void> {
     });
   }
 
-  const existingAdmin = await prisma.adminUser.findUnique({
+  const developmentAdmin = await prisma.adminUser.findUnique({
     where: { email: "admin@qleaves.local" },
   });
+  const password = "QLeavesDemo123!";
+  const passwordHash = developmentAdmin && await argon2.verify(developmentAdmin.passwordHash, password)
+    ? developmentAdmin.passwordHash
+    : await argon2.hash(password);
 
-  if (existingAdmin) {
-    await prisma.adminUser.update({
-      where: { id: existingAdmin.id },
-      data: { name: "QLeaves Development Admin" },
-    });
-  } else {
-    await prisma.adminUser.create({
-      data: {
-        email: "admin@qleaves.local",
-        name: "QLeaves Development Admin",
-        passwordHash: await argon2.hash("QLeavesDemo123!"),
-      },
-    });
-  }
+  await prisma.adminUser.upsert({
+    where: { email: "admin@qleaves.local" },
+    create: {
+      email: "admin@qleaves.local",
+      name: "QLeaves Development Admin",
+      passwordHash,
+    },
+    update: {
+      name: "QLeaves Development Admin",
+      passwordHash,
+    },
+  });
 }
 
 if (
