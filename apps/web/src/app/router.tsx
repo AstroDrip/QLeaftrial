@@ -1,7 +1,4 @@
-import {
-  createBrowserRouter,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import { NotFoundPage } from "../components/NotFoundPage";
 import { AdminDashboardPage } from "../features/admin/AdminDashboardPage";
@@ -27,6 +24,7 @@ export const router = createBrowserRouter([
       { path: "cart", element: <CartPage /> },
       { path: "checkout", element: <CheckoutPage /> },
       { path: "order/:orderNumber", element: <OrderConfirmationPage /> },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
   { path: "/admin/login", element: <AdminLoginPage /> },
@@ -40,6 +38,7 @@ export const router = createBrowserRouter([
       { path: "*", element: <Navigate to="/admin" replace /> },
     ],
   },
-    { path: "*", element: <NotFoundPage /> },
 ]);
+
+
 
