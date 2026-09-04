@@ -20,12 +20,19 @@ type PrismaClient =
   | InstanceType<typeof SqlitePrismaClient>;
 
 function databaseProvider(): DatabaseProvider {
-  const provider = process.env.QLEAVES_DATABASE_PROVIDER ?? (
+  const explicitProvider = process.env.QLEAVES_DATABASE_PROVIDER;
+  const provider = explicitProvider ?? (
     process.env.NODE_ENV === "production" ? "postgresql" : "sqlite"
   );
 
   if (provider !== "postgresql" && provider !== "sqlite") {
     throw new Error(`Unsupported QLEAVES_DATABASE_PROVIDER: ${provider}`);
+  }
+
+  if (process.env.NODE_ENV === "production" && explicitProvider !== "postgresql") {
+    throw new Error(
+      "QLEAVES_DATABASE_PROVIDER=postgresql is required in production",
+    );
   }
 
   if (provider === "postgresql" && !process.env.DATABASE_URL) {

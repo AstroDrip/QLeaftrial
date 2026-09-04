@@ -10,3 +10,5 @@ apps/api/generated/
 coverage/
 playwright-report/
 test-results/
+
+.vercel/
