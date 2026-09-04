@@ -1,8 +1,20 @@
 import { readFile } from "node:fs/promises";
 
-const config = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
+const config = JSON.parse(
+  await readFile(new URL("../vercel.json", import.meta.url), "utf8"),
+);
+
+const packageJson = JSON.parse(
+  await readFile(new URL("../package.json", import.meta.url), "utf8"),
+);
+
 const problems = [];
 
+if (packageJson.type !== "module") {
+  problems.push(
+    'Root package.json must set "type": "module" so the Vercel function can import the ESM Express app',
+  );
+}
 if (config.$schema !== "https://openapi.vercel.sh/vercel.json") {
   problems.push("vercel.json must use the current Vercel schema URL");
 }
