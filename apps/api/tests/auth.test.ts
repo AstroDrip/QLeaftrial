@@ -7,7 +7,7 @@ import { clearLoginAttempts } from "../src/modules/auth/login-rate-limit";
 
 describe("password-only admin authentication", () => {
   beforeEach(async () => {
-    clearLoginAttempts();
+    await clearLoginAttempts();
     await prisma.session.deleteMany();
     await prisma.orderItem.deleteMany();
     await prisma.order.deleteMany();

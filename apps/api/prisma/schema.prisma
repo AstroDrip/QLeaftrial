@@ -118,3 +118,14 @@ model OrderItem {
   quantity     Int
   createdAt    DateTime @default(now())
 }
+
+model RateLimitBucket {
+  limiter   String
+  keyHash   String
+  attempts  Int
+  expiresAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@id([limiter, keyHash])
+  @@index([expiresAt])
+}
