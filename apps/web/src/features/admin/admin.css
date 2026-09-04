@@ -1,0 +1,12 @@
+.admin-logout {
+  border: 1px solid rgba(242, 236, 217, .35);
+  background: transparent;
+  color: var(--paper);
+  padding: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+.admin-session-state { padding: 40px; }
+.table-card input[type="number"] { min-width: 90px; }
+.table-card td[aria-live] { min-width: 84px; color: var(--moss); }

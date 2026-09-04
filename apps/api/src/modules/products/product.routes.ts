@@ -12,6 +12,7 @@ productRouter.get("/products", async (request, response) => {
     throw new ApiError(400, "VALIDATION_ERROR", "Invalid product catalogue query");
   }
 
+  response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
   response.json(await listProducts(parsedQuery.data));
 });
 
@@ -22,5 +23,6 @@ productRouter.get("/products/:slug", async (request, response) => {
     throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
   }
 
+  response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
   response.json(product);
 });

@@ -59,6 +59,7 @@ const productRepository = prisma.product as unknown as ProductRepository;
 
 function toSummary(product: PublicProductRecord): ProductSummary {
   const [image] = product.media;
+  const stock = product.inventory?.quantity ?? 0;
 
   return {
     id: product.id,
@@ -67,7 +68,8 @@ function toSummary(product: PublicProductRecord): ProductSummary {
     category: product.category,
     light: product.light,
     priceQar: product.priceQar,
-    inStock: (product.inventory?.quantity ?? 0) > 0,
+    stock,
+    inStock: stock > 0,
     image: image ?? null,
   };
 }

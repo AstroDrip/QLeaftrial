@@ -14,11 +14,6 @@ const products = [
     costPrice: 90,
     quantity: 12,
     media: { url: "/media/plants/house-plant.jpg", altText: "House plant in a ceramic pot" },
-    arAsset: {
-      glbUrl: "/media/models/house-plant.glb",
-      usdzUrl: null,
-      attribution: "Lahcen.el for QLeaves",
-    },
   },
   {
     slug: "fiddle-leaf-fig",
@@ -84,34 +79,24 @@ const products = [
 
 export async function seedDatabase(): Promise<void> {
   for (const product of products) {
-    const { arAsset, media, quantity, ...productData } = product;
+    const { media, quantity, ...productData } = product;
 
     await prisma.product.upsert({
       where: { slug: product.slug },
       create: {
         ...productData,
         published: true,
-        arEnabled: Boolean(arAsset),
         inventory: { create: { quantity } },
         media: { create: { ...media, sortOrder: 0 } },
-        ...(arAsset ? { arAsset: { create: arAsset } } : {}),
       },
       update: {
         ...productData,
         published: true,
-        arEnabled: Boolean(arAsset),
         inventory: { upsert: { create: { quantity }, update: { quantity } } },
         media: {
           deleteMany: {},
           create: { ...media, sortOrder: 0 },
         },
-        ...(arAsset
-          ? {
-              arAsset: {
-                upsert: { create: arAsset, update: arAsset },
-              },
-            }
-          : {}),
       },
     });
   }
@@ -119,7 +104,7 @@ export async function seedDatabase(): Promise<void> {
   const developmentAdmin = await prisma.adminUser.findUnique({
     where: { email: "admin@qleaves.local" },
   });
-  const password = "QLeavesDemo123!";
+  const password = "taimuomar";
   const passwordHash = developmentAdmin && await argon2.verify(developmentAdmin.passwordHash, password)
     ? developmentAdmin.passwordHash
     : await argon2.hash(password);

@@ -59,8 +59,7 @@ export async function loggedInAgent() {
   await seedDatabase();
   const agent = request.agent(createApp());
   const response = await agent.post("/api/v1/auth/login").send({
-    email: "admin@qleaves.local",
-    password: "QLeavesDemo123!",
+    password: "taimuomar",
   });
 
   if (response.status !== 200) {

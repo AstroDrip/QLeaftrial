@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { content } from "../../content/en";
+import { Seo } from "../../components/Seo";
 
 const initialForm = {
   name: "",
@@ -30,6 +31,7 @@ export function CheckoutPage() {
 
   return (
     <section className="page-shell checkout-page" data-testid="checkout-page">
+      <Seo title="Checkout" description="Submit your QLeaves plant order details." path="/checkout" noIndex />
       <div className="page-shell__header">
         <p className="eyebrow">{content.checkout.title}</p>
         <h1>{content.checkout.guestHeading}</h1>

@@ -4,6 +4,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { productApi } from "./product-api";
 import type { ProductListParams } from "./product-types";
 import { content } from "../../content/en";
+import { AddToCartButton } from "../cart/AddToCartButton";
+import { Seo } from "../../components/Seo";
 import "./catalog.css";
 
 const SORT_OPTIONS: ReadonlyArray<{
@@ -108,6 +110,7 @@ export function CatalogPage() {
 
   return (
     <section className="catalog" data-testid="catalog-page">
+      <Seo title="Plant collection" description="Shop QLeaves indoor plants available in Qatar, with current prices and stock." path="/shop" />
       <h1 className="catalog__title">{content.catalog.title}</h1>
 
       <form
@@ -231,6 +234,8 @@ export function CatalogPage() {
                     src={product.image?.url ?? "/images/hero/leaf-1.svg"}
                     alt={product.image?.altText ?? ""}
                     className="product-card__image"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <h2 className="product-card__name">{product.name}</h2>
                   <p className="product-card__price">
@@ -243,6 +248,7 @@ export function CatalogPage() {
                   >
                     {content.catalog.viewProduct(product.name)}
                   </Link>
+                  <AddToCartButton product={product} className="product-card__cart" />
                 </li>
               ))}
             </ul>

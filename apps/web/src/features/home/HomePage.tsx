@@ -1,7 +1,12 @@
 import "./home.css";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { content } from "../../content/en";
+import { Seo, qleavesStructuredData } from "../../components/Seo";
+import { AddToCartButton } from "../cart/AddToCartButton";
+import { productApi } from "../catalog/product-api";
+import type { ProductSummary } from "../catalog/product-types";
 import { useHeroMotion } from "./useHeroMotion";
 
 const plants = [
@@ -13,14 +18,23 @@ const plants = [
   { name: "Old Lady Cactus", latin: "Mammillaria vetula", stock: 11, light: "Full sun", price: 90, image: "/images/hero/leaf-3.svg" },
 ] as const;
 
-const totalPlants = plants.reduce((sum, plant) => sum + plant.stock, 0);
+const fallbackTotalPlants = plants.reduce((sum, plant) => sum + plant.stock, 0);
 
 export function HomePage() {
   const rootRef = useRef<HTMLElement>(null);
+  const productsQuery = useQuery({
+    queryKey: ["products", "home"],
+    queryFn: () => productApi.list({ page: 1 }),
+  });
+  const livePlants = productsQuery.data?.items.slice(0, 6) ?? [];
+  const totalPlants = livePlants.length
+    ? livePlants.reduce((sum, plant) => sum + plant.stock, 0)
+    : fallbackTotalPlants;
   useHeroMotion(rootRef, totalPlants);
 
   return (
     <article className="home" ref={rootRef} data-testid="home-page">
+      <Seo title="QLeaves" description="Indoor plants thoughtfully selected and sold in Qatar." path="/" structuredData={qleavesStructuredData} />
       <section id="hero" className="qhero" aria-labelledby="hero-heading">
         <canvas id="heroCanvas" className="qhero__canvas" aria-hidden="true" />
         <div className="qhero__mid">
@@ -47,11 +61,20 @@ export function HomePage() {
       <section id="plants" className="home-plants">
         <div className="section-head"><div><span className="eyebrow">On hand today</span><h2>{content.home.featuredTitle}</h2></div><p>Beautiful indoor plants, thoughtfully selected in Qatar. Reach out for current availability, prices and enquiries.</p></div>
         <div className="home-plant-grid" id="plantGrid">
-          {plants.map((plant) => <article className="home-plant-card" key={plant.name}>
-            <div className="frame"><span className="stock">{plant.stock} in stock</span><img src={plant.image} alt={plant.name} loading="lazy" /></div>
-            <h3 className="name">{plant.name}</h3><p className="latin">{plant.latin}</p>
-            <div className="meta"><span className="light">{plant.light}</span><span className="price">{plant.price} QAR</span></div>
-          </article>)}
+          {(livePlants.length ? livePlants : plants).map((plant, index) => {
+            const livePlant = "priceQar" in plant ? plant as ProductSummary : null;
+            const referencePlant = plants[index % plants.length];
+            const image = livePlant?.image?.url ?? referencePlant.image;
+            const alt = livePlant?.image?.altText || livePlant?.name || referencePlant.name;
+            const latin = livePlant ? "" : "latin" in plant ? plant.latin : "";
+            const price = livePlant?.priceQar ?? ("price" in plant ? plant.price : 0);
+            return <article className="home-plant-card" key={index}>
+              <div className="frame"><span className="stock">{plant.stock} in stock</span><img src={image} alt={alt} loading="lazy" decoding="async" /></div>
+              <h3 className="name">{plant.name}</h3><p className="latin">{latin}</p>
+              <div className="meta"><span className="light">{plant.light}</span><span className="price">{price} QAR</span></div>
+              {livePlant ? <AddToCartButton product={livePlant} className="home-plant-card__cart" /> : null}
+            </article>;
+          })}
         </div>
       </section>
 

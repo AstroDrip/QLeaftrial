@@ -26,6 +26,7 @@ export type ProductSummary = {
   category: string;
   light: string;
   priceQar: number;
+  stock: number;
   inStock: boolean;
   image: ProductMedia | null;
 };

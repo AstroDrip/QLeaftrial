@@ -20,7 +20,7 @@ describe("product catalogue", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.items[0]).toEqual(expect.objectContaining({
-      slug: "house-plant", priceQar: 180, inStock: true,
+      slug: "house-plant", priceQar: 180, stock: 12, inStock: true,
     }));
     expect(response.body.items[0]).not.toHaveProperty("costPrice");
   });
@@ -33,6 +33,7 @@ describe("product catalogue", () => {
     expect.objectContaining({
       slug: "house-plant",
       priceQar: 180,
+      stock: 12,
       inStock: true,
     }),
   );

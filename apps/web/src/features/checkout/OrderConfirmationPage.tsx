@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { content } from "../../content/en";
+import { Seo } from "../../components/Seo";
 
 export function OrderConfirmationPage() {
   const { orderNumber } = useParams();
@@ -7,6 +8,7 @@ export function OrderConfirmationPage() {
 
   return (
     <section className="page-shell confirmation-page" data-testid="order-confirmation-page">
+      <Seo title="Order received" description="Your QLeaves order confirmation." path={`/order/${orderId}`} noIndex />
       <div className="page-shell__header">
         <p className="eyebrow">{content.order.confirmation}</p>
         <h1>{content.order.confirmation}</h1>

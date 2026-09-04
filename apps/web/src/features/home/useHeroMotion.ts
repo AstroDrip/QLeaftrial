@@ -12,18 +12,9 @@ export function useHeroMotion(root: RefObject<HTMLElement | null>, totalPlants =
     const host = root.current;
     if (!host) return;
     const reduced = prefersReducedMotion();
-    document.documentElement.setAttribute("data-motion", reduced ? "reduced" : "enabled");
-
     const countEl = host.querySelector<HTMLElement>("#plantCount");
     const labelEl = host.querySelector<HTMLElement>("#countLabel");
-    const ripWrap = host.querySelector<HTMLElement>("#ripWrap");
-    const ripLabel = host.querySelector<HTMLElement>("#ripProgressLabel");
-    const left = host.querySelector<HTMLElement>("#paperLeft");
-    const right = host.querySelector<HTMLElement>("#paperRight");
-    const reveal = host.querySelector<HTMLElement>(".torn-reveal");
-    const cards = Array.from(host.querySelectorAll(".home-plant-card")) as HTMLElement[];
-    let cardAnimation: ReturnType<typeof anime> | null = null;
-
+    let countAnimation: ReturnType<typeof anime> | null = null;
     const revealLabel = () => {
       if (!labelEl) return;
       if (reduced) { labelEl.style.opacity = "1"; labelEl.style.transform = "translateX(0)"; return; }
@@ -32,10 +23,26 @@ export function useHeroMotion(root: RefObject<HTMLElement | null>, totalPlants =
     if (countEl) {
       if (reduced) { countEl.textContent = String(totalPlants); revealLabel(); }
       else {
-        const counter = { val: 0 };
-        anime({ targets: counter, val: totalPlants, duration: 1900, easing: "easeOutExpo", round: 1, update: () => { countEl.textContent = String(Math.round(counter.val)); }, complete: revealLabel });
+        const counter = { val: Number(countEl.textContent) || 0 };
+        countAnimation = anime({ targets: counter, val: totalPlants, duration: 1900, easing: "easeOutExpo", round: 1, update: () => { countEl.textContent = String(Math.round(counter.val)); }, complete: revealLabel });
       }
     }
+    return () => { countAnimation?.pause(); anime.remove([countEl, labelEl].filter(Boolean)); };
+  }, [root, totalPlants]);
+
+  useEffect(() => {
+    const host = root.current;
+    if (!host) return;
+    const reduced = prefersReducedMotion();
+    document.documentElement.setAttribute("data-motion", reduced ? "reduced" : "enabled");
+
+    const ripWrap = host.querySelector<HTMLElement>("#ripWrap");
+    const ripLabel = host.querySelector<HTMLElement>("#ripProgressLabel");
+    const left = host.querySelector<HTMLElement>("#paperLeft");
+    const right = host.querySelector<HTMLElement>("#paperRight");
+    const reveal = host.querySelector<HTMLElement>(".torn-reveal");
+    const cards = Array.from(host.querySelectorAll(".home-plant-card")) as HTMLElement[];
+    let cardAnimation: ReturnType<typeof anime> | null = null;
 
     let threeRaf = 0;
     let renderer: THREE.WebGLRenderer | null = null;
@@ -76,6 +83,6 @@ export function useHeroMotion(root: RefObject<HTMLElement | null>, totalPlants =
     const onScroll=()=>{if(!ticking){scrollRaf=requestAnimationFrame(()=>{updateRip();ticking=false;});ticking=true;}};
     window.addEventListener("scroll",onScroll,{passive:true}); window.addEventListener("resize",updateRip); updateRip();
 
-    return () => { anime.remove([countEl,labelEl,left,right,reveal,...cards].filter(Boolean)); ripTimeline?.pause(); cardAnimation?.pause(); cancelAnimationFrame(threeRaf); cancelAnimationFrame(scrollRaf); window.removeEventListener("scroll",onScroll); window.removeEventListener("resize",updateRip); if(onThreeResize)window.removeEventListener("resize",onThreeResize); window.removeEventListener("mousemove",onPointer); geometry?.dispose(); material?.dispose(); renderer?.dispose(); };
-  }, [root, totalPlants]);
+    return () => { anime.remove([left,right,reveal,...cards].filter(Boolean)); ripTimeline?.pause(); cardAnimation?.pause(); cancelAnimationFrame(threeRaf); cancelAnimationFrame(scrollRaf); window.removeEventListener("scroll",onScroll); window.removeEventListener("resize",updateRip); if(onThreeResize)window.removeEventListener("resize",onThreeResize); window.removeEventListener("mousemove",onPointer); geometry?.dispose(); material?.dispose(); renderer?.dispose(); };
+  }, [root]);
 }

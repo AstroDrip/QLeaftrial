@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CatalogPage } from "./CatalogPage";
 import { productApi } from "./product-api";
 import type { ProductSummary } from "./product-types";
+import { useCartStore } from "../cart/cart-store";
 
 vi.mock("./product-api", () => ({
   productApi: {
@@ -42,6 +43,7 @@ function renderWithClient(ui: ReactElement) {
 
 describe("CatalogPage", () => {
   beforeEach(() => {
+    useCartStore.setState({ items: [] });
     mockFilters.mockResolvedValue({
       categories: ["Indoor", "Succulent"],
       lights: ["Bright indirect", "Direct sun"],
@@ -70,6 +72,7 @@ describe("CatalogPage", () => {
           category: "Indoor",
           light: "Bright indirect",
           priceQar: 180,
+          stock: 12,
           inStock: true,
           image: { url: "/house.jpg", altText: "House plant" },
         },
@@ -85,6 +88,35 @@ describe("CatalogPage", () => {
     );
     expect(screen.getByText("House Plant")).toBeInTheDocument();
     expect(screen.getByText("180 QAR")).toBeInTheDocument();
+  });
+
+  it("adds the selected in-stock catalogue product to the cart", async () => {
+    mockList.mockResolvedValue({
+      items: [
+        {
+          id: "1",
+          slug: "house-plant",
+          name: "House Plant",
+          category: "Indoor",
+          light: "Bright indirect",
+          priceQar: 180,
+          stock: 12,
+          inStock: true,
+          image: { url: "/house.jpg", altText: "House plant" },
+        },
+      ],
+      page: 1,
+      pageSize: 24,
+    });
+
+    renderWithClient(<CatalogPage />);
+    await userEvent.click(
+      await screen.findByRole("button", { name: /add house plant to cart/i }),
+    );
+
+    expect(useCartStore.getState().items).toEqual([
+      expect.objectContaining({ id: "1", quantity: 1 }),
+    ]);
   });
 
   it("renders an empty state when no products match", async () => {
