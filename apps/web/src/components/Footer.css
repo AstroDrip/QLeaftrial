@@ -11,3 +11,15 @@
 .site-footer__links { align-items: center; justify-content: center; }
 .site-footer__icon { width: 25px; height: 25px; }
 .site-footer__credit { margin-top: 16px; }
+
+.site-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+}
+
+.site-footer__legal a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

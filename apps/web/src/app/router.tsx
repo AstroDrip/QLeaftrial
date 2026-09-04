@@ -15,6 +15,9 @@ const CheckoutPage = lazy(() => import("../features/checkout/CheckoutPage").then
 const OrderConfirmationPage = lazy(() => import("../features/checkout/OrderConfirmationPage").then((module) => ({ default: module.OrderConfirmationPage })));
 const CatalogPage = lazy(() => import("../features/catalog/CatalogPage").then((module) => ({ default: module.CatalogPage })));
 const ProductPage = lazy(() => import("../features/catalog/ProductPage").then((module) => ({ default: module.ProductPage })));
+const PrivacyPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.PrivacyPage })));
+const TermsPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.TermsPage })));
+const ShippingReturnsPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.ShippingReturnsPage })));
 
 const deferred = (element: ReactNode) => <Suspense fallback={<p className="page-shell" role="status" aria-live="polite">Loading…</p>}>{element}</Suspense>;
 
@@ -29,6 +32,9 @@ export const router = createBrowserRouter([
       { path: "cart", element: deferred(<CartPage />) },
       { path: "checkout", element: deferred(<CheckoutPage />) },
       { path: "order/:orderNumber", element: deferred(<OrderConfirmationPage />) },
+      { path: "privacy", element: deferred(<PrivacyPage />) },
+      { path: "terms", element: deferred(<TermsPage />) },
+      { path: "shipping-returns", element: deferred(<ShippingReturnsPage />) },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

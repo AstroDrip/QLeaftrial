@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { content } from "../../content/en";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
@@ -144,6 +144,9 @@ export function CheckoutPage() {
         <button type="submit" className="primary-button" disabled={items.length === 0}>
           {content.checkout.placeOrder}
         </button>
+        <p className="checkout-form__legal">
+          By placing an order, you agree to the <Link to="/terms">Terms & Conditions</Link> and acknowledge the <Link to="/privacy">Privacy Policy</Link> and <Link to="/shipping-returns">Shipping & Returns</Link> information.
+        </p>
       </form>
     </section>
   );

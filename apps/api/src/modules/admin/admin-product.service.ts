@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import type { CreateAdminProductInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
+import { removeStoredProductImage, storeProductImage } from "./product-image-storage.js";
 
 const adminProductSelection = {
   id: true,
@@ -145,21 +146,32 @@ export async function updateAdminProduct(
 }
 
 export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
-  const product = await productCreateRepository.create({
-    data: {
-      slug: input.slug,
-      sku: input.sku,
-      name: input.name,
-      description: input.description,
-      category: input.category,
-      light: input.light,
-      priceQar: input.priceQar,
-      costPrice: input.costPrice,
-      published: true,
-      inventory: { create: { quantity: input.stock } },
-      media: { create: { url: input.imageDataUrl, altText: input.imageAltText, sortOrder: 0 } },
-    },
-    select: adminProductSelection,
-  });
-  return toAdminProduct(product);
+  const storedImage = await storeProductImage(input.imageDataUrl, input.slug);
+
+  try {
+    const product = await productCreateRepository.create({
+      data: {
+        slug: input.slug,
+        sku: input.sku,
+        name: input.name,
+        description: input.description,
+        category: input.category,
+        light: input.light,
+        priceQar: input.priceQar,
+        costPrice: input.costPrice,
+        published: true,
+        inventory: { create: { quantity: input.stock } },
+        media: { create: { url: storedImage.url, altText: input.imageAltText, sortOrder: 0 } },
+      },
+      select: adminProductSelection,
+    });
+    return toAdminProduct(product);
+  } catch (error) {
+    try {
+      await removeStoredProductImage(storedImage);
+    } catch (cleanupError) {
+      console.error("Failed to clean up product image after product creation failed", cleanupError);
+    }
+    throw error;
+  }
 }

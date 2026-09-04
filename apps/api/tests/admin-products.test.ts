@@ -67,7 +67,7 @@ describe("admin product management", () => {
       priceQar: 90,
       costPrice: 35,
       stock: 4,
-      imageDataUrl: "data:image/png;base64,aGVsbG8=",
+      imageDataUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z2S8AAAAASUVORK5CYII=",
       imageAltText: "New fern in a pot",
     });
 

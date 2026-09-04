@@ -20,6 +20,31 @@ if (!databaseUrl) {
   }
 }
 
+const supabaseUrl = process.env.SUPABASE_URL?.trim();
+if (!supabaseUrl) {
+  problems.push("SUPABASE_URL must be set");
+} else {
+  try {
+    const parsed = new URL(supabaseUrl);
+    if (parsed.protocol !== "https:" || !parsed.hostname) {
+      problems.push("SUPABASE_URL must be a valid https:// URL");
+    }
+  } catch {
+    problems.push("SUPABASE_URL must be a valid https:// URL");
+  }
+}
+
+if (!process.env.SUPABASE_PRODUCT_IMAGE_BUCKET?.trim()) {
+  problems.push("SUPABASE_PRODUCT_IMAGE_BUCKET must be set");
+}
+
+if (
+  !process.env.SUPABASE_SECRET_KEY?.trim() &&
+  !process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+) {
+  problems.push("SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY must be set");
+}
+
 if (problems.length) {
   console.error(problems.map((problem) => `- ${problem}`).join("\n"));
   process.exit(1);

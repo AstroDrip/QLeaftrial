@@ -3,9 +3,10 @@ import { requireAdmin } from "../auth/auth.middleware.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import { createOrderSchema, updateOrderStatusSchema, updatePaymentStatusSchema } from "./order.schemas.js";
 import { createOrder, dashboardStats, deleteOrder, listOrders, salesReport, updateOrderStatus, updatePaymentStatus } from "./order.service.js";
+import { publicOrderRateLimit } from "./order-rate-limit.js";
 
 export const orderRouter = Router();
-orderRouter.post("/orders", async (req, res) => {
+orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
   const parsed = createOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order details");
   res.status(201).json(await createOrder(parsed.data));

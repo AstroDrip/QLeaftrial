@@ -67,6 +67,10 @@ function verifyDeploymentEnvironment(
   const environment = { ...process.env };
   delete environment.QLEAVES_DATABASE_PROVIDER;
   delete environment.DATABASE_URL;
+  delete environment.SUPABASE_URL;
+  delete environment.SUPABASE_PRODUCT_IMAGE_BUCKET;
+  delete environment.SUPABASE_SECRET_KEY;
+  delete environment.SUPABASE_SERVICE_ROLE_KEY;
 
   for (const [key, value] of Object.entries(overrides)) {
     if (value === undefined) delete environment[key];
@@ -110,9 +114,51 @@ describe("production Prisma workflow", () => {
     const result = await verifyDeploymentEnvironment({
       QLEAVES_DATABASE_PROVIDER: "postgresql",
       DATABASE_URL: postgresqlUrl,
+      SUPABASE_URL: "https://qleaves.supabase.co",
+      SUPABASE_PRODUCT_IMAGE_BUCKET: "product-images",
+      SUPABASE_SECRET_KEY: "sb_secret_test",
     });
 
     expect(result.stdout).toContain("Vercel runtime environment check passed");
+  });
+
+  it("rejects a deployment without the Supabase project URL", async () => {
+    await expect(
+      verifyDeploymentEnvironment({
+        QLEAVES_DATABASE_PROVIDER: "postgresql",
+        DATABASE_URL: postgresqlUrl,
+        SUPABASE_PRODUCT_IMAGE_BUCKET: "product-images",
+        SUPABASE_SECRET_KEY: "sb_secret_test",
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining("SUPABASE_URL must be set"),
+    });
+  });
+
+  it("rejects a deployment without a product image bucket", async () => {
+    await expect(
+      verifyDeploymentEnvironment({
+        QLEAVES_DATABASE_PROVIDER: "postgresql",
+        DATABASE_URL: postgresqlUrl,
+        SUPABASE_URL: "https://qleaves.supabase.co",
+        SUPABASE_SECRET_KEY: "sb_secret_test",
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining("SUPABASE_PRODUCT_IMAGE_BUCKET must be set"),
+    });
+  });
+
+  it("rejects a deployment without a server-side Supabase key", async () => {
+    await expect(
+      verifyDeploymentEnvironment({
+        QLEAVES_DATABASE_PROVIDER: "postgresql",
+        DATABASE_URL: postgresqlUrl,
+        SUPABASE_URL: "https://qleaves.supabase.co",
+        SUPABASE_PRODUCT_IMAGE_BUCKET: "product-images",
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining("SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY must be set"),
+    });
   });
 
   it("rejects a deployment without the explicit PostgreSQL provider", async () => {
