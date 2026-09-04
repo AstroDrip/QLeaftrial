@@ -8,6 +8,7 @@ import { AddToCartButton } from "../cart/AddToCartButton";
 import { productApi } from "../catalog/product-api";
 import type { ProductSummary } from "../catalog/product-types";
 import { useHeroMotion } from "./useHeroMotion";
+import { FallbackImage } from "../../components/FallbackImage";
 
 const plants = [
   { name: "Monstera", latin: "Monstera deliciosa", stock: 14, light: "Bright, indirect", price: 180, image: "/images/hero/leaf-1.svg" },
@@ -60,6 +61,11 @@ export function HomePage() {
 
       <section id="plants" className="home-plants">
         <div className="section-head"><div><span className="eyebrow">On hand today</span><h2>{content.home.featuredTitle}</h2></div><p>Beautiful indoor plants, thoughtfully selected in Qatar. Reach out for current availability, prices and enquiries.</p></div>
+        {productsQuery.isError ? (
+          <p className="home-plants__notice" role="alert">
+            Live inventory is temporarily unavailable: {(productsQuery.error as Error).message}
+          </p>
+        ) : null}
         <div className="home-plant-grid" id="plantGrid">
           {(livePlants.length ? livePlants : plants).map((plant, index) => {
             const livePlant = "priceQar" in plant ? plant as ProductSummary : null;
@@ -69,7 +75,7 @@ export function HomePage() {
             const latin = livePlant ? "" : "latin" in plant ? plant.latin : "";
             const price = livePlant?.priceQar ?? ("price" in plant ? plant.price : 0);
             return <article className="home-plant-card" key={index}>
-              <div className="frame"><span className="stock">{plant.stock} in stock</span><img src={image} alt={alt} loading="lazy" decoding="async" /></div>
+              <div className="frame"><span className="stock">{plant.stock} in stock</span><FallbackImage src={image} alt={alt} loading="lazy" decoding="async" /></div>
               <h3 className="name">{plant.name}</h3><p className="latin">{latin}</p>
               <div className="meta"><span className="light">{plant.light}</span><span className="price">{price} QAR</span></div>
               {livePlant ? <AddToCartButton product={livePlant} className="home-plant-card__cart" /> : null}

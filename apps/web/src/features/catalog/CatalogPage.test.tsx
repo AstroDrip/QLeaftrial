@@ -79,6 +79,8 @@ describe("CatalogPage", () => {
       ],
       page: 1,
       pageSize: 24,
+      totalItems: 1,
+      totalPages: 1,
     });
 
     renderWithClient(<CatalogPage />);
@@ -107,6 +109,8 @@ describe("CatalogPage", () => {
       ],
       page: 1,
       pageSize: 24,
+      totalItems: 1,
+      totalPages: 1,
     });
 
     renderWithClient(<CatalogPage />);
@@ -120,7 +124,13 @@ describe("CatalogPage", () => {
   });
 
   it("renders an empty state when no products match", async () => {
-    mockList.mockResolvedValue({ items: [], page: 1, pageSize: 24 });
+    mockList.mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 24,
+      totalItems: 0,
+      totalPages: 0,
+    });
 
     renderWithClient(<CatalogPage />);
 
@@ -139,11 +149,13 @@ describe("CatalogPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/network down/i);
   });
 
-      it("applies a category filter on change", async () => {
+  it("applies a category filter on change", async () => {
     mockList.mockResolvedValue({
       items: [] as ProductSummary[],
       page: 1,
       pageSize: 24,
+      totalItems: 0,
+      totalPages: 0,
     });
 
     renderWithClient(<CatalogPage />);
@@ -160,5 +172,50 @@ describe("CatalogPage", () => {
         expect.objectContaining({ category: "Indoor" }),
       ),
     );
+  });
+
+  it("shows real pagination on page one and requests the next page", async () => {
+    mockList.mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 24,
+      totalItems: 25,
+      totalPages: 2,
+    });
+
+    renderWithClient(<CatalogPage />);
+
+    const next = await screen.findByRole("button", { name: "Next" });
+    await userEvent.click(next);
+
+    await waitFor(() =>
+      expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ page: 2 })),
+    );
+  });
+
+  it("replaces a failed product image with the local plant fallback", async () => {
+    mockList.mockResolvedValue({
+      items: [{
+        id: "1",
+        slug: "house-plant",
+        name: "House Plant",
+        category: "Indoor",
+        light: "Bright indirect",
+        priceQar: 180,
+        stock: 12,
+        inStock: true,
+        image: { url: "/media/plants/missing.jpg", altText: "House plant" },
+      }],
+      page: 1,
+      pageSize: 24,
+      totalItems: 1,
+      totalPages: 1,
+    });
+
+    renderWithClient(<CatalogPage />);
+    const image = await screen.findByRole("img", { name: "House plant" });
+    fireEvent.error(image);
+
+    expect(image).toHaveAttribute("src", "/images/hero/leaf-1.svg");
   });
 });

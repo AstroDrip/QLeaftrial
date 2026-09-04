@@ -21,6 +21,9 @@ if (config.$schema !== "https://openapi.vercel.sh/vercel.json") {
 if (config.buildCommand !== "npm run vercel-build") {
   problems.push("Vercel buildCommand must call npm run vercel-build");
 }
+if (!packageJson.scripts?.["vercel-build"]?.includes("verify-vercel-env.mjs")) {
+  problems.push("Vercel build must validate the production runtime environment");
+}
 if (config.outputDirectory !== "apps/web/dist") {
   problems.push("Vercel outputDirectory must be apps/web/dist");
 }

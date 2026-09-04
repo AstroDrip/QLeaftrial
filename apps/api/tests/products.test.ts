@@ -23,6 +23,12 @@ describe("product catalogue", () => {
       slug: "house-plant", priceQar: 180, stock: 12, inStock: true,
     }));
     expect(response.body.items[0]).not.toHaveProperty("costPrice");
+    expect(response.body).toEqual(expect.objectContaining({
+      page: 1,
+      pageSize: 24,
+      totalItems: 1,
+      totalPages: 1,
+    }));
   });
 
   it("returns a product detail without AR metadata", async () => {
@@ -73,5 +79,77 @@ describe("product catalogue", () => {
     expect(response.body).toEqual({
       error: expect.objectContaining({ code: "PRODUCT_NOT_FOUND", message: expect.any(String) }),
     });
+  });
+
+  it("sorts the complete result set before applying pagination", async () => {
+    const response = await request(createApp()).get(
+      "/api/v1/products?sort=price-desc&page=1",
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.items[0]).toEqual(expect.objectContaining({
+      slug: "fiddle-leaf-fig",
+      priceQar: 260,
+    }));
+  });
+
+  it("uses a stable slug tie-breaker for equal prices", async () => {
+    await prisma.product.createMany({
+      data: [
+        {
+          slug: "z-equal-price",
+          sku: "QL-ZEP-001",
+          name: "Z Equal Price",
+          description: "Price sorting fixture.",
+          category: "Indoor",
+          light: "Indirect",
+          priceQar: 90,
+          costPrice: 40,
+          published: true,
+        },
+        {
+          slug: "a-equal-price",
+          sku: "QL-AEP-001",
+          name: "A Equal Price",
+          description: "Price sorting fixture.",
+          category: "Indoor",
+          light: "Indirect",
+          priceQar: 90,
+          costPrice: 40,
+          published: true,
+        },
+      ],
+    });
+
+    const response = await request(createApp()).get(
+      "/api/v1/products?sort=price-asc&page=1",
+    );
+    const tiedSlugs = response.body.items
+      .filter((product: { priceQar: number }) => product.priceQar === 90)
+      .map((product: { slug: string }) => product.slug);
+
+    expect(tiedSlugs).toEqual(["a-equal-price", "z-equal-price"]);
+  });
+
+  it("returns filter metadata independently of catalogue pagination", async () => {
+    await prisma.product.create({
+      data: {
+        slug: "patio-palm",
+        sku: "QL-PP-100",
+        name: "Patio Palm",
+        description: "A published outdoor plant.",
+        category: "Outdoor",
+        light: "Full sun",
+        priceQar: 300,
+        costPrice: 150,
+        published: true,
+      },
+    });
+
+    const response = await request(createApp()).get("/api/v1/products/filters");
+
+    expect(response.status).toBe(200);
+    expect(response.body.categories).toContain("Outdoor");
+    expect(response.body.lights).toContain("Full sun");
   });
 });

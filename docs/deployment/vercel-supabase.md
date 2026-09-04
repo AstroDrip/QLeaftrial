@@ -14,7 +14,11 @@ Use the repository root as the project root. `vercel.json` owns the build/output
 - Production runtime environment variables:
   - `QLEAVES_DATABASE_PROVIDER=postgresql`
   - `DATABASE_URL=<Supabase transaction-pooler URL>`
-  - `SESSION_SECRET=<strong random production secret>`
+
+Set both runtime variables for **Production** and for every **Preview**
+environment that should have a working API. The Vercel build stops early with
+a safe error message when either value is absent or malformed; it never prints
+the connection string.
 
 `DIRECT_URL` is an administrative Prisma variable, not a requirement for the
 running Vercel application. Set it in the environment where deliberate schema
@@ -30,11 +34,19 @@ For Vercel/serverless runtime traffic, use Supabase Supavisor **transaction mode
 postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
 ```
 
+Percent-encode reserved characters in the database password before placing it
+in a URL. For example, `@` becomes `%40` and `#` becomes `%23`.
+
 Use `DIRECT_URL` only for deliberate Prisma administrative operations. Prefer the direct database endpoint on port `5432` when your network can reach it; otherwise use Supavisor session mode on port `5432`.
 
 ## First production database initialization
 
-Set `DATABASE_URL`, `DIRECT_URL`, and `QLEAVES_DATABASE_PROVIDER=postgresql` in the shell where you run these commands, then run from the repository root:
+Set `DATABASE_URL`, `DIRECT_URL`, `QLEAVES_DATABASE_PROVIDER=postgresql`, and
+`QLEAVES_ADMIN_SEED_PASSWORD` in the trusted shell where you run these
+commands. The seed password must be a strong, unique production password of at
+least 12 characters; the known local-development password is rejected for
+PostgreSQL seeding. Then run
+from the repository root:
 
 ```bash
 npm run supabase:generate
@@ -45,11 +57,43 @@ npm run supabase:seed
 
 `supabase:deploy` uses the repository's existing `prisma db push` production strategy and intentionally does **not** pass `--accept-data-loss`. Review any warning before proceeding. `supabase:seed` is deliberately separate so product/admin seed data is never written by a Vercel build.
 
+Remove `QLEAVES_ADMIN_SEED_PASSWORD` from the shell immediately after the seed
+finishes. It is only used to hash the initial admin credential; the running API
+does not need it, so do not add it to Vercel's runtime variables.
+
 Run `supabase:deploy` again only when an intentional PostgreSQL schema change is ready to be applied. Run `supabase:seed` only when you explicitly want to restore/update the initial seed catalogue/admin data.
+
+Run these commands from a trusted local shell or protected administrative
+environment. Do not put `DIRECT_URL`, the admin seed password, or any other
+secret in a frontend `VITE_*` variable.
+
+## Deployment health checks
+
+After deployment, test these endpoints in order:
+
+```text
+https://YOUR_DEPLOYMENT/api/v1/health
+https://YOUR_DEPLOYMENT/api/v1/ready
+https://YOUR_DEPLOYMENT/api/v1/products?page=1
+```
+
+- `/health` proves that Vercel loaded and routed the Express function.
+- `/ready` also verifies that the expected product table is reachable.
+- `/products` verifies the public catalogue query and seeded data.
+
+If an API URL returns the React HTML document, confirm that Vercel's Root
+Directory is the repository root and that dashboard build/output settings are
+not overriding `vercel.json`. If `/health` works but `/ready` fails, inspect the
+Function log for a Supabase connection or missing-schema error, then run the
+explicit initialization commands above against the intended database.
 
 ## Preview deployments
 
-`npm run vercel-build` only generates Prisma clients, checks types, and builds code. It never runs `prisma db push`, migrations, or seed commands. If Preview deployments will write test orders/admin edits or receive schema changes, point Preview at a separate Supabase project/database instead of production.
+`npm run vercel-build` validates runtime configuration, generates Prisma clients,
+checks types, and builds code. It never runs `prisma db push`, migrations, or
+seed commands. If Preview deployments will write test orders/admin edits or
+receive schema changes, point Preview at a separate Supabase project/database
+instead of production.
 
 ## Routing and caching
 

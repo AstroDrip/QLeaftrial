@@ -34,17 +34,10 @@ export const productApi = {
   },
   detail: (slug: string): Promise<ProductDetail> =>
     request<ProductDetail>(`/products/${slug}`),
-  filters: async (): Promise<{
+  filters: (): Promise<{
     categories: string[];
     lights: string[];
-  }> => {
-    const list = await request<ProductListResponse>("/products?page=1");
-    const categories = Array.from(
-      new Set(list.items.map((p) => p.category)),
-    ).sort();
-    const lights = Array.from(new Set(list.items.map((p) => p.light))).sort();
-    return { categories, lights };
-  },
+  }> => request("/products/filters"),
 };
 
 export type {
