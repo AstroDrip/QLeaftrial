@@ -16,7 +16,6 @@ const publicProductSelection = {
     orderBy: { sortOrder: "asc" as const },
   },
   inventory: { select: { quantity: true } },
-  arAsset: { select: { glbUrl: true, usdzUrl: true, attribution: true } },
 } as const;
 
 type PublicProductRecord = {
@@ -29,7 +28,6 @@ type PublicProductRecord = {
   priceQar: number;
   media: Array<{ url: string; altText: string }>;
   inventory: { quantity: number } | null;
-  arAsset: { glbUrl: string; usdzUrl: string | null; attribution: string } | null;
 };
 
 type ProductRepository = {
@@ -61,6 +59,7 @@ const productRepository = prisma.product as unknown as ProductRepository;
 
 function toSummary(product: PublicProductRecord): ProductSummary {
   const [image] = product.media;
+  const stock = product.inventory?.quantity ?? 0;
 
   return {
     id: product.id,
@@ -69,7 +68,8 @@ function toSummary(product: PublicProductRecord): ProductSummary {
     category: product.category,
     light: product.light,
     priceQar: product.priceQar,
-    inStock: (product.inventory?.quantity ?? 0) > 0,
+    stock,
+    inStock: stock > 0,
     image: image ?? null,
   };
 }
@@ -79,7 +79,6 @@ function toDetail(product: PublicProductRecord): ProductDetail {
     ...toSummary(product),
     description: product.description,
     media: product.media,
-    arAsset: product.arAsset,
   };
 }
 

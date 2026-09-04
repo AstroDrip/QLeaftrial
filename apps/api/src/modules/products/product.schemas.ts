@@ -26,6 +26,7 @@ export type ProductSummary = {
   category: string;
   light: string;
   priceQar: number;
+  stock: number;
   inStock: boolean;
   image: ProductMedia | null;
 };
@@ -33,9 +34,4 @@ export type ProductSummary = {
 export type ProductDetail = ProductSummary & {
   description: string;
   media: ProductMedia[];
-  arAsset: null | {
-    glbUrl: string;
-    usdzUrl: string | null;
-    attribution: string;
-  };
 };

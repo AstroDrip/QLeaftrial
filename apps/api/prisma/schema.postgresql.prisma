@@ -59,9 +59,7 @@ model Product {
   priceQar    Int
   costPrice   Int
   published   Boolean        @default(false)
-  arEnabled   Boolean        @default(false)
   media       ProductMedia[]
-  arAsset     ArAsset?
   inventory   Inventory?
   orderItems  OrderItem[]
   createdAt   DateTime       @default(now())
@@ -79,17 +77,6 @@ model ProductMedia {
   updatedAt DateTime @updatedAt
 
   @@unique([productId, sortOrder])
-}
-
-model ArAsset {
-  id          String   @id @default(cuid())
-  productId   String   @unique
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  glbUrl      String
-  usdzUrl     String?
-  attribution String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }
 
 model Inventory {

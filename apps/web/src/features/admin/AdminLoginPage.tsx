@@ -1,18 +1,24 @@
 import { useState, type FormEvent } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { content } from "../../content/en";
+import { adminApi } from "./admin-api";
+import { Seo } from "../../components/Seo";
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const queryClient = useQueryClient();
+  const [password, setPassword] = useState("");
+  const login = useMutation({ mutationFn: adminApi.login, onSuccess: (admin) => { queryClient.setQueryData(["admin", "session"], admin); navigate("/admin"); } });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    navigate("/admin");
+    login.mutate(password);
   }
 
   return (
     <section className="page-shell admin-login-page" data-testid="admin-login-page">
+      <Seo title="Admin sign in" description="QLeaves administration sign in." path="/admin/login" noIndex />
       <div className="page-shell__header">
         <p className="eyebrow">{content.admin.loginTitle}</p>
         <h1>{content.admin.loginTitle}</h1>
@@ -20,30 +26,19 @@ export function AdminLoginPage() {
 
       <form className="admin-login-form" onSubmit={handleSubmit}>
         <label>
-          <span>{content.admin.email}</span>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, email: event.target.value }))
-            }
-            placeholder="admin@qleaves.com"
-          />
-        </label>
-
-        <label>
           <span>{content.admin.password}</span>
           <input
             type="password"
-            value={form.password}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, password: event.target.value }))
-            }
-            placeholder={content.admin.newPassword}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+            required
           />
         </label>
 
-        <button type="submit" className="primary-button">
+        {login.isError ? <p role="alert">{login.error.message}</p> : null}
+
+        <button type="submit" className="primary-button" disabled={login.isPending}>
           {content.admin.signIn}
         </button>
       </form>

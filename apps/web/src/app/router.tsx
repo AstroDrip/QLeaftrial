@@ -1,17 +1,21 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Layout } from "../components/Layout";
 import { NotFoundPage } from "../components/NotFoundPage";
-import { AdminDashboardPage } from "../features/admin/AdminDashboardPage";
-import { AdminLayout } from "../features/admin/AdminLayout";
-import { AdminLoginPage } from "../features/admin/AdminLoginPage";
-import { AdminOrdersPage } from "../features/admin/AdminOrdersPage";
-import { AdminProductsPage } from "../features/admin/AdminProductsPage";
-import { CartPage } from "../features/cart/CartPage";
-import { CheckoutPage } from "../features/checkout/CheckoutPage";
-import { OrderConfirmationPage } from "../features/checkout/OrderConfirmationPage";
-import { CatalogPage } from "../features/catalog/CatalogPage";
-import { ProductPage } from "../features/catalog/ProductPage";
 import { HomePage } from "../features/home/HomePage";
+
+const AdminDashboardPage = lazy(() => import("../features/admin/AdminDashboardPage").then((module) => ({ default: module.AdminDashboardPage })));
+const AdminLayout = lazy(() => import("../features/admin/AdminLayout").then((module) => ({ default: module.AdminLayout })));
+const AdminLoginPage = lazy(() => import("../features/admin/AdminLoginPage").then((module) => ({ default: module.AdminLoginPage })));
+const AdminOrdersPage = lazy(() => import("../features/admin/AdminOrdersPage").then((module) => ({ default: module.AdminOrdersPage })));
+const AdminProductsPage = lazy(() => import("../features/admin/AdminProductsPage").then((module) => ({ default: module.AdminProductsPage })));
+const CartPage = lazy(() => import("../features/cart/CartPage").then((module) => ({ default: module.CartPage })));
+const CheckoutPage = lazy(() => import("../features/checkout/CheckoutPage").then((module) => ({ default: module.CheckoutPage })));
+const OrderConfirmationPage = lazy(() => import("../features/checkout/OrderConfirmationPage").then((module) => ({ default: module.OrderConfirmationPage })));
+const CatalogPage = lazy(() => import("../features/catalog/CatalogPage").then((module) => ({ default: module.CatalogPage })));
+const ProductPage = lazy(() => import("../features/catalog/ProductPage").then((module) => ({ default: module.ProductPage })));
+
+const deferred = (element: ReactNode) => <Suspense fallback={<p className="page-shell" role="status" aria-live="polite">Loading…</p>}>{element}</Suspense>;
 
 export const router = createBrowserRouter([
   {
@@ -19,22 +23,22 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "shop", element: <CatalogPage /> },
-      { path: "plants/:slug", element: <ProductPage /> },
-      { path: "cart", element: <CartPage /> },
-      { path: "checkout", element: <CheckoutPage /> },
-      { path: "order/:orderNumber", element: <OrderConfirmationPage /> },
+      { path: "shop", element: deferred(<CatalogPage />) },
+      { path: "plants/:slug", element: deferred(<ProductPage />) },
+      { path: "cart", element: deferred(<CartPage />) },
+      { path: "checkout", element: deferred(<CheckoutPage />) },
+      { path: "order/:orderNumber", element: deferred(<OrderConfirmationPage />) },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
-  { path: "/admin/login", element: <AdminLoginPage /> },
+  { path: "/admin/login", element: deferred(<AdminLoginPage />) },
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: deferred(<AdminLayout />),
     children: [
-      { index: true, element: <AdminDashboardPage /> },
-      { path: "products", element: <AdminProductsPage /> },
-      { path: "orders", element: <AdminOrdersPage /> },
+      { index: true, element: deferred(<AdminDashboardPage />) },
+      { path: "products", element: deferred(<AdminProductsPage />) },
+      { path: "orders", element: deferred(<AdminOrdersPage />) },
       { path: "*", element: <Navigate to="/admin" replace /> },
     ],
   },

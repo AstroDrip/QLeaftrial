@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "test": "vitest run --environment node",
+    "test": "vitest run --environment node --no-file-parallelism",
     "prisma:generate": "npm run prisma:generate:local && npm run prisma:generate:production",
     "prisma:generate:local": "node scripts/prisma.mjs generate --schema prisma/schema.prisma",
     "prisma:generate:production": "node scripts/prisma.mjs generate --schema prisma/schema.postgresql.prisma",

@@ -1,93 +1,79 @@
-import { render, screen, cleanup } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HomePage } from "./HomePage";
+import { productApi } from "../catalog/product-api";
+import { useCartStore } from "../cart/cart-store";
 
-const motionMock = vi.hoisted(() => ({
-  revert: vi.fn(),
+vi.mock("animejs", () => ({
+  default: Object.assign(vi.fn(() => ({ pause: vi.fn() })), {
+    stagger: vi.fn(() => 0),
+    remove: vi.fn(),
+    timeline: vi.fn(() => { const chain:any={duration:100,pause:vi.fn(),seek:vi.fn(),add:vi.fn()}; chain.add.mockReturnValue(chain); return chain; }),
+  }),
 }));
-
-vi.mock("gsap", () => ({
-  __esModule: true,
-  default: {
-    registerPlugin: vi.fn(),
-    context: vi.fn((callback?: () => void) => {
-      if (typeof callback === "function") callback();
-      return { revert: motionMock.revert, add: vi.fn() };
-    }),
-    timeline: vi.fn(() => {
-      const chain = {
-        from: vi.fn(),
-        to: vi.fn(),
-        fromTo: vi.fn(),
-        add: vi.fn(),
-      };
-      chain.from.mockReturnValue(chain);
-      chain.to.mockReturnValue(chain);
-      chain.fromTo.mockReturnValue(chain);
-      chain.add.mockReturnValue(chain);
-      return chain;
-    }),
-    utils: { toArray: vi.fn(() => []), selector: vi.fn(() => () => []) },
+vi.mock("three", () => ({}));
+vi.mock("../catalog/product-api", () => ({
+  productApi: {
+    list: vi.fn(),
+    detail: vi.fn(),
+    filters: vi.fn(),
   },
 }));
 
-vi.mock("gsap/ScrollTrigger", () => ({
-  __esModule: true,
-  ScrollTrigger: {
-    isMatchMedia: vi.fn(),
-    getAll: vi.fn(() => []),
-    prototype: {},
-  },
-  default: { isMatchMedia: vi.fn() },
-}));
-
-describe("HomePage editorial choreography", () => {
-  afterEach(() => {
-    cleanup();
-    vi.restoreAllMocks();
-    motionMock.revert.mockClear();
-    document.documentElement.removeAttribute("data-motion");
-  });
-
-  it("renders the editorial path without requiring motion", () => {
-    window.matchMedia = vi.fn().mockReturnValue({
-      matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+describe("HomePage reference choreography", () => {
+  beforeEach(() => {
+    useCartStore.setState({ items: [] });
+    vi.mocked(productApi.list).mockResolvedValue({
+      items: [{
+        id: "plant-1",
+        slug: "house-plant",
+        name: "House Plant",
+        category: "Indoor",
+        light: "Bright indirect",
+        priceQar: 215,
+        stock: 7,
+        inStock: true,
+        image: { url: "/house.jpg", altText: "House plant" },
+      }],
+      page: 1,
+      pageSize: 24,
     });
-
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>,
+  });
+  afterEach(() => { cleanup(); document.documentElement.removeAttribute("data-motion"); });
+  function renderHome() {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    return render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter><HomePage /></MemoryRouter>
+      </QueryClientProvider>,
     );
+  }
 
-    expect(
-      screen.getByRole("heading", { name: /plants change a room/i }),
-    ).toBeVisible();
-    expect(screen.getByRole("link", { name: /shop plants/i })).toHaveAttribute(
-      "href",
-      "/shop",
-    );
+  it("renders the exact editorial journey with live database values", async () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+    renderHome();
+    expect(screen.getByRole("heading", { name: /for the love of art and plants/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /shop plants/i })).toHaveAttribute("href", "/shop");
+    expect(await screen.findByText("215 QAR")).toBeInTheDocument();
+    expect(screen.getByText("7")).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute("data-motion", "reduced");
   });
 
-  it("reverts its scoped animations on unmount", () => {
-    window.matchMedia = vi.fn().mockReturnValue({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    });
+  it("adds an API-backed home card to the cart", async () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+    renderHome();
 
-    const { unmount } = render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>,
+    await userEvent.click(
+      await screen.findByRole("button", { name: /add house plant to cart/i }),
     );
 
-    expect(document.documentElement).toHaveAttribute("data-motion", "enabled");
-    unmount();
-    expect(motionMock.revert).toHaveBeenCalled();
+    expect(useCartStore.getState().items[0]).toEqual(
+      expect.objectContaining({ id: "plant-1", priceQar: 215, stock: 7 }),
+    );
   });
 });

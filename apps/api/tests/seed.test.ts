@@ -13,13 +13,19 @@ describe("seedDatabase", () => {
 
   afterAll(() => prisma.$disconnect());
 
-  it("creates an AR-enabled plant and development admin", async () => {
+  it("creates the plant catalogue and development admin", async () => {
     await seedDatabase();
 
     expect(await prisma.product.count()).toBeGreaterThanOrEqual(6);
-    expect(
-      await prisma.product.findFirst({ where: { slug: "house-plant" } }),
-    ).toMatchObject({ arEnabled: true, priceQar: 180 });
+    const housePlant = await prisma.product.findFirst({
+      where: { slug: "house-plant" },
+    });
+    expect(housePlant).toMatchObject({
+      slug: "house-plant",
+      priceQar: 180,
+      published: true,
+    });
+    expect(housePlant).not.toHaveProperty("arEnabled");
     expect(
       await prisma.adminUser.findUnique({
         where: { email: "admin@qleaves.local" },
@@ -42,6 +48,6 @@ describe("seedDatabase", () => {
       where: { email: "admin@qleaves.local" },
     });
 
-    expect(await argon2.verify(admin.passwordHash, "QLeavesDemo123!")).toBe(true);
+    expect(await argon2.verify(admin.passwordHash, "taimuomar")).toBe(true);
   });
 });

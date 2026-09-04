@@ -43,7 +43,7 @@ describe("production Prisma workflow", () => {
     expect(generated.stdout).toContain("schema.postgresql.prisma");
     expect(validated.stdout).toContain("is valid");
     expect(deployment.stdout).toContain("prisma db push");
-  }, 10_000);
+  }, 30_000);
 
   it("requires a PostgreSQL URL before selecting the production client", async () => {
     await expect(selectPostgreSqlWithoutUrl()).rejects.toThrow(

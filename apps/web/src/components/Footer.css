@@ -1,0 +1,13 @@
+.site-footer {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding-block: 56px 28px;
+  gap: 14px;
+}
+
+.site-footer__brand { justify-items: center; }
+.site-footer__links { align-items: center; justify-content: center; }
+.site-footer__icon { width: 25px; height: 25px; }
+.site-footer__credit { margin-top: 16px; }

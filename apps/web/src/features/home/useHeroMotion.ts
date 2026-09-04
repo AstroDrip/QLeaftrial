@@ -1,102 +1,88 @@
 import { useEffect, type RefObject } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import anime from "animejs";
+import * as THREE from "three";
 
 export function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined") {
-    return true;
-  }
-
-  const matchMedia = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-  if (!matchMedia) {
-    return true;
-  }
-
-  return matchMedia.matches;
+  if (typeof window === "undefined") return true;
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? true;
 }
 
-export function useHeroMotion(root: RefObject<HTMLElement | null>): void {
+export function useHeroMotion(root: RefObject<HTMLElement | null>, totalPlants = 122): void {
   useEffect(() => {
-    const rootElement = document.documentElement;
+    const host = root.current;
+    if (!host) return;
     const reduced = prefersReducedMotion();
+    const countEl = host.querySelector<HTMLElement>("#plantCount");
+    const labelEl = host.querySelector<HTMLElement>("#countLabel");
+    let countAnimation: ReturnType<typeof anime> | null = null;
+    const revealLabel = () => {
+      if (!labelEl) return;
+      if (reduced) { labelEl.style.opacity = "1"; labelEl.style.transform = "translateX(0)"; return; }
+      anime({ targets: labelEl, opacity: [0, 1], translateX: [-10, 0], duration: 500, easing: "easeOutQuad" });
+    };
+    if (countEl) {
+      if (reduced) { countEl.textContent = String(totalPlants); revealLabel(); }
+      else {
+        const counter = { val: Number(countEl.textContent) || 0 };
+        countAnimation = anime({ targets: counter, val: totalPlants, duration: 1900, easing: "easeOutExpo", round: 1, update: () => { countEl.textContent = String(Math.round(counter.val)); }, complete: revealLabel });
+      }
+    }
+    return () => { countAnimation?.pause(); anime.remove([countEl, labelEl].filter(Boolean)); };
+  }, [root, totalPlants]);
 
-    rootElement.setAttribute("data-motion", reduced ? "reduced" : "enabled");
+  useEffect(() => {
+    const host = root.current;
+    if (!host) return;
+    const reduced = prefersReducedMotion();
+    document.documentElement.setAttribute("data-motion", reduced ? "reduced" : "enabled");
 
-    if (reduced || !root.current) {
-      return;
+    const ripWrap = host.querySelector<HTMLElement>("#ripWrap");
+    const ripLabel = host.querySelector<HTMLElement>("#ripProgressLabel");
+    const left = host.querySelector<HTMLElement>("#paperLeft");
+    const right = host.querySelector<HTMLElement>("#paperRight");
+    const reveal = host.querySelector<HTMLElement>(".torn-reveal");
+    const cards = Array.from(host.querySelectorAll(".home-plant-card")) as HTMLElement[];
+    let cardAnimation: ReturnType<typeof anime> | null = null;
+
+    let threeRaf = 0;
+    let renderer: THREE.WebGLRenderer | null = null;
+    let geometry: THREE.BufferGeometry | null = null;
+    let material: THREE.PointsMaterial | null = null;
+    const canvas = host.querySelector<HTMLCanvasElement>("#heroCanvas");
+    const hero = host.querySelector<HTMLElement>("#hero");
+    let mouseX = 0, mouseY = 0;
+    const onPointer = (e: MouseEvent) => { mouseX = e.clientX / window.innerWidth - .5; mouseY = e.clientY / window.innerHeight - .5; };
+    let onThreeResize: (() => void) | null = null;
+    if (canvas && hero && !reduced) {
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(55, 1, .1, 100); camera.position.z = 12;
+        const count = 260; const positions = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) { positions[i*3] = (Math.random()-.5)*22; positions[i*3+1]=(Math.random()-.5)*16; positions[i*3+2]=(Math.random()-.5)*12; }
+        geometry = new THREE.BufferGeometry(); geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        material = new THREE.PointsMaterial({ color: 0xd7c58a, size: .09, transparent: true, opacity: .75, depthWrite: false });
+        const points = new THREE.Points(geometry, material); scene.add(points);
+        onThreeResize = () => { if (!renderer) return; const w=hero.clientWidth, h=hero.clientHeight; renderer.setSize(w,h,false); renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2)); camera.aspect=w/h; camera.updateProjectionMatrix(); };
+        onThreeResize(); window.addEventListener("resize", onThreeResize); window.addEventListener("mousemove", onPointer);
+        const clock = new THREE.Clock();
+        const tick = () => { if (!renderer || !geometry) return; threeRaf=requestAnimationFrame(tick); const t=clock.getElapsedTime(); points.rotation.y=t*.02+mouseX*.15; points.rotation.x=mouseY*.08; const pos=geometry.attributes.position as THREE.BufferAttribute; for(let i=0;i<count;i++){ let y=pos.getY(i)+.004; if(y>8)y=-8; pos.setY(i,y); } pos.needsUpdate=true; renderer.render(scene,camera); };
+        tick();
+      } catch { renderer = null; }
     }
 
-    gsap.registerPlugin(ScrollTrigger);
-
-    const context = gsap.context(() => {
-      const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-      intro
-        .from(".home__wordmark", { opacity: 0, y: 26, duration: 0.8 })
-        .from(".home__count", { opacity: 0, y: 54, duration: 1.1 }, "-=0.4")
-        .from(".home__count-note", { opacity: 0, x: 24, duration: 0.7 }, "-=0.55")
-        .from(".home__headline", { opacity: 0, y: 18, duration: 0.9 }, "-=0.6")
-        .from(".home__subhead", { opacity: 0, y: 12, duration: 0.7 }, "-=0.45")
-        .from(".home__cta", { opacity: 0, y: 10, duration: 0.7 }, "-=0.35");
-
-      const paperScroll = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".home__paper-rip",
-          start: "top 72%",
-          end: "bottom 18%",
-          scrub: true,
-        },
-      });
-
-      paperScroll.to(".home__paper-rip", {
-        clipPath: "polygon(0 0, 100% 0, 100% 95%, 92% 100%, 79% 96%, 66% 100%, 52% 94%, 38% 100%, 24% 96%, 0 100%)",
-        ease: "none",
-      });
-
-      const paperReveal = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".home__paper-rip",
-          start: "top 80%",
-          once: true,
-        },
-      });
-
-      paperReveal.from(".home__paper-rip", {
-        opacity: 0.3,
-        y: 20,
-        duration: 0.9,
-        ease: "power2.out",
-      });
-
-      const gallery = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".home__plant-gallery",
-          start: "top 80%",
-          once: true,
-        },
-      });
-
-      gallery
-        .from(".home__plant-gallery", { opacity: 0, y: 40, duration: 1 })
-        .from(".home__plant-card", { opacity: 0, y: 80, stagger: 0.12, duration: 0.85 }, "-=0.55");
-
-      const about = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".home__about",
-          start: "top 86%",
-          once: true,
-        },
-      });
-
-      about.from(".home__about", {
-        opacity: 0,
-        y: 26,
-        duration: 0.8,
-      });
-    }, root.current);
-
-    return () => {
-      context.revert();
+    const ripTimeline = !reduced && left && right && reveal ? anime.timeline({ autoplay: false }).add({ targets:left, translateX:["0%","-120%"], translateY:["0%","-16%"], rotate:[0,-16], duration:100, easing:"linear" },0).add({ targets:right, translateX:["0%","120%"], translateY:["0%","14%"], rotate:[0,16], duration:100, easing:"linear" },0).add({ targets:[left,right], opacity:[1,0], duration:100, easing:"linear" },0).add({ targets:reveal, opacity:[.15,1], scale:[.94,1], duration:100, easing:"linear" },0) : null;
+    let plantsRevealed = false;
+    const revealPlants = (progress:number) => {
+      if (progress > .95 && !plantsRevealed) { plantsRevealed=true; if(reduced){cards.forEach(c=>{c.style.opacity="1";c.style.transform="none";});} else cardAnimation=anime({targets:cards,opacity:[0,1],translateY:[38,0],scale:[.97,1],delay:anime.stagger(90),duration:750,easing:"easeOutQuart"}); }
+      else if (progress < .8 && plantsRevealed) { plantsRevealed=false; cardAnimation?.pause(); cards.forEach(c=>{c.style.opacity="0";c.style.transform="translateY(38px) scale(.97)";}); }
     };
+    const clamp=(n:number)=>Math.max(0,Math.min(1,n));
+    const updateRip=()=>{ if(!ripWrap)return; const rect=ripWrap.getBoundingClientRect(); const scrollable=rect.height-window.innerHeight; const p=scrollable>0?clamp(-rect.top/scrollable):0; if(ripTimeline)ripTimeline.seek(ripTimeline.duration*p); else if(left&&right){left.style.transform=`translateX(${-p*120}%) rotate(${-p*16}deg)`;right.style.transform=`translateX(${p*120}%) rotate(${p*16}deg)`;left.style.opacity=right.style.opacity=String(1-p);} if(ripLabel){ripLabel.textContent=p>.98?"Torn open":p<.02?"Keep scrolling":`${Math.round(p*100)}% torn`;ripLabel.style.opacity=p>.98?".35":"1";} revealPlants(p);};
+    let ticking=false, scrollRaf=0;
+    const onScroll=()=>{if(!ticking){scrollRaf=requestAnimationFrame(()=>{updateRip();ticking=false;});ticking=true;}};
+    window.addEventListener("scroll",onScroll,{passive:true}); window.addEventListener("resize",updateRip); updateRip();
+
+    return () => { anime.remove([left,right,reveal,...cards].filter(Boolean)); ripTimeline?.pause(); cardAnimation?.pause(); cancelAnimationFrame(threeRaf); cancelAnimationFrame(scrollRaf); window.removeEventListener("scroll",onScroll); window.removeEventListener("resize",updateRip); if(onThreeResize)window.removeEventListener("resize",onThreeResize); window.removeEventListener("mousemove",onPointer); geometry?.dispose(); material?.dispose(); renderer?.dispose(); };
   }, [root]);
 }

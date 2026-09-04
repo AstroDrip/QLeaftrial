@@ -1,51 +1,36 @@
-@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,450&family=Archivo:wght@400;500;600;700;800&display=swap");
 
-/* QLeaves design tokens. Tuned toward an earthy, minimal editorial storefront. */
 :root {
-  /* Deep earthy forest */
-  --q-color-deep-olive: #1d2c22;
-  /* Muted olive for panels */
-  --q-color-forest-olive: #415d4a;
-  /* Nature green */
-  --q-color-moss: #6a8a67;
-  /* Calm sage */
-  --q-color-sage: #bacbb3;
-  /* Warm parchment */
-  --q-color-warm-ivory: #f7f2ea;
-  /* Soft sand */
-  --q-color-soft-sand: #e8dcc0;
-  /* Clay accent */
-  --q-color-terracotta: #b96d46;
-  /* Muted gold */
-  --q-color-gold: #caa86a;
+  --ink: #161f18;
+  --paper: #f2ecd9;
+  --paper-2: #e9e0c6;
+  --moss: #3f5b43;
+  --moss-deep: #28382b;
+  --rust: #b0603a;
+  --sand: #ddd3ae;
+  --line: rgba(22, 31, 24, 0.14);
+  --serif: "Fraunces", serif;
+  --sans: "Archivo", sans-serif;
 
-  /* Derived UI surfaces */
-  --q-color-background: var(--q-color-warm-ivory);
-  --q-color-surface: #fbf8f2;
-  --q-color-on-background: var(--q-color-deep-olive);
-  --q-color-on-surface: var(--q-color-deep-olive);
-  --q-color-border: rgba(29, 44, 34, 0.1);
-  --q-color-accent: var(--q-color-terracotta);
-
-  /* Typography */
-  --q-font-display: "Archivo", "Arial Black", sans-serif;
-  --q-font-body: "Manrope", "Segoe UI", sans-serif;
-  --q-font-size-xs: 0.75rem;
-  --q-font-size-sm: 0.875rem;
-  --q-font-size-base: 1rem;
-  --q-font-size-lg: 1.125rem;
-  --q-font-size-xl: 1.25rem;
-  --q-font-size-2xl: 1.5rem;
-  --q-font-size-3xl: 1.875rem;
-  --q-font-size-4xl: 2.25rem;
-  --q-font-size-5xl: 3rem;
-  --q-font-size-6xl: 3.75rem;
-  --q-font-size-7xl: 4.5rem;
-
-  /* Spacing scale (8-point grid) */
-  --q-space-3xs: 0.25rem;
-  --q-space-2xs: 0.5rem;
-  --q-space-xs: 0.75rem;
+  --q-color-background: var(--paper);
+  --q-color-surface: var(--paper);
+  --q-color-on-background: var(--ink);
+  --q-color-on-surface: var(--ink);
+  --q-color-border: var(--line);
+  --q-color-accent: var(--rust);
+  --q-color-deep-olive: var(--ink);
+  --q-color-forest-olive: var(--moss-deep);
+  --q-color-moss: var(--moss);
+  --q-color-sage: #6b7268;
+  --q-color-warm-ivory: var(--paper);
+  --q-color-soft-sand: var(--sand);
+  --q-color-terracotta: var(--rust);
+  --q-color-gold: #d7c58a;
+  --q-font-display: var(--serif);
+  --q-font-body: var(--sans);
+  --q-space-3xs: .25rem;
+  --q-space-2xs: .5rem;
+  --q-space-xs: .75rem;
   --q-space-sm: 1rem;
   --q-space-md: 1.25rem;
   --q-space-lg: 1.5rem;
@@ -53,42 +38,14 @@
   --q-space-2xl: 2.5rem;
   --q-space-3xl: 3rem;
   --q-space-4xl: 4rem;
-
-  /* Border radius */
-  --q-radius-sm: 0.25rem;
-  --q-radius-md: 0.5rem;
-  --q-radius-lg: 0.75rem;
-  --q-radius-xl: 1rem;
-  --q-radius-full: 9999px;
-
-  /* Shadows */
-  --q-shadow-sm: 0 1px 3px rgba(31, 46, 36, 0.08);
-  --q-shadow-md: 0 8px 18px rgba(31, 46, 36, 0.08);
-  --q-shadow-lg: 0 18px 35px rgba(31, 46, 36, 0.12);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --q-color-background: var(--q-color-warm-ivory);
-    --q-color-surface: #f8f4ed;
-    --q-color-on-background: var(--q-color-deep-olive);
-    --q-color-on-surface: var(--q-color-deep-olive);
-    --q-color-border: rgba(31, 46, 36, 0.12);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --q-duration-fast: 0ms;
-    --q-duration-base: 0ms;
-    --q-duration-slow: 0ms;
-  }
-}
-
-:root {
+  --q-radius-sm: 0;
+  --q-radius-md: 0;
+  --q-radius-lg: 0;
+  --q-radius-xl: 0;
+  --q-radius-full: 0;
   --q-duration-fast: 150ms;
   --q-duration-base: 250ms;
   --q-duration-slow: 650ms;
-  --q-ease-out: cubic-bezier(0.2, 0, 0, 1);
-  --q-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --q-ease-out: cubic-bezier(.2,0,0,1);
+  --q-ease-in-out: cubic-bezier(.4,0,.2,1);
 }

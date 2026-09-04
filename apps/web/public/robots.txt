@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Sitemap: https://qleaves.qa/sitemap.xml
+Disallow: /order/
+
+Sitemap: https://qleaves.qa/sitemap.xml
