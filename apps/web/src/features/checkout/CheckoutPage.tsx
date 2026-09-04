@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { content } from "../../content/en";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
+import { errorFromResponse } from "../../lib/api-error";
 
 const initialForm = {
   name: "",
@@ -37,8 +38,8 @@ export function CheckoutPage() {
     }
     try {
       const response = await fetch("/api/v1/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerName: form.name, phone: form.phone, email: form.email, addressLine1: form.address, area: form.area, deliveryNotes: form.notes, paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK", items: items.map(({ id, quantity }) => ({ productId: id, quantity })) }) });
+      if (!response.ok) throw await errorFromResponse(response);
       const body = await response.json();
-      if (!response.ok) throw new Error(body?.error?.message || "Could not place order");
       clearCart();
       navigate(`/order/${body.orderNumber}`);
     } catch (submissionError) { setError(submissionError instanceof Error ? submissionError.message : "Could not place order"); }

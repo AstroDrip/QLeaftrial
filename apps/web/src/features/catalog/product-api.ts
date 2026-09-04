@@ -4,6 +4,7 @@ import type {
   ProductListResponse,
   ProductSummary,
 } from "./product-types.js";
+import { errorFromResponse } from "../../lib/api-error";
 
 const BASE_URL = "/api/v1";
 
@@ -14,11 +15,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error?.error?.message ||
-        `Request to ${path} failed with ${response.status}`,
-    );
+    throw await errorFromResponse(response);
   }
 
   return response.json() as Promise<T>;

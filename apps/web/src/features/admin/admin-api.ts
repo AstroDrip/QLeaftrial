@@ -14,8 +14,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(body?.error?.message || `Request failed with ${response.status}`);
+    throw await errorFromResponse(response);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
@@ -35,3 +34,4 @@ export const adminApi = {
   dashboard: (): Promise<AdminDashboard> => request<AdminDashboard>("/admin/dashboard"),
   sales: (from?: string, to?: string): Promise<AdminSalesReport> => request<AdminSalesReport>(`/admin/sales${from || to ? `?${new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) })}` : ""}`),
 };
+import { errorFromResponse } from "../../lib/api-error";
