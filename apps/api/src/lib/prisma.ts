@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient as PostgreSqlPrismaClient } from "../../generated/postgresql/index.js";
 import { PrismaClient as SqlitePrismaClient } from "../../generated/sqlite/index.js";
 
@@ -15,37 +16,52 @@ if (process.platform === "win32" && !process.env.PRISMA_QUERY_ENGINE_LIBRARY) {
 }
 
 type DatabaseProvider = "postgresql" | "sqlite";
+
 type PrismaClient =
   | InstanceType<typeof PostgreSqlPrismaClient>
   | InstanceType<typeof SqlitePrismaClient>;
 
 function databaseProvider(): DatabaseProvider {
   const explicitProvider = process.env.QLEAVES_DATABASE_PROVIDER;
-  const provider = explicitProvider ?? (
-    process.env.NODE_ENV === "production" ? "postgresql" : "sqlite"
-  );
+
+  const provider =
+    explicitProvider ??
+    (process.env.NODE_ENV === "production" ? "postgresql" : "sqlite");
 
   if (provider !== "postgresql" && provider !== "sqlite") {
     throw new Error(`Unsupported QLEAVES_DATABASE_PROVIDER: ${provider}`);
   }
 
-  if (process.env.NODE_ENV === "production" && explicitProvider !== "postgresql") {
+  if (
+    process.env.NODE_ENV === "production" &&
+    explicitProvider !== "postgresql"
+  ) {
     throw new Error(
       "QLEAVES_DATABASE_PROVIDER=postgresql is required in production",
     );
   }
 
   if (provider === "postgresql" && !process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required for PostgreSQL runtime selection");
+    throw new Error(
+      "DATABASE_URL is required for PostgreSQL runtime selection",
+    );
   }
 
   return provider;
 }
 
 function createPrismaClient(): PrismaClient {
-  return databaseProvider() === "postgresql"
-    ? new PostgreSqlPrismaClient()
-    : new SqlitePrismaClient();
+  const provider = databaseProvider();
+
+  if (provider === "postgresql") {
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL!,
+    });
+
+    return new PostgreSqlPrismaClient({ adapter });
+  }
+
+  return new SqlitePrismaClient();
 }
 
 const globalForPrisma = globalThis as typeof globalThis & {
