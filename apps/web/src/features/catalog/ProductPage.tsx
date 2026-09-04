@@ -4,6 +4,7 @@ import { productApi } from "./product-api";
 import { content } from "../../content/en";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { Seo } from "../../components/Seo";
+import { FallbackImage } from "../../components/FallbackImage";
 import "./product-detail.css";
 
 export function ProductPage() {
@@ -69,17 +70,13 @@ export function ProductPage() {
           offers: { "@type": "Offer", priceCurrency: "QAR", price: product.priceQar, availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", url: `https://qleaves.qa/plants/${product.slug}` },
         }}
       />
-      {primaryImage ? (
-        <img
-          src={primaryImage.url}
-          alt={primaryImage.altText}
-          className="product-detail__image"
-          data-testid="product-image"
-          decoding="async"
-        />
-      ) : (
-        <div className="product-detail__image" data-testid="product-image" />
-      )}
+      <FallbackImage
+        src={primaryImage?.url ?? "/images/hero/leaf-1.svg"}
+        alt={primaryImage?.altText || product.name}
+        className="product-detail__image"
+        data-testid="product-image"
+        decoding="async"
+      />
 
       <div className="product-detail__meta">
         <h1 className="product-detail__name" data-testid="product-name">

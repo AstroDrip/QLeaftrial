@@ -78,6 +78,8 @@ const products = [
 ] as const;
 
 export async function seedDatabase(): Promise<void> {
+  const password = adminPasswordForSeed();
+
   for (const product of products) {
     const { media, quantity, ...productData } = product;
 
@@ -104,7 +106,6 @@ export async function seedDatabase(): Promise<void> {
   const developmentAdmin = await prisma.adminUser.findUnique({
     where: { email: "admin@qleaves.local" },
   });
-  const password = "taimuomar";
   const passwordHash = developmentAdmin && await argon2.verify(developmentAdmin.passwordHash, password)
     ? developmentAdmin.passwordHash
     : await argon2.hash(password);
@@ -121,6 +122,31 @@ export async function seedDatabase(): Promise<void> {
       passwordHash,
     },
   });
+}
+
+function adminPasswordForSeed(): string {
+  if (process.env.QLEAVES_DATABASE_PROVIDER !== "postgresql") {
+    return "taimuomar";
+  }
+
+  const password = process.env.QLEAVES_ADMIN_SEED_PASSWORD?.trim();
+  if (!password) {
+    throw new Error(
+      "QLEAVES_ADMIN_SEED_PASSWORD is required when seeding PostgreSQL",
+    );
+  }
+  if (password === "taimuomar") {
+    throw new Error(
+      "QLEAVES_ADMIN_SEED_PASSWORD must not use the known local development password",
+    );
+  }
+  if (password.length < 12) {
+    throw new Error(
+      "QLEAVES_ADMIN_SEED_PASSWORD must contain at least 12 characters",
+    );
+  }
+
+  return password;
 }
 
 if (

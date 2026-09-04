@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ApiError } from "../../middleware/error-handler.js";
 import { productQuerySchema } from "./product.schemas.js";
-import { findProductBySlug, listProducts } from "./product.service.js";
+import { findProductBySlug, listProductFilters, listProducts } from "./product.service.js";
 
 export const productRouter = Router();
 
@@ -14,6 +14,11 @@ productRouter.get("/products", async (request, response) => {
 
   response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
   response.json(await listProducts(parsedQuery.data));
+});
+
+productRouter.get("/products/filters", async (_request, response) => {
+  response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+  response.json(await listProductFilters());
 });
 
 productRouter.get("/products/:slug", async (request, response) => {

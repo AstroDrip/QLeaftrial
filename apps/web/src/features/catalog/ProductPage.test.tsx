@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -67,5 +67,38 @@ describe("ProductPage cart action", () => {
     expect(jsonLd).toContain('"@type":"Product"');
     expect(jsonLd).toContain('"priceCurrency":"QAR"');
     expect(jsonLd).toContain('"price":180');
+  });
+
+  it("replaces a failed product photo with the local plant fallback", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/plants/house-plant"]}><Routes><Route path="/plants/:slug" element={<ProductPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+
+    const image = await screen.findByRole("img", { name: "House plant" });
+    fireEvent.error(image);
+
+    expect(image).toHaveAttribute("src", "/images/hero/leaf-1.svg");
+  });
+
+  it("renders the local fallback when product media is absent", async () => {
+    vi.mocked(productApi.detail).mockResolvedValue({
+      id: "plant-1",
+      slug: "house-plant",
+      name: "House Plant",
+      description: "Glossy foliage.",
+      category: "Indoor",
+      light: "Bright indirect",
+      priceQar: 180,
+      stock: 12,
+      inStock: true,
+      image: null,
+      media: [],
+    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/plants/house-plant"]}><Routes><Route path="/plants/:slug" element={<ProductPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+
+    expect(await screen.findByRole("img", { name: "House Plant" })).toHaveAttribute(
+      "src",
+      "/images/hero/leaf-1.svg",
+    );
   });
 });

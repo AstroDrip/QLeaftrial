@@ -30,6 +30,8 @@ export interface ProductListResponse {
   items: ProductSummary[];
   page: number;
   pageSize: number;
+  totalItems: number;
+  totalPages: number;
 }
 
 export interface ProductListParams {
@@ -37,4 +39,5 @@ export interface ProductListParams {
   category?: string;
   light?: string;
   page?: number;
+  sort?: "name-asc" | "price-asc" | "price-desc";
 }

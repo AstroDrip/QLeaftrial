@@ -12,9 +12,15 @@ npm run setup
 npm run dev
 ```
 
-Open `http://localhost:5173`. The API runs on `http://localhost:3000` and Vite proxies `/api` requests to it. Admin sign-in is at `http://localhost:5173/admin/login`; the temporary local password is stored only in the API seed.
+Open `http://localhost:5173`. The API runs on `http://localhost:3000` and Vite proxies `/api` requests to it. Admin sign-in is at `http://localhost:5173/admin/login`; the temporary local password is stored only in the SQLite development seed. PostgreSQL production seeding requires an operator-supplied password.
 
 The default local database is SQLite at `apps/api/prisma/dev.db`. Product price and stock edits in the admin screen are written to that database immediately.
+
+## Deploy
+
+Vercel and Supabase setup, environment variables, database initialization,
+and deployment health checks are documented in
+[`docs/deployment/vercel-supabase.md`](docs/deployment/vercel-supabase.md).
 
 ## Verify
 

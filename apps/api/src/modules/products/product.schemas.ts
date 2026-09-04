@@ -10,6 +10,7 @@ export const productQuerySchema = z.object({
   category: optionalFilter,
   light: optionalFilter,
   page: z.coerce.number().int().positive().default(1),
+  sort: z.enum(["name-asc", "price-asc", "price-desc"]).default("name-asc"),
 });
 
 export type ProductQuery = z.infer<typeof productQuerySchema>;

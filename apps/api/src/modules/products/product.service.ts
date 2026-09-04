@@ -30,20 +30,26 @@ type PublicProductRecord = {
   inventory: { quantity: number } | null;
 };
 
+type PublicProductWhere = {
+  published: boolean;
+  category?: string;
+  light?: string;
+  OR?: Array<{
+    name?: { contains: string };
+    description?: { contains: string };
+    slug?: { contains: string };
+  }>;
+};
+
 type ProductRepository = {
   findMany(args: {
-    where: {
-      published: boolean;
-      category?: string;
-      light?: string;
-      OR?: Array<{
-        name?: { contains: string };
-        description?: { contains: string };
-        slug?: { contains: string };
-      }>;
-    };
+    where: PublicProductWhere;
     select: typeof publicProductSelection;
-    orderBy: { name: "asc" };
+    orderBy: Array<
+      | { name: "asc" }
+      | { priceQar: "asc" | "desc" }
+      | { slug: "asc" }
+    >;
     skip: number;
     take: number;
   }): Promise<PublicProductRecord[]>;
@@ -51,11 +57,21 @@ type ProductRepository = {
     where: { slug: string; published: boolean };
     select: typeof publicProductSelection;
   }): Promise<PublicProductRecord | null>;
+  count(args: { where: PublicProductWhere }): Promise<number>;
 };
 
 // SQLite and PostgreSQL clients share this generated Product delegate shape,
 // but TypeScript cannot call generic methods through their runtime union.
 const productRepository = prisma.product as unknown as ProductRepository;
+
+type ProductFilterRepository = {
+  findMany(args: {
+    where: { published: boolean };
+    select: { category: true; light: true };
+  }): Promise<Array<{ category: string; light: string }>>;
+};
+
+const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
 
 function toSummary(product: PublicProductRecord): ProductSummary {
   const [image] = product.media;
@@ -86,29 +102,64 @@ export async function listProducts(query: ProductQuery): Promise<{
   items: ProductSummary[];
   page: number;
   pageSize: number;
+  totalItems: number;
+  totalPages: number;
 }> {
-  const products = await productRepository.findMany({
-    where: {
-      published: true,
-      ...(query.category ? { category: query.category } : {}),
-      ...(query.light ? { light: query.light } : {}),
-      ...(query.q
-        ? {
-            OR: [
-              { name: { contains: query.q } },
-              { description: { contains: query.q } },
-              { slug: { contains: query.q } },
-            ],
-          }
-        : {}),
-    },
-    select: publicProductSelection,
-    orderBy: { name: "asc" },
-    skip: (query.page - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
+  const where: PublicProductWhere = {
+    published: true,
+    ...(query.category ? { category: query.category } : {}),
+    ...(query.light ? { light: query.light } : {}),
+    ...(query.q
+      ? {
+          OR: [
+            { name: { contains: query.q } },
+            { description: { contains: query.q } },
+            { slug: { contains: query.q } },
+          ],
+        }
+      : {}),
+  };
+
+  const orderBy: Parameters<ProductRepository["findMany"]>[0]["orderBy"] =
+    query.sort === "price-asc"
+    ? [{ priceQar: "asc" }, { slug: "asc" }]
+    : query.sort === "price-desc"
+      ? [{ priceQar: "desc" }, { slug: "asc" }]
+      : [{ name: "asc" }, { slug: "asc" }];
+
+  const [products, totalItems] = await Promise.all([
+    productRepository.findMany({
+      where,
+      select: publicProductSelection,
+      orderBy,
+      skip: (query.page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    productRepository.count({ where }),
+  ]);
+
+  return {
+    items: products.map(toSummary),
+    page: query.page,
+    pageSize: PAGE_SIZE,
+    totalItems,
+    totalPages: Math.ceil(totalItems / PAGE_SIZE),
+  };
+}
+
+export async function listProductFilters(): Promise<{
+  categories: string[];
+  lights: string[];
+}> {
+  const products = await productFilterRepository.findMany({
+    where: { published: true },
+    select: { category: true, light: true },
   });
 
-  return { items: products.map(toSummary), page: query.page, pageSize: PAGE_SIZE };
+  return {
+    categories: [...new Set(products.map((product) => product.category))].sort(),
+    lights: [...new Set(products.map((product) => product.light))].sort(),
+  };
 }
 
 export async function findProductBySlug(slug: string): Promise<ProductDetail | null> {

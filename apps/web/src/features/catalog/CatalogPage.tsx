@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { productApi } from "./product-api";
@@ -6,6 +6,7 @@ import type { ProductListParams } from "./product-types";
 import { content } from "../../content/en";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { Seo } from "../../components/Seo";
+import { FallbackImage } from "../../components/FallbackImage";
 import "./catalog.css";
 
 const SORT_OPTIONS: ReadonlyArray<{
@@ -17,19 +18,23 @@ const SORT_OPTIONS: ReadonlyArray<{
   { value: "price-desc", label: (c) => c.catalog.sortPriceDesc },
 ];
 
-const MAX_PAGES = 20;
-
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(
     searchParams.get("q") ?? "",
   );
 
+  const requestedSort = searchParams.get("sort");
+  const sort: ProductListParams["sort"] = SORT_OPTIONS.some(
+    (option) => option.value === requestedSort,
+  ) ? requestedSort as ProductListParams["sort"] : "name-asc";
+
   const params: ProductListParams = {
     q: searchParams.get("q") ?? undefined,
     category: searchParams.get("category") || undefined,
     light: searchParams.get("light") || undefined,
     page: Number(searchParams.get("page") ?? 1) || 1,
+    sort,
   };
 
   const {
@@ -52,17 +57,7 @@ export function CatalogPage() {
     staleTime: 60_000,
   });
 
-  const sortedItems = useMemo(() => {
-    if (!result) return [];
-    const sort = searchParams.get("sort") ?? "name-asc";
-    return [...result.items].sort((a, b) => {
-      if (sort === "name-asc") return a.name.localeCompare(b.name);
-      if (sort === "price-asc") return a.priceQar - b.priceQar;
-      return b.priceQar - a.priceQar;
-    });
-  }, [result, searchParams]);
-
-  const totalPages = Math.min(MAX_PAGES, 10);
+  const totalPages = result?.totalPages ?? 0;
 
   function applyFilter(key: string, value: string) {
     setSearchParams((prev) => {
@@ -189,7 +184,7 @@ export function CatalogPage() {
         <label>
           {content.catalog.sortBy}
           <select
-            value={searchParams.get("sort") ?? "name-asc"}
+            value={sort}
             onChange={(e) => toggleSort(e.target.value)}
             data-testid="sort-select"
           >
@@ -218,7 +213,7 @@ export function CatalogPage() {
         <>
           {isPending ? (
             <p data-testid="catalog-loading">Loading plants…</p>
-          ) : sortedItems.length === 0 ? (
+          ) : !result || result.items.length === 0 ? (
             <p data-testid="catalog-empty">
               {content.catalog.noResults}
             </p>
@@ -228,9 +223,9 @@ export function CatalogPage() {
               data-testid="product-grid"
               aria-label={content.catalog.title}
             >
-              {sortedItems.map((product) => (
+              {result.items.map((product) => (
                 <li key={product.id} className="product-card">
-                  <img
+                  <FallbackImage
                     src={product.image?.url ?? "/images/hero/leaf-1.svg"}
                     alt={product.image?.altText ?? ""}
                     className="product-card__image"
@@ -254,7 +249,7 @@ export function CatalogPage() {
             </ul>
           )}
 
-          {result && result.page > 1 && (
+          {result && totalPages > 1 && (
             <nav
               className="catalog__pagination"
               aria-label="Pagination"

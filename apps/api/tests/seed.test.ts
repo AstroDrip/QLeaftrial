@@ -50,4 +50,89 @@ describe("seedDatabase", () => {
 
     expect(await argon2.verify(admin.passwordHash, "taimuomar")).toBe(true);
   });
+
+  it("refuses to seed PostgreSQL with the known development password", async () => {
+    const previousProvider = process.env.QLEAVES_DATABASE_PROVIDER;
+    const previousSeedPassword = process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+    process.env.QLEAVES_DATABASE_PROVIDER = "postgresql";
+    delete process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+
+    try {
+      await expect(seedDatabase()).rejects.toThrow(
+        "QLEAVES_ADMIN_SEED_PASSWORD is required when seeding PostgreSQL",
+      );
+    } finally {
+      process.env.QLEAVES_DATABASE_PROVIDER = previousProvider;
+      if (previousSeedPassword === undefined) {
+        delete process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+      } else {
+        process.env.QLEAVES_ADMIN_SEED_PASSWORD = previousSeedPassword;
+      }
+    }
+  });
+
+  it("rejects the known local password when it is explicitly supplied for PostgreSQL", async () => {
+    const previousProvider = process.env.QLEAVES_DATABASE_PROVIDER;
+    const previousSeedPassword = process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+    process.env.QLEAVES_DATABASE_PROVIDER = "postgresql";
+    process.env.QLEAVES_ADMIN_SEED_PASSWORD = "taimuomar";
+
+    try {
+      await expect(seedDatabase()).rejects.toThrow(
+        "must not use the known local development password",
+      );
+    } finally {
+      process.env.QLEAVES_DATABASE_PROVIDER = previousProvider;
+      if (previousSeedPassword === undefined) {
+        delete process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+      } else {
+        process.env.QLEAVES_ADMIN_SEED_PASSWORD = previousSeedPassword;
+      }
+    }
+  });
+
+  it("rejects a weak PostgreSQL seed password", async () => {
+    const previousProvider = process.env.QLEAVES_DATABASE_PROVIDER;
+    const previousSeedPassword = process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+    process.env.QLEAVES_DATABASE_PROVIDER = "postgresql";
+    process.env.QLEAVES_ADMIN_SEED_PASSWORD = "too-short";
+
+    try {
+      await expect(seedDatabase()).rejects.toThrow(
+        "must contain at least 12 characters",
+      );
+    } finally {
+      process.env.QLEAVES_DATABASE_PROVIDER = previousProvider;
+      if (previousSeedPassword === undefined) {
+        delete process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+      } else {
+        process.env.QLEAVES_ADMIN_SEED_PASSWORD = previousSeedPassword;
+      }
+    }
+  });
+
+  it("uses the operator-supplied password when seeding PostgreSQL", async () => {
+    const previousProvider = process.env.QLEAVES_DATABASE_PROVIDER;
+    const previousSeedPassword = process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+    process.env.QLEAVES_DATABASE_PROVIDER = "postgresql";
+    process.env.QLEAVES_ADMIN_SEED_PASSWORD = "a-production-only-password";
+
+    try {
+      await seedDatabase();
+      const admin = await prisma.adminUser.findUniqueOrThrow({
+        where: { email: "admin@qleaves.local" },
+      });
+      expect(
+        await argon2.verify(admin.passwordHash, "a-production-only-password"),
+      ).toBe(true);
+      expect(await argon2.verify(admin.passwordHash, "taimuomar")).toBe(false);
+    } finally {
+      process.env.QLEAVES_DATABASE_PROVIDER = previousProvider;
+      if (previousSeedPassword === undefined) {
+        delete process.env.QLEAVES_ADMIN_SEED_PASSWORD;
+      } else {
+        process.env.QLEAVES_ADMIN_SEED_PASSWORD = previousSeedPassword;
+      }
+    }
+  });
 });

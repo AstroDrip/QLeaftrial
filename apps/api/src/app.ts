@@ -1,6 +1,11 @@
 import express, { type Express } from "express";
 import { errorHandler } from "./middleware/error-handler.js";
 import { apiRouter } from "./routes.js";
+import { prisma } from "./lib/prisma.js";
+
+const productRepository = prisma.product as unknown as {
+  count(): Promise<number>;
+};
 
 export function createApp(): Express {
   const app = express();
@@ -12,6 +17,15 @@ export function createApp(): Express {
   app.use(express.json());
   app.get("/api/v1/health", (_request, response) => {
     response.json({ status: "ok" });
+  });
+  app.get("/api/v1/ready", async (_request, response, next) => {
+    try {
+      await productRepository.count();
+      response.setHeader("Cache-Control", "no-store");
+      response.json({ status: "ready", database: "connected" });
+    } catch (error) {
+      next(error);
+    }
   });
   app.use("/api/v1", apiRouter);
   app.use(errorHandler);

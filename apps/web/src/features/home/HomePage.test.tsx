@@ -40,6 +40,8 @@ describe("HomePage reference choreography", () => {
       }],
       page: 1,
       pageSize: 24,
+      totalItems: 1,
+      totalPages: 1,
     });
   });
   afterEach(() => { cleanup(); document.documentElement.removeAttribute("data-motion"); });
@@ -75,5 +77,14 @@ describe("HomePage reference choreography", () => {
     expect(useCartStore.getState().items[0]).toEqual(
       expect.objectContaining({ id: "plant-1", priceQar: 215, stock: 7 }),
     );
+  });
+
+  it("keeps the reference fallback visible while reporting an API outage", async () => {
+    vi.mocked(productApi.list).mockRejectedValue(new Error("API unavailable"));
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+    renderHome();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/API unavailable/i);
+    expect(screen.getByText("Monstera")).toBeInTheDocument();
   });
 });
