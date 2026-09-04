@@ -10,7 +10,13 @@
     "dev": "concurrently \"npm run dev -w @qleaves/api\" \"npm run dev -w @qleaves/web\"",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces",
-    "build": "npm run build --workspaces"
+    "build": "npm run build --workspaces",
+    "verify:vercel-config": "node scripts/verify-vercel-config.mjs",
+    "vercel-build": "npm run verify:vercel-config && npm run prisma:generate -w @qleaves/api && npm run typecheck && npm run build",
+    "supabase:generate": "npm run prisma:generate:production -w @qleaves/api",
+    "supabase:validate": "npm run prisma:validate:production -w @qleaves/api",
+    "supabase:deploy": "npm run prisma:deploy:production -w @qleaves/api",
+    "supabase:seed": "npm run prisma:seed -w @qleaves/api"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
@@ -20,5 +26,8 @@
     "@prisma/engines@6.16.2": true,
     "argon2@0.44.0": true,
     "esbuild@0.28.2": true
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

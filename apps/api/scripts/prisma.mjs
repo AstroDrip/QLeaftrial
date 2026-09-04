@@ -25,10 +25,12 @@ const productionSchema = prismaArguments.some(
 
 if (
   productionSchema &&
-  (prismaArguments[0] === "generate" || prismaArguments[0] === "validate") &&
-  !environment.DATABASE_URL
+  (prismaArguments[0] === "generate" || prismaArguments[0] === "validate")
 ) {
-  environment.DATABASE_URL = "postgresql://qleaves:qleaves@localhost:5432/qleaves";
+  environment.DATABASE_URL ??=
+    "postgresql://qleaves:qleaves@localhost:6543/qleaves?pgbouncer=true&connection_limit=1";
+  environment.DIRECT_URL ??=
+    "postgresql://qleaves:qleaves@localhost:5432/qleaves";
 }
 
 if (prismaArguments[0] === "migrate" && prismaArguments[1] === "dev") {

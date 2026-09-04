@@ -17,7 +17,7 @@ export type CartItem = CartProduct & {
 
 type CartState = {
   items: CartItem[];
-  addItem: (product: CartProduct) => void;
+  addItem: (product: CartProduct) => boolean;
   setQuantity: (id: string, quantity: number) => void;
   removeItem: (id: string) => void;
   clear: () => void;
@@ -29,13 +29,16 @@ function clampQuantity(quantity: number, stock: number): number {
 
 export const useCartStore = create<CartState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       items: [],
       addItem: (product) => {
-        if (product.stock <= 0) return;
+        if (product.stock <= 0) return false;
+        const existing = get().items.find((item) => item.id === product.id);
+        if (existing && existing.quantity >= product.stock) return false;
+
         set((state) => {
-          const existing = state.items.find((item) => item.id === product.id);
-          if (!existing) {
+          const current = state.items.find((item) => item.id === product.id);
+          if (!current) {
             return { items: [...state.items, { ...product, quantity: 1 }] };
           }
           return {
@@ -50,6 +53,7 @@ export const useCartStore = create<CartState>()(
             ),
           };
         });
+        return true;
       },
       setQuantity: (id, quantity) =>
         set((state) => ({

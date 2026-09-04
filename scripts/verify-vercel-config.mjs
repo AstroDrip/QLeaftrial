@@ -1,0 +1,36 @@
+import { readFile } from "node:fs/promises";
+
+const config = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
+const problems = [];
+
+if (config.$schema !== "https://openapi.vercel.sh/vercel.json") {
+  problems.push("vercel.json must use the current Vercel schema URL");
+}
+if (config.buildCommand !== "npm run vercel-build") {
+  problems.push("Vercel buildCommand must call npm run vercel-build");
+}
+if (config.outputDirectory !== "apps/web/dist") {
+  problems.push("Vercel outputDirectory must be apps/web/dist");
+}
+const rewrites = Array.isArray(config.rewrites) ? config.rewrites : [];
+const apiRewrite = rewrites.findIndex((route) => route.source === "/api/v1/:path*" && route.destination === "/api/index");
+const spaRewrite = rewrites.findIndex((route) => route.destination === "/index.html");
+if (apiRewrite < 0) problems.push("Missing /api/v1/* rewrite to the Express function");
+if (spaRewrite < 0) problems.push("Missing SPA fallback to index.html");
+if (spaRewrite >= 0 && !String(rewrites[spaRewrite].source).includes("?!api/")) {
+  problems.push("SPA fallback must explicitly exclude /api requests");
+}
+if (apiRewrite >= 0 && spaRewrite >= 0 && apiRewrite > spaRewrite) {
+  problems.push("API rewrite must be evaluated before the SPA fallback");
+}
+const fn = config.functions?.["api/index.ts"];
+if (!fn || typeof fn.maxDuration !== "number" || !fn.includeFiles) {
+  problems.push("api/index.ts must declare maxDuration and includeFiles for Prisma assets");
+}
+
+if (problems.length) {
+  console.error(problems.map((problem) => `- ${problem}`).join("\n"));
+  process.exit(1);
+}
+
+console.log("Vercel configuration smoke check passed");
