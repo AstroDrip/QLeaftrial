@@ -33,9 +33,4 @@ export type ProductSummary = {
 export type ProductDetail = ProductSummary & {
   description: string;
   media: ProductMedia[];
-  arAsset: null | {
-    glbUrl: string;
-    usdzUrl: string | null;
-    attribution: string;
-  };
 };

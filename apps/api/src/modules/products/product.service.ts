@@ -16,7 +16,6 @@ const publicProductSelection = {
     orderBy: { sortOrder: "asc" as const },
   },
   inventory: { select: { quantity: true } },
-  arAsset: { select: { glbUrl: true, usdzUrl: true, attribution: true } },
 } as const;
 
 type PublicProductRecord = {
@@ -29,7 +28,6 @@ type PublicProductRecord = {
   priceQar: number;
   media: Array<{ url: string; altText: string }>;
   inventory: { quantity: number } | null;
-  arAsset: { glbUrl: string; usdzUrl: string | null; attribution: string } | null;
 };
 
 type ProductRepository = {
@@ -79,7 +77,6 @@ function toDetail(product: PublicProductRecord): ProductDetail {
     ...toSummary(product),
     description: product.description,
     media: product.media,
-    arAsset: product.arAsset,
   };
 }
 

@@ -51,8 +51,6 @@ export function ProductPage() {
   }
 
   const primaryImage = product.media[0] ?? product.image;
-  const arAsset = product.arAsset;
-
   return (
     <article className="product-detail" data-testid="product-page">
       {primaryImage ? (

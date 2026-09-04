@@ -5,14 +5,5 @@ import { SkipLink } from "./SkipLink";
 import { SiteHeader } from "./SiteHeader";
 
 export function Layout({ children }: { children?: ReactNode }) {
-  return (
-    <>
-      <SkipLink />
-      <SiteHeader />
-      <main id="main-content" className="main-content">
-        {children ?? <Outlet />}
-      </main>
-      <Footer />
-    </>
-  );
+  return <><SkipLink /><SiteHeader /><main id="main-content" className="main-content">{children ?? <Outlet />}</main><Footer /></>;
 }

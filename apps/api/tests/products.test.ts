@@ -25,13 +25,19 @@ describe("product catalogue", () => {
     expect(response.body.items[0]).not.toHaveProperty("costPrice");
   });
 
-  it("returns AR metadata for a product detail", async () => {
-    const response = await request(createApp()).get("/api/v1/products/house-plant");
+  it("returns a product detail without AR metadata", async () => {
+  const response = await request(createApp()).get("/api/v1/products/house-plant");
 
-    expect(response.status).toBe(200);
-    expect(response.body.arAsset.glbUrl).toBe("/media/models/house-plant.glb");
-    expect(response.body.arAsset.attribution).toContain("Lahcen.el");
-  });
+  expect(response.status).toBe(200);
+  expect(response.body).toEqual(
+    expect.objectContaining({
+      slug: "house-plant",
+      priceQar: 180,
+      inStock: true,
+    }),
+  );
+  expect(response.body).not.toHaveProperty("arAsset");
+});
 
   it("filters by category and light while excluding unpublished products", async () => {
     await prisma.product.create({

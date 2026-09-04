@@ -13,13 +13,17 @@ describe("seedDatabase", () => {
 
   afterAll(() => prisma.$disconnect());
 
-  it("creates an AR-enabled plant and development admin", async () => {
-    await seedDatabase();
+  it("creates the plant catalogue and development admin", async () => {
+  await seedDatabase();
 
-    expect(await prisma.product.count()).toBeGreaterThanOrEqual(6);
-    expect(
-      await prisma.product.findFirst({ where: { slug: "house-plant" } }),
-    ).toMatchObject({ arEnabled: true, priceQar: 180 });
+  expect(await prisma.product.count()).toBeGreaterThanOrEqual(6);
+  expect(
+    await prisma.product.findFirst({ where: { slug: "house-plant" } }),
+  ).toMatchObject({
+    slug: "house-plant",
+    priceQar: 180,
+    published: true,
+  });
     expect(
       await prisma.adminUser.findUnique({
         where: { email: "admin@qleaves.local" },

@@ -9,12 +9,6 @@ export interface ProductMedia {
   altText: string;
 }
 
-export interface ArAsset {
-  glbUrl: string;
-  usdzUrl: string | null;
-  attribution: string;
-}
-
 export interface ProductSummary {
   id: string;
   slug: string;
@@ -29,7 +23,6 @@ export interface ProductSummary {
 export interface ProductDetail extends ProductSummary {
   description: string;
   media: ProductMedia[];
-  arAsset: ArAsset | null;
 }
 
 export interface ProductListResponse {
