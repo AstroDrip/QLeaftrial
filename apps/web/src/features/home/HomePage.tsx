@@ -55,7 +55,6 @@ export function HomePage() {
           <div className="torn-reveal"><span className="eyebrow">New stock, lovingly chosen</span><h2>For the love of <em>art &amp; plants</em></h2></div>
           <div className="paper-half" id="paperLeft"><div className="grain"><div className="stamp">QLeaves<br />Qatar</div><span>Handle with care</span></div></div>
           <div className="paper-half" id="paperRight"><div className="grain"><span>Plants · Home · Warmth</span></div></div>
-          <div className="rip-progress" id="ripProgressLabel">Keep scrolling</div>
         </div>
       </section>
 

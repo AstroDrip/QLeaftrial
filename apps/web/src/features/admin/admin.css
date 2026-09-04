@@ -1,3 +1,32 @@
+.admin-shell {
+  --admin-bg: #101714;
+  --admin-surface: #18221d;
+  --admin-surface-raised: #202d26;
+  --admin-text: #f4f0df;
+  --admin-muted: #b8c4b9;
+  --admin-border: rgba(244, 240, 223, .16);
+  --admin-accent: #d9bd72;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+}
+.admin-shell .admin-content { background: var(--admin-bg); }
+.admin-shell .page-shell__header { border-color: var(--admin-border); }
+.admin-shell .eyebrow { color: var(--admin-accent); }
+.admin-shell .metric-card,.admin-shell .table-card,.admin-shell .admin-login-form { background: var(--admin-surface); border-color: var(--admin-border); }
+.admin-shell .metric-grid { background: var(--admin-border); border-color: var(--admin-border); }
+.admin-shell .metric-card p,.admin-shell label { color: var(--admin-muted); }
+.admin-shell .table-card th,.admin-shell .table-card td { border-color: var(--admin-border); }
+.admin-shell input,.admin-shell select,.admin-shell textarea { color: var(--admin-text); border-color: var(--admin-border); }
+.admin-shell input:focus,.admin-shell select:focus,.admin-shell textarea:focus { border-color: var(--admin-accent); }
+.admin-shell .primary-button { background: var(--admin-accent); border-color: var(--admin-accent); color: #172019; }
+.admin-shell .primary-button--secondary { background: transparent; color: var(--admin-text); border-color: var(--admin-border); }
+.admin-shell .status-pill { background: #39634a; color: #eff8ed; }
+.admin-product-form{display:grid;gap:18px;padding:24px;background:var(--admin-surface);border:1px solid var(--admin-border)}
+.admin-product-form h2{margin:0}
+.admin-product-form__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.admin-product-form label{display:grid;gap:6px}
+.admin-product-form__full{grid-column:1/-1}
+.admin-product-form__preview{width:120px;height:120px;object-fit:cover;border:1px solid var(--admin-border)}
 .admin-logout {
   border: 1px solid rgba(242, 236, 217, .35);
   background: transparent;
@@ -6,6 +35,7 @@
   text-transform: uppercase;
   letter-spacing: .1em;
 }
+@media(max-width:720px){.admin-product-form__grid{grid-template-columns:1fr}.admin-product-form__full{grid-column:auto}}
 
 .admin-session-state { padding: 40px; }
 .table-card input[type="number"] { min-width: 90px; }

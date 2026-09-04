@@ -1,6 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../middleware/error-handler.js";
-import type { UpdateAdminProductInput } from "./admin-product.schemas.js";
+import type { CreateAdminProductInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
 
 const adminProductSelection = {
   id: true,
@@ -31,6 +31,25 @@ type AdminProductRepository = {
     select: typeof adminProductSelection;
     orderBy: { name: "asc" };
   }): Promise<AdminProductRecord[]>;
+};
+
+type AdminProductCreateRepository = {
+  create(args: {
+    data: {
+      slug: string;
+      sku: string;
+      name: string;
+      description: string;
+      category: string;
+      light: string;
+      priceQar: number;
+      costPrice: number;
+      published: boolean;
+      inventory: { create: { quantity: number } };
+      media: { create: { url: string; altText: string; sortOrder: number } };
+    };
+    select: typeof adminProductSelection;
+  }): Promise<AdminProductRecord>;
 };
 
 type TransactionClient = {
@@ -64,6 +83,7 @@ type TransactionDatabase = {
 };
 
 const productRepository = prisma.product as unknown as AdminProductRepository;
+const productCreateRepository = prisma.product as unknown as AdminProductCreateRepository;
 const transactionDatabase = prisma as unknown as TransactionDatabase;
 
 function toAdminProduct(product: AdminProductRecord): AdminProduct {
@@ -122,4 +142,24 @@ export async function updateAdminProduct(
       stock: inventory?.quantity ?? 0,
     };
   });
+}
+
+export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
+  const product = await productCreateRepository.create({
+    data: {
+      slug: input.slug,
+      sku: input.sku,
+      name: input.name,
+      description: input.description,
+      category: input.category,
+      light: input.light,
+      priceQar: input.priceQar,
+      costPrice: input.costPrice,
+      published: true,
+      inventory: { create: { quantity: input.stock } },
+      media: { create: { url: input.imageDataUrl, altText: input.imageAltText, sortOrder: 0 } },
+    },
+    select: adminProductSelection,
+  });
+  return toAdminProduct(product);
 }

@@ -8,6 +8,7 @@ const AdminDashboardPage = lazy(() => import("../features/admin/AdminDashboardPa
 const AdminLayout = lazy(() => import("../features/admin/AdminLayout").then((module) => ({ default: module.AdminLayout })));
 const AdminLoginPage = lazy(() => import("../features/admin/AdminLoginPage").then((module) => ({ default: module.AdminLoginPage })));
 const AdminOrdersPage = lazy(() => import("../features/admin/AdminOrdersPage").then((module) => ({ default: module.AdminOrdersPage })));
+const AdminSalesPage = lazy(() => import("../features/admin/AdminSalesPage").then((module) => ({ default: module.AdminSalesPage })));
 const AdminProductsPage = lazy(() => import("../features/admin/AdminProductsPage").then((module) => ({ default: module.AdminProductsPage })));
 const CartPage = lazy(() => import("../features/cart/CartPage").then((module) => ({ default: module.CartPage })));
 const CheckoutPage = lazy(() => import("../features/checkout/CheckoutPage").then((module) => ({ default: module.CheckoutPage })));
@@ -39,10 +40,10 @@ export const router = createBrowserRouter([
       { index: true, element: deferred(<AdminDashboardPage />) },
       { path: "products", element: deferred(<AdminProductsPage />) },
       { path: "orders", element: deferred(<AdminOrdersPage />) },
+      { path: "sales", element: deferred(<AdminSalesPage />) },
       { path: "*", element: <Navigate to="/admin" replace /> },
     ],
   },
 ]);
-
 
 

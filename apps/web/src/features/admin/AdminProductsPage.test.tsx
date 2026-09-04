@@ -6,7 +6,7 @@ import { AdminProductsPage } from "./AdminProductsPage";
 import { adminApi } from "./admin-api";
 
 vi.mock("./admin-api", () => ({
-  adminApi: { login: vi.fn(), session: vi.fn(), logout: vi.fn(), products: vi.fn(), updateProduct: vi.fn() },
+  adminApi: { login: vi.fn(), session: vi.fn(), logout: vi.fn(), products: vi.fn(), updateProduct: vi.fn(), createProduct: vi.fn() },
 }));
 
 const product = {

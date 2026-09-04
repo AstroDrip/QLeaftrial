@@ -2,12 +2,12 @@
 
 :root {
   --ink: #161f18;
-  --paper: #f2ecd9;
-  --paper-2: #e9e0c6;
+  --paper: #fffbce;
+  --paper-2: #f5efbd;
   --moss: #3f5b43;
   --moss-deep: #28382b;
   --rust: #b0603a;
-  --sand: #ddd3ae;
+  --sand: #e8dfae;
   --line: rgba(22, 31, 24, 0.14);
   --serif: "Fraunces", serif;
   --sans: "Archivo", sans-serif;

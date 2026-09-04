@@ -51,6 +51,7 @@ export function AddToCartButton({
   className?: string;
 }) {
   const addItem = useCartStore((state) => state.addItem);
+  const setQuantity = useCartStore((state) => state.setQuantity);
   const quantity = useCartStore(
     (state) => state.items.find((item) => item.id === product.id)?.quantity ?? 0,
   );
@@ -88,6 +89,11 @@ export function AddToCartButton({
     }, CONFIRMATION_MS);
   }
 
+  function decrement() {
+    setQuantity(product.id, quantity - 1);
+    setAnnouncement(`${product.name} quantity decreased`);
+  }
+
   const label = isConfirming
     ? "Added ✓"
     : outOfStock
@@ -103,7 +109,17 @@ export function AddToCartButton({
       : `Add ${product.name} to cart`;
 
   return (
-    <>
+    <div className={`add-to-cart__controls${quantity > 0 ? " add-to-cart__controls--with-decrement" : ""}`}>
+      {quantity > 0 ? (
+        <button
+          type="button"
+          className="add-to-cart__decrement"
+          aria-label={`Decrease ${product.name} quantity`}
+          onClick={decrement}
+        >
+          −
+        </button>
+      ) : null}
       <button
         type="button"
         className={["add-to-cart", className].filter(Boolean).join(" ")}
@@ -124,6 +140,6 @@ export function AddToCartButton({
       <span className="sr-only" role="status" aria-live="polite">
         {announcement}
       </span>
-    </>
+    </div>
   );
 }

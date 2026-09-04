@@ -14,7 +14,7 @@ export function createApp(): Express {
   // use their socket address and cannot spoof X-Forwarded-For.
   if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
 
-  app.use(express.json());
+  app.use(express.json({ limit: "3mb" }));
   app.get("/api/v1/health", (_request, response) => {
     response.json({ status: "ok" });
   });

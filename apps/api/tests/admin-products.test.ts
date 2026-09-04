@@ -55,6 +55,47 @@ describe("admin product management", () => {
     );
   });
 
+  it("creates a published plant only when a valid image is supplied", async () => {
+    const agent = await loggedInAgent();
+    const response = await agent.post("/api/v1/admin/products").send({
+      name: "New Fern",
+      slug: "new-fern",
+      sku: "QL-NF-007",
+      description: "A fresh fern for a shaded corner.",
+      category: "Indoor",
+      light: "Low indirect",
+      priceQar: 90,
+      costPrice: 35,
+      stock: 4,
+      imageDataUrl: "data:image/png;base64,aGVsbG8=",
+      imageAltText: "New fern in a pot",
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual(expect.objectContaining({ slug: "new-fern", stock: 4 }));
+    expect(await prisma.product.findUnique({ where: { slug: "new-fern" }, include: { media: true } }))
+      .toMatchObject({ published: true, media: [{ altText: "New fern in a pot" }] });
+  });
+
+  it("rejects a plant without an image", async () => {
+    const agent = await loggedInAgent();
+    const response = await agent.post("/api/v1/admin/products").send({
+      name: "Missing Image",
+      slug: "missing-image",
+      sku: "QL-MI-008",
+      description: "This plant is missing its required image.",
+      category: "Indoor",
+      light: "Low indirect",
+      priceQar: 90,
+      costPrice: 35,
+      stock: 4,
+      imageAltText: "Missing image",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it.each([
     [{ priceQar: 12.5 }, "decimal price"],
     [{ stock: -1 }, "negative stock"],

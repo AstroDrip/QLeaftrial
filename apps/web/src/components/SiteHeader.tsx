@@ -14,7 +14,10 @@ export function SiteHeader() {
       <div className="site-header__inner">
         <Link to="/" className="site-header__brand" aria-label="QLeaves home">
           <img className="site-header__logo" src="/brand/qleaves-logo.png" alt="" aria-hidden="true" onError={(event) => { event.currentTarget.style.display = "none"; }} />
-          <span className="site-header__wordmark">{content.brand}</span>
+          <span className="site-header__wordmark" aria-label={content.brand}>
+            <span className="site-header__wordmark-q">Q</span>
+            <span className="site-header__wordmark-leaves">LEAVES</span>
+          </span>
         </Link>
         <nav aria-label="primary" className="site-header__nav" data-testid="primary-nav">
           {navLinks.map(({ to, label }) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}

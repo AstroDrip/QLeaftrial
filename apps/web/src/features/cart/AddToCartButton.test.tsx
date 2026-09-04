@@ -49,10 +49,10 @@ describe("AddToCartButton", () => {
     await user.click(screen.getByRole("button", { name: /add house plant to cart/i }));
 
     expect(useCartStore.getState().items[0]?.quantity).toBe(1);
-    expect(screen.getByRole("button")).toHaveTextContent("Added ✓");
+    expect(screen.getByRole("button", { name: /add house plant to cart/i })).toHaveTextContent("Added ✓");
 
     await act(async () => { vi.advanceTimersByTime(1300); });
-    expect(screen.getByRole("button")).toHaveTextContent("Add to cart");
+    expect(screen.getByRole("button", { name: /add house plant to cart/i })).toHaveTextContent("Add to cart");
     expect(screen.getByText("1", { selector: ".add-to-cart__quantity" })).toBeInTheDocument();
   });
 
@@ -67,6 +67,13 @@ describe("AddToCartButton", () => {
     await user.click(button);
     expect(screen.queryByText("Added ✓")).not.toBeInTheDocument();
     expect(useCartStore.getState().items[0]?.quantity).toBe(2);
+  });
+
+  it("keeps the add button full width before a decrement control is needed", () => {
+    render(<AddToCartButton product={plant} />);
+    const controls = screen.getByRole("button", { name: /add house plant to cart/i }).parentElement;
+    expect(controls).not.toHaveClass("add-to-cart__controls--with-decrement");
+    expect(screen.queryByRole("button", { name: /decrease house plant quantity/i })).not.toBeInTheDocument();
   });
 
   it("shows Out of stock for unavailable products", () => {
