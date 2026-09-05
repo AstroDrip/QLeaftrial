@@ -7,6 +7,9 @@
 export interface ProductMedia {
   url: string;
   altText: string;
+  width?: number | null;
+  height?: number | null;
+  purpose?: "catalog" | "detail" | null;
 }
 
 export interface ProductSummary {
@@ -19,6 +22,7 @@ export interface ProductSummary {
   stock: number;
   inStock: boolean;
   image: ProductMedia | null;
+  media?: ProductMedia[];
 }
 
 export interface ProductDetail extends ProductSummary {

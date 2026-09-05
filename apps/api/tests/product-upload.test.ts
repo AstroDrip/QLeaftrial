@@ -145,6 +145,11 @@ describe("signed product uploads", () => {
       { purpose: "catalog", width: 1, height: 1, altText: newProduct.imageAltText },
       { purpose: "detail", width: 1, height: 1, altText: newProduct.imageAltText },
     ]);
+    const publicResponse = await request(createApp()).get(`/api/v1/products/${newProduct.slug}`);
+    expect(publicResponse.body.media).toMatchObject([
+      { purpose: "catalog", width: 1, height: 1 },
+      { purpose: "detail", width: 1, height: 1 },
+    ]);
     expect(fetchMock.mock.calls.filter(([, init]) => init?.method === "DELETE")).toHaveLength(2);
   });
 

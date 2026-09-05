@@ -18,6 +18,9 @@ export type ProductQuery = z.infer<typeof productQuerySchema>;
 export type ProductMedia = {
   url: string;
   altText: string;
+  width: number | null;
+  height: number | null;
+  purpose: string | null;
 };
 
 export type ProductSummary = {
@@ -30,9 +33,9 @@ export type ProductSummary = {
   stock: number;
   inStock: boolean;
   image: ProductMedia | null;
+  media: ProductMedia[];
 };
 
 export type ProductDetail = ProductSummary & {
   description: string;
-  media: ProductMedia[];
 };

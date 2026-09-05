@@ -12,7 +12,7 @@ const publicProductSelection = {
   light: true,
   priceQar: true,
   media: {
-    select: { url: true, altText: true },
+    select: { url: true, altText: true, width: true, height: true, purpose: true },
     orderBy: { sortOrder: "asc" as const },
   },
   inventory: { select: { quantity: true } },
@@ -26,7 +26,13 @@ type PublicProductRecord = {
   category: string;
   light: string;
   priceQar: number;
-  media: Array<{ url: string; altText: string }>;
+  media: Array<{
+    url: string;
+    altText: string;
+    width: number | null;
+    height: number | null;
+    purpose: string | null;
+  }>;
   inventory: { quantity: number } | null;
 };
 
@@ -87,6 +93,7 @@ function toSummary(product: PublicProductRecord): ProductSummary {
     stock,
     inStock: stock > 0,
     image: image ?? null,
+    media: product.media,
   };
 }
 

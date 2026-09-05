@@ -6,7 +6,7 @@ import type { ProductListParams } from "./product-types";
 import { content } from "../../content/en";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { Seo } from "../../components/Seo";
-import { FallbackImage } from "../../components/FallbackImage";
+import { ProductImage } from "../../components/ProductImage";
 import "./catalog.css";
 
 const SORT_OPTIONS: ReadonlyArray<{
@@ -225,12 +225,13 @@ export function CatalogPage() {
             >
               {result.items.map((product) => (
                 <li key={product.id} className="product-card">
-                  <FallbackImage
-                    src={product.image?.url ?? "/images/hero/leaf-1.svg"}
-                    alt={product.image?.altText ?? ""}
+                  <ProductImage
+                    media={product.media ?? product.image}
+                    alt={product.image?.altText || product.name}
                     className="product-card__image"
                     loading="lazy"
                     decoding="async"
+                    sizes="(max-width: 720px) 100vw, 33vw"
                   />
                   <h2 className="product-card__name">{product.name}</h2>
                   <p className="product-card__price">

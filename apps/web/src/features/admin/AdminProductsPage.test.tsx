@@ -1,12 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminProductsPage } from "./AdminProductsPage";
 import { adminApi } from "./admin-api";
 
 vi.mock("./admin-api", () => ({
-  adminApi: { login: vi.fn(), session: vi.fn(), logout: vi.fn(), products: vi.fn(), updateProduct: vi.fn(), createProduct: vi.fn() },
+  adminApi: { login: vi.fn(), session: vi.fn(), logout: vi.fn(), products: vi.fn(), updateProduct: vi.fn(), createProduct: vi.fn(), createProductWithImage: vi.fn() },
 }));
 
 const product = {
@@ -72,5 +72,26 @@ describe("AdminProductsPage", () => {
     await user.clear(price); await user.type(price, "210");
     await act(async () => { vi.advanceTimersByTime(800); });
     expect(await screen.findByRole("alert")).toHaveTextContent(/stock save failed/i);
+  });
+
+  it("hands one selected image to the upload workflow and disables duplicate submission", async () => {
+    vi.mocked(adminApi.createProductWithImage).mockImplementation(() => new Promise(() => {}));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+    await screen.findByText("Monstera");
+    const imageInput = screen.getByLabelText(/plant image/i);
+    const file = new File(["image"], "fern.png", { type: "image/png" });
+    await act(async () => {
+      fireEvent.change(imageInput, { target: { files: [file] } });
+    });
+
+    const submit = screen.getByRole("button", { name: "Add plant" });
+    await act(async () => {
+      fireEvent.submit(submit.closest("form")!);
+    });
+
+    expect(adminApi.createProductWithImage).toHaveBeenCalledOnce();
+    expect(vi.mocked(adminApi.createProductWithImage).mock.calls[0]?.[1]).toBe(file);
+    expect(await screen.findByRole("button", { name: "Adding…" })).toBeDisabled();
   });
 });

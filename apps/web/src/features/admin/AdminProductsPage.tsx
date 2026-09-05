@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { content } from "../../content/en";
-import { adminApi, type AdminProduct, type CreateAdminProductInput } from "./admin-api";
+import { adminApi, type AdminProduct, type CreateAdminProductFields } from "./admin-api";
 
-const emptyForm: Omit<CreateAdminProductInput, "imageDataUrl"> & { imageDataUrl: string } = {
+const emptyForm: CreateAdminProductFields = {
   name: "", slug: "", sku: "", description: "", category: "Indoor", light: "Bright indirect",
-  priceQar: 0, costPrice: 0, stock: 0, imageDataUrl: "", imageAltText: "",
+  priceQar: 0, costPrice: 0, stock: 0, imageAltText: "",
 };
 
 function ProductRow({ product }: { product: AdminProduct }) {
@@ -60,12 +60,19 @@ export function AdminProductsPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const imageInput = useRef<HTMLInputElement>(null);
   const create = useMutation({
-    mutationFn: adminApi.createProduct,
+    mutationFn: ({ input, file }: { input: CreateAdminProductFields; file: File }) =>
+      adminApi.createProductWithImage(input, file),
     onSuccess: (created) => {
       queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => [...(items ?? []), created].sort((a, b) => a.name.localeCompare(b.name)));
       void queryClient.invalidateQueries({ queryKey: ["products"] });
       setForm(emptyForm);
+      setImageFile(null);
+      setImagePreview("");
+      if (imageInput.current) imageInput.current.value = "";
       setFormError("");
     },
     onError: (error) => setFormError(error instanceof Error ? error.message : "Could not add plant"),
@@ -76,13 +83,23 @@ export function AdminProductsPage() {
   }
 
   function readImage(file: File) {
-    if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type) || file.size > 2 * 1024 * 1024) {
-      setFormError("Choose a PNG, JPEG, WebP, or GIF image smaller than 2 MB.");
+    const acceptedTypes = import.meta.env.PROD
+      ? ["image/png", "image/jpeg", "image/webp"]
+      : ["image/png", "image/jpeg", "image/webp", "image/gif"];
+    const maximumBytes = import.meta.env.PROD ? 20 * 1024 * 1024 : 2 * 1024 * 1024;
+    if (!acceptedTypes.includes(file.type) || file.size > maximumBytes) {
+      setImageFile(null);
+      setImagePreview("");
+      setFormError(import.meta.env.PROD
+        ? "Choose a JPEG, PNG, or WebP image smaller than 20 MB."
+        : "Choose a PNG, JPEG, WebP, or GIF image smaller than 2 MB.");
       return;
     }
+    setImageFile(file);
+    setFormError("");
     const reader = new FileReader();
     reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") updateField("imageDataUrl", reader.result);
+      if (typeof reader.result === "string") setImagePreview(reader.result);
     });
     reader.readAsDataURL(file);
   }
@@ -90,15 +107,18 @@ export function AdminProductsPage() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
-    if (!form.imageDataUrl) {
+    if (!imageFile) {
       setFormError("A plant image is required.");
       return;
     }
     create.mutate({
-      ...form,
-      priceQar: Number(form.priceQar),
-      costPrice: Number(form.costPrice),
-      stock: Number(form.stock),
+      file: imageFile,
+      input: {
+        ...form,
+        priceQar: Number(form.priceQar),
+        costPrice: Number(form.costPrice),
+        stock: Number(form.stock),
+      },
     });
   }
   return (
@@ -121,9 +141,9 @@ export function AdminProductsPage() {
           <label>Stock<input required type="number" min="0" step="1" value={form.stock} onChange={(event) => updateField("stock", Number(event.target.value))} /></label>
           <label className="admin-product-form__full">Description<textarea required minLength={10} value={form.description} onChange={(event) => updateField("description", event.target.value)} /></label>
           <label>Image alt text<input required value={form.imageAltText} onChange={(event) => updateField("imageAltText", event.target.value)} /></label>
-          <label>Plant image (required)<input required type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0]; if (file) readImage(file); }} /></label>
+          <label>Plant image (required)<input ref={imageInput} required type="file" accept={import.meta.env.PROD ? "image/png,image/jpeg,image/webp" : "image/png,image/jpeg,image/webp,image/gif"} onChange={(event) => { const file = event.target.files?.[0]; if (file) readImage(file); }} /></label>
         </div>
-        {form.imageDataUrl ? <img className="admin-product-form__preview" src={form.imageDataUrl} alt="Selected plant preview" /> : null}
+        {imagePreview ? <img className="admin-product-form__preview" src={imagePreview} alt="Selected plant preview" /> : null}
         {formError ? <p role="alert">{formError}</p> : null}
         <button className="primary-button" type="submit" disabled={create.isPending}>{create.isPending ? "Adding…" : "Add plant"}</button>
       </form>
