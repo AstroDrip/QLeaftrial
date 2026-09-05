@@ -1,4 +1,5 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { LanguageToggle } from "./LanguageToggle";
 import { content } from "../content/en";
 
 const navLinks = [
@@ -9,6 +10,7 @@ const navLinks = [
 export function SiteHeader() {
   const { pathname } = useLocation();
   const onHome = pathname === "/";
+
   return (
     <header className={`site-header${onHome ? " site-header--hero" : ""}`} data-testid="site-header">
       <div className="site-header__inner">
@@ -19,9 +21,12 @@ export function SiteHeader() {
             <span className="site-header__wordmark-leaves">LEAVES</span>
           </span>
         </Link>
-        <nav aria-label="primary" className="site-header__nav" data-testid="primary-nav">
-          {navLinks.map(({ to, label }) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}
-        </nav>
+        <div className="site-header__actions">
+          <nav aria-label="primary" className="site-header__nav" data-testid="primary-nav">
+            {navLinks.map(({ to, label }) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}
+          </nav>
+          <LanguageToggle />
+        </div>
       </div>
     </header>
   );
