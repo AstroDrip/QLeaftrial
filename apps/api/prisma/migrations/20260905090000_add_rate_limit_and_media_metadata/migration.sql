@@ -8,3 +8,7 @@ CREATE TABLE "RateLimitBucket" (
 );
 
 CREATE INDEX "RateLimitBucket_expiresAt_idx" ON "RateLimitBucket"("expiresAt");
+
+ALTER TABLE "ProductMedia" ADD COLUMN "width" INTEGER;
+ALTER TABLE "ProductMedia" ADD COLUMN "height" INTEGER;
+ALTER TABLE "ProductMedia" ADD COLUMN "purpose" TEXT;

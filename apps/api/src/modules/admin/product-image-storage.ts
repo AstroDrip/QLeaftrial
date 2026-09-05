@@ -3,7 +3,7 @@ import { ApiError } from "../../middleware/error-handler.js";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
-type SupportedImage = {
+export type SupportedImage = {
   mimeType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
   extension: "png" | "jpg" | "webp" | "gif";
   bytes: Buffer;
@@ -14,7 +14,7 @@ export type StoredProductImage = {
   storagePath?: string;
 };
 
-function detectedImageType(bytes: Buffer): Pick<SupportedImage, "mimeType" | "extension"> | null {
+export function detectedImageType(bytes: Buffer): Pick<SupportedImage, "mimeType" | "extension"> | null {
   if (
     bytes.length >= 8 &&
     bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
@@ -70,12 +70,14 @@ function usesPostgreSql(): boolean {
   return process.env.QLEAVES_DATABASE_PROVIDER === "postgresql";
 }
 
-function storageConfig(): {
+export type ProductImageStorageConfig = {
   baseUrl: string;
   bucket: string;
   apiKey: string;
   legacyBearer: boolean;
-} {
+};
+
+export function productImageStorageConfig(): ProductImageStorageConfig {
   const baseUrl = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const bucket = process.env.SUPABASE_PRODUCT_IMAGE_BUCKET?.trim();
   const secretKey = process.env.SUPABASE_SECRET_KEY?.trim();
@@ -91,19 +93,19 @@ function storageConfig(): {
   return { baseUrl, bucket, apiKey, legacyBearer: !secretKey && Boolean(legacyKey) };
 }
 
-function objectPathUrl(baseUrl: string, bucket: string, storagePath: string): string {
+export function objectPathUrl(baseUrl: string, bucket: string, storagePath: string): string {
   const encodedBucket = encodeURIComponent(bucket);
   const encodedPath = storagePath.split("/").map(encodeURIComponent).join("/");
   return `${baseUrl}/storage/v1/object/${encodedBucket}/${encodedPath}`;
 }
 
-function publicObjectUrl(baseUrl: string, bucket: string, storagePath: string): string {
+export function publicObjectUrl(baseUrl: string, bucket: string, storagePath: string): string {
   const encodedBucket = encodeURIComponent(bucket);
   const encodedPath = storagePath.split("/").map(encodeURIComponent).join("/");
   return `${baseUrl}/storage/v1/object/public/${encodedBucket}/${encodedPath}`;
 }
 
-function storageHeaders(apiKey: string, legacyBearer: boolean): Record<string, string> {
+export function storageHeaders(apiKey: string, legacyBearer: boolean): Record<string, string> {
   const headers: Record<string, string> = { apikey: apiKey };
   if (legacyBearer) headers.Authorization = `Bearer ${apiKey}`;
   return headers;
@@ -116,7 +118,7 @@ export async function storeProductImage(dataUrl: string, slug: string): Promise<
     return { url: dataUrl };
   }
 
-  const { baseUrl, bucket, apiKey, legacyBearer } = storageConfig();
+  const { baseUrl, bucket, apiKey, legacyBearer } = productImageStorageConfig();
   const storagePath = `products/${slug}/${randomUUID()}.${parsed.extension}`;
   const response = await fetch(objectPathUrl(baseUrl, bucket, storagePath), {
     method: "POST",
@@ -146,7 +148,7 @@ export async function storeProductImage(dataUrl: string, slug: string): Promise<
 export async function removeStoredProductImage(image: StoredProductImage): Promise<void> {
   if (!image.storagePath) return;
 
-  const { baseUrl, bucket, apiKey, legacyBearer } = storageConfig();
+  const { baseUrl, bucket, apiKey, legacyBearer } = productImageStorageConfig();
   const response = await fetch(objectPathUrl(baseUrl, bucket, image.storagePath), {
     method: "DELETE",
     headers: storageHeaders(apiKey, legacyBearer),

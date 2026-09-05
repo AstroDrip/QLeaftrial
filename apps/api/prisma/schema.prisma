@@ -73,6 +73,9 @@ model ProductMedia {
   url       String
   altText   String
   sortOrder Int
+  width     Int?
+  height    Int?
+  purpose   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

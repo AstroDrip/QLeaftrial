@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import type { CreateAdminProductInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
 import { removeStoredProductImage, storeProductImage } from "./product-image-storage.js";
+import { finalizeProductImages, removeProductImagePaths } from "./product-upload.service.js";
 
 const adminProductSelection = {
   id: true,
@@ -47,7 +48,14 @@ type AdminProductCreateRepository = {
       costPrice: number;
       published: boolean;
       inventory: { create: { quantity: number } };
-      media: { create: { url: string; altText: string; sortOrder: number } };
+      media: { create: Array<{
+        url: string;
+        altText: string;
+        sortOrder: number;
+        width?: number;
+        height?: number;
+        purpose?: string;
+      }> };
     };
     select: typeof adminProductSelection;
   }): Promise<AdminProductRecord>;
@@ -146,7 +154,19 @@ export async function updateAdminProduct(
 }
 
 export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
-  const storedImage = await storeProductImage(input.imageDataUrl, input.slug);
+  const usesPostgreSql = process.env.QLEAVES_DATABASE_PROVIDER === "postgresql";
+  if (usesPostgreSql && input.imageDataUrl) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Production product creation requires staged image variants");
+  }
+
+  const stagedPaths = input.stagedImages?.map((image) => image.stagingPath) ?? [];
+  const finalizedImages = input.stagedImages
+    ? await finalizeProductImages(input.stagedImages, input.slug)
+    : [];
+  const legacyImage = input.imageDataUrl
+    ? await storeProductImage(input.imageDataUrl, input.slug)
+    : undefined;
+  const finalStoragePaths = finalizedImages.map((image) => image.storagePath);
 
   try {
     const product = await productCreateRepository.create({
@@ -161,16 +181,42 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         costPrice: input.costPrice,
         published: true,
         inventory: { create: { quantity: input.stock } },
-        media: { create: { url: storedImage.url, altText: input.imageAltText, sortOrder: 0 } },
+        media: {
+          create: finalizedImages.length > 0
+            ? finalizedImages
+                .sort((left, right) => left.purpose === "catalog" ? -1 : right.purpose === "catalog" ? 1 : 0)
+                .map((image, sortOrder) => ({
+                  url: image.url,
+                  altText: input.imageAltText,
+                  sortOrder,
+                  width: image.width,
+                  height: image.height,
+                  purpose: image.purpose,
+                }))
+            : [{ url: legacyImage!.url, altText: input.imageAltText, sortOrder: 0 }],
+        },
       },
       select: adminProductSelection,
     });
+
+    if (stagedPaths.length > 0) {
+      try {
+        await removeProductImagePaths(stagedPaths);
+      } catch (cleanupError) {
+        console.error("Failed to remove staged product images after product creation", cleanupError);
+      }
+    }
     return toAdminProduct(product);
   } catch (error) {
-    try {
-      await removeStoredProductImage(storedImage);
-    } catch (cleanupError) {
-      console.error("Failed to clean up product image after product creation failed", cleanupError);
+    if (finalStoragePaths.length > 0) {
+      await Promise.allSettled([removeProductImagePaths(finalStoragePaths)]);
+    }
+    if (legacyImage) {
+      try {
+        await removeStoredProductImage(legacyImage);
+      } catch (cleanupError) {
+        console.error("Failed to clean up product image after product creation failed", cleanupError);
+      }
     }
     throw error;
   }
