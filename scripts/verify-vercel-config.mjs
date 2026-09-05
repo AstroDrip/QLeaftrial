@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 
 const config = JSON.parse(
   await readFile(new URL("../vercel.json", import.meta.url), "utf8"),
@@ -29,14 +29,26 @@ if (config.outputDirectory !== "apps/web/dist") {
 }
 const rewrites = Array.isArray(config.rewrites) ? config.rewrites : [];
 const apiRewrite = rewrites.findIndex((route) => route.source === "/api/v1/:path*" && route.destination === "/api/index");
+const sitemapRewrite = rewrites.findIndex((route) => route.source === "/sitemap.xml" && route.destination === "/api/index");
 const spaRewrite = rewrites.findIndex((route) => route.destination === "/index.html");
 if (apiRewrite < 0) problems.push("Missing /api/v1/* rewrite to the Express function");
+if (sitemapRewrite < 0) problems.push("Missing /sitemap.xml rewrite to the Express function");
 if (spaRewrite < 0) problems.push("Missing SPA fallback to index.html");
 if (spaRewrite >= 0 && !String(rewrites[spaRewrite].source).includes("?!api/")) {
   problems.push("SPA fallback must explicitly exclude /api requests");
 }
 if (apiRewrite >= 0 && spaRewrite >= 0 && apiRewrite > spaRewrite) {
   problems.push("API rewrite must be evaluated before the SPA fallback");
+}
+if (sitemapRewrite >= 0 && spaRewrite >= 0 && sitemapRewrite > spaRewrite) {
+  problems.push("Sitemap rewrite must be evaluated before the SPA fallback");
+}
+
+try {
+  await access(new URL("../apps/web/public/sitemap.xml", import.meta.url));
+  problems.push("Static sitemap.xml must not shadow the dynamic sitemap route");
+} catch {
+  // Absence is required: the Express route owns /sitemap.xml.
 }
 const fn = config.functions?.["api/index.ts"];
 if (!fn || typeof fn.maxDuration !== "number" || !fn.includeFiles) {

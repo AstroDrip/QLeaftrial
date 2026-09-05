@@ -1,6 +1,6 @@
 import express, { type Express } from "express";
 import { errorHandler } from "./middleware/error-handler.js";
-import { apiRouter } from "./routes.js";
+import { apiRouter, siteRouter } from "./routes.js";
 import { prisma } from "./lib/prisma.js";
 import { requestContext } from "./middleware/request-context.js";
 
@@ -16,6 +16,7 @@ export function createApp(): Express {
   if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
 
   app.use(requestContext);
+  app.use(siteRouter);
   app.use(express.json({ limit: "3mb" }));
   app.get("/api/v1/health", (_request, response) => {
     response.json({ status: "ok" });

@@ -67,6 +67,10 @@ describe("ProductPage cart action", () => {
     expect(jsonLd).toContain('"@type":"Product"');
     expect(jsonLd).toContain('"priceCurrency":"QAR"');
     expect(jsonLd).toContain('"price":180');
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://qleaves.qa/plants/house-plant",
+    );
   });
 
   it("replaces a failed product photo with the local plant fallback", async () => {

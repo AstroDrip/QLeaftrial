@@ -15,6 +15,10 @@
       "destination": "/api/index"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/index"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
