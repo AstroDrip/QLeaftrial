@@ -169,9 +169,7 @@ export function AdminOrdersPage() {
   const deleteVisibleOrders = useMutation({
     mutationFn: async () => {
       const visibleOrderIds = filteredOrders.map((order) => order.id);
-      for (const id of visibleOrderIds) {
-        await adminApi.deleteOrder(id);
-      }
+      await adminApi.deleteOrders(visibleOrderIds);
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["admin", "orders"] });

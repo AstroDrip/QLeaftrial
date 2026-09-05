@@ -32,12 +32,12 @@ export const productApi = {
     });
     return request<ProductListResponse>(`/products?${search}`);
   },
-  detail: (slug: string): Promise<ProductDetail> =>
-    request<ProductDetail>(`/products/${slug}`),
-  filters: (): Promise<{
+  detail: (slug: string, lang: "en" | "ar" = "en"): Promise<ProductDetail> =>
+    request<ProductDetail>(`/products/${slug}?lang=${lang}`),
+  filters: (lang: "en" | "ar" = "en"): Promise<{
     categories: string[];
     lights: string[];
-  }> => request("/products/filters"),
+  }> => request(`/products/filters?lang=${lang}`),
 };
 
 export type {

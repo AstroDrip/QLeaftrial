@@ -3,7 +3,7 @@ import "./Footer.css";
 
 export function Footer() {
   return (
-    <footer className="site-footer" data-testid="site-footer">
+    <footer className="site-footer" data-testid="site-footer" dir="ltr" lang="en">
       <div className="site-footer__brand"><strong>QLeaves</strong><span>For the love of art and plants.</span></div>
       <span>Founded in 2020</span>
       <span>© {new Date().getFullYear()} QLeaves · Qatar</span>

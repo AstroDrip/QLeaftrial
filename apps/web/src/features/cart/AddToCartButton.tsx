@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSiteContent, useSiteLanguage } from "../../app/providers";
 import type { ProductSummary } from "../catalog/product-types";
 import { useCartStore } from "./cart-store";
 import "./AddToCartButton.css";
@@ -50,6 +51,8 @@ export function AddToCartButton({
   product: ProductSummary;
   className?: string;
 }) {
+  const content = useSiteContent();
+  const { language } = useSiteLanguage();
   const addItem = useCartStore((state) => state.addItem);
   const setQuantity = useCartStore((state) => state.setQuantity);
   const quantity = useCartStore(
@@ -76,13 +79,13 @@ export function AddToCartButton({
 
     const added = addItem(product);
     if (!added) {
-      setAnnouncement(`${product.name} could not be added because the available stock is already in your cart`);
+      setAnnouncement(language === "ar" ? `تعذر إضافة ${product.name} لأن الكمية المتاحة موجودة بالفعل في السلة` : `${product.name} could not be added because the available stock is already in your cart`);
       return;
     }
 
     if (confirmationTimer.current) clearTimeout(confirmationTimer.current);
     setIsConfirming(true);
-    setAnnouncement(`${product.name} added to cart`);
+    setAnnouncement(language === "ar" ? `تمت إضافة ${product.name} إلى السلة` : `${product.name} added to cart`);
     confirmationTimer.current = setTimeout(() => {
       confirmationTimer.current = null;
       setIsConfirming(false);
@@ -91,22 +94,22 @@ export function AddToCartButton({
 
   function decrement() {
     setQuantity(product.id, quantity - 1);
-    setAnnouncement(`${product.name} quantity decreased`);
+    setAnnouncement(language === "ar" ? `تم تقليل كمية ${product.name}` : `${product.name} quantity decreased`);
   }
 
   const label = isConfirming
-    ? "Added ✓"
+    ? (language === "ar" ? "تمت الإضافة ✓" : "Added ✓")
     : outOfStock
-      ? "Out of stock"
+      ? content.product.outOfStock
       : maxInCart
-        ? "Max in cart"
-        : "Add to cart";
+        ? (language === "ar" ? "الحد الأقصى في السلة" : "Max in cart")
+        : content.product.addToCart;
 
   const accessibleName = outOfStock
-    ? `${product.name} is out of stock`
+    ? (language === "ar" ? `${product.name} غير متوفر` : `${product.name} is out of stock`)
     : maxInCart
-      ? `Maximum stock of ${product.name} is already in cart`
-      : `Add ${product.name} to cart`;
+      ? (language === "ar" ? `الحد الأقصى المتاح من ${product.name} موجود في السلة` : `Maximum stock of ${product.name} is already in cart`)
+      : (language === "ar" ? `أضف ${product.name} إلى السلة` : `Add ${product.name} to cart`);
 
   return (
     <div className={`add-to-cart__controls${quantity > 0 ? " add-to-cart__controls--with-decrement" : ""}`}>
@@ -114,7 +117,7 @@ export function AddToCartButton({
         <button
           type="button"
           className="add-to-cart__decrement"
-          aria-label={`Decrease ${product.name} quantity`}
+          aria-label={language === "ar" ? `قلل كمية ${product.name}` : `Decrease ${product.name} quantity`}
           onClick={decrement}
         >
           −
@@ -132,7 +135,7 @@ export function AddToCartButton({
         <CartIcon />
         <span className="add-to-cart__label">{label}</span>
         {quantity > 0 ? (
-          <span className="add-to-cart__quantity" aria-label={`${quantity} in cart`}>
+          <span className="add-to-cart__quantity" aria-label={language === "ar" ? `${quantity} في السلة` : `${quantity} in cart`}>
             {quantity}
           </span>
         ) : null}

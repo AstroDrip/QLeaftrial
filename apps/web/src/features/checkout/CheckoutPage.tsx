@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { content } from "../../content/en";
+import { useSiteContent } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
 
@@ -15,6 +15,7 @@ const initialForm = {
 };
 
 export function CheckoutPage() {
+  const content = useSiteContent();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const items = useCartStore((state) => state.items);
@@ -32,16 +33,16 @@ export function CheckoutPage() {
     event.preventDefault();
     setError("");
     if (items.length === 0) {
-      setError("Your cart is empty.");
+      setError(content.checkout.emptyCart);
       return;
     }
     try {
       const response = await fetch("/api/v1/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerName: form.name, phone: form.phone, email: form.email, addressLine1: form.address, area: form.area, deliveryNotes: form.notes, paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK", items: items.map(({ id, quantity }) => ({ productId: id, quantity })) }) });
       const body = await response.json();
-      if (!response.ok) throw new Error(body?.error?.message || "Could not place order");
+      if (!response.ok) throw new Error(body?.error?.message || content.checkout.orderFailed);
       clearCart();
       navigate(`/order/${body.orderNumber}`);
-    } catch (submissionError) { setError(submissionError instanceof Error ? submissionError.message : "Could not place order"); }
+    } catch (submissionError) { setError(submissionError instanceof Error ? submissionError.message : content.checkout.orderFailed); }
   }
 
   return (
@@ -94,7 +95,7 @@ export function CheckoutPage() {
               name="address"
               value={form.address}
               onChange={handleChange}
-              placeholder="Villa 12, Street 30"
+              placeholder={content.checkout.addressPlaceholder}
             />
           </label>
 
@@ -104,7 +105,7 @@ export function CheckoutPage() {
               name="area"
               value={form.area}
               onChange={handleChange}
-              placeholder="Doha"
+              placeholder={content.checkout.areaPlaceholder}
             />
           </label>
 
@@ -122,7 +123,7 @@ export function CheckoutPage() {
               name="notes"
               value={form.notes}
               onChange={handleChange}
-              placeholder="Ring the bell or leave at reception."
+              placeholder={content.checkout.notesPlaceholder}
             />
           </label>
         </div>
@@ -145,7 +146,7 @@ export function CheckoutPage() {
           {content.checkout.placeOrder}
         </button>
         <p className="checkout-form__legal">
-          By placing an order, you agree to the <Link to="/terms">Terms & Conditions</Link> and acknowledge the <Link to="/privacy">Privacy Policy</Link> and <Link to="/shipping-returns">Shipping & Returns</Link> information.
+          {content.checkout.legalPrefix} <Link to="/terms">{content.checkout.terms}</Link> {content.checkout.legalAnd} <Link to="/privacy">{content.checkout.privacy}</Link> {content.checkout.legalAndSecond} <Link to="/shipping-returns">{content.checkout.shipping}</Link> {content.checkout.legalSuffix}
         </p>
       </form>
     </section>

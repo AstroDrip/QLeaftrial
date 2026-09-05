@@ -111,4 +111,47 @@ describe("admin product management", () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("creates and edits Arabic product content without changing English fields", async () => {
+    const agent = await loggedInAgent();
+    const created = await agent.post("/api/v1/admin/products").send({
+      name: "Arabic Fern",
+      nameAr: "سرخس عربي",
+      slug: "arabic-fern",
+      sku: "QL-AF-009",
+      description: "A fresh fern with localized catalogue content.",
+      descriptionAr: "سرخس أخضر بمحتوى عربي للعرض في المتجر.",
+      category: "Indoor",
+      categoryAr: "داخلي",
+      light: "Low indirect",
+      lightAr: "إضاءة منخفضة غير مباشرة",
+      priceQar: 95,
+      costPrice: 40,
+      stock: 5,
+      imageDataUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z2S8AAAAASUVORK5CYII=",
+      imageAltText: "Arabic fern in a pot",
+    });
+
+    expect(created.status).toBe(201);
+    expect(created.body).toEqual(expect.objectContaining({
+      nameAr: "سرخس عربي",
+      categoryAr: "داخلي",
+    }));
+
+    const updated = await agent.patch(`/api/v1/admin/products/${created.body.id}`).send({
+      nameAr: "سرخس عربي محدث",
+      lightAr: "إضاءة متوسطة غير مباشرة",
+    });
+    expect(updated.status).toBe(200);
+    expect(updated.body).toEqual(expect.objectContaining({
+      name: "Arabic Fern",
+      nameAr: "سرخس عربي محدث",
+      lightAr: "إضاءة متوسطة غير مباشرة",
+    }));
+
+    const publicArabic = await request(createApp()).get("/api/v1/products/arabic-fern?lang=ar");
+    expect(publicArabic.body.name).toBe("سرخس عربي محدث");
+  });
+
+
 });

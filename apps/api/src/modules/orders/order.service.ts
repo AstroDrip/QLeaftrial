@@ -64,6 +64,32 @@ export async function deleteOrder(id: string) {
   await db.order.delete({ where: { id } });
 }
 
+
+export async function deleteOrders(ids: string[]) {
+  const uniqueIds = [...new Set(ids)];
+  return db.$transaction(async (tx: any) => {
+    const orders = await tx.order.findMany({
+      where: { id: { in: uniqueIds } },
+      select: { id: true, status: true },
+    });
+    if (orders.length !== uniqueIds.length) {
+      throw new ApiError(404, "ORDER_NOT_FOUND", "One or more orders were not found");
+    }
+    const blocked = orders.find(
+      (order: { status: string }) => order.status !== "CANCELLED" && order.status !== "DELIVERED",
+    );
+    if (blocked) {
+      throw new ApiError(
+        409,
+        "ORDER_NOT_DELETABLE",
+        "Only declined or completed orders can be deleted",
+      );
+    }
+    const result = await tx.order.deleteMany({ where: { id: { in: uniqueIds } } });
+    return { deleted: result.count };
+  });
+}
+
 export async function dashboardStats() {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const [ordersToday, inventory, lowStock, pending] = await Promise.all([

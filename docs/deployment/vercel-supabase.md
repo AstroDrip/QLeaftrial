@@ -14,6 +14,9 @@ Use the repository root as the project root. `vercel.json` owns the build/output
 - Production runtime environment variables:
   - `QLEAVES_DATABASE_PROVIDER=postgresql`
   - `DATABASE_URL=<Supabase transaction-pooler URL>`
+  - `SUPABASE_URL=https://PROJECT_REF.supabase.co`
+  - `SUPABASE_SECRET_KEY=<server-only secret key>`
+  - `SUPABASE_PRODUCT_IMAGE_BUCKET=product-images`
 
 Set both runtime variables for **Production** and for every **Preview**
 environment that should have a working API. The Vercel build stops early with
@@ -98,3 +101,25 @@ instead of production.
 ## Routing and caching
 
 Requests under `/api/v1/*` are sent to the Express function before the SPA fallback. Vercel checks the filesystem before rewrites, so built assets continue to be served directly. Hashed Vite assets under `/assets/*` receive a one-year immutable cache header. General responses receive conservative security headers; API caching remains controlled by Express so admin/session/product writes are not hidden behind a stale CDN response.
+
+
+## Supabase Storage authentication troubleshooting
+
+Product creation uploads image bytes through the server-side API before the product row is written. The browser must never receive the Supabase secret key.
+
+If an admin product upload returns a Supabase authentication error:
+
+1. Confirm `SUPABASE_URL` is the project URL for the same project that owns the bucket.
+2. Confirm `SUPABASE_PRODUCT_IMAGE_BUCKET=product-images` matches the actual public bucket name exactly.
+3. Prefer the current server-only `SUPABASE_SECRET_KEY`. The legacy `SUPABASE_SERVICE_ROLE_KEY` remains supported by the application for older projects.
+4. Do not prefix either server credential with `VITE_`; Vite-prefixed variables can be exposed to the browser bundle.
+5. Re-save the variables in Vercel and redeploy so the Function receives the updated environment.
+6. Test a new product upload and confirm `ProductMedia.url` contains a Supabase Storage public URL rather than a Base64 `data:` URL.
+
+Never paste a real secret key into logs, screenshots, Git commits, issue trackers, or chat messages.
+
+## Arabic product schema rollout
+
+The bilingual catalogue stores optional Arabic product fields (`nameAr`, `descriptionAr`, `categoryAr`, and `lightAr`) alongside the existing English fields. Existing English-only rows continue to work because public Arabic responses fall back to English when a translation is absent.
+
+For local SQLite development, regenerate Prisma and replay the migrations against a disposable/local database before running the full test suite. For Supabase/PostgreSQL, review the schema diff and run the existing deliberate `npm run supabase:deploy` command from a trusted administrative shell. The Vercel build does not modify production schema.

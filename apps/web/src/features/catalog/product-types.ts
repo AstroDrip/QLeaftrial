@@ -40,4 +40,5 @@ export interface ProductListParams {
   light?: string;
   page?: number;
   sort?: "name-asc" | "price-asc" | "price-desc";
+  lang?: "en" | "ar";
 }

@@ -1,22 +1,22 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { useSiteContent } from "../app/providers";
 import { LanguageToggle } from "./LanguageToggle";
-import { content } from "../content/en";
-
-const navLinks = [
-  { to: "/shop", label: content.nav.shop },
-  { to: "/cart", label: content.nav.cart },
-] as const;
 
 export function SiteHeader() {
   const { pathname } = useLocation();
   const onHome = pathname === "/";
+  const content = useSiteContent();
+  const navLinks = [
+    { to: "/shop", label: content.nav.shop },
+    { to: "/cart", label: content.nav.cart },
+  ] as const;
 
   return (
     <header className={`site-header${onHome ? " site-header--hero" : ""}`} data-testid="site-header">
       <div className="site-header__inner">
-        <Link to="/" className="site-header__brand" aria-label="QLeaves home">
+        <Link to="/" className="site-header__brand" aria-label="QLeaves home" dir="ltr" lang="en">
           <img className="site-header__logo" src="/brand/qleaves-logo.png" alt="" aria-hidden="true" onError={(event) => { event.currentTarget.style.display = "none"; }} />
-          <span className="site-header__wordmark" aria-label={content.brand}>
+          <span className="site-header__wordmark" aria-label="QLeaves">
             <span className="site-header__wordmark-q">Q</span>
             <span className="site-header__wordmark-leaves">LEAVES</span>
           </span>

@@ -9,6 +9,7 @@ export const productQuerySchema = z.object({
   q: optionalFilter,
   category: optionalFilter,
   light: optionalFilter,
+  lang: z.enum(["en", "ar"]).default("en"),
   page: z.coerce.number().int().positive().default(1),
   sort: z.enum(["name-asc", "price-asc", "price-desc"]).default("name-asc"),
 });

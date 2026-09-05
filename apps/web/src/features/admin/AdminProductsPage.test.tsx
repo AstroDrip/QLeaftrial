@@ -73,4 +73,20 @@ describe("AdminProductsPage", () => {
     await act(async () => { vi.advanceTimersByTime(800); });
     expect(await screen.findByRole("alert")).toHaveTextContent(/stock save failed/i);
   });
+
+  it("saves Arabic catalogue fields for an existing product", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+
+    const arabicName = await screen.findByRole("textbox", { name: /monstera arabic name/i });
+    await user.type(arabicName, "مونستيرا");
+    await user.click(screen.getByRole("button", { name: /save arabic/i }));
+
+    expect(adminApi.updateProduct).toHaveBeenCalledWith("plant-1", {
+      nameAr: "مونستيرا",
+    });
+  });
+
+
 });

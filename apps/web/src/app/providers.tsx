@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { SiteLanguage } from "../content/locales";
+import { localeContent, type SiteLanguage } from "../content/locales";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +27,11 @@ const LanguageContext = createContext<{
 
 export function useSiteLanguage() {
   return useContext(LanguageContext);
+}
+
+export function useSiteContent() {
+  const { language } = useSiteLanguage();
+  return localeContent[language];
 }
 
 export function Providers({ children }: { children: ReactNode }) {

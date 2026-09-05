@@ -4,7 +4,7 @@ import { content } from "../../content/en";
 import { adminApi, type AdminProduct, type CreateAdminProductInput } from "./admin-api";
 
 const emptyForm: Omit<CreateAdminProductInput, "imageDataUrl"> & { imageDataUrl: string } = {
-  name: "", slug: "", sku: "", description: "", category: "Indoor", light: "Bright indirect",
+  name: "", nameAr: "", slug: "", sku: "", description: "", descriptionAr: "", category: "Indoor", categoryAr: "", light: "Bright indirect", lightAr: "",
   priceQar: 0, costPrice: 0, stock: 0, imageDataUrl: "", imageAltText: "",
 };
 
@@ -12,10 +12,15 @@ function ProductRow({ product }: { product: AdminProduct }) {
   const queryClient = useQueryClient();
   const [stock, setStock] = useState(String(product.stock));
   const [price, setPrice] = useState(String(product.priceQar));
+  const [nameAr, setNameAr] = useState(product.nameAr ?? "");
+  const [descriptionAr, setDescriptionAr] = useState(product.descriptionAr ?? "");
+  const [categoryAr, setCategoryAr] = useState(product.categoryAr ?? "");
+  const [lightAr, setLightAr] = useState(product.lightAr ?? "");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<"stock" | "priceQar", string>>>({});
   const timers = useRef<Partial<Record<"stock" | "priceQar", ReturnType<typeof setTimeout>>>>({});
   const save = useMutation({
-    mutationFn: (patch: { stock?: number; priceQar?: number }) => adminApi.updateProduct(product.id, patch),
+    mutationFn: (patch: { stock?: number; priceQar?: number; nameAr?: string; descriptionAr?: string; categoryAr?: string; lightAr?: string }) =>
+      adminApi.updateProduct(product.id, patch),
     scope: { id: `admin-product-${product.id}` },
     onSuccess: (updated, patch) => {
       if (patch.stock !== undefined) setStock(String(updated.stock));
@@ -52,7 +57,16 @@ function ProductRow({ product }: { product: AdminProduct }) {
   }
   useEffect(() => () => { Object.values(timers.current).forEach((timer) => clearTimeout(timer)); }, []);
   const errorMessage = [fieldErrors.stock, fieldErrors.priceQar].filter(Boolean).join(". ");
-  return <tr><td>{product.name}</td><td><input type="number" min="0" step="1" aria-label={`${product.name} stock`} aria-invalid={Boolean(fieldErrors.stock)} value={stock} onChange={(event) => { const value=event.target.value; setStock(value); schedule("stock",value); }} onBlur={() => persist("stock",stock)} /></td><td><input type="number" min="0" step="1" aria-label={`${product.name} price`} aria-invalid={Boolean(fieldErrors.priceQar)} value={price} onChange={(event) => { const value=event.target.value; setPrice(value); schedule("priceQar",value); }} onBlur={() => persist("priceQar",price)} /></td><td aria-live="polite">{errorMessage ? <span role="alert">{errorMessage}</span> : save.isPending ? "Saving…" : save.isSuccess ? "Saved" : ""}</td></tr>;
+  function saveArabic() {
+    const patch = {
+      ...(nameAr.trim() ? { nameAr: nameAr.trim() } : {}),
+      ...(descriptionAr.trim() ? { descriptionAr: descriptionAr.trim() } : {}),
+      ...(categoryAr.trim() ? { categoryAr: categoryAr.trim() } : {}),
+      ...(lightAr.trim() ? { lightAr: lightAr.trim() } : {}),
+    };
+    if (Object.keys(patch).length > 0) save.mutate(patch);
+  }
+  return <tr><td><strong>{product.name}</strong><div className="admin-product-ar-fields" dir="rtl" lang="ar"><input aria-label={`${product.name} Arabic name`} placeholder="الاسم بالعربية" value={nameAr} onChange={(event) => setNameAr(event.target.value)} /><input aria-label={`${product.name} Arabic category`} placeholder="الفئة بالعربية" value={categoryAr} onChange={(event) => setCategoryAr(event.target.value)} /><input aria-label={`${product.name} Arabic light`} placeholder="الإضاءة بالعربية" value={lightAr} onChange={(event) => setLightAr(event.target.value)} /><textarea aria-label={`${product.name} Arabic description`} placeholder="الوصف بالعربية" value={descriptionAr} onChange={(event) => setDescriptionAr(event.target.value)} /><button type="button" className="primary-button primary-button--secondary" onClick={saveArabic}>Save Arabic</button></div></td><td><input type="number" min="0" step="1" aria-label={`${product.name} stock`} aria-invalid={Boolean(fieldErrors.stock)} value={stock} onChange={(event) => { const value=event.target.value; setStock(value); schedule("stock",value); }} onBlur={() => persist("stock",stock)} /></td><td><input type="number" min="0" step="1" aria-label={`${product.name} price`} aria-invalid={Boolean(fieldErrors.priceQar)} value={price} onChange={(event) => { const value=event.target.value; setPrice(value); schedule("priceQar",value); }} onBlur={() => persist("priceQar",price)} /></td><td aria-live="polite">{errorMessage ? <span role="alert">{errorMessage}</span> : save.isPending ? "Saving…" : save.isSuccess ? "Saved" : ""}</td></tr>;
 }
 
 export function AdminProductsPage() {
@@ -112,14 +126,18 @@ export function AdminProductsPage() {
         <h2>Add plant</h2>
         <div className="admin-product-form__grid">
           <label>Name<input required value={form.name} onChange={(event) => updateField("name", event.target.value)} /></label>
+          <label>Arabic name<input dir="rtl" lang="ar" value={form.nameAr ?? ""} onChange={(event) => updateField("nameAr", event.target.value)} /></label>
           <label>Slug<input required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value={form.slug} onChange={(event) => updateField("slug", event.target.value)} /></label>
           <label>SKU<input required value={form.sku} onChange={(event) => updateField("sku", event.target.value)} /></label>
+          <label>Arabic category<input dir="rtl" lang="ar" value={form.categoryAr ?? ""} onChange={(event) => updateField("categoryAr", event.target.value)} /></label>
           <label>Category<input required value={form.category} onChange={(event) => updateField("category", event.target.value)} /></label>
+          <label>Arabic light<input dir="rtl" lang="ar" value={form.lightAr ?? ""} onChange={(event) => updateField("lightAr", event.target.value)} /></label>
           <label>Light<input required value={form.light} onChange={(event) => updateField("light", event.target.value)} /></label>
           <label>Price (QAR)<input required type="number" min="0" step="1" value={form.priceQar} onChange={(event) => updateField("priceQar", Number(event.target.value))} /></label>
           <label>Cost (QAR)<input required type="number" min="0" step="1" value={form.costPrice} onChange={(event) => updateField("costPrice", Number(event.target.value))} /></label>
           <label>Stock<input required type="number" min="0" step="1" value={form.stock} onChange={(event) => updateField("stock", Number(event.target.value))} /></label>
           <label className="admin-product-form__full">Description<textarea required minLength={10} value={form.description} onChange={(event) => updateField("description", event.target.value)} /></label>
+          <label className="admin-product-form__full">Arabic description<textarea dir="rtl" lang="ar" minLength={10} value={form.descriptionAr ?? ""} onChange={(event) => updateField("descriptionAr", event.target.value)} /></label>
           <label>Image alt text<input required value={form.imageAltText} onChange={(event) => updateField("imageAltText", event.target.value)} /></label>
           <label>Plant image (required)<input required type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0]; if (file) readImage(file); }} /></label>
         </div>
