@@ -32,8 +32,12 @@ const apiRewrite = rewrites.findIndex((route) => route.source === "/api/v1/:path
 const spaRewrite = rewrites.findIndex((route) => route.destination === "/index.html");
 if (apiRewrite < 0) problems.push("Missing /api/v1/* rewrite to the Express function");
 if (spaRewrite < 0) problems.push("Missing SPA fallback to index.html");
-if (spaRewrite >= 0 && !String(rewrites[spaRewrite].source).includes("?!api/")) {
-  problems.push("SPA fallback must explicitly exclude /api requests");
+if (
+  spaRewrite >= 0 &&
+  (!String(rewrites[spaRewrite].source).includes("?!api/") ||
+    !String(rewrites[spaRewrite].source).includes("?!assets/"))
+) {
+  problems.push("SPA fallback must explicitly exclude /api and /assets requests");
 }
 if (apiRewrite >= 0 && spaRewrite >= 0 && apiRewrite > spaRewrite) {
   problems.push("API rewrite must be evaluated before the SPA fallback");
