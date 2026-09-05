@@ -1,0 +1,156 @@
+/*
+ * Rocker switch adapted from bandirevanth's "wonderful-dog-56" on Uiverse.
+ * Original component: https://uiverse.io/bandirevanth/wonderful-dog-56
+ * Licensed under the MIT License.
+ */
+.language-rocker {
+  display: inline-block;
+  position: relative;
+  font-size: 2em;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  color: #888;
+  width: 7em;
+  height: 4em;
+  overflow: hidden;
+  border-bottom: .5em solid #eee;
+  direction: ltr;
+  flex: 0 0 auto;
+}
+
+.language-rocker--small {
+  font-size: .62em;
+}
+
+.language-rocker::before {
+  content: "";
+  position: absolute;
+  top: .5em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #999;
+  border: .5em solid #eee;
+  border-bottom: 0;
+}
+
+.language-rocker input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.language-rocker__left,
+.language-rocker__right {
+  cursor: pointer;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5em;
+  width: 3em;
+  transition: .2s;
+  user-select: none;
+  pointer-events: none;
+}
+
+.language-rocker__left {
+  height: 2.4em;
+  width: 2.75em;
+  left: .85em;
+  bottom: .4em;
+  background-color: #ddd;
+  transform: rotate(15deg) skewX(15deg);
+}
+
+.language-rocker__right {
+  right: .5em;
+  bottom: 0;
+  background-color: var(--moss-deep);
+  color: var(--paper);
+}
+
+.language-rocker__left::before,
+.language-rocker__right::before {
+  content: "";
+  position: absolute;
+  width: .4em;
+  height: 2.45em;
+  bottom: -.45em;
+  background-color: #ccc;
+  transform: skewY(-65deg);
+}
+
+.language-rocker__left::before {
+  left: -.4em;
+}
+
+.language-rocker__right::before {
+  right: -.375em;
+  background-color: transparent;
+  transform: skewY(65deg);
+}
+
+.language-rocker input:checked + .language-rocker__left {
+  background-color: var(--moss-deep);
+  color: var(--paper);
+  bottom: 0;
+  left: .5em;
+  height: 2.5em;
+  width: 3em;
+  transform: rotate(0deg) skewX(0deg);
+}
+
+.language-rocker input:checked + .language-rocker__left::before {
+  background-color: transparent;
+  width: 3.0833em;
+}
+
+.language-rocker input:checked + .language-rocker__left + .language-rocker__right {
+  background-color: #ddd;
+  color: #888;
+  bottom: .4em;
+  right: .8em;
+  height: 2.4em;
+  width: 2.75em;
+  transform: rotate(-15deg) skewX(-15deg);
+}
+
+.language-rocker input:checked + .language-rocker__left + .language-rocker__right::before {
+  background-color: #ccc;
+}
+
+.language-rocker input:focus-visible + .language-rocker__left {
+  outline: 2px solid var(--rust);
+  outline-offset: 2px;
+}
+
+.language-rocker input:checked:focus-visible + .language-rocker__left + .language-rocker__right {
+  outline: 2px solid var(--rust);
+  outline-offset: 2px;
+}
+
+.site-header--hero .language-rocker__right,
+.site-header--hero .language-rocker input:checked + .language-rocker__left {
+  background-color: #d7c58a;
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .language-rocker--small {
+    font-size: .55em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .language-rocker__left,
+  .language-rocker__right {
+    transition: none;
+  }
+}

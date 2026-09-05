@@ -22,8 +22,16 @@ describe("runtime localization", () => {
       </Providers>,
     );
 
-    await userEvent.click(screen.getByTestId("language-toggle"));
+    const languageSwitch = screen.getByRole("checkbox", { name: "Switch language" });
+    expect(languageSwitch).not.toBeChecked();
+    expect(screen.getByText("EN")).toBeInTheDocument();
+    expect(screen.getByText("AR")).toBeInTheDocument();
+    expect(document.querySelector(".language-toggle")).toBeNull();
+    expect(document.querySelector(".language-toggle__track")).toBeNull();
 
+    await userEvent.click(languageSwitch);
+
+    expect(languageSwitch).toBeChecked();
     expect(screen.getByRole("link", { name: "المتجر" })).toHaveAttribute("href", "/shop");
     expect(document.documentElement).toHaveAttribute("lang", "ar");
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
