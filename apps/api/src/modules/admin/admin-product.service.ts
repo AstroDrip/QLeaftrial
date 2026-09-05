@@ -203,7 +203,11 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
       try {
         await removeProductImagePaths(stagedPaths);
       } catch (cleanupError) {
-        console.error("Failed to remove staged product images after product creation", cleanupError);
+        console.error(JSON.stringify({
+          level: "error",
+          event: "staged-product-image-cleanup-failed",
+          errorType: cleanupError instanceof Error ? cleanupError.name : typeof cleanupError,
+        }));
       }
     }
     return toAdminProduct(product);
@@ -215,7 +219,11 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
       try {
         await removeStoredProductImage(legacyImage);
       } catch (cleanupError) {
-        console.error("Failed to clean up product image after product creation failed", cleanupError);
+        console.error(JSON.stringify({
+          level: "error",
+          event: "legacy-product-image-cleanup-failed",
+          errorType: cleanupError instanceof Error ? cleanupError.name : typeof cleanupError,
+        }));
       }
     }
     throw error;

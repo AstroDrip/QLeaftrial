@@ -131,11 +131,11 @@ export async function storeProductImage(dataUrl: string, slug: string): Promise<
   });
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    console.error("Supabase product image upload failed", {
+    console.error(JSON.stringify({
+      level: "error",
+      event: "product-image-upload-failed",
       status: response.status,
-      detail: detail.slice(0, 500),
-    });
+    }));
     throw new ApiError(502, "IMAGE_UPLOAD_FAILED", "Product image could not be stored");
   }
 
@@ -155,7 +155,6 @@ export async function removeStoredProductImage(image: StoredProductImage): Promi
   });
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(`Supabase product image cleanup failed (${response.status}): ${detail.slice(0, 500)}`);
+    throw new Error(`Supabase product image cleanup failed with status ${response.status}`);
   }
 }

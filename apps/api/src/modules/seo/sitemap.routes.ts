@@ -19,7 +19,6 @@ sitemapRouter.get("/sitemap.xml", async (request, response) => {
       pathname: request.path,
       error: {
         name: error instanceof Error ? error.name : typeof error,
-        message: error instanceof Error ? error.message : String(error),
       },
     }));
     response.status(503).send(

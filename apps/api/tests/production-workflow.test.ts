@@ -71,6 +71,13 @@ function verifyDeploymentEnvironment(
   delete environment.SUPABASE_PRODUCT_IMAGE_BUCKET;
   delete environment.SUPABASE_SECRET_KEY;
   delete environment.SUPABASE_SERVICE_ROLE_KEY;
+  delete environment.RATE_LIMIT_SALT;
+  delete environment.VITE_DATABASE_URL;
+  delete environment.VITE_DIRECT_URL;
+  delete environment.VITE_SUPABASE_SECRET_KEY;
+  delete environment.VITE_SUPABASE_SERVICE_ROLE_KEY;
+  delete environment.VITE_RATE_LIMIT_SALT;
+  delete environment.VITE_QLEAVES_ADMIN_SEED_PASSWORD;
 
   for (const [key, value] of Object.entries(overrides)) {
     if (value === undefined) delete environment[key];
@@ -117,9 +124,59 @@ describe("production Prisma workflow", () => {
       SUPABASE_URL: "https://qleaves.supabase.co",
       SUPABASE_PRODUCT_IMAGE_BUCKET: "product-images",
       SUPABASE_SECRET_KEY: "sb_secret_test",
+      RATE_LIMIT_SALT: "production-test-rate-limit-salt-32-characters",
     });
 
     expect(result.stdout).toContain("Vercel runtime environment check passed");
+  });
+
+  it.each([undefined, "short", "replace-with-a-strong-rate-limit-salt"])(
+    "rejects production without a strong non-placeholder rate-limit salt (%s)",
+    async (rateLimitSalt) => {
+      await expect(verifyDeploymentEnvironment({
+        QLEAVES_DATABASE_PROVIDER: "postgresql",
+        DATABASE_URL: postgresqlUrl,
+        SUPABASE_URL: "https://qleaves.supabase.co",
+        SUPABASE_PRODUCT_IMAGE_BUCKET: "product-images",
+        SUPABASE_SECRET_KEY: "sb_secret_test",
+        RATE_LIMIT_SALT: rateLimitSalt,
+      })).rejects.toMatchObject({
+        stderr: expect.stringContaining("RATE_LIMIT_SALT"),
+      });
+    },
+  );
+
+  it.each([
+    "VITE_DATABASE_URL",
+    "VITE_SUPABASE_SECRET_KEY",
+    "VITE_RATE_LIMIT_SALT",
+  ])("rejects a server secret exposed through %s without printing its value", async (variable) => {
+    const leakedValue = "do-not-print-this-secret-value";
+    await expect(verifyDeploymentEnvironment({
+      QLEAVES_DATABASE_PROVIDER: "postgresql",
+      DATABASE_URL: postgresqlUrl,
+      SUPABASE_URL: "https://qleaves.supabase.co",
+      SUPABASE_PRODUCT_IMAGE_BUCKET: "product-images",
+      SUPABASE_SECRET_KEY: "sb_secret_test",
+      RATE_LIMIT_SALT: "production-test-rate-limit-salt-32-characters",
+      [variable]: leakedValue,
+    })).rejects.toMatchObject({
+      stderr: expect.stringContaining(variable),
+    });
+
+    try {
+      await verifyDeploymentEnvironment({
+        QLEAVES_DATABASE_PROVIDER: "postgresql",
+        DATABASE_URL: postgresqlUrl,
+        SUPABASE_URL: "https://qleaves.supabase.co",
+        SUPABASE_PRODUCT_IMAGE_BUCKET: "product-images",
+        SUPABASE_SECRET_KEY: "sb_secret_test",
+        RATE_LIMIT_SALT: "production-test-rate-limit-salt-32-characters",
+        [variable]: leakedValue,
+      });
+    } catch (error) {
+      expect(String((error as { stderr?: string }).stderr)).not.toContain(leakedValue);
+    }
   });
 
   it("rejects a deployment without the Supabase project URL", async () => {

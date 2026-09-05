@@ -10,11 +10,16 @@ export default defineConfig({
     },
   },
   build: {
+    // Three.js is isolated to the decorative homepage particle field. Its
+    // minified ESM bundle is ~501 kB, so keep the warning threshold narrowly
+    // above that measured vendor chunk rather than hiding larger regressions.
+    chunkSizeWarningLimit: 510,
     rollupOptions: {
       output: {
         manualChunks: {
           react: ["react", "react-dom", "react-router-dom", "@tanstack/react-query", "zustand"],
-          motion: ["animejs", "three"],
+          anime: ["animejs"],
+          three: ["three"],
         },
       },
     },

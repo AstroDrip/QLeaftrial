@@ -45,7 +45,7 @@ describe("dynamic sitemap", () => {
 
   it("returns a controlled XML 503 when the catalogue query fails", async () => {
     vi.spyOn(prisma.product, "findMany").mockRejectedValueOnce(new Error("database secret details"));
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const response = await request(createApp()).get("/sitemap.xml");
 
@@ -53,5 +53,6 @@ describe("dynamic sitemap", () => {
     expect(response.headers["content-type"]).toMatch(/^application\/xml/);
     expect(response.text).toContain("Sitemap temporarily unavailable");
     expect(response.text).not.toContain("database secret details");
+    expect(errorLog.mock.calls.flat().join(" ")).not.toContain("database secret details");
   });
 });
