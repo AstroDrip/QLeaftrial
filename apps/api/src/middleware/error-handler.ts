@@ -19,6 +19,18 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, _nex
     return;
   }
 
+  if (
+    error &&
+    typeof error === "object" &&
+    "status" in error &&
+    (error as { status?: unknown }).status === 413
+  ) {
+    response.status(413).json({
+      error: { code: "PAYLOAD_TOO_LARGE", message: "Payload too large" },
+    });
+    return;
+  }
+
   const requestId =
     typeof response.locals.requestId === "string"
       ? response.locals.requestId

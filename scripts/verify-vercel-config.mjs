@@ -43,6 +43,26 @@ if (!fn || typeof fn.maxDuration !== "number" || !fn.includeFiles) {
   problems.push("api/index.ts must declare maxDuration and includeFiles for Prisma assets");
 }
 
+const globalHeaders = (Array.isArray(config.headers) ? config.headers : [])
+  .find((entry) => entry.source === "/(.*)")?.headers ?? [];
+const reportOnlyCsp = globalHeaders.find(
+  (header) => header.key === "Content-Security-Policy-Report-Only",
+)?.value;
+if (!reportOnlyCsp) {
+  problems.push("Missing Content-Security-Policy-Report-Only header");
+} else {
+  for (const directive of [
+    "default-src 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "report-uri /api/v1/security/csp-report",
+  ]) {
+    if (!reportOnlyCsp.includes(directive)) {
+      problems.push(`Report-only CSP must include: ${directive}`);
+    }
+  }
+}
+
 if (problems.length) {
   console.error(problems.map((problem) => `- ${problem}`).join("\n"));
   process.exit(1);
