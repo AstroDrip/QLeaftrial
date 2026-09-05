@@ -72,6 +72,24 @@ describe("product catalogue", () => {
       .not.toContain("unpublished-house-plant");
   });
 
+  it("compresses JSON responses and sets cache headers for product catalogue routes", async () => {
+    const listResponse = await request(createApp())
+      .get("/api/v1/products?page=1")
+      .set("Accept-Encoding", "gzip");
+
+    expect(listResponse.status).toBe(200);
+    expect(listResponse.headers["content-encoding"]).toBe("gzip");
+    expect(listResponse.headers["cache-control"]).toContain("public");
+    expect(listResponse.headers["cache-control"]).toContain("max-age=60");
+
+    const detailResponse = await request(createApp())
+      .get("/api/v1/products/house-plant")
+      .set("Accept-Encoding", "gzip");
+
+    expect(detailResponse.status).toBe(200);
+    expect(detailResponse.headers["cache-control"]).toContain("max-age=120");
+  });
+
   it("returns the public error shape when a product is absent", async () => {
     const response = await request(createApp()).get("/api/v1/products/missing-plant");
 

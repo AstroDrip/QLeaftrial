@@ -75,7 +75,9 @@ export function ProductPage() {
         alt={primaryImage?.altText || product.name}
         className="product-detail__image"
         data-testid="product-image"
+        loading="eager"
         decoding="async"
+        fetchPriority="high"
       />
 
       <div className="product-detail__meta">
