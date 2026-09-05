@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { lazy, Suspense, type ReactNode } from "react";
 import { Layout } from "../components/Layout";
 import { NotFoundPage } from "../components/NotFoundPage";
+import { RouteErrorPage } from "../components/RouteErrorPage";
 import { HomePage } from "../features/home/HomePage";
 
 const AdminDashboardPage = lazy(() => import("../features/admin/AdminDashboardPage").then((module) => ({ default: module.AdminDashboardPage })));
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
+    errorElement: <RouteErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
       { path: "shop", element: deferred(<CatalogPage />) },
@@ -38,10 +40,11 @@ export const router = createBrowserRouter([
       { path: "*", element: <NotFoundPage /> },
     ],
   },
-  { path: "/admin/login", element: deferred(<AdminLoginPage />) },
+  { path: "/admin/login", element: deferred(<AdminLoginPage />), errorElement: <RouteErrorPage /> },
   {
     path: "/admin",
     element: deferred(<AdminLayout />),
+    errorElement: <RouteErrorPage />,
     children: [
       { index: true, element: deferred(<AdminDashboardPage />) },
       { path: "products", element: deferred(<AdminProductsPage />) },

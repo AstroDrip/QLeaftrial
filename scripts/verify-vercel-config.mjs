@@ -37,6 +37,9 @@ if (spaRewrite < 0) problems.push("Missing SPA fallback to index.html");
 if (spaRewrite >= 0 && !String(rewrites[spaRewrite].source).includes("?!api/")) {
   problems.push("SPA fallback must explicitly exclude /api requests");
 }
+if (spaRewrite >= 0 && !String(rewrites[spaRewrite].source).includes("assets/")) {
+  problems.push("SPA fallback must explicitly exclude /assets requests");
+}
 if (apiRewrite >= 0 && spaRewrite >= 0 && apiRewrite > spaRewrite) {
   problems.push("API rewrite must be evaluated before the SPA fallback");
 }
