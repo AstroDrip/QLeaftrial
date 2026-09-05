@@ -76,8 +76,10 @@ export function ProductPage() {
         preferredPurpose="detail"
         className="product-detail__image"
         data-testid="product-image"
+        loading="eager"
         decoding="async"
         sizes="(max-width: 900px) 100vw, 50vw"
+        fetchPriority="high"
       />
 
       <div className="product-detail__meta">

@@ -1,3 +1,4 @@
+import compression from "compression";
 import express, { type Express } from "express";
 import { errorHandler } from "./middleware/error-handler.js";
 import { apiRouter, siteRouter } from "./routes.js";
@@ -16,6 +17,7 @@ export function createApp(): Express {
   if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
 
   app.use(requestContext);
+  app.use(compression({ threshold: 1024 }));
   app.use(siteRouter);
   app.use(express.json({ limit: "3mb" }));
   app.get("/api/v1/health", (_request, response) => {
