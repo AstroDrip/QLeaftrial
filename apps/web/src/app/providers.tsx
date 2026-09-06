@@ -31,6 +31,11 @@ export function useSiteLanguage() {
   return useContext(LanguageContext);
 }
 
+export function useSiteContent() {
+  const { language } = useSiteLanguage();
+  return localeContent[language];
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<SiteLanguage>(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem("qleaves-language") : null;

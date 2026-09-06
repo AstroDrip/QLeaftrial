@@ -51,3 +51,7 @@
 .admin-session-state { padding: 40px; }
 .table-card input[type="number"] { min-width: 90px; }
 .table-card td[aria-live] { min-width: 84px; color: var(--moss); }
+
+.admin-product-ar-fields{display:grid;gap:8px;margin-top:10px;min-width:260px}
+.admin-product-ar-fields input,.admin-product-ar-fields textarea{width:100%}
+.admin-product-ar-fields textarea{min-height:72px;resize:vertical}

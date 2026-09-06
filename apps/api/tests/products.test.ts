@@ -190,4 +190,31 @@ describe("product catalogue", () => {
     expect(response.body.categoryLabels.Indoor).toBe("نباتات داخلية");
     expect(response.body.lightLabels["Bright indirect"]).toBe("إضاءة ساطعة غير مباشرة");
   });
+
+  it("localizes Arabic product responses, search, and filters with English fallback", async () => {
+    const list = await request(createApp()).get("/api/v1/products?lang=ar&q=%D9%85%D9%86%D8%B2%D9%84%D9%8A");
+    expect(list.status).toBe(200);
+    expect(list.body.items).toContainEqual(
+      expect.objectContaining({
+        slug: "house-plant",
+        name: "نبات منزلي",
+        category: "نباتات داخلية",
+        light: "إضاءة ساطعة غير مباشرة",
+      }),
+    );
+
+    const detail = await request(createApp()).get("/api/v1/products/house-plant?lang=ar");
+    expect(detail.status).toBe(200);
+    expect(detail.body).toEqual(expect.objectContaining({
+      name: "نبات منزلي",
+      description: expect.stringContaining("أوراق"),
+    }));
+
+    const filters = await request(createApp()).get("/api/v1/products/filters?lang=ar");
+    expect(filters.status).toBe(200);
+    expect(filters.body.categories).toContain("نباتات داخلية");
+    expect(filters.body.lights).toContain("إضاءة ساطعة غير مباشرة");
+  });
+
+
 });

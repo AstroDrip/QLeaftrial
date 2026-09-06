@@ -28,3 +28,9 @@ export const deleteOrdersSchema = z.object({
 });
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+
+export const bulkDeleteOrdersSchema = z.object({
+  ids: z.array(z.string().trim().min(1)).min(1).max(100),
+}).strict();
+
+export type BulkDeleteOrdersInput = z.infer<typeof bulkDeleteOrdersSchema>;

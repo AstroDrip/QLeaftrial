@@ -89,18 +89,22 @@ type ProductFilterRepository = {
 
 const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
 
-function toSummary(product: PublicProductRecord): ProductSummary {
+function toSummary(
+  product: PublicProductRecord,
+  language: ProductQuery["lang"] = "en",
+): ProductSummary {
   const [image] = product.media;
   const stock = product.inventory?.quantity ?? 0;
+  const isArabic = language === "ar";
 
   return {
     id: product.id,
     slug: product.slug,
-    name: product.name,
+    name: isArabic && product.nameAr?.trim() ? product.nameAr : product.name,
     nameAr: product.nameAr,
-    category: product.category,
+    category: isArabic && product.categoryAr?.trim() ? product.categoryAr : product.category,
     categoryAr: product.categoryAr,
-    light: product.light,
+    light: isArabic && product.lightAr?.trim() ? product.lightAr : product.light,
     lightAr: product.lightAr,
     priceQar: product.priceQar,
     stock,
@@ -110,10 +114,13 @@ function toSummary(product: PublicProductRecord): ProductSummary {
   };
 }
 
-function toDetail(product: PublicProductRecord): ProductDetail {
+function toDetail(
+  product: PublicProductRecord,
+  language: ProductQuery["lang"] = "en",
+): ProductDetail {
   return {
-    ...toSummary(product),
-    description: product.description,
+    ...toSummary(product, language),
+    description: language === "ar" && product.descriptionAr?.trim() ? product.descriptionAr : product.description,
     descriptionAr: product.descriptionAr,
     media: product.media,
   };
@@ -162,7 +169,7 @@ export async function listProducts(query: ProductQuery): Promise<{
   ]);
 
   return {
-    items: products.map(toSummary),
+    items: products.map((product) => toSummary(product, query.lang)),
     page: query.page,
     pageSize: PAGE_SIZE,
     totalItems,
@@ -170,7 +177,7 @@ export async function listProducts(query: ProductQuery): Promise<{
   };
 }
 
-export async function listProductFilters(): Promise<{
+export async function listProductFilters(language: ProductQuery["lang"] = "en"): Promise<{
   categories: string[];
   lights: string[];
   categoryLabels: Record<string, string>;
@@ -182,18 +189,21 @@ export async function listProductFilters(): Promise<{
   });
 
   return {
-    categories: [...new Set(products.map((product) => product.category))].sort(),
-    lights: [...new Set(products.map((product) => product.light))].sort(),
+    categories: [...new Set(products.map((product) => language === "ar" && product.categoryAr?.trim() ? product.categoryAr : product.category))].sort(),
+    lights: [...new Set(products.map((product) => language === "ar" && product.lightAr?.trim() ? product.lightAr : product.light))].sort(),
     categoryLabels: Object.fromEntries(products.flatMap((product) => product.categoryAr ? [[product.category, product.categoryAr]] : [])),
     lightLabels: Object.fromEntries(products.flatMap((product) => product.lightAr ? [[product.light, product.lightAr]] : [])),
   };
 }
 
-export async function findProductBySlug(slug: string): Promise<ProductDetail | null> {
+export async function findProductBySlug(
+  slug: string,
+  language: ProductQuery["lang"] = "en",
+): Promise<ProductDetail | null> {
   const product = await productRepository.findFirst({
     where: { slug, published: true },
     select: publicProductSelection,
   });
 
-  return product ? toDetail(product) : null;
+  return product ? toDetail(product, language) : null;
 }
