@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { productApi } from "./product-api";
-import { content } from "../../content/en";
+import { useSiteLanguage } from "../../app/providers";
+import { localizeProduct } from "./localize-product";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { Seo } from "../../components/Seo";
 import { ProductImage } from "../../components/ProductImage";
 import "./product-detail.css";
 
 export function ProductPage() {
+  const { content, isArabic } = useSiteLanguage();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const fallbackSlug = slug ?? "unknown";
@@ -26,7 +28,7 @@ export function ProductPage() {
   if (isPending) {
     return (
       <p data-testid="product-loading" className="product-detail">
-        Loading plant…
+        {isArabic ? "جارٍ تحميل النبات…" : "Loading plant…"}
       </p>
     );
   }
@@ -35,10 +37,10 @@ export function ProductPage() {
     return (
       <section className="product-detail" data-testid="product-error">
         <p role="alert">
-          {content.errors.retryFailed}: {(error as Error).message}
+          {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
         </p>
         <button type="button" onClick={() => navigate(-1)}>
-          Back
+          {content.common.back}
         </button>
       </section>
     );
@@ -54,25 +56,26 @@ export function ProductPage() {
   }
 
   const primaryImage = product.media[0] ?? product.image;
+  const localized = localizeProduct(product, isArabic);
   return (
     <article className="product-detail" data-testid="product-page">
       <Seo
-        title={product.name}
-        description={product.description}
+        title={localized.name}
+        description={localized.description}
         path={`/plants/${product.slug}`}
         image={primaryImage?.url}
         structuredData={{
           "@context": "https://schema.org",
           "@type": "Product",
-          name: product.name,
-          description: product.description,
+          name: localized.name,
+          description: localized.description,
           image: product.media.map((media) => new URL(media.url, "https://qleaves.qa").toString()),
           offers: { "@type": "Offer", priceCurrency: "QAR", price: product.priceQar, availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", url: `https://qleaves.qa/plants/${product.slug}` },
         }}
       />
       <ProductImage
         media={product.media.length > 0 ? product.media : primaryImage}
-        alt={primaryImage?.altText || product.name}
+        alt={isArabic ? localized.name : primaryImage?.altText || localized.name}
         preferredPurpose="detail"
         className="product-detail__image"
         data-testid="product-image"
@@ -84,7 +87,7 @@ export function ProductPage() {
 
       <div className="product-detail__meta">
         <h1 className="product-detail__name" data-testid="product-name">
-          {product.name}
+          {localized.name}
         </h1>
         <p className="product-detail__price" data-testid="product-price">
           {product.priceQar} QAR
@@ -98,15 +101,15 @@ export function ProductPage() {
             : content.product.outOfStock}
         </p>
         <p className="product-detail__description">
-          {product.description}
+          {localized.description}
         </p>
 
         <ul className="product-detail__facts" data-testid="care-facts">
           <li>
-            <span>{content.product.category}:</span> {product.category}
+            <span>{content.product.category}:</span> {localized.category}
           </li>
           <li>
-            <span>{content.product.lightNeeds}:</span> {product.light}
+            <span>{content.product.lightNeeds}:</span> {localized.light}
           </li>
         </ul>
         <AddToCartButton product={product} className="product-detail__cart" />

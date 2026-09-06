@@ -4,10 +4,14 @@ export const updateAdminProductSchema = z
   .object({
     priceQar: z.number().int().nonnegative().optional(),
     stock: z.number().int().nonnegative().optional(),
+    nameAr: z.string().trim().min(2).max(120).optional(),
+    descriptionAr: z.string().trim().min(10).max(2000).optional(),
+    categoryAr: z.string().trim().min(2).max(80).optional(),
+    lightAr: z.string().trim().min(2).max(80).optional(),
   })
   .strict()
   .refine(
-    (value) => value.priceQar !== undefined || value.stock !== undefined,
+    (value) => Object.values(value).some((field) => field !== undefined),
     "At least one product field is required",
   );
 
@@ -31,11 +35,15 @@ const stagedProductImageSchema = productUploadMetadataSchema.extend({
 
 export const createAdminProductSchema = z.object({
   name: z.string().trim().min(2).max(120),
+  nameAr: z.string().trim().min(2).max(120),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must contain lowercase letters, numbers, and hyphens").max(120),
   sku: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]+$/, "SKU contains invalid characters").max(40),
   description: z.string().trim().min(10).max(2000),
+  descriptionAr: z.string().trim().min(10).max(2000),
   category: z.string().trim().min(2).max(80),
+  categoryAr: z.string().trim().min(2).max(80),
   light: z.string().trim().min(2).max(80),
+  lightAr: z.string().trim().min(2).max(80),
   priceQar: z.number().int().nonnegative(),
   costPrice: z.number().int().nonnegative(),
   stock: z.number().int().nonnegative(),

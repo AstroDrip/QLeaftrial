@@ -8,6 +8,10 @@ const adminProductSelection = {
   id: true,
   slug: true,
   name: true,
+  nameAr: true,
+  descriptionAr: true,
+  categoryAr: true,
+  lightAr: true,
   priceQar: true,
   inventory: { select: { quantity: true } },
 } as const;
@@ -16,6 +20,10 @@ type AdminProductRecord = {
   id: string;
   slug: string;
   name: string;
+  nameAr: string | null;
+  descriptionAr: string | null;
+  categoryAr: string | null;
+  lightAr: string | null;
   priceQar: number;
   inventory: { quantity: number } | null;
 };
@@ -24,6 +32,10 @@ export type AdminProduct = {
   id: string;
   slug: string;
   name: string;
+  nameAr: string | null;
+  descriptionAr: string | null;
+  categoryAr: string | null;
+  lightAr: string | null;
   priceQar: number;
   stock: number;
 };
@@ -41,9 +53,13 @@ type AdminProductCreateRepository = {
       slug: string;
       sku: string;
       name: string;
+      nameAr: string;
       description: string;
+      descriptionAr: string;
       category: string;
+      categoryAr: string;
       light: string;
+      lightAr: string;
       priceQar: number;
       costPrice: number;
       published: boolean;
@@ -65,13 +81,13 @@ type TransactionClient = {
   product: {
     findUnique(args: {
       where: { id: string };
-      select: { id: true; slug: true; name: true; priceQar: true };
-    }): Promise<{ id: string; slug: string; name: string; priceQar: number } | null>;
+      select: typeof adminProductSelection;
+    }): Promise<AdminProductRecord | null>;
     update(args: {
       where: { id: string };
-      data: { priceQar?: number };
-      select: { id: true; slug: true; name: true; priceQar: true };
-    }): Promise<{ id: string; slug: string; name: string; priceQar: number }>;
+      data: { priceQar?: number; nameAr?: string; descriptionAr?: string; categoryAr?: string; lightAr?: string };
+      select: typeof adminProductSelection;
+    }): Promise<AdminProductRecord>;
   };
   inventory: {
     findUnique(args: {
@@ -100,6 +116,10 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
     id: product.id,
     slug: product.slug,
     name: product.name,
+    nameAr: product.nameAr,
+    descriptionAr: product.descriptionAr,
+    categoryAr: product.categoryAr,
+    lightAr: product.lightAr,
     priceQar: product.priceQar,
     stock: product.inventory?.quantity ?? 0,
   };
@@ -120,18 +140,25 @@ export async function updateAdminProduct(
   return transactionDatabase.$transaction(async (transaction) => {
     const existing = await transaction.product.findUnique({
       where: { id },
-      select: { id: true, slug: true, name: true, priceQar: true },
+      select: adminProductSelection,
     });
     if (!existing) {
       throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
     }
 
-    const product = input.priceQar === undefined
+    const productFields = {
+      ...(input.priceQar !== undefined ? { priceQar: input.priceQar } : {}),
+      ...(input.nameAr !== undefined ? { nameAr: input.nameAr } : {}),
+      ...(input.descriptionAr !== undefined ? { descriptionAr: input.descriptionAr } : {}),
+      ...(input.categoryAr !== undefined ? { categoryAr: input.categoryAr } : {}),
+      ...(input.lightAr !== undefined ? { lightAr: input.lightAr } : {}),
+    };
+    const product = Object.keys(productFields).length === 0
       ? existing
       : await transaction.product.update({
           where: { id },
-          data: { priceQar: input.priceQar },
-          select: { id: true, slug: true, name: true, priceQar: true },
+          data: productFields,
+          select: adminProductSelection,
         });
 
     const inventory = input.stock === undefined
@@ -174,9 +201,13 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         slug: input.slug,
         sku: input.sku,
         name: input.name,
+        nameAr: input.nameAr,
         description: input.description,
+        descriptionAr: input.descriptionAr,
         category: input.category,
+        categoryAr: input.categoryAr,
         light: input.light,
+        lightAr: input.lightAr,
         priceQar: input.priceQar,
         costPrice: input.costPrice,
         published: true,

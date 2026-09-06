@@ -72,22 +72,40 @@ describe("product catalogue", () => {
       .not.toContain("unpublished-house-plant");
   });
 
-  it("compresses JSON responses and sets cache headers for product catalogue routes", async () => {
+  it("compresses JSON responses and requires product catalogue revalidation", async () => {
     const listResponse = await request(createApp())
       .get("/api/v1/products?page=1")
       .set("Accept-Encoding", "gzip");
 
     expect(listResponse.status).toBe(200);
     expect(listResponse.headers["content-encoding"]).toBe("gzip");
-    expect(listResponse.headers["cache-control"]).toContain("public");
-    expect(listResponse.headers["cache-control"]).toContain("max-age=60");
+    expect(listResponse.headers["cache-control"]).toBe("public, max-age=0, must-revalidate");
 
     const detailResponse = await request(createApp())
       .get("/api/v1/products/house-plant")
       .set("Accept-Encoding", "gzip");
 
     expect(detailResponse.status).toBe(200);
-    expect(detailResponse.headers["cache-control"]).toContain("max-age=120");
+    expect(detailResponse.headers["cache-control"]).toBe("public, max-age=0, must-revalidate");
+  });
+
+  it("returns Arabic product copy alongside the canonical product fields", async () => {
+    const response = await request(createApp()).get("/api/v1/products/house-plant");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(expect.objectContaining({
+      nameAr: "نبات منزلي",
+      descriptionAr: expect.any(String),
+      categoryAr: "نباتات داخلية",
+      lightAr: "إضاءة ساطعة غير مباشرة",
+    }));
+  });
+
+  it("searches Arabic product copy", async () => {
+    const response = await request(createApp()).get("/api/v1/products?q=" + encodeURIComponent("منزلي"));
+
+    expect(response.status).toBe(200);
+    expect(response.body.items.map((product: { slug: string }) => product.slug)).toContain("house-plant");
   });
 
   it("returns the public error shape when a product is absent", async () => {
@@ -169,5 +187,7 @@ describe("product catalogue", () => {
     expect(response.status).toBe(200);
     expect(response.body.categories).toContain("Outdoor");
     expect(response.body.lights).toContain("Full sun");
+    expect(response.body.categoryLabels.Indoor).toBe("نباتات داخلية");
+    expect(response.body.lightLabels["Bright indirect"]).toBe("إضاءة ساطعة غير مباشرة");
   });
 });

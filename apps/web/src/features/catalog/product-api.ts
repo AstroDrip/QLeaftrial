@@ -34,6 +34,8 @@ export const productApi = {
   filters: (): Promise<{
     categories: string[];
     lights: string[];
+    categoryLabels?: Record<string, string>;
+    lightLabels?: Record<string, string>;
   }> => request("/products/filters"),
 };
 

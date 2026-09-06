@@ -16,8 +16,11 @@ export interface ProductSummary {
   id: string;
   slug: string;
   name: string;
+  nameAr?: string | null;
   category: string;
+  categoryAr?: string | null;
   light: string;
+  lightAr?: string | null;
   priceQar: number;
   stock: number;
   inStock: boolean;
@@ -27,6 +30,7 @@ export interface ProductSummary {
 
 export interface ProductDetail extends ProductSummary {
   description: string;
+  descriptionAr?: string | null;
   media: ProductMedia[];
 }
 

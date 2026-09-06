@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useRouteError } from "react-router-dom";
+import { useSiteLanguage } from "../app/providers";
 
 type RecoveryStorage = {
   getItem(key: string): string | null;
@@ -48,6 +49,7 @@ export function attemptStaleChunkRecovery(
 }
 
 export function RouteErrorContent({ error }: { error: unknown }) {
+  const { isArabic } = useSiteLanguage();
   const staleChunk = isStaleChunkError(error);
 
   useEffect(() => {
@@ -61,14 +63,14 @@ export function RouteErrorContent({ error }: { error: unknown }) {
   return (
     <main className="page-shell" id="main-content">
       <p className="eyebrow">QLeaves</p>
-      <h1>{staleChunk ? "Updating QLeaves" : "Something went wrong"}</h1>
+      <h1>{staleChunk ? (isArabic ? "جارٍ تحديث QLeaves" : "Updating QLeaves") : (isArabic ? "حدث خطأ ما" : "Something went wrong")}</h1>
       <p>
         {staleChunk
-          ? "A newer version of the shop is available. Refresh to continue."
-          : "We couldn't load this page. Please refresh and try again."}
+          ? (isArabic ? "يتوفر إصدار أحدث من المتجر. حدّث الصفحة للمتابعة." : "A newer version of the shop is available. Refresh to continue.")
+          : (isArabic ? "تعذر تحميل هذه الصفحة. يرجى تحديثها والمحاولة مجددًا." : "We couldn't load this page. Please refresh and try again.")}
       </p>
       <button type="button" className="button button-primary" onClick={() => window.location.reload()}>
-        Refresh QLeaves
+        {isArabic ? "تحديث QLeaves" : "Refresh QLeaves"}
       </button>
     </main>
   );

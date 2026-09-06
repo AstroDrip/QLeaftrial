@@ -34,11 +34,11 @@ const spaRewrite = rewrites.findIndex((route) => route.destination === "/index.h
 if (apiRewrite < 0) problems.push("Missing /api/v1/* rewrite to the Express function");
 if (sitemapRewrite < 0) problems.push("Missing /sitemap.xml rewrite to the Express function");
 if (spaRewrite < 0) problems.push("Missing SPA fallback to index.html");
-if (spaRewrite >= 0 && !String(rewrites[spaRewrite].source).includes("?!api/")) {
-  problems.push("SPA fallback must explicitly exclude /api requests");
-}
-if (spaRewrite >= 0 && !String(rewrites[spaRewrite].source).includes("assets/")) {
-  problems.push("SPA fallback must explicitly exclude /assets requests");
+const spaSource = spaRewrite >= 0 ? String(rewrites[spaRewrite].source) : "";
+const excludesApi = spaSource.includes("?!api/");
+const excludesAssets = spaSource.includes("?!assets/") || spaSource.includes("?!api/|assets/");
+if (spaRewrite >= 0 && (!excludesApi || !excludesAssets)) {
+  problems.push("SPA fallback must explicitly exclude /api and /assets requests");
 }
 if (apiRewrite >= 0 && spaRewrite >= 0 && apiRewrite > spaRewrite) {
   problems.push("API rewrite must be evaluated before the SPA fallback");
@@ -70,6 +70,8 @@ if (!reportOnlyCsp) {
     "default-src 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
     "report-uri /api/v1/security/csp-report",
   ]) {
     if (!reportOnlyCsp.includes(directive)) {

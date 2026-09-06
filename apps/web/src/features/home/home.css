@@ -13,3 +13,11 @@
 .home-plants__notice{margin:-22px 0 28px;color:var(--rust);font-size:.82rem}
 @media(max-width:900px){.home-plant-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.home-about{grid-template-columns:1fr}}@media(max-width:560px){.home-plant-grid{grid-template-columns:1fr}.qhero__bottom>span:first-child{display:none}}
 @media(prefers-reduced-motion:reduce){.scroll-cue .stem:after{animation:none;top:0}.home-plant-card{opacity:1;transform:none}}
+@media(max-width:560px){
+  .paper-half .grain>span{max-width:34vw;text-align:center;line-height:1.55;letter-spacing:.16em;font-size:.62rem;overflow-wrap:anywhere}
+  .paper-half#paperLeft .grain{transform:translateX(-10%)}
+  .paper-half#paperRight .grain{transform:translateX(10%)}
+  .torn-reveal{padding-inline:clamp(28px,10vw,44px)}
+  .torn-reveal .eyebrow{max-width:24ch;line-height:1.55}
+  .torn-reveal h2{max-width:11ch;font-size:clamp(2.1rem,11vw,3rem)}
+}

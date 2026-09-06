@@ -74,6 +74,19 @@ describe("AdminProductsPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/stock save failed/i);
   });
 
+  it("persists Arabic catalogue copy when an editor leaves the field", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+
+    const arabicName = await screen.findByRole("textbox", { name: /monstera arabic name/i });
+    await user.clear(arabicName);
+    await user.type(arabicName, "مونستيرا");
+    await user.tab();
+
+    expect(adminApi.updateProduct).toHaveBeenCalledWith("plant-1", { nameAr: "مونستيرا" });
+  });
+
   it("hands one selected image to the upload workflow and disables duplicate submission", async () => {
     vi.mocked(adminApi.createProductWithImage).mockImplementation(() => new Promise(() => {}));
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

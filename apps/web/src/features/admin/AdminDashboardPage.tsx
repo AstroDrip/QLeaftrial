@@ -1,15 +1,16 @@
 import { Link } from "react-router-dom";
-import { content } from "../../content/en";
+import { useSiteLanguage } from "../../app/providers";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "./admin-api";
 
 export function AdminDashboardPage() {
+  const { content } = useSiteLanguage();
   const dashboard = useQuery({ queryKey: ["admin", "dashboard"], queryFn: adminApi.dashboard });
   const stats = dashboard.data ? [
-    { label: "Orders today", value: String(dashboard.data.ordersToday) },
-    { label: "Live inventory", value: String(dashboard.data.liveInventory) },
-    { label: "Low stock", value: String(dashboard.data.lowStock) },
-    { label: "Pending payouts", value: `QAR ${dashboard.data.pendingPayoutsQar}` },
+    { label: content.admin.ordersToday, value: String(dashboard.data.ordersToday) },
+    { label: content.admin.liveInventory, value: String(dashboard.data.liveInventory) },
+    { label: content.admin.lowStock, value: String(dashboard.data.lowStock) },
+    { label: content.admin.pendingPayouts, value: `QAR ${dashboard.data.pendingPayoutsQar}` },
   ] : [];
   return (
     <section className="page-shell admin-page" data-testid="admin-dashboard-page">
@@ -26,8 +27,8 @@ export function AdminDashboardPage() {
           </article>
         ))}
       </div>
-      {dashboard.isPending ? <p>Loading dashboard…</p> : null}
-      {dashboard.isError ? <p role="alert">Could not load dashboard.</p> : null}
+      {dashboard.isPending ? <p>{content.admin.loadingDashboard}</p> : null}
+      {dashboard.isError ? <p role="alert">{content.admin.loadDashboardError}</p> : null}
 
       <div className="admin-actions">
         <Link to="/admin/products" className="primary-button">

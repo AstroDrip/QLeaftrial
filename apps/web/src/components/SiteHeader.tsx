@@ -1,27 +1,32 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { content } from "../content/en";
-
-const navLinks = [
-  { to: "/shop", label: content.nav.shop },
-  { to: "/cart", label: content.nav.cart },
-] as const;
+import { LanguageToggle } from "./LanguageToggle";
+import { useSiteLanguage } from "../app/providers";
 
 export function SiteHeader() {
   const { pathname } = useLocation();
+  const { content } = useSiteLanguage();
   const onHome = pathname === "/";
+  const navLinks = [
+    { to: "/shop", label: content.nav.shop },
+    { to: "/cart", label: content.nav.cart },
+  ];
+
   return (
     <header className={`site-header${onHome ? " site-header--hero" : ""}`} data-testid="site-header">
       <div className="site-header__inner">
-        <Link to="/" className="site-header__brand" aria-label="QLeaves home">
+        <Link to="/" className="site-header__brand" aria-label="QLeaves home" lang="en" dir="ltr">
           <img className="site-header__logo" src="/brand/qleaves-logo.png" alt="" aria-hidden="true" onError={(event) => { event.currentTarget.style.display = "none"; }} />
           <span className="site-header__wordmark" aria-label={content.brand}>
             <span className="site-header__wordmark-q">Q</span>
             <span className="site-header__wordmark-leaves">LEAVES</span>
           </span>
         </Link>
-        <nav aria-label="primary" className="site-header__nav" data-testid="primary-nav">
-          {navLinks.map(({ to, label }) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}
-        </nav>
+        <div className="site-header__actions">
+          <nav aria-label={content.aria.primaryNavigation} className="site-header__nav" data-testid="primary-nav">
+            {navLinks.map(({ to, label }) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}
+          </nav>
+          <LanguageToggle />
+        </div>
       </div>
     </header>
   );

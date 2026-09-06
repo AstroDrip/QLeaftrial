@@ -6,11 +6,15 @@ vi.mock("./product-image-variants", () => ({ createProductImageVariants: vi.fn()
 
 const fields = {
   name: "New Fern",
+  nameAr: "سرخس جديد",
   slug: "new-fern",
   sku: "QL-NF-007",
   description: "A fresh fern for a shaded corner.",
+  descriptionAr: "سرخس جديد لزاوية مظللة في المنزل.",
   category: "Indoor",
+  categoryAr: "داخلي",
   light: "Low indirect",
+  lightAr: "إضاءة منخفضة غير مباشرة",
   priceQar: 90,
   costPrice: 35,
   stock: 4,
@@ -52,5 +56,25 @@ describe("admin product image upload orchestration", () => {
     ]);
     expect(JSON.stringify(finalBody)).not.toContain("token");
     expect(JSON.stringify(finalBody)).not.toContain("Blob");
+  });
+});
+
+describe("admin order bulk deletion", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("deletes the selected orders in one atomic API request", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await adminApi.deleteOrders(["order-1", "order-2"]);
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/admin/orders", expect.objectContaining({
+      method: "DELETE",
+      body: JSON.stringify({ ids: ["order-1", "order-2"] }),
+    }));
   });
 });

@@ -40,6 +40,11 @@ if (!databaseUrl) {
     if (!parsed.hostname || !parsed.pathname || parsed.pathname === "/") {
       problems.push("DATABASE_URL must include a database host and name");
     }
+    if (!parsed.username || !parsed.password) {
+      problems.push("DATABASE_URL must include a database username and password");
+    } else if (placeholderPattern.test(parsed.username) || placeholderPattern.test(parsed.password)) {
+      problems.push("DATABASE_URL must not contain placeholder credentials");
+    }
   } catch {
     problems.push("DATABASE_URL must be a valid PostgreSQL URL");
   }

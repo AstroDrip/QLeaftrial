@@ -1,9 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { Providers } from "../app/providers";
 import { Layout } from "./Layout";
 
 describe("Layout", () => {
+  beforeEach(() => window.localStorage.clear());
+  afterEach(cleanup);
+
   it("provides navigation, skip link, and cart destination", () => {
     render(
       <MemoryRouter>
@@ -26,5 +31,28 @@ describe("Layout", () => {
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Shipping & Returns" })).toHaveAttribute("href", "/shipping-returns");
     expect(screen.getByText("QOZYD").tagName).toBe("STRONG");
+  });
+
+  it("translates the public interface to Arabic while preserving the English footer and brand", async () => {
+    render(
+      <Providers>
+        <MemoryRouter>
+          <Layout>
+            <h1>محتوى الصفحة</h1>
+          </Layout>
+        </MemoryRouter>
+      </Providers>,
+    );
+
+    await userEvent.click(screen.getByTestId("language-toggle"));
+
+    expect(screen.getByRole("link", { name: "المتجر" })).toHaveAttribute("href", "/shop");
+    expect(screen.getByRole("link", { name: "السلة" })).toHaveAttribute("href", "/cart");
+    expect(document.documentElement).toHaveAttribute("lang", "ar");
+    expect(document.documentElement).toHaveAttribute("dir", "rtl");
+    expect(screen.getByTestId("site-footer")).toHaveAttribute("lang", "en");
+    expect(screen.getByTestId("site-footer")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("Founded in 2020")).toBeInTheDocument();
+    expect(screen.getByLabelText("التبديل إلى اللغة الإنجليزية")).toBeInTheDocument();
   });
 });

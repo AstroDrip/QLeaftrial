@@ -49,4 +49,27 @@ describe("orders and admin operations", () => {
     expect(report.status).toBe(200);
     expect(report.body).toEqual(expect.objectContaining({ orders: 1, revenueQar: product.priceQar }));
   });
+
+  it("deletes a visible set atomically only when every order is deletable", async () => {
+    const product = await seededProduct("house-plant");
+    const first = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const second = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const agent = await loggedInAgent();
+    await agent.patch(`/api/v1/admin/orders/${first.body.id}/status`).send({ status: "completed" });
+
+    const rejected = await agent
+      .delete("/api/v1/admin/orders")
+      .send({ ids: [first.body.id, second.body.id] });
+
+    expect(rejected.status).toBe(409);
+    expect(await prisma.order.count({ where: { id: { in: [first.body.id, second.body.id] } } })).toBe(2);
+
+    await agent.patch(`/api/v1/admin/orders/${second.body.id}/status`).send({ status: "declined" });
+    const deleted = await agent
+      .delete("/api/v1/admin/orders")
+      .send({ ids: [first.body.id, second.body.id] });
+
+    expect(deleted.status).toBe(204);
+    expect(await prisma.order.count({ where: { id: { in: [first.body.id, second.body.id] } } })).toBe(0);
+  });
 });

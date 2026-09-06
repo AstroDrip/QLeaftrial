@@ -30,11 +30,15 @@ const stagedImages = [
 
 const newProduct = {
   name: "Direct Fern",
+  nameAr: "سرخس مباشر",
   slug: "direct-fern",
   sku: "QL-DF-100",
   description: "A production-ready fern with responsive images.",
+  descriptionAr: "سرخس جاهز للعرض مع صور متجاوبة.",
   category: "Indoor",
+  categoryAr: "نباتات داخلية",
   light: "Low indirect",
+  lightAr: "إضاءة منخفضة غير مباشرة",
   priceQar: 110,
   costPrice: 45,
   stock: 6,

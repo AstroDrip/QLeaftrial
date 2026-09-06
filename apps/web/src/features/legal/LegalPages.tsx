@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Seo } from "../../components/Seo";
 import "./LegalPages.css";
+import { useSiteLanguage } from "../../app/providers";
 
 const LAST_UPDATED = "5 September 2026";
 const WHATSAPP_URL = "https://wa.me/97477551056";
@@ -18,6 +19,7 @@ function LegalShell({
   path: string;
   children: ReactNode;
 }) {
+  const { isArabic } = useSiteLanguage();
   return (
     <section className="page-shell legal-page">
       <Seo title={title} description={description} path={path} />
@@ -25,21 +27,30 @@ function LegalShell({
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
       </div>
-      <p className="legal-page__updated">Last updated: {LAST_UPDATED}</p>
+      <p className="legal-page__updated">{isArabic ? "آخر تحديث: 5 سبتمبر 2026" : `Last updated: ${LAST_UPDATED}`}</p>
       <div className="legal-page__content">{children}</div>
     </section>
   );
 }
 
 function SupportLink() {
+  const { isArabic } = useSiteLanguage();
   return (
     <a href={WHATSAPP_URL} target="_blank" rel="noreferrer">
-      Contact QLeaves on WhatsApp
+      {isArabic ? "تواصل مع QLeaves عبر واتساب" : "Contact QLeaves on WhatsApp"}
     </a>
   );
 }
 
 export function PrivacyPage() {
+  const { isArabic } = useSiteLanguage();
+  if (isArabic) return <LegalShell eyebrow="معلوماتك" title="سياسة الخصوصية" description="كيف تجمع QLeaves معلومات العملاء وتستخدمها وتحميها." path="/privacy">
+    <section><h2>المعلومات التي نجمعها</h2><p>عند تقديم طلب، تجمع QLeaves المعلومات التي تدخلها عند الدفع، ومنها الاسم ورقم الهاتف والبريد الإلكتروني وعنوان التوصيل والمنطقة وملاحظات التوصيل الاختيارية وطريقة الدفع والمنتجات والكميات المطلوبة.</p><p>قد يعالج الموقع ومزودو الاستضافة أيضًا معلومات الطلب التقنية الأساسية اللازمة لتقديم الخدمة وتشخيص الأخطاء وحماية المتجر من إساءة الاستخدام.</p></section>
+    <section><h2>كيفية استخدام معلوماتك</h2><ul><li>لإنشاء طلبك وتأكيده وتجهيزه وتوصيله أو تحديثه أو إلغائه.</li><li>للتواصل معك بشأن توفر المنتجات أو التوصيل أو الدفع أو الدعم.</li><li>لإدارة سجلات الطلبات والمخزون وتشغيل المتجر بأمان.</li><li>للوفاء بمتطلبات حفظ السجلات أو الالتزامات القانونية.</li></ul></section>
+    <section><h2>ملفات تعريف الارتباط والتتبع</h2><p>لا يستخدم المتجر حاليًا ملفات تعريف ارتباط إعلانية أو تحليلية عن قصد. تستخدم منطقة الإدارة ملف تعريف ارتباط ضروريًا للمصادقة حتى يظل الموظفون المخولون مسجلين.</p></section>
+    <section><h2>التخزين ومزودو الخدمات</h2><p>تستخدم QLeaves مزودين خارجيين لاستضافة الموقع وواجهة البرمجة وقاعدة البيانات وصور المنتجات. يعالج هؤلاء المزودون المعلومات بالقدر اللازم لتشغيل خدماتهم، وقد تُشارك معلومات الطلب مع الأطراف المشاركة في تنفيذه عند الضرورة.</p></section>
+    <section><h2>الاحتفاظ وطلباتك</h2><p>نحتفظ بمعلومات الطلب والعملاء للمدة المعقولة اللازمة لتنفيذ الطلبات وحفظ سجلات العمل وحل النزاعات وتأمين الخدمة والوفاء بالالتزامات القانونية. للتصحيح أو الحذف أو الاستفسار عن معلوماتك، تواصل معنا.</p><p><SupportLink /></p></section>
+  </LegalShell>;
   return (
     <LegalShell
       eyebrow="Your information"
@@ -93,6 +104,15 @@ export function PrivacyPage() {
 }
 
 export function TermsPage() {
+  const { isArabic } = useSiteLanguage();
+  if (isArabic) return <LegalShell eyebrow="قواعد المتجر" title="الشروط والأحكام" description="شروط استخدام متجر QLeaves في قطر وتقديم طلبات النباتات." path="/terms">
+    <section><h2>استخدام المتجر</h2><p>يمكنك تصفح كتالوج QLeaves وتقديم طلبات لأغراض شخصية أو قانونية. لا تسئ استخدام الموقع أو تعرقل تشغيله أو تحاول الوصول غير المصرح به أو تقدم طلبات زائفة أو مسيئة.</p></section>
+    <section><h2>المنتجات والأسعار والتوفر</h2><p>تظهر الأسعار بالريال القطري وقد يتغير التوفر والمخزون. النباتات منتجات حية، لذلك يُتوقع اختلاف طبيعي في الحجم والشكل واللون والأوراق والمظهر، والصور تمثيلية وليست ضمانًا للتطابق التام.</p></section>
+    <section><h2>الطلبات والدفع</h2><p>يؤدي إرسال نموذج الدفع إلى إنشاء طلب وفق الأسعار والتوفر المؤكدين من خادم QLeaves. قد نتواصل معك لتأكيد التوفر أو تفاصيل التوصيل أو الدفع. يدعم المتجر الدفع نقدًا عند الاستلام أو عبر رابط دفع.</p><p>يجوز رفض الطلب أو إلغاؤه إذا كان المنتج غير متوفر أو تعذر التحقق من البيانات أو إتمام الدفع أو التنفيذ.</p></section>
+    <section><h2>معلومات طلبك</h2><p>أنت مسؤول عن تقديم معلومات اتصال وتوصيل دقيقة. إذا لاحظت خطأ بعد إرسال الطلب، تواصل مع QLeaves في أقرب وقت واذكر رقم الطلب.</p></section>
+    <section><h2>الملكية الفكرية ومحتوى الموقع</h2><p>لا يجوز نسخ اسم QLeaves أو علامتها أو صورها أو نصوصها أو تصميم موقعها أو إعادة استخدامها بما ينتهك حقوق QLeaves أو الغير.</p></section>
+    <section><h2>الأسئلة</h2><p>للاستفسار عن طلب أو هذه الشروط، <SupportLink />.</p></section>
+  </LegalShell>;
   return (
     <LegalShell
       eyebrow="Store rules"
@@ -147,6 +167,14 @@ export function TermsPage() {
 }
 
 export function ShippingReturnsPage() {
+  const { isArabic } = useSiteLanguage();
+  if (isArabic) return <LegalShell eyebrow="دعم الطلبات" title="الشحن والإرجاع" description="إرشادات QLeaves للتوصيل والإلغاء والتلف والإرجاع داخل قطر." path="/shipping-returns">
+    <section><h2>التوصيل</h2><p>تخدم QLeaves العملاء في قطر. يعتمد توفر التوصيل وموعده على المنطقة وتوفر المنتجات وحالة الطلب. قدم رقم هاتف متاحًا وعنوانًا كاملًا حتى نتمكن من التواصل عند الحاجة.</p></section>
+    <section><h2>تعديل الطلب أو إلغاؤه</h2><p>إذا احتجت إلى تعديل طلب أو إلغائه، تواصل مع QLeaves في أسرع وقت واذكر رقم الطلب. تعتمد إمكانية التعديل أو الإلغاء على مرحلة التجهيز والتوصيل.</p></section>
+    <section><h2>العناصر التالفة أو الخاطئة أو الناقصة</h2><p>إذا وصل عنصر تالفًا أو مختلفًا عما طلبته أو كان ناقصًا، تواصل معنا سريعًا مع رقم الطلب والمعلومات اللازمة لمراجعة المشكلة. قد نطلب صورة لتأكيد حالة النبات أو المنتج.</p></section>
+    <section><h2>حالة النبات والاختلاف الطبيعي</h2><p>النباتات منتجات حية والاختلاف الطبيعي متوقع. الاختلاف في الأوراق أو النمو أو الحجم أو الشكل أو اللون لا يعني وحده أن المنتج معيب. تراجع QLeaves مشكلات الحالة أو التنفيذ الحقيقية بصورة فردية.</p></section>
+    <section><h2>الإرجاع والحلول</h2><p>تواصل مع QLeaves قبل إعادة أي عنصر. تعتمد الأهلية والحل المناسب على المنتج وحالته وسبب الطلب وحالة الطلب. سنؤكد خطوات الاستبدال أو الاسترداد أو الرصيد أو أي حل مناسب مباشرة.</p><p><SupportLink /></p></section>
+  </LegalShell>;
   return (
     <LegalShell
       eyebrow="Order support"

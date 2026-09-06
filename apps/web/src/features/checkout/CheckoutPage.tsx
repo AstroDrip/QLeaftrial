@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { content } from "../../content/en";
+import { useSiteLanguage } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
 import { errorFromResponse } from "../../lib/api-error";
@@ -16,6 +16,7 @@ const initialForm = {
 };
 
 export function CheckoutPage() {
+  const { content, isArabic } = useSiteLanguage();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const items = useCartStore((state) => state.items);
@@ -33,7 +34,7 @@ export function CheckoutPage() {
     event.preventDefault();
     setError("");
     if (items.length === 0) {
-      setError("Your cart is empty.");
+      setError(isArabic ? "سلة المشتريات فارغة." : "Your cart is empty.");
       return;
     }
     try {
@@ -42,12 +43,12 @@ export function CheckoutPage() {
       const body = await response.json();
       clearCart();
       navigate(`/order/${body.orderNumber}`);
-    } catch (submissionError) { setError(submissionError instanceof Error ? submissionError.message : "Could not place order"); }
+    } catch (submissionError) { setError(isArabic ? "تعذر إرسال الطلب" : submissionError instanceof Error ? submissionError.message : "Could not place order"); }
   }
 
   return (
     <section className="page-shell checkout-page" data-testid="checkout-page">
-      <Seo title="Checkout" description="Submit your QLeaves plant order details." path="/checkout" noIndex />
+      <Seo title={content.checkout.title} description={isArabic ? "أرسل تفاصيل طلب نباتات QLeaves." : "Submit your QLeaves plant order details."} path="/checkout" noIndex />
       <div className="page-shell__header">
         <p className="eyebrow">{content.checkout.title}</p>
         <h1>{content.checkout.guestHeading}</h1>
@@ -64,7 +65,7 @@ export function CheckoutPage() {
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="Aisha Rahman"
+              placeholder={isArabic ? "عائشة رحمن" : "Aisha Rahman"}
             />
           </label>
 
@@ -95,7 +96,7 @@ export function CheckoutPage() {
               name="address"
               value={form.address}
               onChange={handleChange}
-              placeholder="Villa 12, Street 30"
+              placeholder={isArabic ? "فيلا 12، شارع 30" : "Villa 12, Street 30"}
             />
           </label>
 
@@ -105,7 +106,7 @@ export function CheckoutPage() {
               name="area"
               value={form.area}
               onChange={handleChange}
-              placeholder="Doha"
+              placeholder={isArabic ? "الدوحة" : "Doha"}
             />
           </label>
 
@@ -123,7 +124,7 @@ export function CheckoutPage() {
               name="notes"
               value={form.notes}
               onChange={handleChange}
-              placeholder="Ring the bell or leave at reception."
+              placeholder={isArabic ? "يرجى قرع الجرس أو ترك الطلب عند الاستقبال." : "Ring the bell or leave at reception."}
             />
           </label>
         </div>
@@ -132,7 +133,7 @@ export function CheckoutPage() {
           <h2>{content.order.summary}</h2>
           <ul>
             <li>
-              <span>{items.map((item) => `${item.name} × ${item.quantity}`).join(", ")}</span>
+              <span>{items.map((item) => `${isArabic ? item.nameAr?.trim() || item.name : item.name} × ${item.quantity}`).join(isArabic ? "، " : ", ")}</span>
               <strong>{cartSubtotal(items)} QAR</strong>
             </li>
           </ul>
@@ -146,7 +147,7 @@ export function CheckoutPage() {
           {content.checkout.placeOrder}
         </button>
         <p className="checkout-form__legal">
-          By placing an order, you agree to the <Link to="/terms">Terms & Conditions</Link> and acknowledge the <Link to="/privacy">Privacy Policy</Link> and <Link to="/shipping-returns">Shipping & Returns</Link> information.
+          {isArabic ? <>بإرسال الطلب، فإنك توافق على <Link to="/terms">الشروط والأحكام</Link> وتقر بالاطلاع على <Link to="/privacy">سياسة الخصوصية</Link> ومعلومات <Link to="/shipping-returns">الشحن والإرجاع</Link>.</> : <>By placing an order, you agree to the <Link to="/terms">Terms &amp; Conditions</Link> and acknowledge the <Link to="/privacy">Privacy Policy</Link> and <Link to="/shipping-returns">Shipping &amp; Returns</Link> information.</>}
         </p>
       </form>
     </section>

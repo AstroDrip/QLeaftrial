@@ -248,4 +248,18 @@ describe("production Prisma workflow", () => {
       stderr: expect.stringContaining("DATABASE_URL must use postgresql://"),
     });
   });
+
+  it.each([
+    "postgresql://qleaves@localhost:6543/qleaves",
+    "postgresql://your-user:replace-me@localhost:6543/qleaves",
+  ])("rejects missing or placeholder database credentials without connecting (%s)", async (databaseUrl) => {
+    await expect(
+      verifyDeploymentEnvironment({
+        QLEAVES_DATABASE_PROVIDER: "postgresql",
+        DATABASE_URL: databaseUrl,
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining("DATABASE_URL"),
+    });
+  });
 });

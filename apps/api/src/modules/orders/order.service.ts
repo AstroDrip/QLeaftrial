@@ -64,6 +64,22 @@ export async function deleteOrder(id: string) {
   await db.order.delete({ where: { id } });
 }
 
+export async function deleteOrders(ids: string[]) {
+  await db.$transaction(async (transaction) => {
+    const orders = await transaction.order.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, status: true },
+    });
+    if (orders.length !== ids.length) {
+      throw new ApiError(404, "ORDER_NOT_FOUND", "One or more orders were not found");
+    }
+    if (orders.some((order) => order.status !== "CANCELLED" && order.status !== "DELIVERED")) {
+      throw new ApiError(409, "ORDER_NOT_DELETABLE", "Only declined or completed orders can be deleted");
+    }
+    await transaction.order.deleteMany({ where: { id: { in: ids } } });
+  });
+}
+
 export async function dashboardStats() {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const [ordersToday, inventory, lowStock, pending] = await Promise.all([

@@ -27,8 +27,11 @@ export type ProductSummary = {
   id: string;
   slug: string;
   name: string;
+  nameAr: string | null;
   category: string;
+  categoryAr: string | null;
   light: string;
+  lightAr: string | null;
   priceQar: number;
   stock: number;
   inStock: boolean;
@@ -38,4 +41,5 @@ export type ProductSummary = {
 
 export type ProductDetail = ProductSummary & {
   description: string;
+  descriptionAr: string | null;
 };

@@ -14,6 +14,8 @@ import { CatalogPage } from "./CatalogPage";
 import { productApi } from "./product-api";
 import type { ProductSummary } from "./product-types";
 import { useCartStore } from "../cart/cart-store";
+import { Providers } from "../../app/providers";
+import { LanguageToggle } from "../../components/LanguageToggle";
 
 vi.mock("./product-api", () => ({
   productApi: {
@@ -43,11 +45,24 @@ function renderWithClient(ui: ReactElement) {
 
 describe("CatalogPage", () => {
   beforeEach(() => {
+    window.localStorage.removeItem("qleaves-language");
     useCartStore.setState({ items: [] });
     mockFilters.mockResolvedValue({
       categories: ["Indoor", "Succulent"],
       lights: ["Bright indirect", "Direct sun"],
     });
+  });
+
+  it("renders Arabic product and filter copy after switching languages", async () => {
+    mockFilters.mockResolvedValue({ categories: ["Indoor"], lights: ["Bright indirect"], categoryLabels: { Indoor: "نباتات داخلية" }, lightLabels: { "Bright indirect": "إضاءة ساطعة غير مباشرة" } });
+    mockList.mockResolvedValue({ items: [{ id: "1", slug: "house-plant", name: "House Plant", nameAr: "نبات منزلي", category: "Indoor", categoryAr: "نباتات داخلية", light: "Bright indirect", lightAr: "إضاءة ساطعة غير مباشرة", priceQar: 180, stock: 12, inStock: true, image: null }], page: 1, pageSize: 24, totalItems: 1, totalPages: 1 });
+    render(<Providers><MemoryRouter><LanguageToggle /><CatalogPage /></MemoryRouter></Providers>);
+
+    await userEvent.click(screen.getByTestId("language-toggle"));
+
+    expect(await screen.findByRole("heading", { name: "نبات منزلي" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "نباتات داخلية" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "أضف نبات منزلي إلى السلة" })).toBeInTheDocument();
   });
 
   afterEach(() => {

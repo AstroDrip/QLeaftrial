@@ -3,22 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { productApi } from "./product-api";
 import type { ProductListParams } from "./product-types";
-import { content } from "../../content/en";
+import { useSiteLanguage } from "../../app/providers";
+import { localizeProduct } from "./localize-product";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { Seo } from "../../components/Seo";
 import { ProductImage } from "../../components/ProductImage";
 import "./catalog.css";
 
-const SORT_OPTIONS: ReadonlyArray<{
-  value: "name-asc" | "price-asc" | "price-desc";
-  label: (c: typeof content) => string;
-}> = [
-  { value: "name-asc", label: (c) => c.catalog.sortNameAsc },
-  { value: "price-asc", label: (c) => c.catalog.sortPriceAsc },
-  { value: "price-desc", label: (c) => c.catalog.sortPriceDesc },
-];
+const SORT_OPTIONS = [
+  { value: "name-asc", label: "sortNameAsc" },
+  { value: "price-asc", label: "sortPriceAsc" },
+  { value: "price-desc", label: "sortPriceDesc" },
+] as const;
 
 export function CatalogPage() {
+  const { content, isArabic } = useSiteLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(
     searchParams.get("q") ?? "",
@@ -105,7 +104,7 @@ export function CatalogPage() {
 
   return (
     <section className="catalog" data-testid="catalog-page">
-      <Seo title="Plant collection" description="Shop QLeaves indoor plants available in Qatar, with current prices and stock." path="/shop" />
+      <Seo title={content.catalog.title} description={isArabic ? "تسوق نباتات QLeaves الداخلية المتوفرة في قطر مع الأسعار والمخزون الحالي." : "Shop QLeaves indoor plants available in Qatar, with current prices and stock."} path="/shop" />
       <h1 className="catalog__title">{content.catalog.title}</h1>
 
       <form
@@ -126,7 +125,7 @@ export function CatalogPage() {
           data-testid="search-input"
         />
         <button type="submit" data-testid="search-submit">
-          Search
+          {content.common.search}
         </button>
       </form>
 
@@ -150,7 +149,7 @@ export function CatalogPage() {
             <option value="">{content.catalog.filterAllCategories}</option>
             {filters?.categories.map((cat) => (
               <option key={cat} value={cat}>
-                {cat}
+                {isArabic ? filters.categoryLabels?.[cat] || cat : cat}
               </option>
             ))}
           </select>
@@ -175,7 +174,7 @@ export function CatalogPage() {
             <option value="">{content.catalog.filterAllLights}</option>
             {filters?.lights.map((light) => (
               <option key={light} value={light}>
-                {light}
+                {isArabic ? filters.lightLabels?.[light] || light : light}
               </option>
             ))}
           </select>
@@ -190,7 +189,7 @@ export function CatalogPage() {
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label(content)}
+                {content.catalog[opt.label]}
               </option>
             ))}
           </select>
@@ -201,18 +200,18 @@ export function CatalogPage() {
           onClick={clearFilters}
           data-testid="clear-filters"
         >
-          Clear
+          {content.common.clear}
         </button>
       </div>
 
       {isError ? (
         <p role="alert" data-testid="catalog-error">
-          {content.errors.retryFailed}: {(error as Error).message}
+          {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
         </p>
       ) : (
         <>
           {isPending ? (
-            <p data-testid="catalog-loading">Loading plants…</p>
+            <p data-testid="catalog-loading">{isArabic ? "جارٍ تحميل النباتات…" : "Loading plants…"}</p>
           ) : !result || result.items.length === 0 ? (
             <p data-testid="catalog-empty">
               {content.catalog.noResults}
@@ -223,17 +222,18 @@ export function CatalogPage() {
               data-testid="product-grid"
               aria-label={content.catalog.title}
             >
-              {result.items.map((product) => (
-                <li key={product.id} className="product-card">
+              {result.items.map((product) => {
+                const localized = localizeProduct(product, isArabic);
+                return <li key={product.id} className="product-card">
                   <ProductImage
                     media={product.media ?? product.image}
-                    alt={product.image?.altText || product.name}
+                    alt={isArabic ? localized.name : product.image?.altText || localized.name}
                     className="product-card__image"
                     loading="lazy"
                     decoding="async"
                     sizes="(max-width: 720px) 100vw, 33vw"
                   />
-                  <h2 className="product-card__name">{product.name}</h2>
+                  <h2 className="product-card__name">{localized.name}</h2>
                   <p className="product-card__price">
                     {product.priceQar} QAR
                   </p>
@@ -242,18 +242,18 @@ export function CatalogPage() {
                     className="product-card__link"
                     data-testid={`view-${product.slug}`}
                   >
-                    {content.catalog.viewProduct(product.name)}
+                    {content.catalog.viewProduct(localized.name)}
                   </Link>
                   <AddToCartButton product={product} className="product-card__cart" />
-                </li>
-              ))}
+                </li>;
+              })}
             </ul>
           )}
 
           {result && totalPages > 1 && (
             <nav
               className="catalog__pagination"
-              aria-label="Pagination"
+              aria-label={content.aria.pagination}
               data-testid="pagination"
             >
               <button
@@ -262,7 +262,7 @@ export function CatalogPage() {
                 disabled={result.page <= 1}
                 data-testid="prev-page"
               >
-                Previous
+                {content.common.previous}
               </button>
               <span data-testid="page-indicator">
                 {content.catalog.page(result.page, totalPages || 1)}
@@ -273,7 +273,7 @@ export function CatalogPage() {
                 disabled={result.page >= totalPages}
                 data-testid="next-page"
               >
-                Next
+                {content.common.next}
               </button>
             </nav>
           )}

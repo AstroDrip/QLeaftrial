@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { content } from "../../content/en";
+import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
 import { Seo } from "../../components/Seo";
 
 export function AdminLoginPage() {
+  const { content, isArabic } = useSiteLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [password, setPassword] = useState("");
@@ -18,7 +19,7 @@ export function AdminLoginPage() {
 
   return (
     <section className="page-shell admin-login-page" data-testid="admin-login-page">
-      <Seo title="Admin sign in" description="QLeaves administration sign in." path="/admin/login" noIndex />
+      <Seo title={content.admin.loginTitle} description={isArabic ? "تسجيل الدخول إلى إدارة QLeaves." : "QLeaves administration sign in."} path="/admin/login" noIndex />
       <div className="page-shell__header">
         <p className="eyebrow">{content.admin.loginTitle}</p>
         <h1>{content.admin.loginTitle}</h1>
@@ -36,7 +37,7 @@ export function AdminLoginPage() {
           />
         </label>
 
-        {login.isError ? <p role="alert">{login.error.message}</p> : null}
+        {login.isError ? <p role="alert">{isArabic ? "تعذر تسجيل الدخول. تحقق من كلمة المرور وحاول مجددًا." : login.error.message}</p> : null}
 
         <button type="submit" className="primary-button" disabled={login.isPending}>
           {content.admin.signIn}

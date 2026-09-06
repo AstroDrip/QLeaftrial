@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { requireAdmin } from "../auth/auth.middleware.js";
 import { ApiError } from "../../middleware/error-handler.js";
-import { createOrderSchema, updateOrderStatusSchema, updatePaymentStatusSchema } from "./order.schemas.js";
-import { createOrder, dashboardStats, deleteOrder, listOrders, salesReport, updateOrderStatus, updatePaymentStatus } from "./order.service.js";
+import { createOrderSchema, deleteOrdersSchema, updateOrderStatusSchema, updatePaymentStatusSchema } from "./order.schemas.js";
+import { createOrder, dashboardStats, deleteOrder, deleteOrders, listOrders, salesReport, updateOrderStatus, updatePaymentStatus } from "./order.service.js";
 import { publicOrderRateLimit } from "./order-rate-limit.js";
 
 export const orderRouter = Router();
@@ -13,6 +13,12 @@ orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
 });
 orderRouter.use("/admin/orders", requireAdmin);
 orderRouter.get("/admin/orders", async (_req, res) => { res.setHeader("Cache-Control", "no-store"); res.json({ items: await listOrders() }); });
+orderRouter.delete("/admin/orders", async (req, res) => {
+  const parsed = deleteOrdersSchema.safeParse(req.body);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order selection");
+  await deleteOrders(parsed.data.ids);
+  res.status(204).end();
+});
 orderRouter.patch("/admin/orders/:id/status", async (req, res) => {
   const parsed = updateOrderStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order status");

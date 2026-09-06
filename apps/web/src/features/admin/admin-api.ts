@@ -2,8 +2,8 @@ import { errorFromResponse } from "../../lib/api-error";
 import { createProductImageVariants, type ProductImageVariant } from "./product-image-variants";
 
 export interface AdminSession { name: string }
-export interface AdminProduct { id: string; slug: string; name: string; priceQar: number; stock: number }
-export interface CreateAdminProductFields { name: string; slug: string; sku: string; description: string; category: string; light: string; priceQar: number; costPrice: number; stock: number; imageAltText: string }
+export interface AdminProduct { id: string; slug: string; name: string; nameAr?: string | null; descriptionAr?: string | null; categoryAr?: string | null; lightAr?: string | null; priceQar: number; stock: number }
+export interface CreateAdminProductFields { name: string; nameAr: string; slug: string; sku: string; description: string; descriptionAr: string; category: string; categoryAr: string; light: string; lightAr: string; priceQar: number; costPrice: number; stock: number; imageAltText: string }
 export interface StagedProductImage { stagingPath: string; purpose: "catalog" | "detail"; contentType: "image/webp"; byteSize: number; width: number; height: number }
 export type CreateAdminProductInput = CreateAdminProductFields & { imageDataUrl?: string; stagedImages?: StagedProductImage[] };
 export interface AdminOrder { id: string; orderNumber: string; customerName: string; phone: string; email: string; addressLine1: string; area: string; deliveryNotes?: string | null; subtotalQar: number; status: string; paymentStatus: string; createdAt: string; items: Array<{ productName: string; quantity: number; unitPriceQar: number }> }
@@ -101,11 +101,12 @@ export const adminApi = {
       body: JSON.stringify({ ...input, stagedImages }),
     });
   },
-  updateProduct: (id: string, patch: { priceQar?: number; stock?: number }): Promise<AdminProduct> => request<AdminProduct>(`/admin/products/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+  updateProduct: (id: string, patch: { priceQar?: number; stock?: number; nameAr?: string; descriptionAr?: string; categoryAr?: string; lightAr?: string }): Promise<AdminProduct> => request<AdminProduct>(`/admin/products/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
   orders: async (): Promise<AdminOrder[]> => (await request<{ items: AdminOrder[] }>("/admin/orders")).items,
   updateOrderStatus: (id: string, status: string) => request<AdminOrder>(`/admin/orders/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
   updatePaymentStatus: (id: string, paymentStatus: string) => request<AdminOrder>(`/admin/orders/${id}/payment`, { method: "PATCH", body: JSON.stringify({ paymentStatus }) }),
   deleteOrder: (id: string): Promise<void> => request<void>(`/admin/orders/${id}`, { method: "DELETE" }),
+  deleteOrders: (ids: string[]): Promise<void> => request<void>("/admin/orders", { method: "DELETE", body: JSON.stringify({ ids }) }),
   dashboard: (): Promise<AdminDashboard> => request<AdminDashboard>("/admin/dashboard"),
   sales: (from?: string, to?: string): Promise<AdminSalesReport> => request<AdminSalesReport>(`/admin/sales${from || to ? `?${new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) })}` : ""}`),
 };

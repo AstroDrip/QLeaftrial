@@ -7,9 +7,13 @@ const publicProductSelection = {
   id: true,
   slug: true,
   name: true,
+  nameAr: true,
   description: true,
+  descriptionAr: true,
   category: true,
+  categoryAr: true,
   light: true,
+  lightAr: true,
   priceQar: true,
   media: {
     select: { url: true, altText: true, width: true, height: true, purpose: true },
@@ -22,9 +26,13 @@ type PublicProductRecord = {
   id: string;
   slug: string;
   name: string;
+  nameAr: string | null;
   description: string;
+  descriptionAr: string | null;
   category: string;
+  categoryAr: string | null;
   light: string;
+  lightAr: string | null;
   priceQar: number;
   media: Array<{
     url: string;
@@ -43,6 +51,8 @@ type PublicProductWhere = {
   OR?: Array<{
     name?: { contains: string };
     description?: { contains: string };
+    nameAr?: { contains: string };
+    descriptionAr?: { contains: string };
     slug?: { contains: string };
   }>;
 };
@@ -73,8 +83,8 @@ const productRepository = prisma.product as unknown as ProductRepository;
 type ProductFilterRepository = {
   findMany(args: {
     where: { published: boolean };
-    select: { category: true; light: true };
-  }): Promise<Array<{ category: string; light: string }>>;
+    select: { category: true; categoryAr: true; light: true; lightAr: true };
+  }): Promise<Array<{ category: string; categoryAr: string | null; light: string; lightAr: string | null }>>;
 };
 
 const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
@@ -87,8 +97,11 @@ function toSummary(product: PublicProductRecord): ProductSummary {
     id: product.id,
     slug: product.slug,
     name: product.name,
+    nameAr: product.nameAr,
     category: product.category,
+    categoryAr: product.categoryAr,
     light: product.light,
+    lightAr: product.lightAr,
     priceQar: product.priceQar,
     stock,
     inStock: stock > 0,
@@ -101,6 +114,7 @@ function toDetail(product: PublicProductRecord): ProductDetail {
   return {
     ...toSummary(product),
     description: product.description,
+    descriptionAr: product.descriptionAr,
     media: product.media,
   };
 }
@@ -121,6 +135,8 @@ export async function listProducts(query: ProductQuery): Promise<{
           OR: [
             { name: { contains: query.q } },
             { description: { contains: query.q } },
+            { nameAr: { contains: query.q } },
+            { descriptionAr: { contains: query.q } },
             { slug: { contains: query.q } },
           ],
         }
@@ -157,15 +173,19 @@ export async function listProducts(query: ProductQuery): Promise<{
 export async function listProductFilters(): Promise<{
   categories: string[];
   lights: string[];
+  categoryLabels: Record<string, string>;
+  lightLabels: Record<string, string>;
 }> {
   const products = await productFilterRepository.findMany({
     where: { published: true },
-    select: { category: true, light: true },
+    select: { category: true, categoryAr: true, light: true, lightAr: true },
   });
 
   return {
     categories: [...new Set(products.map((product) => product.category))].sort(),
     lights: [...new Set(products.map((product) => product.light))].sort(),
+    categoryLabels: Object.fromEntries(products.flatMap((product) => product.categoryAr ? [[product.category, product.categoryAr]] : [])),
+    lightLabels: Object.fromEntries(products.flatMap((product) => product.lightAr ? [[product.light, product.lightAr]] : [])),
   };
 }
 

@@ -55,6 +55,10 @@ https://YOUR_DEPLOYMENT/sitemap.xml
 
 If an API URL returns the React document, confirm the Root Directory and dashboard overrides. If `health` succeeds but `ready` fails, use the request ID to inspect connection/schema errors and run schema commands only against the explicitly intended database.
 
+If Prisma reports `Authentication failed against database server`, the application has reached PostgreSQL but Supabase rejected the username/password in `DATABASE_URL`. Copy a fresh **transaction pooler** connection string from the intended Supabase project, replace the password with that project's current database password, percent-encode reserved password characters, update the Vercel variable for every intended environment, and redeploy. Do not use the Supabase API/service-role key as the database password. A successful `/api/v1/health` only proves function routing; `/api/v1/ready` is the database credential/schema check.
+
+Arabic catalogue copy is stored in the nullable `nameAr`, `descriptionAr`, `categoryAr`, and `lightAr` product columns. Existing rows remain readable, but editors should populate all four Arabic values in Admin Products so Arabic storefront pages never need the legacy English fallback.
+
 ## Preview, security, and caching
 
 Use a separate Preview database/bucket if Preview can create orders or products. `npm run vercel-build` validates configuration, generates clients, checks types, and builds; it does not deploy a schema or seed data.

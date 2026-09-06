@@ -54,9 +54,13 @@ model Product {
   slug        String         @unique
   sku         String         @unique
   name        String
+  nameAr      String?
   description String
+  descriptionAr String?
   category    String
+  categoryAr  String?
   light       String
+  lightAr     String?
   priceQar    Int
   costPrice   Int
   published   Boolean        @default(false)

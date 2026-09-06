@@ -4,6 +4,7 @@ import { Layout } from "../components/Layout";
 import { NotFoundPage } from "../components/NotFoundPage";
 import { RouteErrorPage } from "../components/RouteErrorPage";
 import { HomePage } from "../features/home/HomePage";
+import { useSiteLanguage } from "./providers";
 
 const AdminDashboardPage = lazy(() => import("../features/admin/AdminDashboardPage").then((module) => ({ default: module.AdminDashboardPage })));
 const AdminLayout = lazy(() => import("../features/admin/AdminLayout").then((module) => ({ default: module.AdminLayout })));
@@ -20,7 +21,12 @@ const PrivacyPage = lazy(() => import("../features/legal/LegalPages").then((modu
 const TermsPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.TermsPage })));
 const ShippingReturnsPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.ShippingReturnsPage })));
 
-const deferred = (element: ReactNode) => <Suspense fallback={<p className="page-shell" role="status" aria-live="polite">Loading…</p>}>{element}</Suspense>;
+function LoadingPage() {
+  const { content } = useSiteLanguage();
+  return <p className="page-shell" role="status" aria-live="polite">{content.common.loading}</p>;
+}
+
+const deferred = (element: ReactNode) => <Suspense fallback={<LoadingPage />}>{element}</Suspense>;
 
 export const router = createBrowserRouter([
   {
