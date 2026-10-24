@@ -72,7 +72,11 @@ describe("admin product management", () => {
     });
 
     expect(response.status).toBe(201);
-    expect(response.body).toEqual(expect.objectContaining({ slug: "new-fern", stock: 4 }));
+    expect(response.body).toEqual(expect.objectContaining({
+      slug: "new-fern",
+      stock: 4,
+      image: expect.objectContaining({ altText: "New fern in a pot" }),
+    }));
     expect(await prisma.product.findUnique({ where: { slug: "new-fern" }, include: { media: true } }))
       .toMatchObject({ published: true, media: [{ altText: "New fern in a pot" }] });
   });

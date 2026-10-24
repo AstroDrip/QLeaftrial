@@ -1,13 +1,30 @@
 import { Link } from "react-router-dom";
+import { useSiteLanguage, useStoreSettings } from "../app/providers";
 import "./Footer.css";
 
 export function Footer() {
+  const { language } = useSiteLanguage();
+  const settings = useStoreSettings();
+  const business = settings.data;
+  const details = [
+    [language === "ar" ? "السجل التجاري" : "Commercial Registration (CR)", business?.commercialRegistration],
+    [language === "ar" ? "ترخيص التجارة الإلكترونية" : "E-commerce license", business?.ecommerceLicense],
+    [language === "ar" ? "العنوان المسجل" : "Registered address", business?.businessAddress],
+  ] as const;
   return (
-    <footer className="site-footer" data-testid="site-footer" dir="ltr" lang="en">
+    <footer className="site-footer" data-testid="site-footer" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
       <div className="site-footer__brand"><strong>QLeaves</strong><span>For the love of art and plants.</span></div>
       <span>Founded in 2020</span>
+      <address className="site-footer__business-details">
+        {details.map(([label, value]) => <span key={label}>{label}: {value || (language === "ar" ? "يُرجى الإضافة" : "To be provided")}</span>)}
+        <span>{language === "ar" ? "البريد الإلكتروني" : "Customer service email"}: {business?.supportEmail
+          ? <a href={`mailto:${business.supportEmail}`}>{business.supportEmail}</a>
+          : (language === "ar" ? "يُرجى الإضافة" : "To be provided")}</span>
+        <span>{language === "ar" ? "الهاتف" : "Customer service phone"}: <a href={`tel:${business?.supportPhone || "+97477551056"}`}>{business?.supportPhone || "+974 7755 1056"}</a></span>
+      </address>
       <span>© {new Date().getFullYear()} QLeaves · Qatar</span>
       <nav className="site-footer__legal" aria-label="Legal">
+        <Link to="/about">{language === "ar" ? "من نحن" : "About us"}</Link>
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
         <Link to="/shipping-returns">Shipping & Returns</Link>

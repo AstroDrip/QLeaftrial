@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Billing Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+    <style>
+        body {
+            margin: 30px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-control:focus {
+            border-color: #aaa;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #3e8e41;
+        }
+
+        .btn:active {
+            background-color: #3e8e41;
+            transform: translateY(2px);
+        }
+
+        .table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .deleteBill, .updateBill {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #e74c3c;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .deleteBill:hover, .updateBill:hover {
+            background-color: #c0392b;
+        }
+
+        .deleteBill:active, .updateBill:active {
+            background-color: #c0392b;
+            transform: translateY(2px);
+        }
+
+        /* Hover effects for table rows */
+        .table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Add some padding to the table cells */
+        .table td, .table th {
+            padding: 15px;
+        }
+
+        /* Make the table headers sticky */
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+        }
+    </style>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Billing Management System</h2>
+        <form>
+            <fieldset>
+                <legend>Add Bill</legend>
+                <input type="number" class="form-control" id="bill_no" placeholder="Enter Bill No.">
+                <input type="number" class="form-control" id="appointment_no" placeholder="Enter Appointment No.">
+                <input type="number" class="form-control" id="amount" placeholder="Enter Amount">
+                <select class="form-control" id="payment_method">
+                    <option value="">Select Payment Method</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="Online">Online</option>
+                </select>
+                <select class="form-control" id="payment_status">
+                    <option value="">Select Payment Status</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                </select>
+                <br>
+                <button type="button" id="addBill" class="btn btn-success">Add Bill</button>
+                <button type="button" id="fetchBills" class="btn btn-primary">Fetch Bills</button>
+            </fieldset>
+        </form>
+
+        <h4>Bill Records</h4>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Bill No.</th>
+                    <th>Appointment No.</th>
+                    <th>Amount</th>
+                    <th>Payment Method</th>
+                    <th>Payment Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="billList"></tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        let db;
+        const request = indexedDB.open("HospitalDBB", 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            let objectStore = db.createObjectStore("bills", { keyPath: "bill_no" });
+            objectStore.createIndex("appointment_no", "appointment_no", { unique: false });
+            objectStore.createIndex("amount", "amount", { unique: false });
+            objectStore.createIndex("payment_method", "payment_method", { unique: false });
+            objectStore.createIndex("payment_status", "payment_status", { unique: false });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+        };
+
+        request.onerror = function(event) {
+            console.log("Error opening database", event.target.errorCode);
+        };
+
+        $("#addBill").click(function() {
+            let bill_no = Number($("#bill_no").val());
+            let appointment_no = Number($("#appointment_no").val());
+            let amount = Number($("#amount").val());
+            let payment_method = $("#payment_method").val();
+            let payment_status = $("#payment_status").val();
+
+            if (!bill_no || !appointment_no || !amount || !payment_method || !payment_status) {
+                alert("Please fill all fields.");
+                return;
+            }
+
+            let transaction = db.transaction(["bills"], "readwrite");
+            let objectStore = transaction.objectStore("bills");
+
+            let getRequest = objectStore.get(bill_no);
+            getRequest.onsuccess = function() {
+                if (getRequest.result) {
+                    alert("Bill No. already exists! Please use a unique ID.");
+                } else {
+                    let addRequest = objectStore.add({ bill_no, appointment_no, amount, payment_method, payment_status });
+
+                    addRequest.onsuccess = function() {
+                        alert("Bill added successfully.");
+                        clearFields();
+                    };
+
+                    addRequest.onerror = function() {
+                        alert("Error adding bill.");
+                    };
+                }
+            };
+        });
+
+        $("#fetchBills").click(function() {
+            $("#billList").empty();
+            let transaction = db.transaction(["bills"], "readonly");
+            let objectStore = transaction.objectStore("bills");
+            let request = objectStore.openCursor();
+
+            request.onsuccess = function(event) {
+                let cursor = event.target.result;
+                if (cursor) {
+                    $("#billList").append(
+                        `<tr id="row${cursor.value.bill_no}">
+                            <td>${cursor.value.bill_no}</td>
+                            <td id="appointment_no${cursor.value.bill_no}">${cursor.value.appointment_no}</td>
+                            <td id="amount${cursor.value.bill_no}">${cursor.value.amount}</td>
+                            <td id="payment_method${cursor.value.bill_no}">${cursor.value.payment_method}</td>
+                            <td id="payment_status${cursor.value.bill_no}">${cursor.value.payment_status}</td>
+                            <td>
+                                <button class="btn btn-danger deleteBill" data-id="${cursor.value.bill_no}">Delete</button>
+                                <button class="btn btn-primary updateBill" data-id="${cursor.value.bill_no}">Modify</button>
+                            </td>
+                        </tr>`
+                    );
+                    cursor.continue();
+                } else {
+                    if (!$("#billList").children().length) {
+                        $("#billList").append("<tr><td colspan='6' align='center'>No Bills Found</td></tr>");
+                    }
+                }
+            };
+        });
+
+        $(document).on("click", ".deleteBill", function() {
+            let id = Number($(this).data("id"));
+            let transaction = db.transaction(["bills"], "readwrite");
+            let objectStore = transaction.objectStore("bills");
+            let request = objectStore.delete(id);
+
+            request.onsuccess = function() {
+                $("#row" + id).fadeOut();
+                alert("Bill deleted successfully.");
+            };
+        });
+
+        $(document).on("click", ".updateBill", function() {
+            let id = Number($(this).data("id"));
+
+            let transaction = db.transaction(["bills"], "readwrite");
+            let objectStore = transaction.objectStore("bills");
+            let request = objectStore.get(id);
+
+            request.onsuccess = function(event) {
+                let data = event.target.result;
+                if (!data) {
+                    alert("Bill not found.");
+                    return;
+                }
+
+                let newAppointmentNo = prompt("Enter new Appointment No.:", data.appointment_no) || data.appointment_no;
+                let newAmount = prompt("Enter new Amount:", data.amount) || data.amount;
+                let newPaymentMethod = prompt("Enter new Payment Method:", data.payment_method) || data.payment_method;
+                let newPaymentStatus = prompt("Enter new Payment Status:", data.payment_status) || data.payment_status;
+
+                data.appointment_no = newAppointmentNo;
+                data.amount = newAmount;
+                data.payment_method = newPaymentMethod;
+                data.payment_status = newPaymentStatus;
+
+                let updateRequest = objectStore.put(data);
+
+                updateRequest.onsuccess = function() {
+                    $("#appointment_no" + id).text(newAppointmentNo);
+                    $("#amount" + id).text(newAmount);
+                    $("#payment_method" + id).text(newPaymentMethod);
+                    $("#payment_status" + id).text(newPaymentStatus);
+
+                    alert("Bill record updated successfully.");
+                };
+
+                updateRequest.onerror = function() {
+                    alert("Error updating bill record.");
+                };
+            };
+        });
+
+        function clearFields() {
+            $("#bill_no").val("");
+            $("#appointment_no").val("");
+            $("#amount").val("");
+            $("#payment_method").val("");
+            $("#payment_status").val("");
+        }
+    </script>
+</body>
+</html>

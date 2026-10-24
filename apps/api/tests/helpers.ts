@@ -11,18 +11,25 @@ type ValidOrder = {
   area: string;
   deliveryNotes?: string;
   paymentMethod: "COD" | "PAYMENT_LINK";
+  deliveryFeeQar: number;
   items: Array<{ productId: string; quantity: number; unitPriceQar?: number }>;
 };
 
 export async function resetDatabase(): Promise<void> {
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
+  await prisma.storeSettings.deleteMany();
   await prisma.product.deleteMany();
   await prisma.adminUser.deleteMany();
 }
 
 export async function seededProduct(slug: string) {
   await seedDatabase();
+  await prisma.storeSettings.upsert({
+    where: { id: "storefront" },
+    create: { id: "storefront", deliveryFeeQar: 0 },
+    update: {},
+  });
   const product = await prisma.product.findUnique({ where: { slug } });
 
   if (!product) {
@@ -50,6 +57,7 @@ export function validOrder(overrides: Partial<ValidOrder> = {}): ValidOrder {
     addressLine1: "12 Palm Street",
     area: "The Pearl",
     paymentMethod: "COD",
+    deliveryFeeQar: 0,
     items: [],
     ...overrides,
   };

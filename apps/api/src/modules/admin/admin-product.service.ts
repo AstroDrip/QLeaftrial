@@ -8,10 +8,19 @@ const adminProductSelection = {
   slug: true,
   name: true,
   nameAr: true,
+  description: true,
   descriptionAr: true,
+  category: true,
   categoryAr: true,
+  light: true,
   lightAr: true,
   priceQar: true,
+  published: true,
+  media: {
+    select: { url: true, altText: true },
+    orderBy: { sortOrder: "asc" },
+    take: 1,
+  },
   inventory: { select: { quantity: true } },
 } as const;
 
@@ -20,10 +29,15 @@ type AdminProductRecord = {
   slug: string;
   name: string;
   nameAr: string | null;
+  description: string;
   descriptionAr: string | null;
+  category: string;
   categoryAr: string | null;
+  light: string;
   lightAr: string | null;
   priceQar: number;
+  published: boolean;
+  media: Array<{ url: string; altText: string }>;
   inventory: { quantity: number } | null;
 };
 
@@ -32,11 +46,16 @@ export type AdminProduct = {
   slug: string;
   name: string;
   nameAr: string | null;
+  description: string;
   descriptionAr: string | null;
+  category: string;
   categoryAr: string | null;
+  light: string;
   lightAr: string | null;
   priceQar: number;
   stock: number;
+  image: { url: string; altText: string } | null;
+  published: boolean;
 };
 
 type AdminProductRepository = {
@@ -71,6 +90,7 @@ type AdminProductCreateRepository = {
 
 type ProductUpdateData = {
   priceQar?: number;
+  published?: boolean;
   nameAr?: string;
   descriptionAr?: string;
   categoryAr?: string;
@@ -111,17 +131,29 @@ const productRepository = prisma.product as unknown as AdminProductRepository;
 const productCreateRepository = prisma.product as unknown as AdminProductCreateRepository;
 const transactionDatabase = prisma as unknown as TransactionDatabase;
 
+type AdminProductDeleteRepository = {
+  findUnique(args: { where: { id: string }; select: { id: true } }): Promise<{ id: string } | null>;
+  delete(args: { where: { id: string } }): Promise<{ id: string }>;
+};
+
+const productDeleteRepository = prisma.product as unknown as AdminProductDeleteRepository;
+
 function toAdminProduct(product: AdminProductRecord): AdminProduct {
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
     nameAr: product.nameAr,
+    description: product.description,
     descriptionAr: product.descriptionAr,
+    category: product.category,
     categoryAr: product.categoryAr,
+    light: product.light,
     lightAr: product.lightAr,
     priceQar: product.priceQar,
     stock: product.inventory?.quantity ?? 0,
+    image: product.media[0] ?? null,
+    published: product.published,
   };
 }
 
@@ -148,6 +180,7 @@ export async function updateAdminProduct(
 
     const productPatch: ProductUpdateData = {
       ...(input.priceQar !== undefined ? { priceQar: input.priceQar } : {}),
+      ...(input.published !== undefined ? { published: input.published } : {}),
       ...(input.nameAr !== undefined ? { nameAr: input.nameAr } : {}),
       ...(input.descriptionAr !== undefined ? { descriptionAr: input.descriptionAr } : {}),
       ...(input.categoryAr !== undefined ? { categoryAr: input.categoryAr } : {}),
@@ -211,4 +244,12 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
     }
     throw error;
   }
+}
+
+export async function deleteAdminProduct(id: string): Promise<void> {
+  const existing = await productDeleteRepository.findUnique({ where: { id }, select: { id: true } });
+  if (!existing) {
+    throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
+  }
+  await productDeleteRepository.delete({ where: { id } });
 }

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { requireAdmin } from "../auth/auth.middleware.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import { createAdminProductSchema, updateAdminProductSchema } from "./admin-product.schemas.js";
-import { createAdminProduct, listAdminProducts, updateAdminProduct } from "./admin-product.service.js";
+import { createAdminProduct, deleteAdminProduct, listAdminProducts, updateAdminProduct } from "./admin-product.service.js";
 
 export const adminProductRouter = Router();
 
@@ -29,4 +29,9 @@ adminProductRouter.patch("/admin/products/:id", async (request, response) => {
 
   response.setHeader("Cache-Control", "no-store");
   response.json(await updateAdminProduct(request.params.id, parsed.data));
+});
+
+adminProductRouter.delete("/admin/products/:id", async (request, response) => {
+  await deleteAdminProduct(request.params.id);
+  response.status(204).end();
 });

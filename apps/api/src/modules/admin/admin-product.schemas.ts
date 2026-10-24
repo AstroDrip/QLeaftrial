@@ -7,6 +7,7 @@ export const updateAdminProductSchema = z
   .object({
     priceQar: z.number().int().nonnegative().optional(),
     stock: z.number().int().nonnegative().optional(),
+    published: z.boolean().optional(),
     nameAr: optionalArabicText(2, 120),
     descriptionAr: optionalArabicText(10, 2000),
     categoryAr: optionalArabicText(2, 80),
@@ -17,6 +18,7 @@ export const updateAdminProductSchema = z
     (value) =>
       value.priceQar !== undefined ||
       value.stock !== undefined ||
+      value.published !== undefined ||
       value.nameAr !== undefined ||
       value.descriptionAr !== undefined ||
       value.categoryAr !== undefined ||

@@ -11,7 +11,8 @@ vi.mock("./admin-api", () => ({
 
 const product = {
   id: "plant-1", slug: "monstera", name: "Monstera", category: "Indoor",
-  light: "Bright indirect", priceQar: 180, stock: 14, inStock: true, image: null,
+  description: "A lovely plant for your home.", light: "Bright indirect",
+  priceQar: 180, stock: 14, inStock: true, image: null,
 };
 
 describe("AdminProductsPage", () => {
@@ -79,6 +80,7 @@ describe("AdminProductsPage", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
 
+    await user.click(await screen.findByRole("button", { name: "العربية" }));
     const arabicName = await screen.findByRole("textbox", { name: /monstera arabic name/i });
     await user.type(arabicName, "مونستيرا");
     await user.click(screen.getByRole("button", { name: /save arabic/i }));
@@ -88,5 +90,41 @@ describe("AdminProductsPage", () => {
     });
   });
 
+  it("switches the product-card preview between English and Arabic", async () => {
+    vi.mocked(adminApi.products).mockResolvedValue([{
+      ...product,
+      nameAr: "مونستيرا",
+      categoryAr: "داخلي",
+      lightAr: "إضاءة ساطعة غير مباشرة",
+      descriptionAr: "نبات جميل لمنزلك.",
+      image: { url: "/monstera.jpg", altText: "Monstera plant" },
+    }]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+
+    await screen.findByRole("group", { name: /product card preview language/i });
+    const englishPreview = document.querySelector(".admin-product-language-preview");
+    expect(englishPreview).toHaveAttribute("lang", "en");
+    expect(englishPreview).toHaveTextContent("Monstera");
+    expect(englishPreview).not.toHaveTextContent("مونستيرا");
+    expect(englishPreview).not.toHaveAttribute("dir", "rtl");
+    expect(englishPreview).toHaveTextContent("View Monstera");
+    expect(englishPreview).toHaveTextContent("Add to cart");
+    expect(englishPreview?.querySelector("img")).toHaveAttribute("src", "/monstera.jpg");
+    expect(screen.queryByRole("textbox", { name: "Monstera Arabic name" })).not.toBeInTheDocument();
+    expect(document.querySelector(".admin-product-ar-fields")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "العربية" }));
+
+    const arabicPreview = document.querySelector(".admin-product-language-preview");
+    expect(arabicPreview).toHaveAttribute("lang", "ar");
+    expect(arabicPreview).toHaveAttribute("dir", "rtl");
+    expect(arabicPreview).toHaveTextContent("مونستيرا");
+    expect(arabicPreview).toHaveTextContent("عرض مونستيرا");
+    expect(arabicPreview).toHaveTextContent("أضف إلى السلة");
+    expect(screen.getByRole("textbox", { name: /monstera arabic name/i })).toHaveValue("مونستيرا");
+    expect(screen.getByRole("button", { name: "العربية" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "false");
+  });
 
 });

@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { content } from "../../content/en";
+import { localeContent, type SiteLanguage } from "../../content/locales";
+import { FallbackImage } from "../../components/FallbackImage";
 import { adminApi, type AdminProduct, type CreateAdminProductInput } from "./admin-api";
+import "../catalog/catalog.css";
+import "../cart/AddToCartButton.css";
 
 const emptyForm: Omit<CreateAdminProductInput, "imageDataUrl"> & { imageDataUrl: string } = {
   name: "", nameAr: "", slug: "", sku: "", description: "", descriptionAr: "", category: "Indoor", categoryAr: "", light: "Bright indirect", lightAr: "",
   priceQar: 0, costPrice: 0, stock: 0, imageDataUrl: "", imageAltText: "",
 };
 
-function ProductRow({ product }: { product: AdminProduct }) {
+function ProductRow({ product, cardLanguage }: { product: AdminProduct; cardLanguage: SiteLanguage }) {
   const queryClient = useQueryClient();
   const [stock, setStock] = useState(String(product.stock));
   const [price, setPrice] = useState(String(product.priceQar));
@@ -18,8 +22,9 @@ function ProductRow({ product }: { product: AdminProduct }) {
   const [lightAr, setLightAr] = useState(product.lightAr ?? "");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<"stock" | "priceQar", string>>>({});
   const timers = useRef<Partial<Record<"stock" | "priceQar", ReturnType<typeof setTimeout>>>>({});
+
   const save = useMutation({
-    mutationFn: (patch: { stock?: number; priceQar?: number; nameAr?: string; descriptionAr?: string; categoryAr?: string; lightAr?: string }) =>
+    mutationFn: (patch: { stock?: number; priceQar?: number; published?: boolean; nameAr?: string; descriptionAr?: string; categoryAr?: string; lightAr?: string }) =>
       adminApi.updateProduct(product.id, patch),
     scope: { id: `admin-product-${product.id}` },
     onSuccess: (updated, patch) => {
@@ -33,6 +38,15 @@ function ProductRow({ product }: { product: AdminProduct }) {
     },
     onError: (_error, patch) => setFieldErrors((errors) => ({ ...errors, ...(patch.stock !== undefined ? { stock: "Stock save failed" } : {}), ...(patch.priceQar !== undefined ? { priceQar: "Price save failed" } : {}) })),
   });
+
+  const remove = useMutation({
+    mutationFn: () => adminApi.deleteProduct(product.id),
+    onSuccess: () => {
+      queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => items?.filter((item) => item.id !== product.id));
+      void queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
   function persist(field: "stock" | "priceQar", rawValue: string) {
     const activeTimer = timers.current[field];
     if (activeTimer) clearTimeout(activeTimer);
@@ -50,13 +64,17 @@ function ProductRow({ product }: { product: AdminProduct }) {
     setFieldErrors((errors) => ({ ...errors, [field]: undefined }));
     save.mutate({ [field]: value });
   }
+
   function schedule(field: "stock" | "priceQar", rawValue: string) {
     const activeTimer = timers.current[field];
     if (activeTimer) clearTimeout(activeTimer);
     timers.current[field] = setTimeout(() => persist(field, rawValue), 350);
   }
+
   useEffect(() => () => { Object.values(timers.current).forEach((timer) => clearTimeout(timer)); }, []);
+
   const errorMessage = [fieldErrors.stock, fieldErrors.priceQar].filter(Boolean).join(". ");
+
   function saveArabic() {
     const patch = {
       ...(nameAr.trim() ? { nameAr: nameAr.trim() } : {}),
@@ -66,7 +84,108 @@ function ProductRow({ product }: { product: AdminProduct }) {
     };
     if (Object.keys(patch).length > 0) save.mutate(patch);
   }
-  return <tr><td><strong>{product.name}</strong><div className="admin-product-ar-fields" dir="rtl" lang="ar"><input aria-label={`${product.name} Arabic name`} placeholder="الاسم بالعربية" value={nameAr} onChange={(event) => setNameAr(event.target.value)} /><input aria-label={`${product.name} Arabic category`} placeholder="الفئة بالعربية" value={categoryAr} onChange={(event) => setCategoryAr(event.target.value)} /><input aria-label={`${product.name} Arabic light`} placeholder="الإضاءة بالعربية" value={lightAr} onChange={(event) => setLightAr(event.target.value)} /><textarea aria-label={`${product.name} Arabic description`} placeholder="الوصف بالعربية" value={descriptionAr} onChange={(event) => setDescriptionAr(event.target.value)} /><button type="button" className="primary-button primary-button--secondary" onClick={saveArabic}>Save Arabic</button></div></td><td><input type="number" min="0" step="1" aria-label={`${product.name} stock`} aria-invalid={Boolean(fieldErrors.stock)} value={stock} onChange={(event) => { const value=event.target.value; setStock(value); schedule("stock",value); }} onBlur={() => persist("stock",stock)} /></td><td><input type="number" min="0" step="1" aria-label={`${product.name} price`} aria-invalid={Boolean(fieldErrors.priceQar)} value={price} onChange={(event) => { const value=event.target.value; setPrice(value); schedule("priceQar",value); }} onBlur={() => persist("priceQar",price)} /></td><td aria-live="polite">{errorMessage ? <span role="alert">{errorMessage}</span> : save.isPending ? "Saving…" : save.isSuccess ? "Saved" : ""}</td></tr>;
+
+  function handleDelete() {
+    if (!window.confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+    remove.mutate();
+  }
+
+  const isArabic = cardLanguage === "ar";
+  const customerContent = localeContent[cardLanguage];
+  const inStock = product.stock > 0;
+
+  // Show the correct localised values in the preview card
+  const shownName        = isArabic ? (nameAr || product.nameAr || product.name) : product.name;
+  const shownCategory    = isArabic ? (categoryAr || product.categoryAr || product.category) : product.category;
+  const shownLight       = isArabic ? (lightAr || product.lightAr || product.light) : product.light;
+  const shownDescription = isArabic ? (descriptionAr || product.descriptionAr || product.description) : product.description;
+
+  const isPublished = product.published ?? true;
+
+  return (
+    <tr>
+      <td>
+        <article className="product-card admin-product-language-preview" dir={isArabic ? "rtl" : "ltr"} lang={cardLanguage}>
+          <FallbackImage
+            className="product-card__image"
+            src={product.image?.url ?? "/images/hero/leaf-1.svg"}
+            alt={product.image?.altText ?? ""}
+          />
+          <h2 className="product-card__name">{shownName}</h2>
+          <p className="product-card__price">{product.priceQar} QAR</p>
+          <p className="admin-product-preview__meta">
+            <span>{customerContent.product.category}: {shownCategory}</span>
+            {" · "}
+            <span>{customerContent.product.lightNeeds}: {shownLight}</span>
+          </p>
+          <p className="admin-product-preview__desc">{shownDescription}</p>
+          <span className="product-card__link">{customerContent.catalog.viewProduct(shownName)}</span>
+          <div className="add-to-cart__controls">
+            <span className={`add-to-cart product-card__cart${inStock ? "" : " admin-product-language-preview__cart--out"}`}>
+              <svg
+                className="add-to-cart__icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M7 8h10l1 11H6L7 8Z" />
+                <path d="M9 9V6a3 3 0 0 1 6 0v3" />
+              </svg>
+              <span className="add-to-cart__label">
+                {inStock ? customerContent.product.addToCart : customerContent.product.outOfStock}
+              </span>
+            </span>
+          </div>
+        </article>
+
+        {isArabic ? (
+          <div className="admin-product-ar-fields" dir="rtl" lang="ar">
+            <input aria-label={`${product.name} Arabic name`} placeholder="الاسم بالعربية" value={nameAr} onChange={(event) => setNameAr(event.target.value)} />
+            <input aria-label={`${product.name} Arabic category`} placeholder="الفئة بالعربية" value={categoryAr} onChange={(event) => setCategoryAr(event.target.value)} />
+            <input aria-label={`${product.name} Arabic light`} placeholder="الإضاءة بالعربية" value={lightAr} onChange={(event) => setLightAr(event.target.value)} />
+            <textarea aria-label={`${product.name} Arabic description`} placeholder="الوصف بالعربية" value={descriptionAr} onChange={(event) => setDescriptionAr(event.target.value)} />
+            <button type="button" className="primary-button primary-button--secondary" onClick={saveArabic}>Save Arabic</button>
+          </div>
+        ) : null}
+      </td>
+
+      <td><input type="number" min="0" step="1" aria-label={`${product.name} stock`} aria-invalid={Boolean(fieldErrors.stock)} value={stock} onChange={(event) => { const value=event.target.value; setStock(value); schedule("stock",value); }} onBlur={() => persist("stock",stock)} /></td>
+      <td><input type="number" min="0" step="1" aria-label={`${product.name} price`} aria-invalid={Boolean(fieldErrors.priceQar)} value={price} onChange={(event) => { const value=event.target.value; setPrice(value); schedule("priceQar",value); }} onBlur={() => persist("priceQar",price)} /></td>
+
+      <td>
+        <div className="admin-product-row-actions">
+          <span className={`admin-product-status-pill admin-product-status-pill--${isPublished ? "published" : "draft"}`}>
+            {isPublished ? "Published" : "Draft"}
+          </span>
+          <button
+            type="button"
+            className="primary-button primary-button--secondary admin-product-publish-btn"
+            disabled={save.isPending}
+            onClick={() => save.mutate({ published: !isPublished })}
+          >
+            {isPublished ? "Unpublish" : "Publish"}
+          </button>
+          <button
+            type="button"
+            className="primary-button admin-product-delete-btn"
+            disabled={remove.isPending}
+            onClick={handleDelete}
+          >
+            {remove.isPending ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+        <div aria-live="polite" className="admin-product-save-status">
+          {errorMessage ? <span role="alert">{errorMessage}</span> : save.isPending ? "Saving…" : save.isSuccess ? "Saved" : ""}
+        </div>
+        {remove.isError ? <span role="alert" className="admin-product-delete-error">Delete failed</span> : null}
+      </td>
+    </tr>
+  );
 }
 
 export function AdminProductsPage() {
@@ -74,6 +193,9 @@ export function AdminProductsPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
+  const [previewLanguage, setPreviewLanguage] = useState<SiteLanguage>("en");
+  const [search, setSearch] = useState("");
+
   const create = useMutation({
     mutationFn: adminApi.createProduct,
     onSuccess: (created) => {
@@ -115,6 +237,13 @@ export function AdminProductsPage() {
       stock: Number(form.stock),
     });
   }
+
+  const filteredProducts = (products.data ?? []).filter((p) =>
+    search.trim() === "" ||
+    p.name.toLowerCase().includes(search.trim().toLowerCase()) ||
+    (p.nameAr ?? "").includes(search.trim())
+  );
+
   return (
     <section className="page-shell admin-page" data-testid="admin-products-page">
       <div className="page-shell__header">
@@ -129,10 +258,10 @@ export function AdminProductsPage() {
           <label>Arabic name<input dir="rtl" lang="ar" value={form.nameAr ?? ""} onChange={(event) => updateField("nameAr", event.target.value)} /></label>
           <label>Slug<input required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value={form.slug} onChange={(event) => updateField("slug", event.target.value)} /></label>
           <label>SKU<input required value={form.sku} onChange={(event) => updateField("sku", event.target.value)} /></label>
-          <label>Arabic category<input dir="rtl" lang="ar" value={form.categoryAr ?? ""} onChange={(event) => updateField("categoryAr", event.target.value)} /></label>
           <label>Category<input required value={form.category} onChange={(event) => updateField("category", event.target.value)} /></label>
-          <label>Arabic light<input dir="rtl" lang="ar" value={form.lightAr ?? ""} onChange={(event) => updateField("lightAr", event.target.value)} /></label>
+          <label>Arabic category<input dir="rtl" lang="ar" value={form.categoryAr ?? ""} onChange={(event) => updateField("categoryAr", event.target.value)} /></label>
           <label>Light<input required value={form.light} onChange={(event) => updateField("light", event.target.value)} /></label>
+          <label>Arabic light<input dir="rtl" lang="ar" value={form.lightAr ?? ""} onChange={(event) => updateField("lightAr", event.target.value)} /></label>
           <label>Price (QAR)<input required type="number" min="0" step="1" value={form.priceQar} onChange={(event) => updateField("priceQar", Number(event.target.value))} /></label>
           <label>Cost (QAR)<input required type="number" min="0" step="1" value={form.costPrice} onChange={(event) => updateField("costPrice", Number(event.target.value))} /></label>
           <label>Stock<input required type="number" min="0" step="1" value={form.stock} onChange={(event) => updateField("stock", Number(event.target.value))} /></label>
@@ -147,19 +276,47 @@ export function AdminProductsPage() {
       </form>
 
       <div className="table-card">
+        <div className="admin-products-language-control">
+          <span>Product card preview</span>
+          <div className="admin-product-language-toggle" role="group" aria-label="Product card preview language">
+            <button type="button" aria-pressed={previewLanguage === "en"} onClick={() => setPreviewLanguage("en")}>English</button>
+            <button type="button" aria-pressed={previewLanguage === "ar"} onClick={() => setPreviewLanguage("ar")}>العربية</button>
+          </div>
+        </div>
+
+        <div className="admin-products-search">
+          <label htmlFor="admin-products-search-input" className="admin-products-search__label">Search products</label>
+          <input
+            id="admin-products-search-input"
+            type="search"
+            className="admin-products-search__input"
+            placeholder="Filter by name…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          {search && (
+            <p className="admin-products-search__count" aria-live="polite">
+              {filteredProducts.length} of {products.data?.length ?? 0} products
+            </p>
+          )}
+        </div>
+
         <table>
           <thead>
             <tr>
               <th>Product</th>
               <th>{content.admin.stock}</th>
               <th>{content.admin.price}</th>
-              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {products.data?.map((product) => <ProductRow key={product.id} product={product} />)}
+            {filteredProducts.map((product) => <ProductRow key={product.id} product={product} cardLanguage={previewLanguage} />)}
           </tbody>
         </table>
+        {filteredProducts.length === 0 && search && products.data && products.data.length > 0 ? (
+          <p className="admin-products-search__empty">No products match "{search}".</p>
+        ) : null}
         {products.isPending ? <p>Loading products…</p> : null}
         {products.isError ? <p role="alert">Could not load products.</p> : null}
       </div>

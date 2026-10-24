@@ -38,6 +38,19 @@ model AdminUser {
   updatedAt    DateTime  @updatedAt
 }
 
+model StoreSettings {
+  id                      String   @id
+  orderingEnabled         Boolean  @default(true)
+  commercialRegistration String?
+  ecommerceLicense       String?
+  businessAddress        String?
+  supportEmail           String?
+  supportPhone           String?
+  deliveryFeeQar         Int?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
 model Session {
   id          String    @id @default(cuid())
   tokenHash   String    @unique
@@ -105,6 +118,7 @@ model Order {
   paymentUrl      String?
   status          OrderStatus   @default(PENDING)
   subtotalQar     Int
+  deliveryFeeQar  Int           @default(0)
   items           OrderItem[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

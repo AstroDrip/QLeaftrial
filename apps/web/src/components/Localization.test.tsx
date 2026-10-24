@@ -13,7 +13,7 @@ describe("runtime localization", () => {
     document.body.dir = "ltr";
   });
 
-  it("switches navigation and document direction while keeping QLeaves footer English/LTR", async () => {
+  it("switches navigation and document direction including footer details", async () => {
     render(
       <Providers>
         <MemoryRouter>
@@ -28,14 +28,19 @@ describe("runtime localization", () => {
     expect(screen.getByText("AR")).toBeInTheDocument();
     expect(document.querySelector(".language-toggle")).toBeNull();
     expect(document.querySelector(".language-toggle__track")).toBeNull();
+    expect(screen.getAllByRole("link", { name: "About us" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "About us" }).every((link) => link.getAttribute("href") === "/about")).toBe(true);
 
     await userEvent.click(languageSwitch);
 
     expect(languageSwitch).toBeChecked();
     expect(screen.getByRole("link", { name: "المتجر" })).toHaveAttribute("href", "/shop");
+    expect(screen.getAllByRole("link", { name: "من نحن" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "من نحن" }).every((link) => link.getAttribute("href") === "/about")).toBe(true);
     expect(document.documentElement).toHaveAttribute("lang", "ar");
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
-    expect(screen.getByTestId("site-footer")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByTestId("site-footer")).toHaveAttribute("dir", "rtl");
+    expect(screen.getByTestId("site-footer")).toHaveAttribute("lang", "ar");
     expect(screen.getByText("Founded in 2020")).toBeInTheDocument();
     expect(screen.getByLabelText("QLeaves home")).toHaveAttribute("dir", "ltr");
   });

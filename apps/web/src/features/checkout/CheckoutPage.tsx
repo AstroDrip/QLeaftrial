@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSiteContent } from "../../app/providers";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSiteContent, useStoreSettings } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
 
@@ -16,6 +17,8 @@ const initialForm = {
 
 export function CheckoutPage() {
   const content = useSiteContent();
+  const settings = useStoreSettings();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const items = useCartStore((state) => state.items);
@@ -37,9 +40,14 @@ export function CheckoutPage() {
       return;
     }
     try {
-      const response = await fetch("/api/v1/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerName: form.name, phone: form.phone, email: form.email, addressLine1: form.address, area: form.area, deliveryNotes: form.notes, paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK", items: items.map(({ id, quantity }) => ({ productId: id, quantity })) }) });
+      const response = await fetch("/api/v1/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerName: form.name, phone: form.phone, email: form.email, addressLine1: form.address, area: form.area, deliveryNotes: form.notes, paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK", deliveryFeeQar: settings.data?.deliveryFeeQar, items: items.map(({ id, quantity }) => ({ productId: id, quantity })) }) });
       const body = await response.json();
-      if (!response.ok) throw new Error(body?.error?.message || content.checkout.orderFailed);
+      if (!response.ok) {
+        if (body?.error?.code === "DELIVERY_PRICE_CHANGED") {
+          await queryClient.invalidateQueries({ queryKey: ["storefront-settings"] });
+        }
+        throw new Error(body?.error?.message || content.checkout.orderFailed);
+      }
       clearCart();
       navigate(`/order/${body.orderNumber}`);
     } catch (submissionError) { setError(submissionError instanceof Error ? submissionError.message : content.checkout.orderFailed); }
@@ -101,12 +109,17 @@ export function CheckoutPage() {
 
           <label>
             <span>{content.checkout.area}</span>
-            <input
+            <select
               name="area"
               value={form.area}
               onChange={handleChange}
-              placeholder={content.checkout.areaPlaceholder}
-            />
+              required
+            >
+              <option value="">{content.checkout.selectDeliveryArea}</option>
+              {Object.entries(content.checkout.deliveryAreas).map(([area, label]) => (
+                <option key={area} value={label}>{label}</option>
+              ))}
+            </select>
           </label>
 
           <label>
@@ -130,19 +143,25 @@ export function CheckoutPage() {
 
         <div className="checkout-summary">
           <h2>{content.order.summary}</h2>
+          {settings.isError ? <p role="alert">{content.checkout.deliveryNotConfigured}</p> : null}
+          {settings.data?.deliveryFeeQar === null ? <p role="alert">{content.checkout.deliveryNotConfigured}</p> : null}
           <ul>
             <li>
               <span>{items.map((item) => `${item.name} × ${item.quantity}`).join(", ")}</span>
               <strong>{cartSubtotal(items)} QAR</strong>
             </li>
+            <li>
+              <span>{content.checkout.deliveryFee}</span>
+              <strong>{settings.data?.deliveryFeeQar == null || settings.isError || settings.isPending ? "—" : `${settings.data.deliveryFeeQar} QAR`}</strong>
+            </li>
           </ul>
           <div className="checkout-summary__total">
-            <span>{content.cart.subtotal}</span>
-            <strong>{cartSubtotal(items)} QAR</strong>
+            <span>{content.checkout.total}</span>
+            <strong>{settings.data?.deliveryFeeQar == null || settings.isError || settings.isPending ? "—" : `${cartSubtotal(items) + settings.data.deliveryFeeQar} QAR`}</strong>
           </div>
         </div>
 
-        <button type="submit" className="primary-button" disabled={items.length === 0}>
+        <button type="submit" className="primary-button" disabled={items.length === 0 || settings.isPending || settings.isError || settings.data?.deliveryFeeQar === null}>
           {content.checkout.placeOrder}
         </button>
         <p className="checkout-form__legal">

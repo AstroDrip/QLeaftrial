@@ -12,6 +12,14 @@
 .site-footer__icon { width: 25px; height: 25px; }
 .site-footer__credit { margin-top: 16px; }
 
+.site-footer__business-details {
+  display: grid;
+  gap: 5px;
+  font-size: .82rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+
 .site-footer__legal {
   display: flex;
   flex-wrap: wrap;

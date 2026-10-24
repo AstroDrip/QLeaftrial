@@ -10,9 +10,11 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Providers } from "../../app/providers";
+import { LanguageToggle } from "../../components/LanguageToggle";
 import { CatalogPage } from "./CatalogPage";
 import { productApi } from "./product-api";
-import type { ProductSummary } from "./product-types";
+import type { ProductListResponse, ProductSummary } from "./product-types";
 import { useCartStore } from "../cart/cart-store";
 
 vi.mock("./product-api", () => ({
@@ -53,6 +55,8 @@ describe("CatalogPage", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    localStorage.clear();
   });
 
   it("renders a loading state while products fetch", () => {
@@ -90,6 +94,92 @@ describe("CatalogPage", () => {
     );
     expect(screen.getByText("House Plant")).toBeInTheDocument();
     expect(screen.getByText("180 QAR")).toBeInTheDocument();
+  });
+
+  it("does not show Arabic catalogue data as a placeholder after switching to English", async () => {
+    localStorage.setItem("qleaves-language", "ar");
+    const arabicProducts: ProductListResponse = {
+      items: [{
+        id: "1", slug: "house-plant", name: "نبات منزلي", category: "داخلي",
+        light: "إضاءة ساطعة غير مباشرة", priceQar: 180, stock: 12, inStock: true, image: null,
+      }],
+      page: 1, pageSize: 24, totalItems: 1, totalPages: 1,
+    };
+    let completeEnglishRequest: ((response: ProductListResponse) => void) | undefined;
+    mockList.mockImplementation((params) => params.lang === "ar"
+      ? Promise.resolve(arabicProducts)
+      : new Promise((resolve) => { completeEnglishRequest = resolve; }));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        orderingEnabled: true,
+        commercialRegistration: null,
+        ecommerceLicense: null,
+        businessAddress: null,
+        supportEmail: null,
+        supportPhone: null,
+        deliveryFeeQar: null,
+      }),
+    }));
+
+    render(
+      <Providers>
+        <MemoryRouter>
+          <LanguageToggle />
+          <CatalogPage />
+        </MemoryRouter>
+      </Providers>,
+    );
+
+    expect(await screen.findByText("نبات منزلي")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: "تبديل اللغة" }));
+
+    await waitFor(() => expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ lang: "en" })));
+    expect(screen.queryByText("نبات منزلي")).not.toBeInTheDocument();
+    expect(screen.getByTestId("catalog-loading")).toBeInTheDocument();
+
+    completeEnglishRequest?.({
+      items: [{
+        id: "1", slug: "house-plant", name: "House Plant", category: "Indoor",
+        light: "Bright indirect", priceQar: 180, stock: 12, inStock: true, image: null,
+      }],
+      page: 1, pageSize: 24, totalItems: 1, totalPages: 1,
+    });
+    expect(await screen.findByText("House Plant")).toBeInTheDocument();
+  });
+
+  it("hides prices, cart controls, and price sorting when ordering is disabled", async () => {
+    mockList.mockResolvedValue({
+      items: [
+        {
+          id: "1",
+          slug: "house-plant",
+          name: "House Plant",
+          category: "Indoor",
+          light: "Bright indirect",
+          priceQar: 180,
+          stock: 12,
+          inStock: true,
+          image: { url: "/house.jpg", altText: "House plant" },
+        },
+      ],
+      page: 1,
+      pageSize: 24,
+      totalItems: 1,
+      totalPages: 1,
+    });
+    const client = createTestClient();
+    client.setQueryData(["storefront-settings"], { orderingEnabled: false });
+    render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter><CatalogPage /></MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("product-grid");
+    expect(screen.queryByText("180 QAR")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add house plant to cart/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId("sort-select").querySelectorAll("option")).toHaveLength(1);
   });
 
   it("adds the selected in-stock catalogue product to the cart", async () => {

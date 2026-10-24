@@ -2,7 +2,7 @@ import "./home.css";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useSiteContent, useSiteLanguage } from "../../app/providers";
+import { useSiteContent, useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { Seo, qleavesStructuredData } from "../../components/Seo";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { productApi } from "../catalog/product-api";
@@ -24,6 +24,8 @@ const fallbackTotalPlants = plants.reduce((sum, plant) => sum + plant.stock, 0);
 export function HomePage() {
   const content = useSiteContent();
   const { language } = useSiteLanguage();
+  const settings = useStoreSettings();
+  const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const rootRef = useRef<HTMLElement>(null);
   const productsQuery = useQuery({
     queryKey: ["products", "home", language],
@@ -41,10 +43,10 @@ export function HomePage() {
       <section id="hero" className="qhero" aria-labelledby="hero-heading">
         <canvas id="heroCanvas" className="qhero__canvas" aria-hidden="true" />
         <div className="qhero__mid">
-          <div className="qhero__count-row">
+          {orderingEnabled ? <div className="qhero__count-row">
             <span id="plantCount" className="qhero__count" aria-live="polite">0</span>
             <span id="countLabel" className="qhero__count-label">{content.home.remaining}</span>
-          </div>
+          </div> : null}
           <h1 id="hero-heading" className="sr-only">{content.home.heroTitle}</h1>
           <p className="qhero__sub">{content.home.heroSubtitle}</p>
           <Link to="/shop" className="qhero__shop-link">{content.home.shopCta} ↗</Link>
@@ -77,10 +79,10 @@ export function HomePage() {
             const latin = livePlant ? "" : "latin" in plant ? plant.latin : "";
             const price = livePlant?.priceQar ?? ("price" in plant ? plant.price : 0);
             return <article className="home-plant-card" key={index}>
-              <div className="frame"><span className="stock">{plant.stock} {content.home.inStock}</span><FallbackImage src={image} alt={alt} loading="lazy" decoding="async" /></div>
+              <div className="frame">{orderingEnabled ? <span className="stock">{plant.stock} {content.home.inStock}</span> : null}<FallbackImage src={image} alt={alt} loading="lazy" decoding="async" /></div>
               <h3 className="name">{livePlant?.name ?? (language === "ar" ? referencePlant.nameAr : referencePlant.name)}</h3><p className="latin">{latin}</p>
-              <div className="meta"><span className="light">{livePlant?.light ?? (language === "ar" ? referencePlant.lightAr : referencePlant.light)}</span><span className="price">{price} QAR</span></div>
-              {livePlant ? <AddToCartButton product={livePlant} className="home-plant-card__cart" /> : null}
+              <div className="meta"><span className="light">{livePlant?.light ?? (language === "ar" ? referencePlant.lightAr : referencePlant.light)}</span>{orderingEnabled ? <span className="price">{price} QAR</span> : null}</div>
+              {orderingEnabled && livePlant ? <AddToCartButton product={livePlant} className="home-plant-card__cart" /> : null}
             </article>;
           })}
         </div>

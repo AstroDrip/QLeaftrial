@@ -42,3 +42,23 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.about-business-details dl {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.about-business-details dl > div {
+  display: grid;
+  gap: 4px;
+}
+
+.about-business-details dt {
+  font-weight: 700;
+}
+
+.about-business-details dd {
+  margin: 0;
+  color: #4b544d;
+}

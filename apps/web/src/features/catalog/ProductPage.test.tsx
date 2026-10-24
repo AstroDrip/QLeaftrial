@@ -69,6 +69,18 @@ describe("ProductPage cart action", () => {
     expect(jsonLd).toContain('"price":180');
   });
 
+  it("hides ordering details and Offer data when ordering is disabled", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    client.setQueryData(["storefront-settings"], { orderingEnabled: false });
+    render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/plants/house-plant"]}><Routes><Route path="/plants/:slug" element={<ProductPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+
+    await screen.findByRole("heading", { name: "House Plant" });
+    expect(screen.queryByTestId("product-price")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add house plant to cart/i })).not.toBeInTheDocument();
+    await waitFor(() => expect(document.head.querySelector('script[data-qleaves-seo][type="application/ld+json"]')).toBeInTheDocument());
+    expect(document.head.querySelector('script[data-qleaves-seo][type="application/ld+json"]')?.textContent).not.toContain('"@type":"Offer"');
+  });
+
   it("replaces a failed product photo with the local plant fallback", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(<QueryClientProvider client={client}><MemoryRouter initialEntries={["/plants/house-plant"]}><Routes><Route path="/plants/:slug" element={<ProductPage />} /></Routes></MemoryRouter></QueryClientProvider>);

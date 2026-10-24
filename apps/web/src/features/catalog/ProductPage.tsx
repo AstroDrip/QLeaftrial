@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useSiteContent, useSiteLanguage } from "../../app/providers";
+import { useSiteContent, useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { productApi } from "./product-api";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { Seo } from "../../components/Seo";
@@ -10,6 +10,8 @@ import "./product-detail.css";
 export function ProductPage() {
   const content = useSiteContent();
   const { language } = useSiteLanguage();
+  const settings = useStoreSettings();
+  const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const fallbackSlug = slug ?? "unknown";
@@ -49,22 +51,22 @@ export function ProductPage() {
         name: product.name,
         description: product.description,
         image: product.media.map((media) => new URL(media.url, "https://qleaves.qa").toString()),
-        offers: { "@type": "Offer", priceCurrency: "QAR", price: product.priceQar, availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", url: `https://qleaves.qa/plants/${product.slug}` },
+        ...(orderingEnabled ? { offers: { "@type": "Offer", priceCurrency: "QAR", price: product.priceQar, availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", url: `https://qleaves.qa/plants/${product.slug}` } } : {}),
       }} />
       <FallbackImage src={primaryImage?.url ?? "/images/hero/leaf-1.svg"} alt={primaryImage?.altText || product.name} className="product-detail__image" data-testid="product-image" loading="eager" decoding="async" fetchPriority="high" />
 
       <div className="product-detail__meta">
         <h1 className="product-detail__name" data-testid="product-name">{product.name}</h1>
-        <p className="product-detail__price" data-testid="product-price">{product.priceQar} QAR</p>
-        <p className="product-detail__stock" data-testid={product.inStock ? "in-stock" : "out-of-stock"}>
+        {orderingEnabled ? <p className="product-detail__price" data-testid="product-price">{product.priceQar} QAR</p> : null}
+        {orderingEnabled ? <p className="product-detail__stock" data-testid={product.inStock ? "in-stock" : "out-of-stock"}>
           {product.inStock ? content.product.inStock : content.product.outOfStock}
-        </p>
+        </p> : null}
         <p className="product-detail__description">{product.description}</p>
         <ul className="product-detail__facts" data-testid="care-facts">
           <li><span>{content.product.category}:</span> {product.category}</li>
           <li><span>{content.product.lightNeeds}:</span> {product.light}</li>
         </ul>
-        <AddToCartButton product={product} className="product-detail__cart" />
+        {orderingEnabled ? <AddToCartButton product={product} className="product-detail__cart" /> : null}
       </div>
     </article>
   );

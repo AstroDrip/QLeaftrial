@@ -8,6 +8,7 @@ export const createOrderSchema = z.object({
   area: z.string().trim().min(2).max(100),
   deliveryNotes: z.string().trim().max(500).optional(),
   paymentMethod: z.enum(["COD", "PAYMENT_LINK"]),
+  deliveryFeeQar: z.number().int().nonnegative(),
   items: z.array(z.object({ productId: z.string().min(1), quantity: z.number().int().positive().max(100) })).min(1).max(50),
 }).strict();
 
@@ -20,7 +21,17 @@ export const updatePaymentStatusSchema = z.object({
   paymentStatus: z.enum(["PENDING", "PAID", "FAILED"]),
 }).strict();
 
+export const acceptEditedOrderSchema = z.object({
+  items: z.array(z.object({
+    orderItemId: z.string().trim().min(1),
+    included: z.boolean(),
+    productId: z.string().trim().min(1),
+    quantity: z.number().int().positive().max(100),
+  }).strict()).min(1).max(50),
+}).strict();
+
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+export type AcceptEditedOrderInput = z.infer<typeof acceptEditedOrderSchema>;
 
 export const bulkDeleteOrdersSchema = z.object({
   ids: z.array(z.string().trim().min(1)).min(1).max(100),

@@ -1,15 +1,18 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { useSiteContent } from "../app/providers";
+import { useSiteContent, useStoreSettings } from "../app/providers";
 import { LanguageToggle } from "./LanguageToggle";
 
 export function SiteHeader() {
   const { pathname } = useLocation();
   const onHome = pathname === "/";
   const content = useSiteContent();
+  const settings = useStoreSettings();
+  const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const navLinks = [
     { to: "/shop", label: content.nav.shop },
-    { to: "/cart", label: content.nav.cart },
-  ] as const;
+    { to: "/about", label: content.nav.about },
+    ...(orderingEnabled ? [{ to: "/cart", label: content.nav.cart }] : []),
+  ];
 
   return (
     <header className={`site-header${onHome ? " site-header--hero" : ""}`} data-testid="site-header">
@@ -28,6 +31,7 @@ export function SiteHeader() {
           <LanguageToggle />
         </div>
       </div>
+      {settings.isError ? <p role="alert">Ordering status could not be checked.</p> : null}
     </header>
   );
 }

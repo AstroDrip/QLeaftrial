@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Appointment Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+    <style>
+        body {
+            margin: 30px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-control:focus {
+            border-color: #aaa;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #3e8e41;
+        }
+
+        .btn:active {
+            background-color: #3e8e41;
+            transform: translateY(2px);
+        }
+
+        .table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .deleteAppointment, .updateAppointment {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #e74c3c;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .deleteAppointment:hover, .updateAppointment:hover {
+            background-color: #c0392b;
+        }
+
+        .deleteAppointment:active, .updateAppointment:active {
+            background-color: #c0392b;
+            transform: translateY(2px);
+        }
+
+        /* Hover effects for table rows */
+        .table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Add some padding to the table cells */
+        .table td, .table th {
+            padding: 15px;
+        }
+
+        /* Make the table headers sticky */
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+        }
+    </style>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Appointment Management System</h2>
+        <form>
+            <fieldset>
+                <legend>Add Appointment</legend>
+                <input type="number" class="form-control" id="appointment_no" placeholder="Enter Appointment No.">
+                <input type="number" class="form-control" id="patient_id" placeholder="Enter Patient ID">
+                <input type="number" class="form-control" id="doctor_id" placeholder="Enter Doctor ID">
+                <input type="date" class="form-control" id="date" placeholder="Enter Date">
+                <input type="time" class="form-control" id="time" placeholder="Enter Time">
+                <input type="text" class="form-control" id="diagnosis" placeholder="Enter Diagnosis">
+                <br>
+                <button type="button" id="addAppointment" class="btn btn-success">Add Appointment</button>
+                <button type="button" id="fetchAppointments" class="btn btn-primary">Fetch Appointments</button>
+            </fieldset>
+        </form>
+
+        <h4>Appointment Records</h4>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Appointment No.</th>
+                    <th>Patient ID</th>
+                    <th>Doctor ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Diagnosis</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="appointmentList"></tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        let db;
+        const request = indexedDB.open("HospitalDBA", 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            let objectStore = db.createObjectStore("appointments", { keyPath: "appointment_no" });
+            objectStore.createIndex("patient_id", "patient_id", { unique: false });
+            objectStore.createIndex("doctor_id", "doctor_id", { unique: false });
+            objectStore.createIndex("date", "date", { unique: false });
+            objectStore.createIndex("time", "time", { unique: false });
+            objectStore.createIndex("diagnosis", "diagnosis", { unique: false });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+        };
+
+        request.onerror = function(event) {
+            console.log("Error opening database", event.target.errorCode);
+        };
+
+        $("#addAppointment").click(function() {
+            let appointment_no = Number($("#appointment_no").val());
+            let patient_id = Number($("#patient_id").val());
+            let doctor_id = Number($("#doctor_id").val());
+            let date = $("#date").val();
+            let time = $("#time").val();
+            let diagnosis = $("#diagnosis").val();
+
+            if (!appointment_no || !patient_id || !doctor_id || !date || !time || !diagnosis) {
+                alert("Please fill all fields.");
+                return;
+            }
+
+            let transaction = db.transaction(["appointments"], "readwrite");
+            let objectStore = transaction.objectStore("appointments");
+
+            let getRequest = objectStore.get(appointment_no);
+            getRequest.onsuccess = function() {
+                if (getRequest.result) {
+                    alert("Appointment No. already exists! Please use a unique ID.");
+                } else {
+                    let addRequest = objectStore.add({ appointment_no, patient_id, doctor_id, date, time, diagnosis });
+
+                    addRequest.onsuccess = function() {
+                        alert("Appointment added successfully.");
+                        clearFields();
+                    };
+
+                    addRequest.onerror = function() {
+                        alert("Error adding appointment.");
+                    };
+                }
+            };
+        });
+
+        $("#fetchAppointments").click(function() {
+            $("#appointmentList").empty();
+            let transaction = db.transaction(["appointments"], "readonly");
+            let objectStore = transaction.objectStore("appointments");
+            let request = objectStore.openCursor();
+
+            request.onsuccess = function(event) {
+                let cursor = event.target.result;
+                if (cursor) {
+                    $("#appointmentList").append(
+                        `<tr id="row${cursor.value.appointment_no}">
+                            <td>${cursor.value.appointment_no}</td>
+                            <td id="patient_id${cursor.value.appointment_no}">${cursor.value.patient_id}</td>
+                            <td id="doctor_id${cursor.value.appointment_no}">${cursor.value.doctor_id}</td>
+                            <td id="date${cursor.value.appointment_no}">${cursor.value.date}</td>
+                            <td id="time${cursor.value.appointment_no}">${cursor.value.time}</td>
+                            <td id="diagnosis${cursor.value.appointment_no}">${cursor.value.diagnosis}</td>
+                            <td>
+                                <button class="btn btn-danger deleteAppointment" data-id="${cursor.value.appointment_no}">Delete</button>
+                                <button class="btn btn-primary updateAppointment" data-id="${cursor.value.appointment_no}">Modify</button>
+                            </td>
+                        </tr>`
+                    );
+                    cursor.continue();
+                } else {
+                    if (!$("#appointmentList").children().length) {
+                        $("#appointmentList").append("<tr><td colspan='7' align='center'>No Appointments Found</td></tr>");
+                    }
+                }
+            };
+        });
+
+        $(document).on("click", ".deleteAppointment", function() {
+            let id = Number($(this).data("id"));
+            let transaction = db.transaction(["appointments"], "readwrite");
+            let objectStore = transaction.objectStore("appointments");
+            let request = objectStore.delete(id);
+
+            request.onsuccess = function() {
+                $("#row" + id).fadeOut();
+                alert("Appointment deleted successfully.");
+            };
+        });
+
+        $(document).on("click", ".updateAppointment", function() {
+            let id = Number($(this).data("id"));
+
+            let transaction = db.transaction(["appointments"], "readwrite");
+            let objectStore = transaction.objectStore("appointments");
+            let request = objectStore.get(id);
+
+            request.onsuccess = function(event) {
+                let data = event.target.result;
+                if (!data) {
+                    alert("Appointment not found.");
+                    return;
+                }
+
+                let newPatientId = prompt("Enter new Patient ID:", data.patient_id) || data.patient_id;
+                let newDoctorId = prompt("Enter new Doctor ID:", data.doctor_id) || data.doctor_id;
+                let newDate = prompt("Enter new Date:", data.date) || data.date;
+                let newTime = prompt("Enter new Time:", data.time) || data.time;
+                let newDiagnosis = prompt("Enter new Diagnosis:", data.diagnosis) || data.diagnosis;
+
+                data.patient_id = newPatientId;
+                data.doctor_id = newDoctorId;
+                data.date = newDate;
+                data.time = newTime;
+                data.diagnosis = newDiagnosis;
+
+                let updateRequest = objectStore.put(data);
+
+                updateRequest.onsuccess = function() {
+                    $("#patient_id" + id).text(newPatientId);
+                    $("#doctor_id" + id).text(newDoctorId);
+                    $("#date" + id).text(newDate);
+                    $("#time" + id).text(newTime);
+                    $("#diagnosis" + id).text(newDiagnosis);
+
+                    alert("Appointment record updated successfully.");
+                };
+
+                updateRequest.onerror = function() {
+                    alert("Error updating appointment record.");
+                };
+            };
+        });
+
+        function clearFields() {
+            $("#appointment_no").val("");
+            $("#patient_id").val("");
+            $("#doctor_id").val("");
+            $("#date").val("");
+            $("#time").val("");
+            $("#diagnosis").val("");
+        }
+    </script>
+</body>
+</html>

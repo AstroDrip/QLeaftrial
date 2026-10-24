@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { localeContent, type SiteLanguage } from "../content/locales";
 
 const queryClient = new QueryClient({
@@ -32,6 +32,29 @@ export function useSiteLanguage() {
 export function useSiteContent() {
   const { language } = useSiteLanguage();
   return localeContent[language];
+}
+
+export interface StoreSettings {
+  orderingEnabled: boolean;
+  commercialRegistration: string | null;
+  ecommerceLicense: string | null;
+  businessAddress: string | null;
+  supportEmail: string | null;
+  supportPhone: string | null;
+  deliveryFeeQar: number | null;
+}
+
+export function useStoreSettings() {
+  return useQuery({
+    queryKey: ["storefront-settings"],
+    queryFn: async (): Promise<StoreSettings> => {
+      const response = await fetch("/api/v1/storefront/settings");
+      if (!response.ok) throw new Error(`Could not load storefront settings (${response.status})`);
+      return response.json() as Promise<StoreSettings>;
+    },
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
 }
 
 export function Providers({ children }: { children: ReactNode }) {

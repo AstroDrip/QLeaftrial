@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
-import { useSiteContent, useSiteLanguage } from "../../app/providers";
+import { useSiteContent, useSiteLanguage, useStoreSettings } from "../../app/providers";
+import type { SiteLanguage } from "../../content/locales";
 import { productApi } from "./product-api";
 import type { ProductListParams } from "./product-types";
 import { AddToCartButton } from "../cart/AddToCartButton";
@@ -11,14 +12,22 @@ import "./catalog.css";
 
 const SORT_VALUES = ["name-asc", "price-asc", "price-desc"] as const;
 
+function queryLanguage(queryKey: readonly unknown[]): SiteLanguage | null {
+  const params = queryKey[1];
+  if (typeof params !== "object" || params === null || !("lang" in params)) return null;
+  return params.lang === "en" || params.lang === "ar" ? params.lang : null;
+}
+
 export function CatalogPage() {
   const content = useSiteContent();
   const { language } = useSiteLanguage();
+  const settings = useStoreSettings();
+  const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
 
   const requestedSort = searchParams.get("sort");
-  const sort: ProductListParams["sort"] = SORT_VALUES.includes(
+  const sort: ProductListParams["sort"] = orderingEnabled && SORT_VALUES.includes(
     requestedSort as (typeof SORT_VALUES)[number],
   ) ? requestedSort as ProductListParams["sort"] : "name-asc";
 
@@ -39,7 +48,8 @@ export function CatalogPage() {
   const { data: result, isPending, isError, error } = useQuery({
     queryKey: ["products", params],
     queryFn: () => productApi.list(params),
-    placeholderData: (previous) => previous,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery && queryLanguage(previousQuery.queryKey) === language ? previous : undefined,
     staleTime: 60_000,
   });
 
@@ -124,7 +134,7 @@ export function CatalogPage() {
         <label>
           {content.catalog.sortBy}
           <select value={sort} onChange={(event) => toggleSort(event.target.value)} data-testid="sort-select">
-            {SORT_VALUES.map((value) => <option key={value} value={value}>{sortLabels[value]}</option>)}
+            {(orderingEnabled ? SORT_VALUES : ["name-asc"] as const).map((value) => <option key={value} value={value}>{sortLabels[value]}</option>)}
           </select>
         </label>
 
@@ -144,14 +154,14 @@ export function CatalogPage() {
           ) : (
             <ul className="catalog__grid" data-testid="product-grid" aria-label={content.catalog.title}>
               {result.items.map((product) => (
-                <li key={product.id} className="product-card">
+                <li key={product.id} className="product-card" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
                   <FallbackImage src={product.image?.url ?? "/images/hero/leaf-1.svg"} alt={product.image?.altText ?? ""} className="product-card__image" loading="lazy" decoding="async" />
                   <h2 className="product-card__name">{product.name}</h2>
-                  <p className="product-card__price">{product.priceQar} QAR</p>
+                  {orderingEnabled ? <p className="product-card__price">{product.priceQar} QAR</p> : null}
                   <Link to={`/plants/${product.slug}`} className="product-card__link" data-testid={`view-${product.slug}`}>
                     {content.catalog.viewProduct(product.name)}
                   </Link>
-                  <AddToCartButton product={product} className="product-card__cart" />
+                  {orderingEnabled ? <AddToCartButton product={product} className="product-card__cart" /> : null}
                 </li>
               ))}
             </ul>
