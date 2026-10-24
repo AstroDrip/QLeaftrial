@@ -2,12 +2,12 @@ import "./admin.css";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useSiteContent } from "../../app/providers";
+import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
 import { Seo } from "../../components/Seo";
 
 export function AdminLayout() {
-  const content = useSiteContent();
+  const { content, isArabic } = useSiteLanguage();
   const links = [
     { to: "/admin", label: content.admin.dashboard, index: "01", end: true },
     { to: "/admin/orders", label: content.admin.orders, index: "02", end: false },
@@ -62,7 +62,7 @@ export function AdminLayout() {
 
   return (
     <div className="admin-shell" data-testid="admin-layout">
-      <Seo title="Admin" description="QLeaves administration." path="/admin" noIndex />
+      <Seo title={content.nav.admin} description={isArabic ? "إدارة QLeaves." : "QLeaves administration."} path="/admin" noIndex />
 
       <button
         type="button"
@@ -78,8 +78,8 @@ export function AdminLayout() {
       >
         <div className="admin-sidebar__head">
           <div>
-            <div className="admin-sidebar__brand">QLeaves</div>
-            <span>Administration</span>
+            <div className="admin-sidebar__brand"><span lang="en" dir="ltr">QLeaves</span></div>
+            <span>{content.nav.admin}</span>
           </div>
           <button
             type="button"

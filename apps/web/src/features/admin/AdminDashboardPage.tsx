@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { content } from "../../content/en";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useStoreSettings, type StoreSettings } from "../../app/providers";
+import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
 
 export function AdminDashboardPage() {
+  const { content } = useSiteLanguage();
   const dashboard = useQuery({ queryKey: ["admin", "dashboard"], queryFn: adminApi.dashboard });
   const settings = useStoreSettings();
   const queryClient = useQueryClient();

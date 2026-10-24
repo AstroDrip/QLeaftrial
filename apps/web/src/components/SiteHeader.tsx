@@ -1,11 +1,11 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { useSiteContent, useStoreSettings } from "../app/providers";
 import { LanguageToggle } from "./LanguageToggle";
+import { useSiteLanguage, useStoreSettings } from "../app/providers";
 
 export function SiteHeader() {
   const { pathname } = useLocation();
+  const { content } = useSiteLanguage();
   const onHome = pathname === "/";
-  const content = useSiteContent();
   const settings = useStoreSettings();
   const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const navLinks = [
@@ -17,15 +17,15 @@ export function SiteHeader() {
   return (
     <header className={`site-header${onHome ? " site-header--hero" : ""}`} data-testid="site-header">
       <div className="site-header__inner">
-        <Link to="/" className="site-header__brand" aria-label="QLeaves home" dir="ltr" lang="en">
+        <Link to="/" className="site-header__brand" aria-label="QLeaves home" lang="en" dir="ltr">
           <img className="site-header__logo" src="/brand/qleaves-logo.png" alt="" aria-hidden="true" onError={(event) => { event.currentTarget.style.display = "none"; }} />
-          <span className="site-header__wordmark" aria-label="QLeaves">
+          <span className="site-header__wordmark" aria-label={content.brand}>
             <span className="site-header__wordmark-q">Q</span>
             <span className="site-header__wordmark-leaves">LEAVES</span>
           </span>
         </Link>
         <div className="site-header__actions">
-          <nav aria-label="primary" className="site-header__nav" data-testid="primary-nav">
+          <nav aria-label={content.aria.primaryNavigation} className="site-header__nav" data-testid="primary-nav">
             {navLinks.map(({ to, label }) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}
           </nav>
           <LanguageToggle />

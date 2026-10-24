@@ -30,6 +30,13 @@ export const acceptEditedOrderSchema = z.object({
   }).strict()).min(1).max(50),
 }).strict();
 
+export const deleteOrdersSchema = z.object({
+  ids: z.array(z.string().trim().min(1)).min(1).max(100),
+}).strict().refine((value) => new Set(value.ids).size === value.ids.length, {
+  message: "Order IDs must be unique",
+  path: ["ids"],
+});
+
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type AcceptEditedOrderInput = z.infer<typeof acceptEditedOrderSchema>;
 

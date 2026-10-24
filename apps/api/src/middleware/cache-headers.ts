@@ -1,15 +1,15 @@
 import type { NextFunction, Request, Response } from "express";
 
-function applyCacheHeaders(response: Response, maxAgeSeconds: number) {
-  response.setHeader("Cache-Control", `public, max-age=${maxAgeSeconds}, must-revalidate`);
+function applyCacheHeaders(response: Response) {
+  response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
 }
 
 export function cacheProductList(_request: Request, response: Response, next: NextFunction) {
-  applyCacheHeaders(response, 60);
+  applyCacheHeaders(response);
   next();
 }
 
 export function cacheProductDetail(_request: Request, response: Response, next: NextFunction) {
-  applyCacheHeaders(response, 120);
+  applyCacheHeaders(response);
   next();
 }

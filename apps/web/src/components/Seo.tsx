@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useSiteLanguage } from "../app/providers";
 
 const SITE_URL = "https://qleaves.qa";
 
@@ -22,6 +23,7 @@ export function Seo({ title, description, path, image = "/brand/qleaves-logo.png
   noIndex?: boolean;
   structuredData?: StructuredData;
 }) {
+  const { language } = useSiteLanguage();
   useEffect(() => {
     const canonicalUrl = new URL(path, SITE_URL).toString();
     const imageUrl = new URL(image, SITE_URL).toString();
@@ -33,6 +35,7 @@ export function Seo({ title, description, path, image = "/brand/qleaves-logo.png
     upsertMeta('meta[property="og:type"]', { property: "og:type", content: structuredData && !Array.isArray(structuredData) && structuredData["@type"] === "Product" ? "product" : "website" });
     upsertMeta('meta[property="og:url"]', { property: "og:url", content: canonicalUrl });
     upsertMeta('meta[property="og:image"]', { property: "og:image", content: imageUrl });
+    upsertMeta('meta[property="og:locale"]', { property: "og:locale", content: language === "ar" ? "ar_QA" : "en_QA" });
 
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonical) {
@@ -51,7 +54,7 @@ export function Seo({ title, description, path, image = "/brand/qleaves-logo.png
       script.textContent = JSON.stringify(structuredData);
       document.head.appendChild(script);
     }
-  }, [description, image, noIndex, path, structuredData, title]);
+  }, [description, image, language, noIndex, path, structuredData, title]);
   return null;
 }
 

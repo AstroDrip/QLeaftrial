@@ -50,33 +50,28 @@ describe("orders and admin operations", () => {
     expect(report.body).toEqual(expect.objectContaining({ orders: 1, revenueQar: product.priceQar }));
   });
 
-  it("bulk deletes terminal orders atomically and rejects mixed non-terminal selections", async () => {
+  it("deletes a visible set atomically only when every order is deletable", async () => {
     const product = await seededProduct("house-plant");
     const first = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     const second = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
-    const pending = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     const agent = await loggedInAgent();
+    await agent.patch(`/api/v1/admin/orders/${first.body.id}/status`).send({ status: "completed" });
 
-    await agent.patch(`/api/v1/admin/orders/${first.body.id}/status`).send({ status: "declined" });
-    await agent.patch(`/api/v1/admin/orders/${second.body.id}/status`).send({ status: "completed" });
+    const rejected = await agent
+      .delete("/api/v1/admin/orders")
+      .send({ ids: [first.body.id, second.body.id] });
 
-    const rejected = await agent.post("/api/v1/admin/orders/bulk-delete").send({
-      ids: [first.body.id, pending.body.id],
-    });
     expect(rejected.status).toBe(409);
-    expect(await prisma.order.findMany({ where: { id: { in: [first.body.id, pending.body.id] } } })).toHaveLength(2);
+    expect(await prisma.order.count({ where: { id: { in: [first.body.id, second.body.id] } } })).toBe(2);
 
-    const deleted = await agent.post("/api/v1/admin/orders/bulk-delete").send({
-      ids: [first.body.id, second.body.id],
-    });
-    expect(deleted.status).toBe(200);
-    expect(deleted.body).toEqual({ deleted: 2 });
-    expect(await prisma.order.findMany({ where: { id: { in: [first.body.id, second.body.id] } } })).toHaveLength(0);
-    expect(await prisma.order.findUnique({ where: { id: pending.body.id } })).not.toBeNull();
+    await agent.patch(`/api/v1/admin/orders/${second.body.id}/status`).send({ status: "declined" });
+    const deleted = await agent
+      .delete("/api/v1/admin/orders")
+      .send({ ids: [first.body.id, second.body.id] });
+
+    expect(deleted.status).toBe(204);
+    expect(await prisma.order.count({ where: { id: { in: [first.body.id, second.body.id] } } })).toBe(0);
   });
-
-
-
   it("accepts an edited pending order and reconciles reserved stock transactionally", async () => {
     const housePlant = await seededProduct("house-plant");
     const snakePlant = await prisma.product.findUniqueOrThrow({ where: { slug: "snake-plant" } });
@@ -196,4 +191,28 @@ describe("orders and admin operations", () => {
     expect(await inventoryFor(product.id)).toMatchObject({ quantity: 12 });
   });
 
+  it("bulk deletes terminal orders atomically and rejects mixed non-terminal selections", async () => {
+    const product = await seededProduct("house-plant");
+    const first = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const second = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const pending = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const agent = await loggedInAgent();
+
+    await agent.patch(`/api/v1/admin/orders/${first.body.id}/status`).send({ status: "declined" });
+    await agent.patch(`/api/v1/admin/orders/${second.body.id}/status`).send({ status: "completed" });
+
+    const rejected = await agent.post("/api/v1/admin/orders/bulk-delete").send({
+      ids: [first.body.id, pending.body.id],
+    });
+    expect(rejected.status).toBe(409);
+    expect(await prisma.order.findMany({ where: { id: { in: [first.body.id, pending.body.id] } } })).toHaveLength(2);
+
+    const deleted = await agent.post("/api/v1/admin/orders/bulk-delete").send({
+      ids: [first.body.id, second.body.id],
+    });
+    expect(deleted.status).toBe(200);
+    expect(deleted.body).toEqual({ deleted: 2 });
+    expect(await prisma.order.findMany({ where: { id: { in: [first.body.id, second.body.id] } } })).toHaveLength(0);
+    expect(await prisma.order.findUnique({ where: { id: pending.body.id } })).not.toBeNull();
+  });
 });

@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 
 const config = JSON.parse(
   await readFile(new URL("../vercel.json", import.meta.url), "utf8"),
@@ -29,31 +29,55 @@ if (config.outputDirectory !== "apps/web/dist") {
 }
 const rewrites = Array.isArray(config.rewrites) ? config.rewrites : [];
 const apiRewrite = rewrites.findIndex((route) => route.source === "/api/v1/:path*" && route.destination === "/api/index");
+const sitemapRewrite = rewrites.findIndex((route) => route.source === "/sitemap.xml" && route.destination === "/api/index");
 const spaRewrite = rewrites.findIndex((route) => route.destination === "/index.html");
 if (apiRewrite < 0) problems.push("Missing /api/v1/* rewrite to the Express function");
+if (sitemapRewrite < 0) problems.push("Missing /sitemap.xml rewrite to the Express function");
 if (spaRewrite < 0) problems.push("Missing SPA fallback to index.html");
-if (
-  spaRewrite >= 0 &&
-  (!String(rewrites[spaRewrite].source).includes("?!api/") ||
-    !String(rewrites[spaRewrite].source).includes("?!assets/"))
-) {
+const spaSource = spaRewrite >= 0 ? String(rewrites[spaRewrite].source) : "";
+const excludesApi = spaSource.includes("?!api/");
+const excludesAssets = spaSource.includes("?!assets/") || spaSource.includes("?!api/|assets/");
+if (spaRewrite >= 0 && (!excludesApi || !excludesAssets)) {
   problems.push("SPA fallback must explicitly exclude /api and /assets requests");
 }
 if (apiRewrite >= 0 && spaRewrite >= 0 && apiRewrite > spaRewrite) {
   problems.push("API rewrite must be evaluated before the SPA fallback");
 }
-const generalHeaders = config.headers?.find((entry) => entry.source === "/(.*)")?.headers ?? [];
-const cspReportOnly = generalHeaders.find((header) => header.key === "Content-Security-Policy-Report-Only")?.value ?? "";
-if (!cspReportOnly.includes("fonts.googleapis.com") || !cspReportOnly.includes("fonts.gstatic.com")) {
-  problems.push("CSP report-only policy must allow Google Fonts stylesheet and font origins");
-}
-if (!cspReportOnly.includes("connect-src") || !cspReportOnly.includes("supabase.co")) {
-  problems.push("CSP report-only policy must allow the configured Supabase origin family");
+if (sitemapRewrite >= 0 && spaRewrite >= 0 && sitemapRewrite > spaRewrite) {
+  problems.push("Sitemap rewrite must be evaluated before the SPA fallback");
 }
 
+try {
+  await access(new URL("../apps/web/public/sitemap.xml", import.meta.url));
+  problems.push("Static sitemap.xml must not shadow the dynamic sitemap route");
+} catch {
+  // Absence is required: the Express route owns /sitemap.xml.
+}
 const fn = config.functions?.["api/index.ts"];
 if (!fn || typeof fn.maxDuration !== "number" || !fn.includeFiles) {
   problems.push("api/index.ts must declare maxDuration and includeFiles for Prisma assets");
+}
+
+const globalHeaders = (Array.isArray(config.headers) ? config.headers : [])
+  .find((entry) => entry.source === "/(.*)")?.headers ?? [];
+const reportOnlyCsp = globalHeaders.find(
+  (header) => header.key === "Content-Security-Policy-Report-Only",
+)?.value;
+if (!reportOnlyCsp) {
+  problems.push("Missing Content-Security-Policy-Report-Only header");
+} else {
+  for (const directive of [
+    "default-src 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "report-uri /api/v1/security/csp-report",
+  ]) {
+    if (!reportOnlyCsp.includes(directive)) {
+      problems.push(`Report-only CSP must include: ${directive}`);
+    }
+  }
 }
 
 if (problems.length) {

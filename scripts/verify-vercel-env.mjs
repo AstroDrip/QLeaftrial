@@ -1,5 +1,30 @@
 const problems = [];
 
+const rateLimitSalt = process.env.RATE_LIMIT_SALT?.trim();
+const placeholderPattern = /(?:replace|change[-_ ]?me|placeholder|example|your[-_ ])/i;
+
+if (!rateLimitSalt || rateLimitSalt.length < 32) {
+  problems.push("RATE_LIMIT_SALT must contain at least 32 characters");
+} else if (placeholderPattern.test(rateLimitSalt)) {
+  problems.push("RATE_LIMIT_SALT must not use a placeholder value");
+}
+
+const serverOnlyVariables = [
+  "DATABASE_URL",
+  "DIRECT_URL",
+  "SUPABASE_SECRET_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "RATE_LIMIT_SALT",
+  "QLEAVES_ADMIN_SEED_PASSWORD",
+];
+
+for (const variable of serverOnlyVariables) {
+  const publicVariable = `VITE_${variable}`;
+  if (process.env[publicVariable]?.trim()) {
+    problems.push(`${publicVariable} must not be set because it exposes a server-only value`);
+  }
+}
+
 if (process.env.QLEAVES_DATABASE_PROVIDER !== "postgresql") {
   problems.push("QLEAVES_DATABASE_PROVIDER must be set to postgresql");
 }
@@ -14,6 +39,11 @@ if (!databaseUrl) {
     const parsed = new URL(databaseUrl);
     if (!parsed.hostname || !parsed.pathname || parsed.pathname === "/") {
       problems.push("DATABASE_URL must include a database host and name");
+    }
+    if (!parsed.username || !parsed.password) {
+      problems.push("DATABASE_URL must include a database username and password");
+    } else if (placeholderPattern.test(parsed.username) || placeholderPattern.test(parsed.password)) {
+      problems.push("DATABASE_URL must not contain placeholder credentials");
     }
   } catch {
     problems.push("DATABASE_URL must be a valid PostgreSQL URL");

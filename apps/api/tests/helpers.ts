@@ -16,6 +16,7 @@ type ValidOrder = {
 };
 
 export async function resetDatabase(): Promise<void> {
+  await prisma.rateLimitBucket.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.storeSettings.deleteMany();

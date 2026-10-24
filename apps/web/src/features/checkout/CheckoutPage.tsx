@@ -1,9 +1,10 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSiteContent, useStoreSettings } from "../../app/providers";
+import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
+import { errorFromResponse } from "../../lib/api-error";
 
 const initialForm = {
   name: "",
@@ -16,7 +17,7 @@ const initialForm = {
 };
 
 export function CheckoutPage() {
-  const content = useSiteContent();
+  const { content, isArabic } = useSiteLanguage();
   const settings = useStoreSettings();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -36,26 +37,45 @@ export function CheckoutPage() {
     event.preventDefault();
     setError("");
     if (items.length === 0) {
-      setError(content.checkout.emptyCart);
+      setError(isArabic ? "سلة المشتريات فارغة." : "Your cart is empty.");
+      return;
+    }
+    if (settings.isPending || settings.isError || settings.data?.deliveryFeeQar == null) {
+      setError(content.checkout.deliveryNotConfigured);
       return;
     }
     try {
-      const response = await fetch("/api/v1/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerName: form.name, phone: form.phone, email: form.email, addressLine1: form.address, area: form.area, deliveryNotes: form.notes, paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK", deliveryFeeQar: settings.data?.deliveryFeeQar, items: items.map(({ id, quantity }) => ({ productId: id, quantity })) }) });
-      const body = await response.json();
+      const response = await fetch("/api/v1/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: form.name,
+          phone: form.phone,
+          email: form.email,
+          addressLine1: form.address,
+          area: form.area,
+          deliveryNotes: form.notes,
+          paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK",
+          deliveryFeeQar: settings.data.deliveryFeeQar,
+          items: items.map(({ id, quantity }) => ({ productId: id, quantity })),
+        }),
+      });
       if (!response.ok) {
-        if (body?.error?.code === "DELIVERY_PRICE_CHANGED") {
+        const responseError = await errorFromResponse(response);
+        if (responseError.code === "DELIVERY_PRICE_CHANGED") {
           await queryClient.invalidateQueries({ queryKey: ["storefront-settings"] });
         }
-        throw new Error(body?.error?.message || content.checkout.orderFailed);
+        throw responseError;
       }
+      const body = await response.json();
       clearCart();
       navigate(`/order/${body.orderNumber}`);
-    } catch (submissionError) { setError(submissionError instanceof Error ? submissionError.message : content.checkout.orderFailed); }
+    } catch (submissionError) { setError(isArabic ? "تعذر إرسال الطلب" : submissionError instanceof Error ? submissionError.message : "Could not place order"); }
   }
 
   return (
     <section className="page-shell checkout-page" data-testid="checkout-page">
-      <Seo title="Checkout" description="Submit your QLeaves plant order details." path="/checkout" noIndex />
+      <Seo title={content.checkout.title} description={isArabic ? "أرسل تفاصيل طلب نباتات QLeaves." : "Submit your QLeaves plant order details."} path="/checkout" noIndex />
       <div className="page-shell__header">
         <p className="eyebrow">{content.checkout.title}</p>
         <h1>{content.checkout.guestHeading}</h1>
@@ -70,9 +90,12 @@ export function CheckoutPage() {
             <span>{content.checkout.customerName}</span>
             <input
               name="name"
+              required
+              minLength={2}
+              maxLength={120}
               value={form.name}
               onChange={handleChange}
-              placeholder="Aisha Rahman"
+              placeholder={isArabic ? "عائشة رحمن" : "Aisha Rahman"}
             />
           </label>
 
@@ -80,6 +103,10 @@ export function CheckoutPage() {
             <span>{content.checkout.phone}</span>
             <input
               name="phone"
+              type="tel"
+              required
+              minLength={5}
+              maxLength={40}
               value={form.phone}
               onChange={handleChange}
               placeholder="+974 5555 1234"
@@ -91,6 +118,8 @@ export function CheckoutPage() {
             <input
               name="email"
               type="email"
+              required
+              maxLength={200}
               value={form.email}
               onChange={handleChange}
               placeholder="hello@example.com"
@@ -101,9 +130,12 @@ export function CheckoutPage() {
             <span>{content.checkout.addressLine1}</span>
             <input
               name="address"
+              required
+              minLength={3}
+              maxLength={240}
               value={form.address}
               onChange={handleChange}
-              placeholder={content.checkout.addressPlaceholder}
+              placeholder={isArabic ? "فيلا 12، شارع 30" : "Villa 12, Street 30"}
             />
           </label>
 
@@ -116,8 +148,8 @@ export function CheckoutPage() {
               required
             >
               <option value="">{content.checkout.selectDeliveryArea}</option>
-              {Object.entries(content.checkout.deliveryAreas).map(([area, label]) => (
-                <option key={area} value={label}>{label}</option>
+              {Object.entries(content.checkout.deliveryAreas).map(([key, label]) => (
+                <option key={key} value={label}>{label}</option>
               ))}
             </select>
           </label>
@@ -136,7 +168,8 @@ export function CheckoutPage() {
               name="notes"
               value={form.notes}
               onChange={handleChange}
-              placeholder={content.checkout.notesPlaceholder}
+              maxLength={500}
+              placeholder={isArabic ? "يرجى قرع الجرس أو ترك الطلب عند الاستقبال." : "Ring the bell or leave at reception."}
             />
           </label>
         </div>
@@ -147,7 +180,7 @@ export function CheckoutPage() {
           {settings.data?.deliveryFeeQar === null ? <p role="alert">{content.checkout.deliveryNotConfigured}</p> : null}
           <ul>
             <li>
-              <span>{items.map((item) => `${item.name} × ${item.quantity}`).join(", ")}</span>
+              <span>{items.map((item) => `${isArabic ? item.nameAr?.trim() || item.name : item.name} × ${item.quantity}`).join(isArabic ? "، " : ", ")}</span>
               <strong>{cartSubtotal(items)} QAR</strong>
             </li>
             <li>
@@ -161,11 +194,11 @@ export function CheckoutPage() {
           </div>
         </div>
 
-        <button type="submit" className="primary-button" disabled={items.length === 0 || settings.isPending || settings.isError || settings.data?.deliveryFeeQar === null}>
+        <button type="submit" className="primary-button" disabled={items.length === 0 || settings.isPending || settings.isError || settings.data?.deliveryFeeQar == null}>
           {content.checkout.placeOrder}
         </button>
         <p className="checkout-form__legal">
-          {content.checkout.legalPrefix} <Link to="/terms">{content.checkout.terms}</Link> {content.checkout.legalAnd} <Link to="/privacy">{content.checkout.privacy}</Link> {content.checkout.legalAndSecond} <Link to="/shipping-returns">{content.checkout.shipping}</Link> {content.checkout.legalSuffix}
+          {isArabic ? <>بإرسال الطلب، فإنك توافق على <Link to="/terms">الشروط والأحكام</Link> وتقر بالاطلاع على <Link to="/privacy">سياسة الخصوصية</Link> ومعلومات <Link to="/shipping-returns">الشحن والإرجاع</Link>.</> : <>By placing an order, you agree to the <Link to="/terms">Terms &amp; Conditions</Link> and acknowledge the <Link to="/privacy">Privacy Policy</Link> and <Link to="/shipping-returns">Shipping &amp; Returns</Link> information.</>}
         </p>
       </form>
     </section>

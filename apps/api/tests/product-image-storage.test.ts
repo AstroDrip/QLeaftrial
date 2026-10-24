@@ -89,6 +89,25 @@ describe("product image storage", () => {
     });
   });
 
+  it("does not log an upstream storage response body when upload fails", async () => {
+    vi.stubEnv("QLEAVES_DATABASE_PROVIDER", "postgresql");
+    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("SUPABASE_SECRET_KEY", "sb_secret_test");
+    vi.stubEnv("SUPABASE_PRODUCT_IMAGE_BUCKET", "product-images");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response("upstream-secret-detail", { status: 500 }),
+    ));
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(storeProductImage(ONE_PIXEL_PNG, "new-fern")).rejects.toMatchObject({
+      code: "IMAGE_UPLOAD_FAILED",
+    });
+
+    const logged = errorLog.mock.calls.flat().join(" ");
+    expect(logged).toContain("product-image-upload-failed");
+    expect(logged).not.toContain("upstream-secret-detail");
+  });
+
   it("deletes an uploaded object when cleanup is requested", async () => {
     vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
     vi.stubEnv("SUPABASE_SECRET_KEY", "sb_secret_test");

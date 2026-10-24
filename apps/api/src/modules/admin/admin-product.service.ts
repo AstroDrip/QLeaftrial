@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import type { CreateAdminProductInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
 import { removeStoredProductImage, storeProductImage } from "./product-image-storage.js";
+import { finalizeProductImages, removeProductImagePaths } from "./product-upload.service.js";
 
 const adminProductSelection = {
   id: true,
@@ -82,7 +83,14 @@ type AdminProductCreateRepository = {
       costPrice: number;
       published: boolean;
       inventory: { create: { quantity: number } };
-      media: { create: { url: string; altText: string; sortOrder: number } };
+      media: { create: Array<{
+        url: string;
+        altText: string;
+        sortOrder: number;
+        width?: number;
+        height?: number;
+        purpose?: string;
+      }> };
     };
     select: typeof adminProductSelection;
   }): Promise<AdminProductRecord>;
@@ -178,7 +186,7 @@ export async function updateAdminProduct(
       throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
     }
 
-    const productPatch: ProductUpdateData = {
+    const productFields = {
       ...(input.priceQar !== undefined ? { priceQar: input.priceQar } : {}),
       ...(input.published !== undefined ? { published: input.published } : {}),
       ...(input.nameAr !== undefined ? { nameAr: input.nameAr } : {}),
@@ -186,17 +194,19 @@ export async function updateAdminProduct(
       ...(input.categoryAr !== undefined ? { categoryAr: input.categoryAr } : {}),
       ...(input.lightAr !== undefined ? { lightAr: input.lightAr } : {}),
     };
-
-    const product = Object.keys(productPatch).length === 0
+    const product = Object.keys(productFields).length === 0
       ? existing
       : await transaction.product.update({
           where: { id },
-          data: productPatch,
+          data: productFields,
           select: adminProductSelection,
         });
 
     const inventory = input.stock === undefined
-      ? product.inventory
+      ? await transaction.inventory.findUnique({
+          where: { productId: id },
+          select: { quantity: true },
+        })
       : await transaction.inventory.upsert({
           where: { productId: id },
           create: { productId: id, quantity: input.stock },
@@ -204,15 +214,24 @@ export async function updateAdminProduct(
           select: { quantity: true },
         });
 
-    return toAdminProduct({
-      ...product,
-      inventory,
-    });
+    return toAdminProduct({ ...product, inventory });
   });
 }
 
 export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
-  const storedImage = await storeProductImage(input.imageDataUrl, input.slug);
+  const usesPostgreSql = process.env.QLEAVES_DATABASE_PROVIDER === "postgresql";
+  if (usesPostgreSql && input.imageDataUrl) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Production product creation requires staged image variants");
+  }
+
+  const stagedPaths = input.stagedImages?.map((image) => image.stagingPath) ?? [];
+  const finalizedImages = input.stagedImages
+    ? await finalizeProductImages(input.stagedImages, input.slug)
+    : [];
+  const legacyImage = input.imageDataUrl
+    ? await storeProductImage(input.imageDataUrl, input.slug)
+    : undefined;
+  const finalStoragePaths = finalizedImages.map((image) => image.storagePath);
 
   try {
     const product = await productCreateRepository.create({
@@ -220,27 +239,61 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         slug: input.slug,
         sku: input.sku,
         name: input.name,
-        ...(input.nameAr ? { nameAr: input.nameAr } : {}),
+        ...(input.nameAr !== undefined ? { nameAr: input.nameAr } : {}),
         description: input.description,
-        ...(input.descriptionAr ? { descriptionAr: input.descriptionAr } : {}),
+        ...(input.descriptionAr !== undefined ? { descriptionAr: input.descriptionAr } : {}),
         category: input.category,
-        ...(input.categoryAr ? { categoryAr: input.categoryAr } : {}),
+        ...(input.categoryAr !== undefined ? { categoryAr: input.categoryAr } : {}),
         light: input.light,
-        ...(input.lightAr ? { lightAr: input.lightAr } : {}),
+        ...(input.lightAr !== undefined ? { lightAr: input.lightAr } : {}),
         priceQar: input.priceQar,
         costPrice: input.costPrice,
         published: true,
         inventory: { create: { quantity: input.stock } },
-        media: { create: { url: storedImage.url, altText: input.imageAltText, sortOrder: 0 } },
+        media: {
+          create: finalizedImages.length > 0
+            ? finalizedImages
+                .sort((left, right) => left.purpose === "catalog" ? -1 : right.purpose === "catalog" ? 1 : 0)
+                .map((image, sortOrder) => ({
+                  url: image.url,
+                  altText: input.imageAltText,
+                  sortOrder,
+                  width: image.width,
+                  height: image.height,
+                  purpose: image.purpose,
+                }))
+            : [{ url: legacyImage!.url, altText: input.imageAltText, sortOrder: 0 }],
+        },
       },
       select: adminProductSelection,
     });
+
+    if (stagedPaths.length > 0) {
+      try {
+        await removeProductImagePaths(stagedPaths);
+      } catch (cleanupError) {
+        console.error(JSON.stringify({
+          level: "error",
+          event: "staged-product-image-cleanup-failed",
+          errorType: cleanupError instanceof Error ? cleanupError.name : typeof cleanupError,
+        }));
+      }
+    }
     return toAdminProduct(product);
   } catch (error) {
-    try {
-      await removeStoredProductImage(storedImage);
-    } catch (cleanupError) {
-      console.error("Failed to clean up product image after product creation failed", cleanupError);
+    if (finalStoragePaths.length > 0) {
+      await Promise.allSettled([removeProductImagePaths(finalStoragePaths)]);
+    }
+    if (legacyImage) {
+      try {
+        await removeStoredProductImage(legacyImage);
+      } catch (cleanupError) {
+        console.error(JSON.stringify({
+          level: "error",
+          event: "legacy-product-image-cleanup-failed",
+          errorType: cleanupError instanceof Error ? cleanupError.name : typeof cleanupError,
+        }));
+      }
     }
     throw error;
   }

@@ -1,33 +1,50 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Providers } from "../app/providers";
 import { Layout } from "./Layout";
 
+const storefrontSettings = {
+  orderingEnabled: true,
+  commercialRegistration: null,
+  ecommerceLicense: null,
+  businessAddress: null,
+  supportEmail: null,
+  supportPhone: null,
+  deliveryFeeQar: null,
+};
+
+function renderWithSettings(orderingEnabled: boolean) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, refetchOnMount: false } },
+  });
+  client.setQueryData(["storefront-settings"], { ...storefrontSettings, orderingEnabled });
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <Layout><p>Page</p></Layout>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe("Layout", () => {
-  afterEach(cleanup);
+  beforeEach(() => window.localStorage.clear());
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
 
-  it("provides navigation, skip link, and cart destination while ordering is enabled", () => {
-    const client = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    client.setQueryData(["storefront-settings"], { orderingEnabled: true });
-    render(
-      <QueryClientProvider client={client}>
-        <MemoryRouter>
-          <Layout>
-            <p>Page</p>
-          </Layout>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+  it("provides the skip link, navigation, cart, and bilingual legal destinations", () => {
+    renderWithSettings(true);
 
-    expect(screen.getByRole("link", { name: /skip to content/i })).toHaveAttribute(
-      "href",
-      "#main-content",
-    );
-    expect(screen.getByRole("navigation", { name: /primary/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
+    expect(screen.getByRole("link", { name: /skip to content/i })).toHaveAttribute("href", "#main-content");
+    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Shop" })).toHaveAttribute("href", "/shop");
+    expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "About us" })).toHaveAttribute("href", "/about");
+    expect(screen.getByRole("link", { name: "Cart" })).toHaveAttribute("href", "/cart");
     expect(screen.getByText("Founded in 2020")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /instagram/i })).toHaveAttribute("href", "https://www.instagram.com/qleaves.qa?igsi=MWh6YzR4dWMyazA0cw==");
     expect(screen.getByRole("link", { name: /whatsapp/i })).toHaveAttribute("href", "https://wa.me/97477551056");
@@ -37,15 +54,39 @@ describe("Layout", () => {
     expect(screen.getByText("QOZYD").tagName).toBe("STRONG");
   });
 
-  it("hides the cart destination when ordering is disabled", async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnMount: false } } });
-    client.setQueryData(["storefront-settings"], { orderingEnabled: false });
+  it("hides the cart destination when ordering is disabled", () => {
+    renderWithSettings(false);
+
+    expect(screen.queryByRole("link", { name: "Cart" })).not.toBeInTheDocument();
+    expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "About us" })).toHaveAttribute("href", "/about");
+  });
+
+  it("localizes public navigation and footer links into Arabic", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => storefrontSettings,
+    }));
     render(
-      <QueryClientProvider client={client}>
-        <MemoryRouter><Layout><p>Page</p></Layout></MemoryRouter>
-      </QueryClientProvider>,
+      <Providers>
+        <MemoryRouter>
+          <Layout><h1>محتوى الصفحة</h1></Layout>
+        </MemoryRouter>
+      </Providers>,
     );
 
-    await waitFor(() => expect(screen.queryByRole("link", { name: /cart/i })).not.toBeInTheDocument());
+    await userEvent.click(screen.getByTestId("language-toggle"));
+
+    expect(screen.getByRole("link", { name: "المتجر" })).toHaveAttribute("href", "/shop");
+    expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "من نحن" })).toHaveAttribute("href", "/about");
+    expect(screen.getByRole("link", { name: "السلة" })).toHaveAttribute("href", "/cart");
+    expect(document.documentElement).toHaveAttribute("lang", "ar");
+    expect(document.documentElement).toHaveAttribute("dir", "rtl");
+    expect(screen.getByTestId("site-footer")).toHaveAttribute("lang", "ar");
+    expect(screen.getByTestId("site-footer")).toHaveAttribute("dir", "rtl");
+    expect(screen.getByRole("link", { name: "الخصوصية" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "الشروط والأحكام" })).toHaveAttribute("href", "/terms");
+    expect(screen.getByRole("link", { name: "الشحن والإرجاع" })).toHaveAttribute("href", "/shipping-returns");
+    expect(screen.getByLabelText("التبديل إلى اللغة الإنجليزية")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("تأسست في 2020")).toBeInTheDocument());
   });
 });

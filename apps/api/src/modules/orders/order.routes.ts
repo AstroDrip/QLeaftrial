@@ -5,6 +5,7 @@ import {
   acceptEditedOrderSchema,
   bulkDeleteOrdersSchema,
   createOrderSchema,
+  deleteOrdersSchema,
   updateOrderStatusSchema,
   updatePaymentStatusSchema,
 } from "./order.schemas.js";
@@ -52,6 +53,13 @@ orderRouter.get("/admin/orders", async (_req, res) => {
   res.json({ items: await listOrders() });
 });
 
+orderRouter.delete("/admin/orders", async (req, res) => {
+  const parsed = deleteOrdersSchema.safeParse(req.body);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order selection");
+  await deleteOrders(parsed.data.ids);
+  res.status(204).end();
+});
+
 orderRouter.patch("/admin/orders/:id/status", async (req, res) => {
   const parsed = updateOrderStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order status");
@@ -73,7 +81,8 @@ orderRouter.patch("/admin/orders/:id/payment", async (req, res) => {
 orderRouter.post("/admin/orders/bulk-delete", async (req, res) => {
   const parsed = bulkDeleteOrdersSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order selection");
-  res.json(await deleteOrders(parsed.data.ids));
+  await deleteOrders(parsed.data.ids);
+  res.json({ deleted: parsed.data.ids.length });
 });
 
 orderRouter.delete("/admin/orders/:id", async (req, res) => {

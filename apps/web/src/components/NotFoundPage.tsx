@@ -1,15 +1,15 @@
 import { Link } from "react-router-dom";
-import { useSiteContent } from "../app/providers";
 import { Seo } from "./Seo";
+import { useSiteLanguage } from "../app/providers";
 
 export function NotFoundPage() {
-  const content = useSiteContent();
+  const { content, isArabic } = useSiteLanguage();
   return (
     <section className="not-found" data-testid="not-found">
-      <Seo title={content.notFound.title} description={content.notFound.body} path={window.location.pathname} noIndex />
+      <Seo title={content.notFound.title} description={isArabic ? "صفحة QLeaves هذه غير موجودة." : "This QLeaves page does not exist."} path={window.location.pathname} noIndex />
       <h1>{content.notFound.title}</h1>
-      <p>{content.notFound.body}</p>
-      <Link to="/shop">{content.notFound.back}</Link>
+      <p>{content.notFound.message}</p>
+      <Link to="/shop">{content.notFound.action}</Link>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { content } from "../../content/en";
+import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
 
 type RangeMode = "all" | "day" | "week" | "month";
@@ -47,6 +47,7 @@ function reportRange(mode: RangeMode, reference: string): { from?: string; to?: 
 }
 
 export function AdminSalesPage() {
+  const { content } = useSiteLanguage();
   const [mode, setMode] = useState<RangeMode>("all");
   const [referenceDate, setReferenceDate] = useState(qatarToday);
   const range = useMemo(() => reportRange(mode, referenceDate), [mode, referenceDate]);

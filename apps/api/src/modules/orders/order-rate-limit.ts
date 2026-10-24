@@ -1,54 +1,29 @@
 import type { RequestHandler } from "express";
+import { ApiError } from "../../middleware/error-handler.js";
+import { clearRateLimit, consumeRateLimit } from "../../lib/rate-limit.js";
 
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 10;
-const MAX_TRACKED_CLIENTS = 10_000;
-
-type AttemptWindow = { attempts: number; startedAt: number };
 type AttemptResult = { limited: boolean; retryAfterSeconds: number };
+const LIMITER = "public-order";
 
-const attempts = new Map<string, AttemptWindow>();
-
-function pruneExpired(now: number): void {
-  for (const [key, attempt] of attempts) {
-    if (now - attempt.startedAt >= WINDOW_MS) attempts.delete(key);
-  }
-
-  while (attempts.size >= MAX_TRACKED_CLIENTS) {
-    const oldestKey = attempts.keys().next().value as string | undefined;
-    if (!oldestKey) break;
-    attempts.delete(oldestKey);
-  }
+export function consumeOrderAttempt(key: string, now = Date.now()): Promise<AttemptResult> {
+  return consumeRateLimit({ limiter: LIMITER, clientKey: key, limit: MAX_ATTEMPTS, windowMs: WINDOW_MS, now });
 }
 
-export function consumeOrderAttempt(key: string, now = Date.now()): AttemptResult {
-  pruneExpired(now);
-  const existing = attempts.get(key);
-  const window = !existing || now - existing.startedAt >= WINDOW_MS
-    ? { attempts: 0, startedAt: now }
-    : existing;
-
-  if (!existing || window !== existing) attempts.set(key, window);
-
-  const elapsed = now - window.startedAt;
-  const retryAfterSeconds = Math.max(1, Math.ceil((WINDOW_MS - elapsed) / 1000));
-
-  if (window.attempts >= MAX_ATTEMPTS) {
-    return { limited: true, retryAfterSeconds };
-  }
-
-  window.attempts += 1;
-  return { limited: false, retryAfterSeconds };
+export function clearOrderRateLimit(key?: string): Promise<void> {
+  return clearRateLimit(LIMITER, key);
 }
 
-export function clearOrderRateLimit(key?: string): void {
-  if (key) attempts.delete(key);
-  else attempts.clear();
-}
-
-export const publicOrderRateLimit: RequestHandler = (request, response, next) => {
+export const publicOrderRateLimit: RequestHandler = async (request, response, next) => {
   const key = request.ip || request.socket.remoteAddress || "unknown";
-  const result = consumeOrderAttempt(key);
+  let result: AttemptResult;
+  try {
+    result = await consumeOrderAttempt(key);
+  } catch {
+    next(new ApiError(503, "RATE_LIMIT_UNAVAILABLE", "Order service is temporarily unavailable"));
+    return;
+  }
 
   if (!result.limited) {
     next();

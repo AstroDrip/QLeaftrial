@@ -1,34 +1,49 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useSiteContent, useSiteLanguage, useStoreSettings } from "../../app/providers";
+import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { productApi } from "./product-api";
+import { localizeProduct } from "./localize-product";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { Seo } from "../../components/Seo";
-import { FallbackImage } from "../../components/FallbackImage";
+import { ProductImage } from "../../components/ProductImage";
 import "./product-detail.css";
 
 export function ProductPage() {
-  const content = useSiteContent();
-  const { language } = useSiteLanguage();
+  const { content, language, isArabic } = useSiteLanguage();
   const settings = useStoreSettings();
   const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const fallbackSlug = slug ?? "unknown";
 
-  const { data: product, isPending, isError, error } = useQuery({
+  const {
+    data: product,
+    isPending,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["product", fallbackSlug, language],
-    queryFn: () => productApi.detail(fallbackSlug, language),
-    staleTime: 120_000,
+    queryFn: () => productApi.detail(`${encodeURIComponent(fallbackSlug)}?lang=${language}`),
+    staleTime: 300_000,
   });
 
-  if (isPending) return <p data-testid="product-loading" className="product-detail">{content.product.loading}</p>;
+  if (isPending) {
+    return (
+      <p data-testid="product-loading" className="product-detail">
+        {isArabic ? "جارٍ تحميل النبات…" : "Loading plant…"}
+      </p>
+    );
+  }
 
   if (isError) {
     return (
       <section className="product-detail" data-testid="product-error">
-        <p role="alert">{content.product.notFound}: {(error as Error).message}</p>
-        <button type="button" onClick={() => navigate(-1)}>{language === "ar" ? "رجوع" : "Back"}</button>
+        <p role="alert">
+          {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
+        </p>
+        <button type="button" onClick={() => navigate(-1)}>
+          {content.common.back}
+        </button>
       </section>
     );
   }
@@ -36,35 +51,78 @@ export function ProductPage() {
   if (!product) {
     return (
       <section className="product-detail" data-testid="product-not-found">
-        <h1>{content.product.notFound}</h1>
-        <Link to="/shop">{content.order.backToShop}</Link>
+        <h1>{content.errors.retryFailed}</h1>
+        <Link to="/shop">{content.catalog.noResults}</Link>
       </section>
     );
   }
 
   const primaryImage = product.media[0] ?? product.image;
+  const localized = localizeProduct(product, isArabic);
   return (
     <article className="product-detail" data-testid="product-page">
-      <Seo title={product.name} description={product.description} path={`/plants/${product.slug}`} image={primaryImage?.url} structuredData={{
-        "@context": "https://schema.org",
-        "@type": "Product",
-        name: product.name,
-        description: product.description,
-        image: product.media.map((media) => new URL(media.url, "https://qleaves.qa").toString()),
-        ...(orderingEnabled ? { offers: { "@type": "Offer", priceCurrency: "QAR", price: product.priceQar, availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", url: `https://qleaves.qa/plants/${product.slug}` } } : {}),
-      }} />
-      <FallbackImage src={primaryImage?.url ?? "/images/hero/leaf-1.svg"} alt={primaryImage?.altText || product.name} className="product-detail__image" data-testid="product-image" loading="eager" decoding="async" fetchPriority="high" />
+      <Seo
+        title={localized.name}
+        description={localized.description}
+        path={`/plants/${product.slug}`}
+        image={primaryImage?.url}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: localized.name,
+          description: localized.description,
+          image: product.media.map((media) => new URL(media.url, "https://qleaves.qa").toString()),
+          ...(orderingEnabled ? {
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "QAR",
+              price: product.priceQar,
+              availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              url: `https://qleaves.qa/plants/${product.slug}`,
+            },
+          } : {}),
+        }}
+      />
+      <ProductImage
+        media={product.media.length > 0 ? product.media : primaryImage}
+        alt={isArabic ? localized.name : primaryImage?.altText || localized.name}
+        preferredPurpose="detail"
+        className="product-detail__image"
+        data-testid="product-image"
+        loading="eager"
+        decoding="async"
+        sizes="(max-width: 900px) 100vw, 50vw"
+        fetchPriority="high"
+      />
 
       <div className="product-detail__meta">
-        <h1 className="product-detail__name" data-testid="product-name">{product.name}</h1>
-        {orderingEnabled ? <p className="product-detail__price" data-testid="product-price">{product.priceQar} QAR</p> : null}
-        {orderingEnabled ? <p className="product-detail__stock" data-testid={product.inStock ? "in-stock" : "out-of-stock"}>
-          {product.inStock ? content.product.inStock : content.product.outOfStock}
-        </p> : null}
-        <p className="product-detail__description">{product.description}</p>
+        <h1 className="product-detail__name" data-testid="product-name">
+          {localized.name}
+        </h1>
+        {orderingEnabled ? (
+          <p className="product-detail__price" data-testid="product-price">
+            {product.priceQar} QAR
+          </p>
+        ) : null}
+        {orderingEnabled ? (
+          <p
+            className="product-detail__stock"
+            data-testid={product.inStock ? "in-stock" : "out-of-stock"}
+          >
+            {product.inStock ? content.product.inStock : content.product.outOfStock}
+          </p>
+        ) : null}
+        <p className="product-detail__description">
+          {localized.description}
+        </p>
+
         <ul className="product-detail__facts" data-testid="care-facts">
-          <li><span>{content.product.category}:</span> {product.category}</li>
-          <li><span>{content.product.lightNeeds}:</span> {product.light}</li>
+          <li>
+            <span>{content.product.category}:</span> {localized.category}
+          </li>
+          <li>
+            <span>{content.product.lightNeeds}:</span> {localized.light}
+          </li>
         </ul>
         {orderingEnabled ? <AddToCartButton product={product} className="product-detail__cart" /> : null}
       </div>

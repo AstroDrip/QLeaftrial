@@ -90,6 +90,9 @@ model ProductMedia {
   url       String
   altText   String
   sortOrder Int
+  width     Int?
+  height    Int?
+  purpose   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -135,4 +138,15 @@ model OrderItem {
   unitPriceQar Int
   quantity     Int
   createdAt    DateTime @default(now())
+}
+
+model RateLimitBucket {
+  limiter   String
+  keyHash   String
+  attempts  Int
+  expiresAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@id([limiter, keyHash])
+  @@index([expiresAt])
 }

@@ -1,5 +1,7 @@
-export interface AdminSession { name: string }
+import { errorFromResponse } from "../../lib/api-error";
+import { createProductImageVariants, type ProductImageVariant } from "./product-image-variants";
 
+export interface AdminSession { name: string }
 export interface AdminProduct {
   id: string;
   slug: string;
@@ -17,23 +19,36 @@ export interface AdminProduct {
   published?: boolean;
 }
 
-export interface CreateAdminProductInput {
+export interface CreateAdminProductFields {
   name: string;
-  nameAr?: string;
+  nameAr: string;
   slug: string;
   sku: string;
   description: string;
-  descriptionAr?: string;
+  descriptionAr: string;
   category: string;
-  categoryAr?: string;
+  categoryAr: string;
   light: string;
-  lightAr?: string;
+  lightAr: string;
   priceQar: number;
   costPrice: number;
   stock: number;
-  imageDataUrl: string;
   imageAltText: string;
 }
+
+export interface StagedProductImage {
+  stagingPath: string;
+  purpose: "catalog" | "detail";
+  contentType: "image/webp";
+  byteSize: number;
+  width: number;
+  height: number;
+}
+
+export type CreateAdminProductInput = CreateAdminProductFields & {
+  imageDataUrl?: string;
+  stagedImages?: StagedProductImage[];
+};
 
 export interface AdminOrderItem {
   id: string;
@@ -105,15 +120,64 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
     if (response.status === 401 && path !== "/auth/login" && typeof window !== "undefined") {
       window.dispatchEvent(new Event("qleaves:admin-unauthorized"));
     }
-    throw new Error(body?.error?.message || `Request failed with ${response.status}`);
+    throw await errorFromResponse(response);
   }
 
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+function fileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("The selected product image could not be read."));
+    });
+    reader.addEventListener("error", () => reject(new Error("The selected product image could not be read.")));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function authorizeVariant(variant: ProductImageVariant): Promise<{
+  path: string;
+  token: string;
+  uploadUrl: string;
+}> {
+  return request("/admin/product-uploads", {
+    method: "POST",
+    body: JSON.stringify({
+      purpose: variant.purpose,
+      contentType: variant.contentType,
+      byteSize: variant.byteSize,
+      width: variant.width,
+      height: variant.height,
+    }),
+  });
+}
+
+async function uploadVariant(variant: ProductImageVariant): Promise<StagedProductImage> {
+  const authorization = await authorizeVariant(variant);
+  const form = new FormData();
+  form.append("cacheControl", "31536000");
+  form.append("", variant.blob);
+  const response = await fetch(authorization.uploadUrl, {
+    method: "PUT",
+    headers: { "x-upsert": "false" },
+    body: form,
+  });
+  if (!response.ok) throw new Error(`The ${variant.purpose} product image upload failed.`);
+  return {
+    stagingPath: authorization.path,
+    purpose: variant.purpose,
+    contentType: variant.contentType,
+    byteSize: variant.byteSize,
+    width: variant.width,
+    height: variant.height,
+  };
 }
 
 export const adminApi = {
@@ -169,9 +233,9 @@ export const adminApi = {
     }),
   deleteOrder: (id: string): Promise<void> =>
     request<void>(`/admin/orders/${id}`, { method: "DELETE" }),
-  deleteOrders: (ids: string[]): Promise<{ deleted: number }> =>
-    request<{ deleted: number }>("/admin/orders/bulk-delete", {
-      method: "POST",
+  deleteOrders: (ids: string[]): Promise<void> =>
+    request<void>("/admin/orders", {
+      method: "DELETE",
       body: JSON.stringify({ ids }),
     }),
   dashboard: (): Promise<AdminDashboard> =>
@@ -193,6 +257,26 @@ export const adminApi = {
             ...(from ? { from } : {}),
             ...(to ? { to } : {}),
           })}`
-        : ""}`,
+          : ""}`,
     ),
+  createProductWithImage: async (
+    input: CreateAdminProductFields,
+    file: File,
+    directUpload = import.meta.env.PROD,
+  ): Promise<AdminProduct> => {
+    if (!directUpload) {
+      return request<AdminProduct>("/admin/products", {
+        method: "POST",
+        body: JSON.stringify({ ...input, imageDataUrl: await fileAsDataUrl(file) }),
+      });
+    }
+
+    const variants = await createProductImageVariants(file);
+    const stagedImages: StagedProductImage[] = [];
+    for (const variant of variants) stagedImages.push(await uploadVariant(variant));
+    return request<AdminProduct>("/admin/products", {
+      method: "POST",
+      body: JSON.stringify({ ...input, stagedImages }),
+    });
+  },
 };

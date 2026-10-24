@@ -16,7 +16,7 @@ const publicProductSelection = {
   lightAr: true,
   priceQar: true,
   media: {
-    select: { url: true, altText: true },
+    select: { url: true, altText: true, width: true, height: true, purpose: true },
     orderBy: { sortOrder: "asc" as const },
   },
   inventory: { select: { quantity: true } },
@@ -34,33 +34,27 @@ type PublicProductRecord = {
   light: string;
   lightAr: string | null;
   priceQar: number;
-  media: Array<{ url: string; altText: string }>;
-  inventory: { quantity: number } | null;
-};
-
-type TextFilter = { contains: string };
-
-type ProductCondition = {
-  category?: string;
-  categoryAr?: string;
-  light?: string;
-  lightAr?: string;
-  OR?: Array<{
-    category?: string;
-    categoryAr?: string;
-    light?: string;
-    lightAr?: string;
-    name?: TextFilter;
-    nameAr?: TextFilter;
-    description?: TextFilter;
-    descriptionAr?: TextFilter;
-    slug?: TextFilter;
+  media: Array<{
+    url: string;
+    altText: string;
+    width: number | null;
+    height: number | null;
+    purpose: string | null;
   }>;
+  inventory: { quantity: number } | null;
 };
 
 type PublicProductWhere = {
   published: boolean;
-  AND?: ProductCondition[];
+  category?: string;
+  light?: string;
+  OR?: Array<{
+    name?: { contains: string };
+    description?: { contains: string };
+    nameAr?: { contains: string };
+    descriptionAr?: { contains: string };
+    slug?: { contains: string };
+  }>;
 };
 
 type ProductRepository = {
@@ -82,6 +76,8 @@ type ProductRepository = {
   count(args: { where: PublicProductWhere }): Promise<number>;
 };
 
+// SQLite and PostgreSQL clients share this generated Product delegate shape,
+// but TypeScript cannot call generic methods through their runtime union.
 const productRepository = prisma.product as unknown as ProductRepository;
 
 type ProductFilterRepository = {
@@ -93,35 +89,39 @@ type ProductFilterRepository = {
 
 const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
 
-function localizedValue(
-  language: ProductQuery["lang"],
-  english: string,
-  arabic: string | null,
-) {
-  return language === "ar" && arabic?.trim() ? arabic : english;
-}
-
-function toSummary(product: PublicProductRecord, language: ProductQuery["lang"]): ProductSummary {
+function toSummary(
+  product: PublicProductRecord,
+  language: ProductQuery["lang"] = "en",
+): ProductSummary {
   const [image] = product.media;
   const stock = product.inventory?.quantity ?? 0;
+  const isArabic = language === "ar";
 
   return {
     id: product.id,
     slug: product.slug,
-    name: localizedValue(language, product.name, product.nameAr),
-    category: localizedValue(language, product.category, product.categoryAr),
-    light: localizedValue(language, product.light, product.lightAr),
+    name: isArabic && product.nameAr?.trim() ? product.nameAr : product.name,
+    nameAr: product.nameAr,
+    category: isArabic && product.categoryAr?.trim() ? product.categoryAr : product.category,
+    categoryAr: product.categoryAr,
+    light: isArabic && product.lightAr?.trim() ? product.lightAr : product.light,
+    lightAr: product.lightAr,
     priceQar: product.priceQar,
     stock,
     inStock: stock > 0,
     image: image ?? null,
+    media: product.media,
   };
 }
 
-function toDetail(product: PublicProductRecord, language: ProductQuery["lang"]): ProductDetail {
+function toDetail(
+  product: PublicProductRecord,
+  language: ProductQuery["lang"] = "en",
+): ProductDetail {
   return {
     ...toSummary(product, language),
-    description: localizedValue(language, product.description, product.descriptionAr),
+    description: language === "ar" && product.descriptionAr?.trim() ? product.descriptionAr : product.description,
+    descriptionAr: product.descriptionAr,
     media: product.media,
   };
 }
@@ -133,44 +133,29 @@ export async function listProducts(query: ProductQuery): Promise<{
   totalItems: number;
   totalPages: number;
 }> {
-  const conditions: ProductCondition[] = [];
-  if (query.category) {
-    conditions.push(
-      query.lang === "ar"
-        ? { OR: [{ categoryAr: query.category }, { category: query.category }] }
-        : { category: query.category },
-    );
-  }
-  if (query.light) {
-    conditions.push(
-      query.lang === "ar"
-        ? { OR: [{ lightAr: query.light }, { light: query.light }] }
-        : { light: query.light },
-    );
-  }
-  if (query.q) {
-    conditions.push({
-      OR: [
-        { name: { contains: query.q } },
-        { nameAr: { contains: query.q } },
-        { description: { contains: query.q } },
-        { descriptionAr: { contains: query.q } },
-        { slug: { contains: query.q } },
-      ],
-    });
-  }
-
   const where: PublicProductWhere = {
     published: true,
-    ...(conditions.length ? { AND: conditions } : {}),
+    ...(query.category ? { category: query.category } : {}),
+    ...(query.light ? { light: query.light } : {}),
+    ...(query.q
+      ? {
+          OR: [
+            { name: { contains: query.q } },
+            { description: { contains: query.q } },
+            { nameAr: { contains: query.q } },
+            { descriptionAr: { contains: query.q } },
+            { slug: { contains: query.q } },
+          ],
+        }
+      : {}),
   };
 
   const orderBy: Parameters<ProductRepository["findMany"]>[0]["orderBy"] =
     query.sort === "price-asc"
-      ? [{ priceQar: "asc" }, { slug: "asc" }]
-      : query.sort === "price-desc"
-        ? [{ priceQar: "desc" }, { slug: "asc" }]
-        : [{ name: "asc" }, { slug: "asc" }];
+    ? [{ priceQar: "asc" }, { slug: "asc" }]
+    : query.sort === "price-desc"
+      ? [{ priceQar: "desc" }, { slug: "asc" }]
+      : [{ name: "asc" }, { slug: "asc" }];
 
   const [products, totalItems] = await Promise.all([
     productRepository.findMany({
@@ -195,6 +180,8 @@ export async function listProducts(query: ProductQuery): Promise<{
 export async function listProductFilters(language: ProductQuery["lang"] = "en"): Promise<{
   categories: string[];
   lights: string[];
+  categoryLabels: Record<string, string>;
+  lightLabels: Record<string, string>;
 }> {
   const products = await productFilterRepository.findMany({
     where: { published: true },
@@ -202,12 +189,10 @@ export async function listProductFilters(language: ProductQuery["lang"] = "en"):
   });
 
   return {
-    categories: [...new Set(products.map((product) =>
-      localizedValue(language, product.category, product.categoryAr),
-    ))].sort((a, b) => a.localeCompare(b, language === "ar" ? "ar" : "en")),
-    lights: [...new Set(products.map((product) =>
-      localizedValue(language, product.light, product.lightAr),
-    ))].sort((a, b) => a.localeCompare(b, language === "ar" ? "ar" : "en")),
+    categories: [...new Set(products.map((product) => language === "ar" && product.categoryAr?.trim() ? product.categoryAr : product.category))].sort(),
+    lights: [...new Set(products.map((product) => language === "ar" && product.lightAr?.trim() ? product.lightAr : product.light))].sort(),
+    categoryLabels: Object.fromEntries(products.flatMap((product) => product.categoryAr ? [[product.category, product.categoryAr]] : [])),
+    lightLabels: Object.fromEntries(products.flatMap((product) => product.lightAr ? [[product.light, product.lightAr]] : [])),
   };
 }
 

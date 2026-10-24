@@ -22,7 +22,8 @@ describe("runtime localization", () => {
       </Providers>,
     );
 
-    const languageSwitch = screen.getByRole("checkbox", { name: "Switch language" });
+    const languageSwitch = screen.getByTestId("language-toggle").querySelector("input");
+    expect(languageSwitch).not.toBeNull();
     expect(languageSwitch).not.toBeChecked();
     expect(screen.getByText("EN")).toBeInTheDocument();
     expect(screen.getByText("AR")).toBeInTheDocument();
@@ -31,7 +32,7 @@ describe("runtime localization", () => {
     expect(screen.getAllByRole("link", { name: "About us" })).toHaveLength(2);
     expect(screen.getAllByRole("link", { name: "About us" }).every((link) => link.getAttribute("href") === "/about")).toBe(true);
 
-    await userEvent.click(languageSwitch);
+    await userEvent.click(languageSwitch!);
 
     expect(languageSwitch).toBeChecked();
     expect(screen.getByRole("link", { name: "المتجر" })).toHaveAttribute("href", "/shop");
@@ -41,7 +42,7 @@ describe("runtime localization", () => {
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
     expect(screen.getByTestId("site-footer")).toHaveAttribute("dir", "rtl");
     expect(screen.getByTestId("site-footer")).toHaveAttribute("lang", "ar");
-    expect(screen.getByText("Founded in 2020")).toBeInTheDocument();
+    expect(screen.getByText("تأسست في 2020")).toBeInTheDocument();
     expect(screen.getByLabelText("QLeaves home")).toHaveAttribute("dir", "ltr");
   });
 });

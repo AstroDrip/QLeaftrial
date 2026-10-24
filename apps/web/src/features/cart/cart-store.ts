@@ -6,6 +6,7 @@ export type CartProduct = {
   id: string;
   slug: string;
   name: string;
+  nameAr?: string | null;
   priceQar: number;
   stock: number;
   image: ProductMedia | null;

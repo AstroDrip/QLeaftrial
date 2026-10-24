@@ -18,10 +18,12 @@ const defaultLanguage: SiteLanguage = "en";
 const LanguageContext = createContext<{
   language: SiteLanguage;
   isArabic: boolean;
+  content: typeof localeContent.en | typeof localeContent.ar;
   setLanguage: (language: SiteLanguage) => void;
 }>({
   language: defaultLanguage,
   isArabic: false,
+  content: localeContent.en,
   setLanguage: () => undefined,
 });
 
@@ -57,7 +59,7 @@ export function useStoreSettings() {
   });
 }
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children, client = queryClient }: { children: ReactNode; client?: QueryClient }) {
   const [language, setLanguage] = useState<SiteLanguage>(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem("qleaves-language") : null;
     return stored === "ar" ? "ar" : defaultLanguage;
@@ -76,11 +78,14 @@ export function Providers({ children }: { children: ReactNode }) {
     document.body.dataset.locale = language;
   }, [language, isArabic]);
 
-  const value = useMemo(() => ({ language, isArabic, setLanguage }), [language, isArabic]);
+  const value = useMemo(
+    () => ({ language, isArabic, content: localeContent[language], setLanguage }),
+    [language, isArabic],
+  );
 
   return (
     <LanguageContext.Provider value={value}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
     </LanguageContext.Provider>
   );
 }

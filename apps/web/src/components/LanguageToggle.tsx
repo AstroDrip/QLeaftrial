@@ -6,7 +6,7 @@ export function LanguageToggle() {
   const content = useSiteContent();
 
   return (
-    <label className="language-rocker language-rocker--small" data-testid="language-rocker">
+    <label className="language-rocker language-rocker--small" data-testid="language-toggle">
       <input
         type="checkbox"
         checked={isArabic}

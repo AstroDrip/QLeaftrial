@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { content } from "../../content/en";
+import { useSiteLanguage } from "../../app/providers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   adminApi,
@@ -10,10 +10,10 @@ import {
 } from "./admin-api";
 
 const tabs = [
-  { status: "PENDING", label: "Pending", shortLabel: "P" },
-  { status: "CONFIRMED", label: "Accepted", shortLabel: "A" },
-  { status: "CANCELLED", label: "Declined", shortLabel: "D" },
-  { status: "DELIVERED", label: "Completed", shortLabel: "C" },
+  { status: "PENDING" },
+  { status: "CONFIRMED" },
+  { status: "CANCELLED" },
+  { status: "DELIVERED" },
 ] as const;
 
 function formatQatarDateTime(value: string): string {
@@ -69,6 +69,9 @@ function OrderCard({
   onDelete: (id: string) => void;
   acceptingEdited: boolean;
 }) {
+  const { isArabic } = useSiteLanguage();
+  const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", paymentPending: "الدفع معلق", paid: "مدفوع", failed: "فشل الدفع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", paymentPending: "Pending", paid: "Paid", failed: "Failed" };
+  const paymentLabels: Record<string, string> = { PENDING: t.paymentPending, PAID: t.paid, FAILED: t.failed };
   const isPending = order.status === "PENDING";
   const isAccepted = order.status === "CONFIRMED";
   const [expanded, setExpanded] = useState(false);
@@ -290,14 +293,14 @@ function OrderCard({
               className="primary-button"
               onClick={() => onStatusChange(order.id, "CONFIRMED")}
             >
-              {expanded ? "Accept full order" : "Accept"}
+              {expanded ? (isArabic ? "قبول الطلب بالكامل" : "Accept full order") : t.accept}
             </button>
             <button
               type="button"
               className="primary-button primary-button--secondary"
               onClick={() => onStatusChange(order.id, "CANCELLED")}
             >
-              Decline
+              {t.decline}
             </button>
           </>
         ) : null}
@@ -309,14 +312,14 @@ function OrderCard({
               className="primary-button"
               onClick={() => onStatusChange(order.id, "DELIVERED")}
             >
-              Complete
+              {t.complete}
             </button>
             <button
               type="button"
               className="primary-button primary-button--secondary"
               onClick={() => onStatusChange(order.id, "CANCELLED")}
             >
-              Decline
+              {t.decline}
             </button>
           </>
         ) : null}
@@ -327,17 +330,17 @@ function OrderCard({
             className="primary-button primary-button--danger"
             onClick={() => onDelete(order.id)}
           >
-            Delete
+            {t.delete}
           </button>
         ) : null}
 
         <select
-          aria-label={`Payment status for ${order.orderNumber}`}
+          aria-label={`${t.payment} ${order.orderNumber}`}
           value={order.paymentStatus}
           onChange={(event) => onPaymentChange(order.id, event.target.value)}
         >
           {["PENDING", "PAID", "FAILED"].map((paymentStatus) => (
-            <option key={paymentStatus}>{paymentStatus}</option>
+            <option key={paymentStatus} value={paymentStatus}>{paymentLabels[paymentStatus]}</option>
           ))}
         </select>
 
@@ -347,7 +350,7 @@ function OrderCard({
           rel="noreferrer"
           className="primary-button primary-button--secondary"
         >
-          Notify on WhatsApp
+          {t.notify}
         </a>
       </div>
     </article>
@@ -355,6 +358,9 @@ function OrderCard({
 }
 
 export function AdminOrdersPage() {
+  const { content, isArabic } = useSiteLanguage();
+  const t = isArabic ? { pending: "معلق", accepted: "مقبول", declined: "مرفوض", completed: "مكتمل", status: "حالة الطلب", loading: "جارٍ تحميل الطلبات…", loadError: "تعذر تحميل الطلبات.", empty: "لا توجد طلبات الآن", deleteOrder: (number: string) => `هل تريد حذف الطلب ${number}؟ لا يمكن التراجع.` } : { pending: "Pending", accepted: "Accepted", declined: "Declined", completed: "Completed", status: "Order status", loading: "Loading orders…", loadError: "Could not load orders.", empty: "No orders right now", deleteOrder: (number: string) => `Delete order ${number}? This cannot be undone.` };
+  const tabLabels: Record<(typeof tabs)[number]["status"], string> = { PENDING: t.pending, CONFIRMED: t.accepted, CANCELLED: t.declined, DELIVERED: t.completed };
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["status"]>("PENDING");
   const orders = useQuery({ queryKey: ["admin", "orders"], queryFn: adminApi.orders });
@@ -451,10 +457,7 @@ export function AdminOrdersPage() {
   );
 
   const deleteVisibleOrders = useMutation({
-    mutationFn: async () => {
-      const visibleOrderIds = filteredOrders.map((order) => order.id);
-      await adminApi.deleteOrders(visibleOrderIds);
-    },
+    mutationFn: () => adminApi.deleteOrders(filteredOrders.map((order) => order.id)),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["admin", "orders"] });
       const previous = queryClient.getQueryData<AdminOrder[]>(["admin", "orders"]);
@@ -476,13 +479,13 @@ export function AdminOrdersPage() {
   });
 
   function handleDelete(order: AdminOrder) {
-    if (window.confirm(`Delete order ${order.orderNumber}? This cannot be undone.`)) {
+    if (window.confirm(t.deleteOrder(order.orderNumber))) {
       deleteOrder.mutate(order.id);
     }
   }
 
   const canClearTab = activeTab === "CANCELLED" || activeTab === "DELIVERED";
-  const activeLabel = tabs.find((tab) => tab.status === activeTab)?.label ?? "orders";
+  const activeLabel = tabLabels[activeTab];
   const mutationError =
     update.error
     ?? acceptEdited.error
@@ -516,7 +519,7 @@ export function AdminOrdersPage() {
       ) : null}
 
       <div className="admin-order-toolbar">
-        <div className="admin-order-tabs" role="tablist" aria-label="Order status">
+        <div className="admin-order-tabs" role="tablist" aria-label={t.status}>
           {tabs.map((tab) => {
             const count = orders.data?.filter((order) => order.status === tab.status).length ?? 0;
             const active = activeTab === tab.status;
@@ -529,9 +532,7 @@ export function AdminOrdersPage() {
                 className={active ? "primary-button" : "primary-button primary-button--secondary"}
                 onClick={() => setActiveTab(tab.status)}
               >
-                <span className="admin-order-tab__full">{tab.label}</span>
-                <span className="admin-order-tab__short" aria-hidden="true">{tab.shortLabel}</span>
-                <span className="admin-order-tab__count">{count}</span>
+                {tabLabels[tab.status]} ({count})
               </button>
             );
           })}
@@ -553,15 +554,15 @@ export function AdminOrdersPage() {
         ) : null}
       </div>
 
-      {orders.isPending ? <p>Loading orders…</p> : null}
-      {orders.isError ? <p role="alert">Could not load orders.</p> : null}
+      {orders.isPending ? <p>{t.loading}</p> : null}
+      {orders.isError ? <p role="alert">{t.loadError}</p> : null}
       {products.isError ? (
         <p role="alert">Replacement plants could not be loaded. Full-order actions are still available.</p>
       ) : null}
 
       {!orders.isPending && filteredOrders.length === 0 ? (
         <div className="table-card">
-          <p>No {activeLabel.toLowerCase()} orders right now.</p>
+          <p>{t.empty} ({activeLabel})</p>
         </div>
       ) : null}
 

@@ -59,11 +59,15 @@ describe("admin product management", () => {
     const agent = await loggedInAgent();
     const response = await agent.post("/api/v1/admin/products").send({
       name: "New Fern",
+      nameAr: "سرخس جديد",
       slug: "new-fern",
       sku: "QL-NF-007",
       description: "A fresh fern for a shaded corner.",
+      descriptionAr: "سرخس منعش لزاوية ظليلة في المنزل.",
       category: "Indoor",
+      categoryAr: "نباتات داخلية",
       light: "Low indirect",
+      lightAr: "إضاءة منخفضة غير مباشرة",
       priceQar: 90,
       costPrice: 35,
       stock: 4,
@@ -74,6 +78,7 @@ describe("admin product management", () => {
     expect(response.status).toBe(201);
     expect(response.body).toEqual(expect.objectContaining({
       slug: "new-fern",
+      nameAr: "سرخس جديد",
       stock: 4,
       image: expect.objectContaining({ altText: "New fern in a pot" }),
     }));
