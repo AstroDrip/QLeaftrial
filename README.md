@@ -4,7 +4,7 @@ React storefront and Node.js/Express API for QLeaves Qatar.
 
 ## Run locally
 
-Requirements: Node.js 20+ and npm.
+Requirements: Node.js 24 and npm.
 
 ```bash
 npm install
