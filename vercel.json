@@ -9,6 +9,19 @@
       "includeFiles": "apps/api/generated/postgresql/**"
     }
   },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.qleaves.qa"
+        }
+      ],
+      "destination": "https://qleaves.qa/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/v1/:path*",

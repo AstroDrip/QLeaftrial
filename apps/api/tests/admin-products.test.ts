@@ -2,7 +2,7 @@ import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
-import { inventoryFor, loggedInAgent, resetDatabase, seededProduct } from "./helpers";
+import { inventoryFor, loggedInAgent, resetDatabase, seededProduct, validOrder } from "./helpers";
 
 describe("admin product management", () => {
   beforeEach(resetDatabase);
@@ -53,6 +53,41 @@ describe("admin product management", () => {
     expect(publicResponse.body).toEqual(
       expect.objectContaining({ priceQar: 215, stock: 7, inStock: true }),
     );
+  });
+
+  it("deletes a product that has never been ordered", async () => {
+    const product = await seededProduct("house-plant");
+    const agent = await loggedInAgent();
+
+    const response = await agent.delete(`/api/v1/admin/products/${product.id}`);
+
+    expect(response.status).toBe(204);
+    expect(await prisma.product.findUnique({ where: { id: product.id } })).toBeNull();
+  });
+
+  it("keeps order history by refusing to delete an ordered product", async () => {
+    const product = await seededProduct("house-plant");
+    const order = await request(createApp())
+      .post("/api/v1/orders")
+      .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    expect(order.status).toBe(201);
+    const agent = await loggedInAgent();
+
+    const response = await agent.delete(`/api/v1/admin/products/${product.id}`);
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("PRODUCT_HAS_ORDERS");
+    expect(await prisma.product.findUnique({ where: { id: product.id } })).not.toBeNull();
+    expect(await prisma.orderItem.count({ where: { productId: product.id } })).toBe(1);
+  });
+
+  it("rejects deleting an ordered product at the database level", async () => {
+    const product = await seededProduct("house-plant");
+    await request(createApp())
+      .post("/api/v1/orders")
+      .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+
+    await expect(prisma.product.delete({ where: { id: product.id } })).rejects.toMatchObject({ code: "P2003" });
   });
 
   it("creates a published plant only when a valid image is supplied", async () => {

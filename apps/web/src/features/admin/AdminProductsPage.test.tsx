@@ -102,28 +102,40 @@ describe("AdminProductsPage", () => {
     render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
 
     await screen.findByRole("group", { name: /product card preview language/i });
-    const englishPreview = document.querySelector(".admin-product-language-preview");
-    expect(englishPreview).toHaveAttribute("lang", "en");
-    expect(englishPreview).toHaveTextContent("Monstera");
-    expect(englishPreview).not.toHaveTextContent("مونستيرا");
-    expect(englishPreview).not.toHaveAttribute("dir", "rtl");
-    expect(englishPreview).toHaveTextContent("View Monstera");
-    expect(englishPreview).toHaveTextContent("Add to cart");
-    expect(englishPreview?.querySelector("img")).toHaveAttribute("src", "/monstera.jpg");
-    expect(screen.queryByRole("textbox", { name: "Monstera Arabic name" })).not.toBeInTheDocument();
-    expect(document.querySelector(".admin-product-ar-fields")).not.toBeInTheDocument();
+    const card = document.querySelector(".admin-product-card")!;
+    const englishDetails = card.querySelector(".admin-product-card__details");
+    expect(englishDetails).toHaveAttribute("lang", "en");
+    expect(englishDetails).not.toHaveAttribute("dir", "rtl");
+    expect(englishDetails).toHaveTextContent("Monstera");
+    expect(englishDetails).toHaveTextContent("Indoor");
+    expect(englishDetails).toHaveTextContent("Bright indirect");
+    expect(englishDetails).toHaveTextContent("A lovely plant for your home.");
+    expect(englishDetails).not.toHaveTextContent("مونستيرا");
+    expect(card.querySelector("img")).toHaveAttribute("src", "/monstera.jpg");
+    expect(card.querySelector(".admin-product-card__stock")).toHaveTextContent("In stock");
+    expect(card.querySelector(".admin-product-card__arabic")).not.toHaveAttribute("open");
 
     await userEvent.click(screen.getByRole("button", { name: "العربية" }));
 
-    const arabicPreview = document.querySelector(".admin-product-language-preview");
-    expect(arabicPreview).toHaveAttribute("lang", "ar");
-    expect(arabicPreview).toHaveAttribute("dir", "rtl");
-    expect(arabicPreview).toHaveTextContent("مونستيرا");
-    expect(arabicPreview).toHaveTextContent("عرض مونستيرا");
-    expect(arabicPreview).toHaveTextContent("أضف إلى السلة");
+    const arabicDetails = document.querySelector(".admin-product-card__details");
+    expect(arabicDetails).toHaveAttribute("lang", "ar");
+    expect(arabicDetails).toHaveAttribute("dir", "rtl");
+    expect(arabicDetails).toHaveTextContent("مونستيرا");
+    expect(arabicDetails).toHaveTextContent("نبات جميل لمنزلك.");
+    expect(document.querySelector(".admin-product-card__stock")).toHaveTextContent("متوفر");
+    expect(document.querySelector(".admin-product-card__arabic")).toHaveAttribute("open");
     expect(screen.getByRole("textbox", { name: /monstera arabic name/i })).toHaveValue("مونستيرا");
     expect(screen.getByRole("button", { name: "العربية" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("shows name, category, light and description in the English view without switching language", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+    expect(await screen.findByRole("heading", { level: 2, name: "Monstera" })).toBeInTheDocument();
+    expect(screen.getByText("Bright indirect")).toBeInTheDocument();
+    expect(screen.getByText("A lovely plant for your home.")).toBeInTheDocument();
+    expect(screen.getByText("Published")).toBeInTheDocument();
   });
 
   it("hands one selected image to the upload workflow and disables duplicate submission", async () => {

@@ -5,6 +5,14 @@ import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
 import { errorFromResponse } from "../../lib/api-error";
+import { rememberOrderSummary, type OrderSummary } from "./order-summary";
+
+type PlacedOrderResponse = {
+  orderNumber: string;
+  subtotalQar: number;
+  deliveryFeeQar: number;
+  items: Array<{ productId: string; productName: string; quantity: number; unitPriceQar: number }>;
+};
 
 const initialForm = {
   name: "",
@@ -67,9 +75,22 @@ export function CheckoutPage() {
         }
         throw responseError;
       }
-      const body = await response.json();
+      const body = await response.json() as PlacedOrderResponse;
+      const arabicNames = new Map(items.map((item) => [item.id, item.nameAr?.trim() || null]));
+      const summary: OrderSummary = {
+        orderNumber: body.orderNumber,
+        items: body.items.map((item) => ({
+          name: item.productName,
+          nameAr: arabicNames.get(item.productId) ?? null,
+          quantity: item.quantity,
+          unitPriceQar: item.unitPriceQar,
+        })),
+        subtotalQar: body.subtotalQar,
+        deliveryFeeQar: body.deliveryFeeQar,
+      };
+      rememberOrderSummary(summary);
       clearCart();
-      navigate(`/order/${body.orderNumber}`);
+      navigate(`/order/${body.orderNumber}`, { state: { order: summary } });
     } catch (submissionError) { setError(isArabic ? "تعذر إرسال الطلب" : submissionError instanceof Error ? submissionError.message : "Could not place order"); }
   }
 

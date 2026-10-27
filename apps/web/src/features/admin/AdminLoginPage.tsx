@@ -3,7 +3,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
+import { LanguageToggle } from "../../components/LanguageToggle";
 import { Seo } from "../../components/Seo";
+import "./admin.css";
 
 export function AdminLoginPage() {
   const { content, isArabic } = useSiteLanguage();
@@ -18,8 +20,11 @@ export function AdminLoginPage() {
   }
 
   return (
-    <section className="page-shell admin-login-page" data-testid="admin-login-page">
+    <section className="page-shell admin-login-page" data-testid="admin-login-page" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
       <Seo title={content.admin.loginTitle} description={isArabic ? "تسجيل الدخول إلى إدارة QLeaves." : "QLeaves administration sign in."} path="/admin/login" noIndex />
+      <div className="admin-login-page__language">
+        <LanguageToggle />
+      </div>
       <div className="page-shell__header">
         <p className="eyebrow">{content.admin.loginTitle}</p>
         <h1>{content.admin.loginTitle}</h1>

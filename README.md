@@ -25,7 +25,7 @@ The site supports Arabic and English and uses `https://qleaves.qa` as its canoni
 ## Deploy
 
 Vercel and Supabase setup, environment variables, database initialization,
-and deployment health checks are documented in
+custom-domain/DNS setup, and deployment health checks are documented in
 [`docs/deployment/vercel-supabase.md`](docs/deployment/vercel-supabase.md).
 
 ## Verify

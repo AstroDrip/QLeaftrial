@@ -64,7 +64,7 @@ export const createAdminProductSchema = z.object({
 }).strict().superRefine((value, context) => {
   if (Boolean(value.imageDataUrl) === Boolean(value.stagedImages)) {
     context.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: "custom",
       message: "Provide either a development image or staged image variants",
       path: ["imageDataUrl"],
     });
@@ -73,7 +73,7 @@ export const createAdminProductSchema = z.object({
     const purposes = new Set(value.stagedImages.map((image) => image.purpose));
     if (!purposes.has("catalog") || !purposes.has("detail")) {
       context.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Catalogue and detail image variants are required",
         path: ["stagedImages"],
       });

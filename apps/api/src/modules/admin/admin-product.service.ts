@@ -145,6 +145,9 @@ type AdminProductDeleteRepository = {
 };
 
 const productDeleteRepository = prisma.product as unknown as AdminProductDeleteRepository;
+const orderItemRepository = prisma.orderItem as unknown as {
+  count(args: { where: { productId: string } }): Promise<number>;
+};
 
 function toAdminProduct(product: AdminProductRecord): AdminProduct {
   return {
@@ -299,10 +302,30 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
   }
 }
 
+function productHasOrders(): ApiError {
+  return new ApiError(
+    409,
+    "PRODUCT_HAS_ORDERS",
+    "This product appears in existing orders and cannot be deleted. Unpublish it instead",
+  );
+}
+
 export async function deleteAdminProduct(id: string): Promise<void> {
   const existing = await productDeleteRepository.findUnique({ where: { id }, select: { id: true } });
   if (!existing) {
     throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
   }
-  await productDeleteRepository.delete({ where: { id } });
+  // Order lines keep sales history, so products referenced by orders are only unpublished.
+  if (await orderItemRepository.count({ where: { productId: id } }) > 0) {
+    throw productHasOrders();
+  }
+  try {
+    await productDeleteRepository.delete({ where: { id } });
+  } catch (error) {
+    // An order placed between the check and the delete trips the Restrict foreign key.
+    if (error && typeof error === "object" && (error as { code?: unknown }).code === "P2003") {
+      throw productHasOrders();
+    }
+    throw error;
+  }
 }

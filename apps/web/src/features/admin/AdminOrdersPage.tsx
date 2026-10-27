@@ -16,6 +16,17 @@ const tabs = [
   { status: "DELIVERED" },
 ] as const;
 
+type OrderTab = (typeof tabs)[number]["status"];
+
+// Preparing and out-for-delivery orders are still accepted orders, so they share
+// the Accepted tab instead of disappearing from every tab.
+const acceptedStatuses = new Set(["CONFIRMED", "PREPARING", "OUT_FOR_DELIVERY"]);
+
+function tabForStatus(status: string): OrderTab | null {
+  if (acceptedStatuses.has(status)) return "CONFIRMED";
+  return tabs.find((tab) => tab.status === status)?.status ?? null;
+}
+
 function formatQatarDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -69,11 +80,12 @@ function OrderCard({
   onDelete: (id: string) => void;
   acceptingEdited: boolean;
 }) {
-  const { isArabic } = useSiteLanguage();
+  const { content, isArabic } = useSiteLanguage();
+  const stageLabels: Record<string, string> = { PREPARING: content.order.statusPreparing, OUT_FOR_DELIVERY: content.order.statusOutForDelivery };
   const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", paymentPending: "الدفع معلق", paid: "مدفوع", failed: "فشل الدفع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", paymentPending: "Pending", paid: "Paid", failed: "Failed" };
   const paymentLabels: Record<string, string> = { PENDING: t.paymentPending, PAID: t.paid, FAILED: t.failed };
   const isPending = order.status === "PENDING";
-  const isAccepted = order.status === "CONFIRMED";
+  const isAccepted = acceptedStatuses.has(order.status);
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState<EditedOrderLine[]>(() => initialDraft(order));
   const itemFingerprint = order.items
@@ -105,7 +117,7 @@ function OrderCard({
     ? `Hello ${order.customerName}, we're sorry, but order ${order.orderNumber} could not be fulfilled.`
     : order.status === "DELIVERED"
       ? `Hello ${order.customerName}, thank you. Order ${order.orderNumber} has been completed.`
-      : order.status === "CONFIRMED"
+      : isAccepted
         ? `Hello ${order.customerName}, order ${order.orderNumber} has been accepted.`
         : `Hello ${order.customerName}, regarding order ${order.orderNumber}.`;
   const whatsappMessage = encodeURIComponent(whatsappCopy);
@@ -121,6 +133,7 @@ function OrderCard({
       <div className="admin-order-card__header">
         <div>
           <p className="eyebrow">{order.orderNumber}</p>
+          {stageLabels[order.status] ? <span className="status-pill">{stageLabels[order.status]}</span> : null}
           <h2>{order.customerName}</h2>
           <p>{order.phone}</p>
           <p>{order.email}</p>
@@ -452,7 +465,7 @@ export function AdminOrdersPage() {
   });
 
   const filteredOrders = useMemo(
-    () => orders.data?.filter((order) => order.status === activeTab) ?? [],
+    () => orders.data?.filter((order) => tabForStatus(order.status) === activeTab) ?? [],
     [activeTab, orders.data],
   );
 
@@ -521,7 +534,7 @@ export function AdminOrdersPage() {
       <div className="admin-order-toolbar">
         <div className="admin-order-tabs" role="tablist" aria-label={t.status}>
           {tabs.map((tab) => {
-            const count = orders.data?.filter((order) => order.status === tab.status).length ?? 0;
+            const count = orders.data?.filter((order) => tabForStatus(order.status) === tab.status).length ?? 0;
             const active = activeTab === tab.status;
             return (
               <button

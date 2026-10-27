@@ -44,17 +44,13 @@ type PublicProductRecord = {
   inventory: { quantity: number } | null;
 };
 
+type TextContains = { contains: string; mode?: "insensitive" };
+
 type PublicProductWhere = {
   published: boolean;
   category?: string;
   light?: string;
-  OR?: Array<{
-    name?: { contains: string };
-    description?: { contains: string };
-    nameAr?: { contains: string };
-    descriptionAr?: { contains: string };
-    slug?: { contains: string };
-  }>;
+  OR?: Array<Partial<Record<"name" | "description" | "nameAr" | "descriptionAr" | "slug", TextContains>>>;
 };
 
 type ProductRepository = {
@@ -88,6 +84,14 @@ type ProductFilterRepository = {
 };
 
 const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
+
+// PostgreSQL matches case-sensitively by default; SQLite's LIKE already ignores
+// ASCII case and its Prisma client rejects the `mode` argument.
+function textContains(value: string): TextContains {
+  return process.env.QLEAVES_DATABASE_PROVIDER === "postgresql"
+    ? { contains: value, mode: "insensitive" }
+    : { contains: value };
+}
 
 function toSummary(
   product: PublicProductRecord,
@@ -139,13 +143,9 @@ export async function listProducts(query: ProductQuery): Promise<{
     ...(query.light ? { light: query.light } : {}),
     ...(query.q
       ? {
-          OR: [
-            { name: { contains: query.q } },
-            { description: { contains: query.q } },
-            { nameAr: { contains: query.q } },
-            { descriptionAr: { contains: query.q } },
-            { slug: { contains: query.q } },
-          ],
+          OR: (["name", "description", "nameAr", "descriptionAr", "slug"] as const).map((field) => ({
+            [field]: textContains(query.q!),
+          })),
         }
       : {}),
   };

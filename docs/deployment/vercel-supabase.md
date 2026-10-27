@@ -12,6 +12,32 @@ Use the repository root as the Vercel Root Directory and keep Build Command and 
 - Install command: root default
 - Function: `api/index.ts`, maximum duration 30 seconds
 
+## Connect `qleaves.qa`
+
+In the Vercel project, open **Settings → Domains** and add both `qleaves.qa` and
+`www.qleaves.qa`. Set `qleaves.qa` as the primary domain; the checked-in Vercel
+redirect permanently sends `www.qleaves.qa` (including paths and query strings)
+to the canonical HTTPS host.
+
+At the domain registrar/DNS provider, apply the records Vercel displays for
+these domains. DNS recommendations can vary by project and provider; do not
+replace existing mail-related MX, SPF, DKIM, or DMARC records. Remove only
+conflicting website records if Vercel identifies them. Wait for Vercel to
+confirm both domain assignments and issue HTTPS certificates before announcing
+the site. Domain registration alone does not connect it to the deployment.
+
+After DNS and certificate provisioning, verify:
+
+```text
+https://qleaves.qa/
+https://www.qleaves.qa/  (should permanently redirect to https://qleaves.qa/)
+https://qleaves.qa/api/v1/health
+https://qleaves.qa/sitemap.xml
+```
+
+Canonical metadata, structured data, `robots.txt`, and the dynamic sitemap use
+`https://qleaves.qa` as their canonical origin.
+
 Set these server-only runtime variables for Production and for every Preview that needs an API:
 
 ```text

@@ -2,10 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { localeContent, type SiteLanguage } from "../../content/locales";
 import { FallbackImage } from "../../components/FallbackImage";
+import { ApiClientError } from "../../lib/api-error";
 import { useSiteLanguage } from "../../app/providers";
 import { adminApi, type AdminProduct, type CreateAdminProductFields } from "./admin-api";
-import "../catalog/catalog.css";
-import "../cart/AddToCartButton.css";
 
 const emptyForm: CreateAdminProductFields = {
   name: "", nameAr: "", slug: "", sku: "", description: "", descriptionAr: "", category: "Indoor", categoryAr: "داخلي", light: "Bright indirect", lightAr: "إضاءة ساطعة غير مباشرة",
@@ -15,8 +14,8 @@ const emptyForm: CreateAdminProductFields = {
 function ProductRow({ product, cardLanguage }: { product: AdminProduct; cardLanguage: SiteLanguage }) {
   const { isArabic: adminIsArabic } = useSiteLanguage();
   const t = adminIsArabic
-    ? { stock: "المخزون", price: "السعر", invalid: "يجب أن يكون رقمًا صحيحًا غير سالب", stockFail: "فشل حفظ المخزون", priceFail: "فشل حفظ السعر", saving: "جارٍ الحفظ…", saved: "تم الحفظ", arFail: "فشل حفظ النص العربي" }
-    : { stock: "Stock", price: "Price", invalid: "must be a non-negative whole number", stockFail: "Stock save failed", priceFail: "Price save failed", saving: "Saving…", saved: "Saved", arFail: "Arabic copy save failed" };
+    ? { stock: "المخزون", price: "السعر (ر.ق)", invalid: "يجب أن يكون رقمًا صحيحًا غير سالب", stockFail: "فشل حفظ المخزون", priceFail: "فشل حفظ السعر", saving: "جارٍ الحفظ…", saved: "تم الحفظ", arFail: "فشل حفظ النص العربي", published: "منشور", draft: "مسودة", publish: "نشر", unpublish: "إلغاء النشر", remove: "حذف", removing: "جارٍ الحذف…", removeFail: "فشل الحذف", hasOrders: "لا يمكن حذف هذا المنتج لأنه موجود في طلبات سابقة. ألغِ نشره بدلًا من ذلك.", arabicCopy: "النص العربي", saveArabic: "حفظ العربية", confirmDelete: (name: string) => `حذف "${name}"؟ لا يمكن التراجع عن هذا الإجراء.` }
+    : { stock: "Stock", price: "Price (QAR)", invalid: "must be a non-negative whole number", stockFail: "Stock save failed", priceFail: "Price save failed", saving: "Saving…", saved: "Saved", arFail: "Arabic copy save failed", published: "Published", draft: "Draft", publish: "Publish", unpublish: "Unpublish", remove: "Delete", removing: "Deleting…", removeFail: "Delete failed", hasOrders: "This product appears in past orders, so it can't be deleted. Unpublish it instead.", arabicCopy: "Arabic copy", saveArabic: "Save Arabic", confirmDelete: (name: string) => `Delete "${name}"? This cannot be undone.` };
   const queryClient = useQueryClient();
   const [stock, setStock] = useState(String(product.stock));
   const [price, setPrice] = useState(String(product.priceQar));
@@ -66,7 +65,7 @@ function ProductRow({ product, cardLanguage }: { product: AdminProduct; cardLang
     const activeTimer = timers.current[field];
     if (activeTimer) clearTimeout(activeTimer);
     delete timers.current[field];
-    const label = field === "stock" ? t.stock : t.price;
+    const label = field === "stock" ? t.stock : t.price.replace(/\s*\(.*\)$/, "");
     if (rawValue.trim() === "") {
       setFieldErrors((errors) => ({ ...errors, [field]: `${label} ${t.invalid}` }));
       return;
@@ -100,7 +99,7 @@ function ProductRow({ product, cardLanguage }: { product: AdminProduct; cardLang
   }
 
   function handleDelete() {
-    if (!window.confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(t.confirmDelete(product.name))) return;
     remove.mutate();
   }
 
@@ -114,90 +113,88 @@ function ProductRow({ product, cardLanguage }: { product: AdminProduct; cardLang
   const shownDescription = isArabic ? (descriptionAr || product.descriptionAr || product.description) : product.description;
 
   const isPublished = product.published ?? true;
+  const statusText = errorMessage
+    ? <span role="alert">{errorMessage}</span>
+    : saveTranslation.isError
+      ? <span role="alert">{t.arFail}</span>
+      : save.isPending || saveTranslation.isPending
+        ? t.saving
+        : save.isSuccess || saveTranslation.isSuccess
+          ? t.saved
+          : "";
 
   return (
-    <tr>
-      <td>
-        <article className="product-card admin-product-language-preview" dir={isArabic ? "rtl" : "ltr"} lang={cardLanguage}>
-          <FallbackImage
-            className="product-card__image"
-            src={product.image?.url ?? "/images/hero/leaf-1.svg"}
-            alt={product.image?.altText ?? ""}
-          />
-          <h2 className="product-card__name">{shownName}</h2>
-          <p className="product-card__price">{product.priceQar} QAR</p>
-          <p className="admin-product-preview__meta">
-            <span>{customerContent.product.category}: {shownCategory}</span>
-            {" · "}
-            <span>{customerContent.product.lightNeeds}: {shownLight}</span>
-          </p>
-          <p className="admin-product-preview__desc">{shownDescription}</p>
-          <span className="product-card__link">{customerContent.catalog.viewProduct(shownName)}</span>
-          <div className="add-to-cart__controls">
-            <span className={`add-to-cart product-card__cart${inStock ? "" : " admin-product-language-preview__cart--out"}`}>
-              <svg
-                className="add-to-cart__icon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                focusable="false"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M7 8h10l1 11H6L7 8Z" />
-                <path d="M9 9V6a3 3 0 0 1 6 0v3" />
-              </svg>
-              <span className="add-to-cart__label">
-                {inStock ? customerContent.product.addToCart : customerContent.product.outOfStock}
-              </span>
+    <li className={`admin-product-card${isPublished ? "" : " is-draft"}`}>
+      <div className="admin-product-card__media">
+        <FallbackImage
+          className="admin-product-card__image"
+          src={product.image?.url ?? "/images/hero/leaf-1.svg"}
+          alt={product.image?.altText ?? ""}
+        />
+        <span className={`admin-product-card__stock admin-product-card__stock--${inStock ? "in" : "out"}`}>
+          {inStock ? customerContent.product.inStock : customerContent.product.outOfStock}
+        </span>
+      </div>
+
+      <div className="admin-product-card__main">
+        <div className="admin-product-card__details" dir={isArabic ? "rtl" : "ltr"} lang={cardLanguage}>
+          <div className="admin-product-card__title-row">
+            <h2 className="admin-product-card__name">{shownName}</h2>
+            <span className={`admin-product-status-pill admin-product-status-pill--${isPublished ? "published" : "draft"}`}>
+              {isPublished ? t.published : t.draft}
             </span>
           </div>
-        </article>
+          <p className="admin-product-card__meta">
+            <span><span className="admin-product-card__meta-label">{customerContent.product.category}</span>{shownCategory}</span>
+            <span><span className="admin-product-card__meta-label">{customerContent.product.lightNeeds}</span>{shownLight}</span>
+          </p>
+          <p className="admin-product-card__desc">{shownDescription}</p>
+        </div>
 
-        {isArabic ? (
+        <div className="admin-product-card__controls">
+          <label className="admin-product-card__field">
+            <span>{t.stock}</span>
+            <input type="number" min="0" step="1" aria-label={`${product.name} stock`} aria-invalid={Boolean(fieldErrors.stock)} value={stock} onChange={(event) => { const value = event.target.value; setStock(value); schedule("stock", value); }} onBlur={() => persist("stock", stock)} />
+          </label>
+          <label className="admin-product-card__field">
+            <span>{t.price}</span>
+            <input type="number" min="0" step="1" aria-label={`${product.name} price`} aria-invalid={Boolean(fieldErrors.priceQar)} value={price} onChange={(event) => { const value = event.target.value; setPrice(value); schedule("priceQar", value); }} onBlur={() => persist("priceQar", price)} />
+          </label>
+          <div className="admin-product-row-actions">
+            <button
+              type="button"
+              className="primary-button primary-button--secondary admin-product-publish-btn"
+              disabled={save.isPending}
+              onClick={() => save.mutate({ published: !isPublished })}
+            >
+              {isPublished ? t.unpublish : t.publish}
+            </button>
+            <button
+              type="button"
+              className="primary-button admin-product-delete-btn"
+              disabled={remove.isPending}
+              onClick={handleDelete}
+            >
+              {remove.isPending ? t.removing : t.remove}
+            </button>
+          </div>
+        </div>
+
+        <div aria-live="polite" className="admin-product-save-status">{statusText}</div>
+        {remove.isError ? <span role="alert" className="admin-product-delete-error">{remove.error instanceof ApiClientError && remove.error.code === "PRODUCT_HAS_ORDERS" ? t.hasOrders : t.removeFail}</span> : null}
+
+        <details className="admin-product-card__arabic" key={cardLanguage} open={isArabic}>
+          <summary>{t.arabicCopy}</summary>
           <div className="admin-product-ar-fields" dir="rtl" lang="ar">
             <input aria-label={`${product.name} Arabic name`} placeholder="الاسم بالعربية" value={nameAr} onChange={(event) => setNameAr(event.target.value)} onBlur={() => { if (nameAr.trim() && nameAr.trim() !== product.nameAr) saveTranslation.mutate({ nameAr: nameAr.trim() }); }} />
             <input aria-label={`${product.name} Arabic category`} placeholder="الفئة بالعربية" value={categoryAr} onChange={(event) => setCategoryAr(event.target.value)} onBlur={() => { if (categoryAr.trim() && categoryAr.trim() !== product.categoryAr) saveTranslation.mutate({ categoryAr: categoryAr.trim() }); }} />
             <input aria-label={`${product.name} Arabic light`} placeholder="الإضاءة بالعربية" value={lightAr} onChange={(event) => setLightAr(event.target.value)} onBlur={() => { if (lightAr.trim() && lightAr.trim() !== product.lightAr) saveTranslation.mutate({ lightAr: lightAr.trim() }); }} />
             <textarea aria-label={`${product.name} Arabic description`} placeholder="الوصف بالعربية" value={descriptionAr} onChange={(event) => setDescriptionAr(event.target.value)} onBlur={() => { if (descriptionAr.trim() && descriptionAr.trim() !== product.descriptionAr) saveTranslation.mutate({ descriptionAr: descriptionAr.trim() }); }} />
-            <button type="button" className="primary-button primary-button--secondary" onClick={saveArabic}>Save Arabic</button>
+            <button type="button" className="primary-button primary-button--secondary" onClick={saveArabic}>{t.saveArabic}</button>
           </div>
-        ) : null}
-      </td>
-
-      <td><input type="number" min="0" step="1" aria-label={`${product.name} stock`} aria-invalid={Boolean(fieldErrors.stock)} value={stock} onChange={(event) => { const value=event.target.value; setStock(value); schedule("stock",value); }} onBlur={() => persist("stock",stock)} /></td>
-      <td><input type="number" min="0" step="1" aria-label={`${product.name} price`} aria-invalid={Boolean(fieldErrors.priceQar)} value={price} onChange={(event) => { const value=event.target.value; setPrice(value); schedule("priceQar",value); }} onBlur={() => persist("priceQar",price)} /></td>
-
-      <td>
-        <div className="admin-product-row-actions">
-          <span className={`admin-product-status-pill admin-product-status-pill--${isPublished ? "published" : "draft"}`}>
-            {isPublished ? "Published" : "Draft"}
-          </span>
-          <button
-            type="button"
-            className="primary-button primary-button--secondary admin-product-publish-btn"
-            disabled={save.isPending}
-            onClick={() => save.mutate({ published: !isPublished })}
-          >
-            {isPublished ? "Unpublish" : "Publish"}
-          </button>
-          <button
-            type="button"
-            className="primary-button admin-product-delete-btn"
-            disabled={remove.isPending}
-            onClick={handleDelete}
-          >
-            {remove.isPending ? "Deleting…" : "Delete"}
-          </button>
-        </div>
-        <div aria-live="polite" className="admin-product-save-status">
-          {errorMessage ? <span role="alert">{errorMessage}</span> : saveTranslation.isError ? <span role="alert">{t.arFail}</span> : save.isPending || saveTranslation.isPending ? t.saving : save.isSuccess || saveTranslation.isSuccess ? t.saved : ""}
-        </div>
-        {remove.isError ? <span role="alert" className="admin-product-delete-error">Delete failed</span> : null}
-      </td>
-    </tr>
+        </details>
+      </div>
+    </li>
   );
 }
 
@@ -307,7 +304,7 @@ export function AdminProductsPage() {
         <button className="primary-button" type="submit" disabled={create.isPending}>{create.isPending ? t.adding : t.add}</button>
       </form>
 
-      <div className="table-card">
+      <div className="table-card admin-products-panel">
         <div className="admin-products-language-control">
           <span>Product card preview</span>
           <div className="admin-product-language-toggle" role="group" aria-label="Product card preview language">
@@ -333,19 +330,9 @@ export function AdminProductsPage() {
           )}
         </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>{t.product}</th>
-              <th>{t.stock}</th>
-              <th>{t.price}</th>
-              <th>{t.status}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((product) => <ProductRow key={product.id} product={product} cardLanguage={previewLanguage} />)}
-          </tbody>
-        </table>
+        <ul className="admin-product-list">
+          {filteredProducts.map((product) => <ProductRow key={product.id} product={product} cardLanguage={previewLanguage} />)}
+        </ul>
         {filteredProducts.length === 0 && search && products.data && products.data.length > 0 ? (
           <p className="admin-products-search__empty">No products match "{search}".</p>
         ) : null}

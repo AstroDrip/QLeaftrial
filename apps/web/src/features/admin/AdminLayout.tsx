@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
+import { LanguageToggle } from "../../components/LanguageToggle";
 import { Seo } from "../../components/Seo";
 
 export function AdminLayout() {
@@ -61,7 +62,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="admin-shell" data-testid="admin-layout">
+    <div className="admin-shell" data-testid="admin-layout" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
       <Seo title={content.nav.admin} description={isArabic ? "إدارة QLeaves." : "QLeaves administration."} path="/admin" noIndex />
 
       <button
@@ -124,7 +125,7 @@ export function AdminLayout() {
           <button
             type="button"
             className="admin-icon-button admin-menu-button"
-            aria-label="Open admin navigation"
+            aria-label={isArabic ? "فتح قائمة الإدارة" : "Open admin navigation"}
             aria-controls="admin-navigation"
             aria-expanded={navigationOpen}
             onClick={() => setNavigationOpen(true)}
@@ -134,14 +135,16 @@ export function AdminLayout() {
 
           <div className="admin-topbar__title">
             <strong>QLeaves</strong>
-            <span>Admin dashboard</span>
+            <span>{content.admin.dashboard}</span>
           </div>
+
+          <LanguageToggle />
 
           <button
             type="button"
             className="admin-icon-button"
-            aria-label="Refresh admin data"
-            title="Refresh admin data"
+            aria-label={isArabic ? "تحديث بيانات الإدارة" : "Refresh admin data"}
+            title={isArabic ? "تحديث بيانات الإدارة" : "Refresh admin data"}
             onClick={refreshAdminData}
           >
             <span aria-hidden="true">↻</span>

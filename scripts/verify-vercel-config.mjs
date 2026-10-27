@@ -28,6 +28,16 @@ if (config.outputDirectory !== "apps/web/dist") {
   problems.push("Vercel outputDirectory must be apps/web/dist");
 }
 const rewrites = Array.isArray(config.rewrites) ? config.rewrites : [];
+const redirects = Array.isArray(config.redirects) ? config.redirects : [];
+const wwwRedirect = redirects.find((route) =>
+  route.source === "/:path*"
+  && route.destination === "https://qleaves.qa/:path*"
+  && route.permanent === true
+  && route.has?.some((condition) => condition.type === "host" && condition.value === "www.qleaves.qa"),
+);
+if (!wwwRedirect) {
+  problems.push("www.qleaves.qa must permanently redirect to the canonical https://qleaves.qa host");
+}
 const apiRewrite = rewrites.findIndex((route) => route.source === "/api/v1/:path*" && route.destination === "/api/index");
 const sitemapRewrite = rewrites.findIndex((route) => route.source === "/sitemap.xml" && route.destination === "/api/index");
 const spaRewrite = rewrites.findIndex((route) => route.destination === "/index.html");

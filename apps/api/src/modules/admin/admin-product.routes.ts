@@ -64,8 +64,3 @@ adminProductRouter.delete("/admin/products/:id", async (request, response) => {
   await deleteAdminProduct(request.params.id);
   response.status(204).end();
 });
-
-adminProductRouter.delete("/admin/products/:id", async (request, response) => {
-  await deleteAdminProduct(request.params.id);
-  response.status(204).end();
-});

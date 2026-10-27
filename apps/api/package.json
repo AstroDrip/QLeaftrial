@@ -23,7 +23,7 @@
     "compression": "^1.7.4",
     "express": "^5.1.0",
     "pg": "^8.23.0",
-    "zod": "^3.24.1"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
