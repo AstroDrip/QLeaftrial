@@ -17,9 +17,10 @@ if (process.platform === "win32" && !process.env.PRISMA_QUERY_ENGINE_LIBRARY) {
 
 type DatabaseProvider = "postgresql" | "sqlite";
 
-type PrismaClient =
-  | InstanceType<typeof PostgreSqlPrismaClient>
-  | InstanceType<typeof SqlitePrismaClient>;
+// Both generated clients expose the same application models. A union of the two
+// makes non-strict TypeScript (as used by Vercel's function compiler) recurse
+// through Prisma's types (TS2615), so the SQLite shape is the declared type.
+type PrismaClient = InstanceType<typeof SqlitePrismaClient>;
 
 function databaseProvider(): DatabaseProvider {
   const explicitProvider = process.env.QLEAVES_DATABASE_PROVIDER;
@@ -58,7 +59,7 @@ function createPrismaClient(): PrismaClient {
       connectionString: process.env.DATABASE_URL!,
     });
 
-    return new PostgreSqlPrismaClient({ adapter });
+    return new PostgreSqlPrismaClient({ adapter }) as unknown as PrismaClient;
   }
 
   return new SqlitePrismaClient();
