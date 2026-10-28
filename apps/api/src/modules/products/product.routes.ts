@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { ApiError } from "../../middleware/error-handler.js";
-import { cacheProductDetail, cacheProductList } from "../../middleware/cache-headers.js";
+import { applyCacheHeaders, cacheProductDetail, cacheProductList } from "../../middleware/cache-headers.js";
 import { productQuerySchema } from "./product.schemas.js";
 import { findProductBySlug, listProductFilters, listProducts } from "./product.service.js";
 
@@ -21,7 +21,7 @@ productRouter.get("/products", cacheProductList, async (request, response) => {
 });
 
 productRouter.get("/products/filters", async (_request, response) => {
-  response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+  applyCacheHeaders(response);
   const language = requestLanguage(_request.query.lang);
   response.json(await listProductFilters(language));
 });

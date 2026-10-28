@@ -19,7 +19,7 @@ export interface ProductSummary {
   nameAr?: string | null;
   category: string;
   categoryAr?: string | null;
-  light: string;
+  light: string | null;
   lightAr?: string | null;
   priceQar: number;
   stock: number;
@@ -46,7 +46,10 @@ export interface ProductListParams {
   q?: string;
   category?: string;
   light?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: "1";
   page?: number;
-  sort?: "name-asc" | "price-asc" | "price-desc";
+  sort?: "name-asc" | "price-asc" | "price-desc" | "newest";
   lang?: "en" | "ar";
 }

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "test": "cross-env QLEAVES_DATABASE_PROVIDER=sqlite DATABASE_URL=file:./dev.db vitest run --environment node --no-file-parallelism",
+    "test": "cross-env QLEAVES_DATABASE_PROVIDER=sqlite vitest run",
     "prisma:generate": "npm run prisma:generate:local && npm run prisma:generate:production",
     "prisma:generate:local": "node scripts/prisma.mjs generate --schema prisma/schema.prisma",
     "prisma:generate:production": "node scripts/prisma.mjs generate --schema prisma/schema.postgresql.prisma",
@@ -14,7 +14,8 @@
     "prisma:validate:production": "node scripts/prisma.mjs validate --schema prisma/schema.postgresql.prisma",
     "prisma:seed": "node --experimental-strip-types prisma/seed.ts",
     "typecheck": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "catalog:import": "node --experimental-strip-types prisma/import-catalog.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.16.2",

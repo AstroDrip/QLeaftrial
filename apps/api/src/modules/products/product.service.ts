@@ -31,7 +31,7 @@ type PublicProductRecord = {
   descriptionAr: string | null;
   category: string;
   categoryAr: string | null;
-  light: string;
+  light: string | null;
   lightAr: string | null;
   priceQar: number;
   media: Array<{
@@ -50,6 +50,8 @@ type PublicProductWhere = {
   published: boolean;
   category?: string;
   light?: string;
+  priceQar?: { gte?: number; lte?: number };
+  inventory?: { is: { quantity: { gt: number } } };
   OR?: Array<Partial<Record<"name" | "description" | "nameAr" | "descriptionAr" | "slug", TextContains>>>;
 };
 
@@ -61,6 +63,7 @@ type ProductRepository = {
       | { name: "asc" }
       | { priceQar: "asc" | "desc" }
       | { slug: "asc" }
+      | { createdAt: "desc" }
     >;
     skip: number;
     take: number;
@@ -80,7 +83,7 @@ type ProductFilterRepository = {
   findMany(args: {
     where: { published: boolean };
     select: { category: true; categoryAr: true; light: true; lightAr: true };
-  }): Promise<Array<{ category: string; categoryAr: string | null; light: string; lightAr: string | null }>>;
+  }): Promise<Array<{ category: string; categoryAr: string | null; light: string | null; lightAr: string | null }>>;
 };
 
 const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
@@ -141,6 +144,10 @@ export async function listProducts(query: ProductQuery): Promise<{
     published: true,
     ...(query.category ? { category: query.category } : {}),
     ...(query.light ? { light: query.light } : {}),
+    ...(query.minPrice !== undefined || query.maxPrice !== undefined
+      ? { priceQar: { ...(query.minPrice !== undefined ? { gte: query.minPrice } : {}), ...(query.maxPrice !== undefined ? { lte: query.maxPrice } : {}) } }
+      : {}),
+    ...(query.inStock ? { inventory: { is: { quantity: { gt: 0 } } } } : {}),
     ...(query.q
       ? {
           OR: (["name", "description", "nameAr", "descriptionAr", "slug"] as const).map((field) => ({
@@ -155,7 +162,9 @@ export async function listProducts(query: ProductQuery): Promise<{
     ? [{ priceQar: "asc" }, { slug: "asc" }]
     : query.sort === "price-desc"
       ? [{ priceQar: "desc" }, { slug: "asc" }]
-      : [{ name: "asc" }, { slug: "asc" }];
+      : query.sort === "newest"
+        ? [{ createdAt: "desc" }, { slug: "asc" }]
+        : [{ name: "asc" }, { slug: "asc" }];
 
   const [products, totalItems] = await Promise.all([
     productRepository.findMany({
@@ -182,17 +191,22 @@ export async function listProductFilters(language: ProductQuery["lang"] = "en"):
   lights: string[];
   categoryLabels: Record<string, string>;
   lightLabels: Record<string, string>;
+  categoryCounts: Record<string, number>;
 }> {
   const products = await productFilterRepository.findMany({
     where: { published: true },
     select: { category: true, categoryAr: true, light: true, lightAr: true },
   });
+  const label = (value: string, arabic: string | null) => language === "ar" && arabic?.trim() ? arabic : value;
+  const categoryCounts: Record<string, number> = {};
+  for (const product of products) categoryCounts[product.category] = (categoryCounts[product.category] ?? 0) + 1;
 
   return {
-    categories: [...new Set(products.map((product) => language === "ar" && product.categoryAr?.trim() ? product.categoryAr : product.category))].sort(),
-    lights: [...new Set(products.map((product) => language === "ar" && product.lightAr?.trim() ? product.lightAr : product.light))].sort(),
+    categories: [...new Set(products.map((product) => label(product.category, product.categoryAr)))].sort(),
+    lights: [...new Set(products.flatMap((product) => product.light ? [label(product.light, product.lightAr)] : []))].sort(),
     categoryLabels: Object.fromEntries(products.flatMap((product) => product.categoryAr ? [[product.category, product.categoryAr]] : [])),
-    lightLabels: Object.fromEntries(products.flatMap((product) => product.lightAr ? [[product.light, product.lightAr]] : [])),
+    lightLabels: Object.fromEntries(products.flatMap((product) => product.light && product.lightAr ? [[product.light, product.lightAr]] : [])),
+    categoryCounts,
   };
 }
 

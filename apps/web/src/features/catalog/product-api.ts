@@ -36,6 +36,7 @@ export const productApi = {
     lights: string[];
     categoryLabels?: Record<string, string>;
     lightLabels?: Record<string, string>;
+    categoryCounts?: Record<string, number>;
   }> => request("/products/filters"),
 };
 

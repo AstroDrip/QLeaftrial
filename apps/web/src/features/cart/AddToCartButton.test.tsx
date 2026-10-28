@@ -108,4 +108,16 @@ describe("AddToCartButton", () => {
     render(<AddToCartButton product={plant} />);
     expect(screen.getByRole("button")).toHaveAttribute("data-reduced-motion", "true");
   });
+
+  it("applies the placement class to the whole control so both buttons share position and stacking", async () => {
+    useCartStore.setState({ items: [{ ...plant, quantity: 1 }] });
+    render(<AddToCartButton product={plant} className="product-card__cart" />);
+
+    const decrement = screen.getByRole("button", { name: /decrease house plant quantity/i });
+    const add = screen.getByRole("button", { name: /add house plant to cart/i });
+    expect(decrement.parentElement).toHaveClass("product-card__cart");
+    expect(add.parentElement).toBe(decrement.parentElement);
+    expect(add).not.toHaveClass("product-card__cart");
+  });
 });
+

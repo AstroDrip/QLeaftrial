@@ -1,35 +1,29 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { useSiteContent, useStoreSettings } from "../../app/providers";
+import { useSiteContent, useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { Seo } from "../../components/Seo";
+import { WhatsAppIcon } from "../../components/icons";
+import { FALLBACK_PHONE, WHATSAPP_URL } from "../../content/contact";
+import { LEGAL_UPDATED, legalContent, type LegalDocument } from "./legal-content";
 import "./LegalPages.css";
-import { useSiteLanguage } from "../../app/providers";
 
-const LAST_UPDATED = "5 September 2026";
-const WHATSAPP_URL = "https://wa.me/97477551056";
-
-function LegalShell({
-  eyebrow,
-  title,
-  description,
-  path,
-  children,
-}: {
+function LegalShell({ eyebrow, title, description, path, updated = true, children }: {
   eyebrow: string;
   title: string;
   description: string;
   path: string;
+  updated?: boolean;
   children: ReactNode;
 }) {
-  const { isArabic } = useSiteLanguage();
+  const { language } = useSiteLanguage();
   return (
     <section className="page-shell legal-page">
       <Seo title={title} description={description} path={path} />
-      <div className="page-shell__header">
+      <header className="page-shell__header">
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
-      </div>
-      <p className="legal-page__updated">{isArabic ? "آخر تحديث: 5 سبتمبر 2026" : `Last updated: ${LAST_UPDATED}`}</p>
+        {updated ? <p className="legal-page__updated">{LEGAL_UPDATED[language]}</p> : null}
+      </header>
       <div className="legal-page__content">{children}</div>
     </section>
   );
@@ -38,230 +32,89 @@ function LegalShell({
 function SupportLink() {
   const { isArabic } = useSiteLanguage();
   return (
-    <a href={WHATSAPP_URL} target="_blank" rel="noreferrer">
-      {isArabic ? "تواصل مع QLeaves عبر واتساب" : "Contact QLeaves on WhatsApp"}
+    <a className="legal-page__support" href={WHATSAPP_URL} target="_blank" rel="noreferrer">
+      <WhatsAppIcon /> {isArabic ? "تواصل مع QLeaves عبر واتساب" : "Contact QLeaves on WhatsApp"}
     </a>
   );
 }
 
-export function PrivacyPage() {
-  const { isArabic } = useSiteLanguage();
-  if (isArabic) return <LegalShell eyebrow="معلوماتك" title="سياسة الخصوصية" description="كيف تجمع QLeaves معلومات العملاء وتستخدمها وتحميها." path="/privacy">
-    <section><h2>المعلومات التي نجمعها</h2><p>عند تقديم طلب، تجمع QLeaves المعلومات التي تدخلها عند الدفع، ومنها الاسم ورقم الهاتف والبريد الإلكتروني وعنوان التوصيل والمنطقة وملاحظات التوصيل الاختيارية وطريقة الدفع والمنتجات والكميات المطلوبة.</p><p>قد يعالج الموقع ومزودو الاستضافة أيضًا معلومات الطلب التقنية الأساسية اللازمة لتقديم الخدمة وتشخيص الأخطاء وحماية المتجر من إساءة الاستخدام.</p></section>
-    <section><h2>كيفية استخدام معلوماتك</h2><ul><li>لإنشاء طلبك وتأكيده وتجهيزه وتوصيله أو تحديثه أو إلغائه.</li><li>للتواصل معك بشأن توفر المنتجات أو التوصيل أو الدفع أو الدعم.</li><li>لإدارة سجلات الطلبات والمخزون وتشغيل المتجر بأمان.</li><li>للوفاء بمتطلبات حفظ السجلات أو الالتزامات القانونية.</li></ul></section>
-    <section><h2>ملفات تعريف الارتباط والتتبع</h2><p>لا يستخدم المتجر حاليًا ملفات تعريف ارتباط إعلانية أو تحليلية عن قصد. تستخدم منطقة الإدارة ملف تعريف ارتباط ضروريًا للمصادقة حتى يظل الموظفون المخولون مسجلين.</p></section>
-    <section><h2>التخزين ومزودو الخدمات</h2><p>تستخدم QLeaves مزودين خارجيين لاستضافة الموقع وواجهة البرمجة وقاعدة البيانات وصور المنتجات. يعالج هؤلاء المزودون المعلومات بالقدر اللازم لتشغيل خدماتهم، وقد تُشارك معلومات الطلب مع الأطراف المشاركة في تنفيذه عند الضرورة.</p></section>
-    <section><h2>الاحتفاظ وطلباتك</h2><p>نحتفظ بمعلومات الطلب والعملاء للمدة المعقولة اللازمة لتنفيذ الطلبات وحفظ سجلات العمل وحل النزاعات وتأمين الخدمة والوفاء بالالتزامات القانونية. للتصحيح أو الحذف أو الاستفسار عن معلوماتك، تواصل معنا.</p><p><SupportLink /></p></section>
-  </LegalShell>;
+function PolicyPage({ pick, path }: { pick: (content: (typeof legalContent)["en"]) => LegalDocument; path: string }) {
+  const { language } = useSiteLanguage();
+  const content = legalContent[language];
+  const document = pick(content);
   return (
-    <LegalShell
-      eyebrow="Your information"
-      title="Privacy Policy"
-      description="How QLeaves collects, uses, and protects customer information when you browse or place an order."
-      path="/privacy"
-    >
+    <LegalShell eyebrow={document.eyebrow} title={document.title} description={document.description} path={path}>
+      {document.sections.map((section) => (
+        <section key={section.title}>
+          <h2>{section.title}</h2>
+          {section.body.map((block, index) => Array.isArray(block)
+            ? <ul key={index}>{block.map((item) => <li key={item}>{item}</li>)}</ul>
+            : <p key={index}>{block}</p>)}
+        </section>
+      ))}
       <section>
-        <h2>Information we collect</h2>
-        <p>
-          When you place an order, QLeaves collects the information you submit at checkout, including your name, phone number, email address, delivery address, area, optional delivery notes, selected payment method, and the products and quantities in your order.
-        </p>
-        <p>
-          The site and its hosting providers may also process basic technical request information needed to deliver the service, diagnose errors, and protect the storefront from abuse.
-        </p>
-      </section>
-
-      <section>
-        <h2>How we use your information</h2>
-        <ul>
-          <li>To create, confirm, prepare, deliver, update, or cancel your order.</li>
-          <li>To contact you about product availability, delivery details, payment, or support.</li>
-          <li>To maintain order and inventory records and operate the storefront securely.</li>
-          <li>To meet record-keeping or legal obligations that apply to the business.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Cookies and tracking</h2>
-        <p>
-          The current storefront does not intentionally use advertising or analytics tracking cookies. The admin area uses a strictly necessary authentication cookie so authorized staff can remain signed in. If optional analytics or advertising tools are introduced later, this policy and any required consent controls should be updated before those tools are enabled.
-        </p>
-      </section>
-
-      <section>
-        <h2>Storage and service providers</h2>
-        <p>
-          QLeaves uses third-party infrastructure providers to host the website, API, database, and product-image storage. Those providers process information only as needed to operate those services. Order information may also be shared with people or services involved in fulfilling the order when necessary.
-        </p>
-      </section>
-
-      <section>
-        <h2>Retention and your requests</h2>
-        <p>
-          Order and customer information is retained only for as long as reasonably needed to fulfil orders, maintain business records, resolve disputes, secure the service, and meet applicable legal obligations. If you want to ask what information QLeaves holds about you or request a correction or deletion, contact QLeaves. Some records may need to be retained where required for legitimate business or legal reasons.
-        </p>
-        <p><SupportLink /></p>
+        <h2>{content.contactTitle}</h2>
+        <p>{content.contactBody}</p>
+        <SupportLink />
       </section>
     </LegalShell>
   );
+}
+
+export function PrivacyPage() {
+  return <PolicyPage pick={(content) => content.privacy} path="/privacy" />;
 }
 
 export function TermsPage() {
-  const { isArabic } = useSiteLanguage();
-  if (isArabic) return <LegalShell eyebrow="قواعد المتجر" title="الشروط والأحكام" description="شروط استخدام متجر QLeaves في قطر وتقديم طلبات النباتات." path="/terms">
-    <section><h2>استخدام المتجر</h2><p>يمكنك تصفح كتالوج QLeaves وتقديم طلبات لأغراض شخصية أو قانونية. لا تسئ استخدام الموقع أو تعرقل تشغيله أو تحاول الوصول غير المصرح به أو تقدم طلبات زائفة أو مسيئة.</p></section>
-    <section><h2>المنتجات والأسعار والتوفر</h2><p>تظهر الأسعار بالريال القطري وقد يتغير التوفر والمخزون. النباتات منتجات حية، لذلك يُتوقع اختلاف طبيعي في الحجم والشكل واللون والأوراق والمظهر، والصور تمثيلية وليست ضمانًا للتطابق التام.</p></section>
-    <section><h2>الطلبات والدفع</h2><p>يؤدي إرسال نموذج الدفع إلى إنشاء طلب وفق الأسعار والتوفر المؤكدين من خادم QLeaves. قد نتواصل معك لتأكيد التوفر أو تفاصيل التوصيل أو الدفع. يدعم المتجر الدفع نقدًا عند الاستلام أو عبر رابط دفع.</p><p>يجوز رفض الطلب أو إلغاؤه إذا كان المنتج غير متوفر أو تعذر التحقق من البيانات أو إتمام الدفع أو التنفيذ.</p></section>
-    <section><h2>معلومات طلبك</h2><p>أنت مسؤول عن تقديم معلومات اتصال وتوصيل دقيقة. إذا لاحظت خطأ بعد إرسال الطلب، تواصل مع QLeaves في أقرب وقت واذكر رقم الطلب.</p></section>
-    <section><h2>الملكية الفكرية ومحتوى الموقع</h2><p>لا يجوز نسخ اسم QLeaves أو علامتها أو صورها أو نصوصها أو تصميم موقعها أو إعادة استخدامها بما ينتهك حقوق QLeaves أو الغير.</p></section>
-    <section><h2>الأسئلة</h2><p>للاستفسار عن طلب أو هذه الشروط، <SupportLink />.</p></section>
-  </LegalShell>;
-  return (
-    <LegalShell
-      eyebrow="Store rules"
-      title="Terms & Conditions"
-      description="Terms for using the QLeaves Qatar storefront and placing plant orders."
-      path="/terms"
-    >
-      <section>
-        <h2>Using the storefront</h2>
-        <p>
-          You may browse the QLeaves catalogue and submit orders for personal or other lawful purposes. Do not misuse the site, interfere with its operation, attempt unauthorized access, or submit false or abusive orders.
-        </p>
-      </section>
-
-      <section>
-        <h2>Products, prices, and availability</h2>
-        <p>
-          Product prices are shown in QAR. Availability and stock can change. Because plants are living products, natural variation in size, shape, colour, foliage, and appearance is expected, and photographs are representative rather than a guarantee that every plant will look identical.
-        </p>
-      </section>
-
-      <section>
-        <h2>Orders and payment</h2>
-        <p>
-          Submitting checkout creates an order request using the prices and availability confirmed by the QLeaves server. QLeaves may contact you to confirm availability, delivery details, or payment before fulfilment. The storefront currently supports cash on delivery and payment link as payment-method options.
-        </p>
-        <p>
-          An order may be declined or cancelled when a product is unavailable, the supplied order information cannot be verified, payment cannot be completed where required, or fulfilment is otherwise not possible.
-        </p>
-      </section>
-
-      <section>
-        <h2>Your order information</h2>
-        <p>
-          You are responsible for providing accurate contact and delivery information. If you notice an error after submitting an order, contact QLeaves as soon as possible and include the order number.
-        </p>
-      </section>
-
-      <section>
-        <h2>Intellectual property and site content</h2>
-        <p>
-          The QLeaves name, branding, photographs, written content, and site design may not be copied or reused in a way that infringes QLeaves or third-party rights. Product information may be updated when stock, care information, pricing, or catalogue details change.
-        </p>
-      </section>
-
-      <section>
-        <h2>Questions</h2>
-        <p>For questions about an order or these terms, <SupportLink />.</p>
-      </section>
-    </LegalShell>
-  );
+  return <PolicyPage pick={(content) => content.terms} path="/terms" />;
 }
 
 export function ShippingReturnsPage() {
-  const { isArabic } = useSiteLanguage();
-  if (isArabic) return <LegalShell eyebrow="دعم الطلبات" title="الشحن والإرجاع" description="إرشادات QLeaves للتوصيل والإلغاء والتلف والإرجاع داخل قطر." path="/shipping-returns">
-    <section><h2>التوصيل</h2><p>تخدم QLeaves العملاء في قطر. يعتمد توفر التوصيل وموعده على المنطقة وتوفر المنتجات وحالة الطلب. قدم رقم هاتف متاحًا وعنوانًا كاملًا حتى نتمكن من التواصل عند الحاجة.</p></section>
-    <section><h2>تعديل الطلب أو إلغاؤه</h2><p>إذا احتجت إلى تعديل طلب أو إلغائه، تواصل مع QLeaves في أسرع وقت واذكر رقم الطلب. تعتمد إمكانية التعديل أو الإلغاء على مرحلة التجهيز والتوصيل.</p></section>
-    <section><h2>العناصر التالفة أو الخاطئة أو الناقصة</h2><p>إذا وصل عنصر تالفًا أو مختلفًا عما طلبته أو كان ناقصًا، تواصل معنا سريعًا مع رقم الطلب والمعلومات اللازمة لمراجعة المشكلة. قد نطلب صورة لتأكيد حالة النبات أو المنتج.</p></section>
-    <section><h2>حالة النبات والاختلاف الطبيعي</h2><p>النباتات منتجات حية والاختلاف الطبيعي متوقع. الاختلاف في الأوراق أو النمو أو الحجم أو الشكل أو اللون لا يعني وحده أن المنتج معيب. تراجع QLeaves مشكلات الحالة أو التنفيذ الحقيقية بصورة فردية.</p></section>
-    <section><h2>الإرجاع والحلول</h2><p>تواصل مع QLeaves قبل إعادة أي عنصر. تعتمد الأهلية والحل المناسب على المنتج وحالته وسبب الطلب وحالة الطلب. سنؤكد خطوات الاستبدال أو الاسترداد أو الرصيد أو أي حل مناسب مباشرة.</p><p><SupportLink /></p></section>
-  </LegalShell>;
-  return (
-    <LegalShell
-      eyebrow="Order support"
-      title="Shipping & Returns"
-      description="QLeaves delivery, cancellation, damaged-item, and return guidance for plant orders in Qatar."
-      path="/shipping-returns"
-    >
-      <section>
-        <h2>Delivery</h2>
-        <p>
-          QLeaves serves customers in Qatar. Delivery availability and timing can depend on the delivery area, product availability, and the order status. Provide a reachable phone number and a complete delivery address so QLeaves can contact you if fulfilment details need to be confirmed.
-        </p>
-      </section>
-
-      <section>
-        <h2>Changing or cancelling an order</h2>
-        <p>
-          If you need to change or cancel an order, contact QLeaves as soon as possible and provide your order number. Whether a change or cancellation is possible depends on how far the order has progressed through preparation and delivery.
-        </p>
-      </section>
-
-      <section>
-        <h2>Damaged, incorrect, or missing items</h2>
-        <p>
-          If an item arrives damaged, is different from what was ordered, or is missing, contact QLeaves promptly with your order number and enough information to review the issue. A photo may be requested where it helps confirm the condition of a plant or product.
-        </p>
-      </section>
-
-      <section>
-        <h2>Plant condition and natural variation</h2>
-        <p>
-          Plants are living products and natural variation is expected. Differences in foliage, growth, size, shape, colour, or other natural characteristics do not by themselves mean that an item is defective. QLeaves will review genuine condition or fulfilment issues individually.
-        </p>
-      </section>
-
-      <section>
-        <h2>Returns and resolutions</h2>
-        <p>
-          Contact QLeaves before sending or returning any item. Return eligibility and the appropriate resolution depend on the product, its condition, the reason for the request, and the order status. Where a refund, replacement, credit, or other resolution is appropriate, QLeaves will confirm the next steps directly with you. Nothing on this page is intended to remove rights that cannot lawfully be excluded.
-        </p>
-        <p><SupportLink /></p>
-      </section>
-    </LegalShell>
-  );
+  return <PolicyPage pick={(content) => content.shipping} path="/shipping-returns" />;
 }
 
 export function AboutPage() {
   const { about } = useSiteContent().legal;
   const settings = useStoreSettings();
   const business = settings.data;
+  // Only details the shop has entered in admin are shown.
   const details = [
     [about.commercialRegistration, business?.commercialRegistration],
     [about.ecommerceLicense, business?.ecommerceLicense],
     [about.registeredAddress, business?.businessAddress],
-  ] as const;
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]));
+  const phone = business?.supportPhone ? { href: `tel:${business.supportPhone}`, label: business.supportPhone } : FALLBACK_PHONE;
 
   return (
-    <LegalShell eyebrow={about.eyebrow} title={about.title} description={about.description} path="/about">
-      <p>{about.introduction}</p>
-      <section className="about-business-details" aria-labelledby="about-business-heading">
-        <h2 id="about-business-heading">{about.businessDetails}</h2>
-        {settings.isPending ? <p role="status">{about.loading}</p> : null}
-        {settings.isError ? <p role="alert">{about.loadError}</p> : null}
-        <dl>
-          {details.map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{value || about.unavailable}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+    <LegalShell eyebrow={about.eyebrow} title={about.title} description={about.description} path="/about" updated={false}>
+      <p className="legal-page__intro">{about.introduction}</p>
+      {settings.isPending ? <p role="status">{about.loading}</p> : null}
+      {settings.isError ? <p role="alert">{about.loadError}</p> : null}
+      {details.length ? (
+        <section aria-labelledby="about-business-heading">
+          <h2 id="about-business-heading">{about.businessDetails}</h2>
+          <dl className="legal-page__details">
+            {details.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
       <section aria-labelledby="about-support-heading">
         <h2 id="about-support-heading">{about.customerSupport}</h2>
-        <p>{about.email}: {business?.supportEmail
-          ? <a href={`mailto:${business.supportEmail}`}>{business.supportEmail}</a>
-          : about.unavailable}</p>
-        <p>{about.phone}: {business?.supportPhone
-          ? <a href={`tel:${business.supportPhone}`}>{business.supportPhone}</a>
-          : <a href="tel:+97477551056">+974 7755 1056</a>}</p>
+        <dl className="legal-page__details">
+          {business?.supportEmail ? <div><dt>{about.email}</dt><dd><a href={`mailto:${business.supportEmail}`}>{business.supportEmail}</a></dd></div> : null}
+          <div><dt>{about.phone}</dt><dd><a href={phone.href} dir="ltr">{phone.label}</a></dd></div>
+        </dl>
+        <SupportLink />
       </section>
       <section aria-labelledby="about-documents-heading">
         <h2 id="about-documents-heading">{about.documents}</h2>
         <p>{about.documentsDescription}</p>
-        <ul>
+        <ul className="legal-page__links">
           <li><Link to="/privacy">{about.privacy}</Link></li>
           <li><Link to="/terms">{about.terms}</Link></li>
           <li><Link to="/shipping-returns">{about.shipping}</Link></li>

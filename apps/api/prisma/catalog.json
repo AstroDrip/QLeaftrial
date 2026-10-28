@@ -1,0 +1,758 @@
+[
+  {
+    "slug": "areca-palm-110-cm",
+    "sku": "SP-11278",
+    "name": "Areca Palm (110 cm)",
+    "nameAr": "نخلة الأريكا (110 سم)",
+    "description": "Areca Palm – Elegant Indoor Greenery\nEnhance your home or office with the Areca Palm, a stunning and easy-to-care-for indoor plant known for its lush, feathery fronds and air-purifying qualities. With its tropical charm and vibrant green foliage, this plant instantly adds elegance and freshness to any space.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 185,
+    "published": true,
+    "altText": "Areca Palm  (110 cm)",
+    "media": [
+      {
+        "url": "/media/plants/areca-palm-110-cm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/areca-palm-110-cm-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "monstera-deliciosa-big-size-120-cm",
+    "sku": "SP-11345",
+    "name": "Monstera Deliciosa (Big Size) (120 cm)",
+    "nameAr": "مونستيرا ديليسيوزا كبيرة (120 سم)",
+    "description": "Monstera Deliciosa (Big Size) (120 cm)Known as the “Swiss Cheese Plant,” Monstera Deliciosa brings a tropical vibe with its iconic split leaves. This large-sized beauty is perfect for creating a lush, indoor jungle feel.\n🪴 Height: (120 cm) – Great as a bold floor statement🌤️ Light: Bright, indirect light💧 Water: Moderate – water when the topsoil feels dry🌿 Benefit: Air-purifying and visually stunning",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 350,
+    "published": true,
+    "altText": "Monstera Deliciosa (Big Size) (120 cm)",
+    "media": [
+      {
+        "url": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/monstera-deliciosa-big-size-120-cm-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "bird-of-paradise-150-cm",
+    "sku": "SP-11303",
+    "name": "Bird of Paradise (150 cm)",
+    "nameAr": "عصفور الجنة (150 سم)",
+    "description": "Bird of Paradise (150 cm) – A Touch of the Tropics Indoors\nTransform your space with the Bird of Paradise (Strelitzia Reginae), an elegant and exotic indoor plant that brings a tropical vibe to any setting. With its large, glossy green leaves, this stunning plant resembles a banana tree and adds a refreshing touch of nature to homes, offices, and indoor gardens.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 300,
+    "published": true,
+    "altText": "Bird of Paradise (150 cm)",
+    "media": [
+      {
+        "url": "/media/plants/bird-of-paradise-150-cm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/bird-of-paradise-150-cm-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "kentia-palm-big-size-120-cm",
+    "sku": "SP-11349",
+    "name": "Kentia Palm (Big Size) (120 cm)",
+    "nameAr": "نخلة الكنتيا كبيرة (120 سم)",
+    "description": "Kentia Palm (Big Size) (120 cm)Bring tropical elegance into your home with the Kentia Palm. Known for its graceful arching fronds and air-purifying qualities, this 120 cm beauty is perfect for brightening up living rooms, offices, or lobbies.\n🪴 Height: (120 cm) – Adds vertical greenery without overpowering🌤️ Light: Prefers bright, indirect sunlight but tolerates low light💧 Water: Keep soil slightly moist; avoid overwatering🌿 Benefit: Elegant, low-maintenance, and improves indoor air quality",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "priceQar": 300,
+    "published": true,
+    "altText": "Kentia Palm (Big Size) (120 cm)",
+    "media": [
+      {
+        "url": "/media/plants/kentia-palm-big-size-120-cm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/kentia-palm-big-size-120-cm-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "zz-plant-75-cm",
+    "sku": "SP-11371",
+    "name": "ZZ Plant (75 cm)",
+    "nameAr": "نبات زد زد (75 سم)",
+    "description": "ZZ Plant (75 cm)The ZZ Plant is a sleek and modern addition to any indoor space. With smooth, waxy leaves and a compact 75 cm height, it’s known for its resilience and air-purifying qualities. Ideal for beginners or busy plant lovers, it requires very little upkeep.\n🪴 Height: 75 cm🌤️ Light: Tolerates low to bright, indirect light💧 Water: Low water needs; let soil dry between watering🌿 Benefit: Low maintenance, purifies air, stylish appearance",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "priceQar": 60,
+    "published": true,
+    "altText": "ZZ Plant (75 cm)",
+    "media": [
+      {
+        "url": "/media/plants/zz-plant-75-cm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/zz-plant-75-cm-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "peace-lily-big-size",
+    "sku": "SP-11333",
+    "name": "Peace Lily (Big Size)",
+    "nameAr": "زنبق السلام كبير",
+    "description": "Peace Lily (Big Size)Bring calm and beauty into your home with the elegant Peace Lily. Known for its glossy green leaves and striking white blooms, this large-sized plant purifies the air and adds a serene touch to any indoor space.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "priceQar": 100,
+    "published": true,
+    "altText": "Peace Lily (Big Size)",
+    "media": [
+      {
+        "url": "/media/plants/peace-lily-big-size-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peace-lily-big-size-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "schefflera",
+    "sku": "SP-11337",
+    "name": "Schefflera",
+    "nameAr": "شيفليرا (نبات المظلة)",
+    "description": "Schefflera (Umbrella Plant)The Schefflera, also known as the Umbrella Plant, is a stylish and easy-care indoor plant with glossy green leaves that fan out like an umbrella. It’s perfect for homes and offices, adding a fresh, tropical feel.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 130,
+    "published": true,
+    "altText": "Schefflera",
+    "media": [
+      {
+        "url": "/media/plants/schefflera-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/schefflera-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "sansevieria-snake-plant-big-size",
+    "sku": "SP-11351",
+    "name": "Sansevieria (Snake Plant – Big Size)",
+    "nameAr": "سانسيفيريا (نبات الثعبان - حجم كبير)",
+    "description": "Sansevieria (Snake Plant – Big Size)Also known as the Mother-in-Law’s Tongue, the Snake Plant is a striking and hardy indoor plant with tall, upright leaves and unique variegated patterns. It’s one of the best air-purifying plants, ideal for homes and offices.\n🪴 Size: Big Size – Perfect as a bold, vertical accent🌤️ Light: Thrives in low to bright indirect light💧 Water: Extremely low maintenance; water sparingly🌿 Benefit: Cleans indoor air and adds a modern, sculptural touch",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "priceQar": 80,
+    "published": true,
+    "altText": "Sansevieria (Snake Plant – Big Size)",
+    "media": [
+      {
+        "url": "/media/plants/sansevieria-snake-plant-big-size-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/sansevieria-snake-plant-big-size-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "pothos-njoy",
+    "sku": "SP-11547",
+    "name": "Pothos N’joy",
+    "nameAr": "بوتوس إنجوي",
+    "description": "Pothos N’Joy (Tabletop Plant)\nPothos N’Joy is a stunning variegated variety of the classic pothos, perfect for brightening up any tabletop or shelf. Its heart-shaped leaves feature striking white and green marbling, creating a fresh, clean look that pairs well with modern interiors. Known for its air-purifying qualities and low-maintenance nature, Pothos N’Joy thrives in indirect light and only needs occasional watering. Whether trailing from a small pot or climbing with support, it brings beauty and charm to any indoor space—an excellent choice for plant lovers of all levels.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "priceQar": 40,
+    "published": true,
+    "altText": "Pothos N’joy",
+    "media": [
+      {
+        "url": "/media/plants/pothos-njoy-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/pothos-njoy-1280.webp",
+        "purpose": "detail",
+        "width": 736,
+        "height": 736
+      }
+    ]
+  },
+  {
+    "slug": "zamioculcas-zamiifolia",
+    "sku": "SP-11516",
+    "name": "Zamioculcas Zamiifolia",
+    "nameAr": "زاميوكولكاس زامي فوليا",
+    "description": "Zamioculcas Zamiifolia – The Ultimate Low-Maintenance Beauty\nCommonly known as the ZZ Plant, the Zamioculcas Zamiifolia is a true icon of modern indoor greenery. With its glossy, deep green leaves and upright growth, it brings a sleek and elegant look to any tabletop or shelf.\nHighly resilient and incredibly easy to care for, the ZZ Plant thrives on neglect—making it the perfect choice for busy plant lovers or low-light spaces. Its clean lines and polished foliage add a contemporary touch to home or office décor.\n•\nHeight: Tabletop size\n•\nLight: Low to bright indirect light\n•\nWatering: Allow soil to dry between waterings\n•\nAir Purifying: Yes\n•\nPerfect For: Offices, modern interiors, low-light rooms",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "priceQar": 45,
+    "published": true,
+    "altText": "Zamioculcas Zamiifolia",
+    "media": [
+      {
+        "url": "/media/plants/zamioculcas-zamiifolia-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/zamioculcas-zamiifolia-1280.webp",
+        "purpose": "detail",
+        "width": 1080,
+        "height": 1080
+      }
+    ]
+  },
+  {
+    "slug": "monstera-adansonii",
+    "sku": "SP-11518",
+    "name": "Monstera Adansonii",
+    "nameAr": "مونستيرا أدانسوني",
+    "description": "Monstera Adansonii – The Swiss Cheese Vine\nThe Monstera Adansonii, affectionately known as the Swiss Cheese Plant, is a charming addition to any tabletop collection. Its eye-catching heart-shaped leaves with natural holes bring a playful and tropical vibe to your space.\nCompact and vine-like, it can be styled to trail, climb, or cascade, making it a versatile choice for small indoor areas. Easy to care for and visually unique, it’s a favorite among plant lovers and design enthusiasts.\n•\nHeight: Tabletop size\n•\nLight: Bright, indirect light\n•\nWatering: Keep soil lightly moist; do not overwater\n•\nAir Purifying: Yes\n•\nPerfect For: Desks, shelves, hanging planters, or terrariums",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 45,
+    "published": true,
+    "altText": "Monstera Adansonii",
+    "media": [
+      {
+        "url": "/media/plants/monstera-adansonii-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/monstera-adansonii-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "boston-fern",
+    "sku": "SP-11522",
+    "name": "Boston Fern",
+    "nameAr": "سرخس بوسطن",
+    "description": "Boston Fern – Lush Green Elegance for Your Table\nThe Boston Fern is a timeless indoor plant known for its feathery, arching fronds that bring a refreshing burst of greenery into any space. Its dense foliage and classic charm make it a perfect fit for tabletops, shelves, or hanging baskets.\nThis plant thrives in humid conditions and helps purify the air, making it not only beautiful but beneficial. With just a bit of care, it rewards you with vibrant, cascading greenery all year round.\n•\nHeight: Compact tabletop size\n•\nLight: Indirect to filtered light\n•\nWatering: Keep soil consistently moist but not soggy\n•\nAir Purifying: Excellent\n•\nPerfect For: Bathrooms, kitchens, or cozy corners needing a natural touch",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "priceQar": 45,
+    "published": true,
+    "altText": "Boston Fern",
+    "media": [
+      {
+        "url": "/media/plants/boston-fern-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/boston-fern-1280.webp",
+        "purpose": "detail",
+        "width": 1080,
+        "height": 1080
+      }
+    ]
+  },
+  {
+    "slug": "chamaedorea-elegans",
+    "sku": "SP-11484",
+    "name": "Chamaedorea Elegans",
+    "nameAr": "نخلة الصالون",
+    "description": "Chamaedorea Elegans – The Elegant Tabletop Palm\nBring a touch of tropical charm to your indoor spaces with the Chamaedorea Elegans, also known as the Parlor Palm. This compact and graceful plant is perfect for table tops, shelves, or desks, offering lush green foliage and a refreshing natural vibe.\nEasy to care for and adaptable to low light, it thrives in indoor environments and purifies the air—making it both a stylish and healthy addition to your home or office.\n•\nLight: Indirect sunlight or low light\n•\nWatering: Moderate – allow the topsoil to dry between watering\n•\nIdeal for: Table tops, workspaces, small corners\n•\nPot Size: Suitable for small to medium decorative pots",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "priceQar": 45,
+    "published": true,
+    "altText": "Chamaedorea Elegans",
+    "media": [
+      {
+        "url": "/media/plants/chamaedorea-elegans-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/chamaedorea-elegans-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-red",
+    "sku": "SP-11512",
+    "name": "Aglaonema Red",
+    "nameAr": "أجلونيما حمراء",
+    "description": "Aglaonema Red – Bold Beauty in a Compact Size\nThe Aglaonema Red is a showstopper with its rich green leaves splashed with vibrant red and pink tones, making it a stunning addition to your tabletop décor. Its compact size makes it perfect for small spaces, adding a bold burst of color to desks, shelves, or side tables.\nKnown for being extremely hardy and low-maintenance, this plant thrives in low to moderate light and is an excellent air purifier—beauty and wellness in one package!\n•\nHeight: Tabletop size\n•\nLight: Indirect to low light\n•\nWatering: Allow soil to dry slightly between waterings\n•\nAir Purifying: Yes\n•\nPerfect For: Living rooms, workspaces, and compact interiors",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "priceQar": 75,
+    "published": true,
+    "altText": "Aglaonema Red",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-red-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-red-1280.webp",
+        "purpose": "detail",
+        "width": 1080,
+        "height": 1080
+      }
+    ]
+  },
+  {
+    "slug": "philodendron-brasil",
+    "sku": "SP-11528",
+    "name": "Philodendron Brasil",
+    "nameAr": "فيلوديندرون برازيل",
+    "description": "Philodendron Brasil – A Tropical Touch with a Splash of Color\nAdd a vibrant twist to your indoor space with the Philodendron Brasil. This charming tabletop plant features heart-shaped leaves adorned with bold green and golden-yellow variegation, resembling the lush vibe of the tropics.\nIt’s fast-growing, easy to care for, and perfect for trailing or hanging displays. Whether on a shelf or in a small pot on your table, the Brasil brings instant life and warmth to any corner.\n•\nHeight: Compact and trailing\n•\nLight: Thrives in bright, indirect light\n•\nWatering: Keep soil lightly moist, allow topsoil to dry out between waterings\n•\nAir Purifying: Yes\n•\nPerfect For: Tabletop displays, plant walls, and decorative pots",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "priceQar": 40,
+    "published": true,
+    "altText": "Philodendron Brasil",
+    "media": [
+      {
+        "url": "/media/plants/philodendron-brasil-640.webp",
+        "purpose": "catalog",
+        "width": 600,
+        "height": 700
+      },
+      {
+        "url": "/media/plants/philodendron-brasil-1280.webp",
+        "purpose": "detail",
+        "width": 600,
+        "height": 700
+      }
+    ]
+  },
+  {
+    "slug": "spider-plant",
+    "sku": "SP-11543",
+    "name": "Spider Plant",
+    "nameAr": "نبات العنكبوت",
+    "description": "Spider Plant\nThe Spider Plant is a classic, easy-to-care-for tabletop plant known for its cascading green leaves with creamy white stripes. Perfect for adding a fresh, lively look to any space, this low-maintenance beauty is ideal for beginners and busy plant lovers. It thrives in bright, indirect light and helps purify the air, making it a stylish and functional addition to your home or office. Its playful, arching foliage brings a touch of nature to shelves, desks, or countertops.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 30,
+    "published": true,
+    "altText": "Spider Plant",
+    "media": [
+      {
+        "url": "/media/plants/spider-plant-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/spider-plant-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "orchid",
+    "sku": "SP-11557",
+    "name": "Orchid",
+    "nameAr": "أوركيد",
+    "description": "Orchid (120 cm)Bring timeless elegance and vibrant charm into your space with our stunning Orchid. Known for its delicate, long-lasting blooms and graceful stems, this plant is a symbol of love, luxury, and strength—making it a perfect gift for any special occasion. Potted in a sleek decorative pot, it fits beautifully in living rooms, offices, or as a centerpiece. Easy to care for and undeniably gorgeous, the Orchid brings both beauty and serenity wherever it’s placed.\nCategory: Gift a PlantIdeal for: Gifting, Home Décor, Office SpacesLight: Bright, indirect sunlightWatering: Moderate – allow the top inch of soil to dry out between watering",
+    "category": "Gift Plants",
+    "categoryAr": "نباتات للإهداء",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 120,
+    "published": true,
+    "altText": "Orchid",
+    "media": [
+      {
+        "url": "/media/plants/orchid-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/orchid-1280.webp",
+        "purpose": "detail",
+        "width": 1080,
+        "height": 1080
+      }
+    ]
+  },
+  {
+    "slug": "anthurium-red-55-cm",
+    "sku": "SP-11564",
+    "name": "Anthurium Red (55 cm)",
+    "nameAr": "أنثوريوم أحمر (55 سم)",
+    "description": "Anthurium Red (55 cm)Add a splash of bold beauty with our Anthurium Red, a striking indoor plant known for its glossy heart-shaped leaves and vibrant red flowers. This tropical gem is more than just eye-catching—it’s a symbol of hospitality and happiness. With its elegant form and long-lasting blooms, the Anthurium makes a thoughtful gift and a stunning addition to any home or office.\nCategory: Gift a PlantIdeal for: Gifting, Tabletops, Living RoomsLight: Bright, indirect lightWatering: Keep soil consistently moist, but not soggy",
+    "category": "Gift Plants",
+    "categoryAr": "نباتات للإهداء",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "priceQar": 90,
+    "published": true,
+    "altText": "Anthurium Red (55 cm)",
+    "media": [
+      {
+        "url": "/media/plants/anthurium-red-55-cm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/anthurium-red-55-cm-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "calathea-makoyana-70-cm",
+    "sku": "SP-11569",
+    "name": "Calathea Makoyana (70 cm)",
+    "nameAr": "كالاثيا ماكويانا (70 سم)",
+    "description": "Calathea Makoyana (70 cm)Also known as the “Peacock Plant,” the Calathea Makoyana is admired for its striking foliage that resembles intricate feather patterns. With light green leaves highlighted by deep green markings and a soft purple underside, this elegant indoor plant adds a sophisticated touch to any space. Its unique beauty and graceful presence make it a thoughtful and eye-catching gift.\nCategory: Gift a PlantIdeal for: Home decor, office spaces, special occasionsLight: Bright, indirect sunlightWatering: Keep soil slightly moist; prefers humidityPet-friendly: Yes",
+    "category": "Gift Plants",
+    "categoryAr": "نباتات للإهداء",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "priceQar": 175,
+    "published": true,
+    "altText": "Calathea Makoyana (70 cm)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-makoyana-70-cm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-makoyana-70-cm-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "succulent",
+    "sku": "SP-11874",
+    "name": "Succulent",
+    "nameAr": "نبات عصاري",
+    "description": "Succulent from the QLeaves collection.",
+    "category": "Gift Plants",
+    "categoryAr": "نباتات للإهداء",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "priceQar": 45,
+    "published": true,
+    "altText": "Succulent",
+    "media": [
+      {
+        "url": "/media/plants/succulent-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/succulent-1280.webp",
+        "purpose": "detail",
+        "width": 1080,
+        "height": 1080
+      }
+    ]
+  },
+  {
+    "slug": "bougainvillea-pink",
+    "sku": "SP-11637",
+    "name": "Bougainvillea Pink",
+    "nameAr": "جهنمية وردية",
+    "description": "Bougainvillea Pink – A Pop of Cheerful Color\nAdd a splash of vibrant charm to your outdoor space with Bougainvillea Pink. Known for its bright pink bracts and hardy nature, this stunning plant thrives in sunlight and brings non-stop color throughout the warm seasons. Perfect for climbing over fences, pergolas, or trailing from pots, it’s a show-stopping choice for gardens, balconies, or patios.\n•\nCategory: Outdoor Plant\n•\nSunlight: Full sun for best blooming\n•\nWatering: Low to moderate; drought-tolerant once established\n•\nPlacement: Ideal for fences, walls, trellises, or containers\n•\nHighlight: Low maintenance, continuous pink blooms",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "priceQar": 45,
+    "published": true,
+    "altText": "Bougainvillea Pink",
+    "media": [
+      {
+        "url": "/media/plants/bougainvillea-pink-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/bougainvillea-pink-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "adenium",
+    "sku": "SP-11645",
+    "name": "Adenium",
+    "nameAr": "أدينيوم (وردة الصحراء)",
+    "description": "Adenium – The Desert Rose\nAdenium, also known as the Desert Rose, is a stunning ornamental plant admired for its thick, sculptural trunk and vibrant trumpet-shaped flowers. Perfect for sunny outdoor spots, this drought-tolerant beauty adds an exotic flair to gardens, patios, and balconies. Its unique bonsai-like shape makes it a favorite among collectors and casual gardeners alike.\n•\nCategory: Outdoor Plant\n•\nSunlight: Full sun\n•\nWatering: Low; water when soil is dry\n•\nPlacement: Pots, garden beds, or decorative corners\n•\nHighlight: Showy blooms with a striking trunk structure",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "priceQar": 60,
+    "published": true,
+    "altText": "Adenium",
+    "media": [
+      {
+        "url": "/media/plants/adenium-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/adenium-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "aloe-vera",
+    "sku": "SP-11643",
+    "name": "Aloe Vera",
+    "nameAr": "ألوفيرا",
+    "description": "Aloe Vera – Nature’s Healing Touch\nAloe Vera is a well-loved succulent known for its soothing, medicinal gel and easy-care nature. With its thick, fleshy green leaves and architectural form, Aloe Vera adds a fresh, modern touch to outdoor gardens and patios. It’s drought-tolerant and thrives in sunny spots, making it ideal for low-maintenance gardening. A perfect mix of beauty and function!\n•\nCategory: Outdoor Plant\n•\nSunlight: Full sun to partial shade\n•\nWatering: Low; water only when the soil is dry\n•\nPlacement: Garden borders, pots, or rock gardens\n•\nHighlight: Medicinal use + minimal care required",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "priceQar": 25,
+    "published": true,
+    "altText": "Aloe Vera",
+    "media": [
+      {
+        "url": "/media/plants/aloe-vera-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aloe-vera-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "alamanda",
+    "sku": "SP-11647",
+    "name": "Alamanda",
+    "nameAr": "ألاماندا",
+    "description": "Alamanda – Golden Trumpet Beauty\nAlamanda, also known as the Golden Trumpet, is a bright and cheerful flowering vine that produces large, trumpet-shaped yellow blooms. Perfect for adding a splash of color to your garden, fence, or balcony railing, Alamanda thrives in warm weather and full sun. Its fast growth and long blooming season make it a popular choice for creating vibrant green walls and garden highlights.\n•\nCategory: Outdoor Plant\n•\nSunlight: Full sun\n•\nWatering: Moderate; prefers well-drained soil\n•\nPlacement: Fences, trellises, pots, or pergolas\n•\nHighlight: Bright yellow flowers with a tropical vibe",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "priceQar": 80,
+    "published": true,
+    "altText": "Alamanda",
+    "media": [
+      {
+        "url": "/media/plants/alamanda-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/alamanda-1280.webp",
+        "purpose": "detail",
+        "width": 1280,
+        "height": 1280
+      }
+    ]
+  },
+  {
+    "slug": "potting-soil",
+    "sku": "SP-11897",
+    "name": "Potting soil",
+    "nameAr": "تربة زراعية",
+    "description": "Potting soil from the QLeaves collection.",
+    "category": "Garden Accessories",
+    "categoryAr": "مستلزمات الحديقة",
+    "light": null,
+    "lightAr": null,
+    "priceQar": 40,
+    "published": true,
+    "altText": "Potting soil",
+    "media": [
+      {
+        "url": "/media/plants/potting-soil-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/potting-soil-1280.webp",
+        "purpose": "detail",
+        "width": 1200,
+        "height": 1200
+      }
+    ]
+  },
+  {
+    "slug": "leca",
+    "sku": "SP-11887",
+    "name": "Leca",
+    "nameAr": "حبيبات ليكا",
+    "description": "Leca from the QLeaves collection.",
+    "category": "Garden Accessories",
+    "categoryAr": "مستلزمات الحديقة",
+    "light": null,
+    "lightAr": null,
+    "priceQar": 20,
+    "published": true,
+    "altText": "Leca",
+    "media": [
+      {
+        "url": "/media/plants/leca-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/leca-1280.webp",
+        "purpose": "detail",
+        "width": 750,
+        "height": 750
+      }
+    ]
+  },
+  {
+    "slug": "white-pebbles",
+    "sku": "SP-11877",
+    "name": "White pebbles",
+    "nameAr": "حصى أبيض",
+    "description": "White pebbles from the QLeaves collection.",
+    "category": "Garden Accessories",
+    "categoryAr": "مستلزمات الحديقة",
+    "light": null,
+    "lightAr": null,
+    "priceQar": 45,
+    "published": true,
+    "altText": "White pebbles",
+    "media": [
+      {
+        "url": "/media/plants/white-pebbles-640.webp",
+        "purpose": "catalog",
+        "width": 500,
+        "height": 500
+      },
+      {
+        "url": "/media/plants/white-pebbles-1280.webp",
+        "purpose": "detail",
+        "width": 500,
+        "height": 500
+      }
+    ]
+  }
+]

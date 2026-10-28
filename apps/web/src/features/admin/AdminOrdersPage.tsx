@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { OrderStatusTabs, type StatusTab } from "./OrderStatusTabs";
 import { useSiteLanguage } from "../../app/providers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,6 +18,13 @@ const tabs = [
 ] as const;
 
 type OrderTab = (typeof tabs)[number]["status"];
+
+const TAB_TONES: Record<OrderTab, StatusTab<OrderTab>["tone"]> = {
+  PENDING: "pending",
+  CONFIRMED: "accepted",
+  CANCELLED: "declined",
+  DELIVERED: "completed",
+};
 
 // Preparing and out-for-delivery orders are still accepted orders, so they share
 // the Accepted tab instead of disappearing from every tab.
@@ -82,7 +90,7 @@ function OrderCard({
 }) {
   const { content, isArabic } = useSiteLanguage();
   const stageLabels: Record<string, string> = { PREPARING: content.order.statusPreparing, OUT_FOR_DELIVERY: content.order.statusOutForDelivery };
-  const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", paymentPending: "الدفع معلق", paid: "مدفوع", failed: "فشل الدفع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", paymentPending: "Pending", paid: "Paid", failed: "Failed" };
+  const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", paymentPending: "الدفع معلق", paid: "مدفوع", failed: "فشل الدفع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", paymentPending: "Payment pending", paid: "Paid", failed: "Payment failed" };
   const paymentLabels: Record<string, string> = { PENDING: t.paymentPending, PAID: t.paid, FAILED: t.failed };
   const isPending = order.status === "PENDING";
   const isAccepted = acceptedStatuses.has(order.status);
@@ -129,23 +137,24 @@ function OrderCard({
   }
 
   return (
-    <article className="metric-card admin-order-card" data-testid={`order-${order.orderNumber}`}>
+    <article className="admin-order-card" data-testid={`order-${order.orderNumber}`}>
       <div className="admin-order-card__header">
-        <div>
-          <p className="eyebrow">{order.orderNumber}</p>
-          {stageLabels[order.status] ? <span className="status-pill">{stageLabels[order.status]}</span> : null}
+        <div className="admin-order-card__who">
+          <p className="admin-order-card__ref">
+            <span>{order.orderNumber}</span>
+            <time dateTime={order.createdAt}>{formatQatarDateTime(order.createdAt)}</time>
+            {stageLabels[order.status] ? <span className="status-pill">{stageLabels[order.status]}</span> : null}
+          </p>
           <h2>{order.customerName}</h2>
-          <p>{order.phone}</p>
-          <p>{order.email}</p>
+          <p className="admin-order-card__contact">
+            <a href={`tel:${order.phone}`}>{order.phone}</a>
+            <a href={`mailto:${order.email}`}>{order.email}</a>
+          </p>
         </div>
-        <strong>{order.subtotalQar + order.deliveryFeeQar} QAR</strong>
-      </div>
-
-      <div className="admin-order-meta">
-        <span>Items: {order.subtotalQar} QAR</span>
-        <span>Delivery: {order.deliveryFeeQar} QAR</span>
-        <span>Ordered {formatQatarDateTime(order.createdAt)}</span>
-        <span>{paymentMethodLabel(order.paymentMethod)}</span>
+        <div className="admin-order-card__total">
+          <strong>{order.subtotalQar + order.deliveryFeeQar} QAR</strong>
+          <span>{order.subtotalQar} + {order.deliveryFeeQar} delivery · {paymentMethodLabel(order.paymentMethod)}</span>
+        </div>
       </div>
 
       <ul className="admin-order-summary-lines">
@@ -171,7 +180,7 @@ function OrderCard({
             onClick={() => setExpanded((current) => !current)}
           >
             <span>{expanded ? "Hide order options" : "Order options"}</span>
-            <span aria-hidden="true" className={expanded ? "admin-order-expand__icon is-open" : "admin-order-expand__icon"}>⌄</span>
+            <span aria-hidden="true" className={expanded ? "admin-order-expand__icon is-open" : "admin-order-expand__icon"} />
           </button>
 
           {expanded ? (
@@ -372,7 +381,7 @@ function OrderCard({
 
 export function AdminOrdersPage() {
   const { content, isArabic } = useSiteLanguage();
-  const t = isArabic ? { pending: "معلق", accepted: "مقبول", declined: "مرفوض", completed: "مكتمل", status: "حالة الطلب", loading: "جارٍ تحميل الطلبات…", loadError: "تعذر تحميل الطلبات.", empty: "لا توجد طلبات الآن", deleteOrder: (number: string) => `هل تريد حذف الطلب ${number}؟ لا يمكن التراجع.` } : { pending: "Pending", accepted: "Accepted", declined: "Declined", completed: "Completed", status: "Order status", loading: "Loading orders…", loadError: "Could not load orders.", empty: "No orders right now", deleteOrder: (number: string) => `Delete order ${number}? This cannot be undone.` };
+  const t = isArabic ? { pending: "معلق", accepted: "مقبول", declined: "مرفوض", completed: "مكتمل", status: "حالة الطلب", loading: "جارٍ تحميل الطلبات…", loadError: "تعذر تحميل الطلبات.", deleteOrder: (number: string) => `هل تريد حذف الطلب ${number}؟ لا يمكن التراجع.` } : { pending: "Pending", accepted: "Accepted", declined: "Declined", completed: "Completed", status: "Order status", loading: "Loading orders…", loadError: "Could not load orders.", deleteOrder: (number: string) => `Delete order ${number}? This cannot be undone.` };
   const tabLabels: Record<(typeof tabs)[number]["status"], string> = { PENDING: t.pending, CONFIRMED: t.accepted, CANCELLED: t.declined, DELIVERED: t.completed };
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["status"]>("PENDING");
@@ -532,24 +541,18 @@ export function AdminOrdersPage() {
       ) : null}
 
       <div className="admin-order-toolbar">
-        <div className="admin-order-tabs" role="tablist" aria-label={t.status}>
-          {tabs.map((tab) => {
-            const count = orders.data?.filter((order) => tabForStatus(order.status) === tab.status).length ?? 0;
-            const active = activeTab === tab.status;
-            return (
-              <button
-                key={tab.status}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                className={active ? "primary-button" : "primary-button primary-button--secondary"}
-                onClick={() => setActiveTab(tab.status)}
-              >
-                {tabLabels[tab.status]} ({count})
-              </button>
-            );
-          })}
-        </div>
+        <OrderStatusTabs
+          label={t.status}
+          panelId="admin-order-panel"
+          active={activeTab}
+          onChange={setActiveTab}
+          tabs={tabs.map((tab) => ({
+            value: tab.status,
+            label: tabLabels[tab.status],
+            count: orders.data?.filter((order) => tabForStatus(order.status) === tab.status).length ?? 0,
+            tone: TAB_TONES[tab.status],
+          }))}
+        />
 
         {canClearTab ? (
           <button
@@ -567,17 +570,13 @@ export function AdminOrdersPage() {
         ) : null}
       </div>
 
-      {orders.isPending ? <p>{t.loading}</p> : null}
-      {orders.isError ? <p role="alert">{t.loadError}</p> : null}
+      <div id="admin-order-panel" role="tabpanel" aria-labelledby={`admin-order-panel-tab-${activeTab}`} className="admin-order-panel">
+      {orders.isPending ? <p className="admin-state" role="status">{t.loading}</p> : null}
+      {orders.isError ? <p className="admin-state" role="alert">{t.loadError}</p> : null}
       {products.isError ? (
         <p role="alert">Replacement plants could not be loaded. Full-order actions are still available.</p>
       ) : null}
 
-      {!orders.isPending && filteredOrders.length === 0 ? (
-        <div className="table-card">
-          <p>{t.empty} ({activeLabel})</p>
-        </div>
-      ) : null}
 
       <div className="admin-order-list">
         {filteredOrders.map((order) => (
@@ -598,6 +597,7 @@ export function AdminOrdersPage() {
             }}
           />
         ))}
+      </div>
       </div>
     </section>
   );

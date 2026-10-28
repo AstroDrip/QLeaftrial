@@ -62,7 +62,9 @@ function createPrismaClient(): PrismaClient {
     return new PostgreSqlPrismaClient({ adapter }) as unknown as PrismaClient;
   }
 
-  return new SqlitePrismaClient();
+  // Tests point this at their own database so they never wipe the developer's dev.db.
+  const sqliteUrl = process.env.QLEAVES_SQLITE_URL;
+  return new SqlitePrismaClient(sqliteUrl ? { datasourceUrl: sqliteUrl } : undefined);
 }
 
 const globalForPrisma = globalThis as typeof globalThis & {

@@ -10,8 +10,11 @@ export const productQuerySchema = z.object({
   category: optionalFilter,
   light: optionalFilter,
   lang: z.enum(["en", "ar"]).default("en"),
+  minPrice: z.coerce.number().int().nonnegative().optional(),
+  maxPrice: z.coerce.number().int().nonnegative().optional(),
+  inStock: z.enum(["1"]).optional(),
   page: z.coerce.number().int().positive().default(1),
-  sort: z.enum(["name-asc", "price-asc", "price-desc"]).default("name-asc"),
+  sort: z.enum(["name-asc", "price-asc", "price-desc", "newest"]).default("name-asc"),
 });
 
 export type ProductQuery = z.infer<typeof productQuerySchema>;
@@ -31,7 +34,7 @@ export type ProductSummary = {
   nameAr: string | null;
   category: string;
   categoryAr: string | null;
-  light: string;
+  light: string | null;
   lightAr: string | null;
   priceQar: number;
   stock: number;

@@ -105,6 +105,18 @@ export function publicObjectUrl(baseUrl: string, bucket: string, storagePath: st
   return `${baseUrl}/storage/v1/object/public/${encodedBucket}/${encodedPath}`;
 }
 
+// Returns the bucket path for a URL this app stored in Supabase, or null for
+// bundled images (/media/...) and inline development data URLs.
+export function storagePathFromPublicUrl(url: string): string | null {
+  const baseUrl = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
+  const bucket = process.env.SUPABASE_PRODUCT_IMAGE_BUCKET?.trim();
+  if (!baseUrl || !bucket) return null;
+  const prefix = `${baseUrl}/storage/v1/object/public/${encodeURIComponent(bucket)}/`;
+  if (!url.startsWith(prefix)) return null;
+  const path = url.slice(prefix.length).split("/").map(decodeURIComponent).join("/");
+  return path.startsWith("products/") ? path : null;
+}
+
 export function storageHeaders(apiKey: string, legacyBearer: boolean): Record<string, string> {
   const headers: Record<string, string> = { apikey: apiKey };
   if (legacyBearer) headers.Authorization = `Bearer ${apiKey}`;

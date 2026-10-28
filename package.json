@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "scripts": {
-    "setup": "npm run prisma:generate -w @qleaves/api && npm run prisma:migrate -w @qleaves/api && npm run prisma:seed -w @qleaves/api",
+    "setup": "npm run prisma:generate -w @qleaves/api && npm run prisma:migrate -w @qleaves/api && npm run prisma:seed -w @qleaves/api && npm run catalog:import -w @qleaves/api",
     "dev": "concurrently \"npm run dev -w @qleaves/api\" \"npm run dev -w @qleaves/web\"",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces && npm run typecheck:vercel",
@@ -18,7 +18,8 @@
     "supabase:generate": "npm run prisma:generate:production -w @qleaves/api",
     "supabase:validate": "npm run prisma:validate:production -w @qleaves/api",
     "supabase:deploy": "npm run prisma:deploy:production -w @qleaves/api",
-    "supabase:seed": "npm run prisma:seed -w @qleaves/api"
+    "supabase:seed": "npm run prisma:seed -w @qleaves/api",
+    "supabase:catalog": "npm run catalog:import -w @qleaves/api"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

@@ -46,8 +46,8 @@ describe("Layout", () => {
     expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "About us" })).toHaveAttribute("href", "/about");
     expect(screen.getByRole("link", { name: "Cart" })).toHaveAttribute("href", "/cart");
     expect(screen.getByText("Founded in 2020")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /instagram/i })).toHaveAttribute("href", "https://www.instagram.com/qleaves.qa?igsi=MWh6YzR4dWMyazA0cw==");
-    expect(screen.getByRole("link", { name: /whatsapp/i })).toHaveAttribute("href", "https://wa.me/97477551056");
+    for (const link of screen.getAllByRole("link", { name: /instagram/i })) expect(link).toHaveAttribute("href", "https://www.instagram.com/qleaves.qa");
+    for (const link of screen.getAllByRole("link", { name: /whatsapp/i })) expect(link).toHaveAttribute("href", "https://wa.me/97452040988");
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "Shipping & Returns" })).toHaveAttribute("href", "/shipping-returns");

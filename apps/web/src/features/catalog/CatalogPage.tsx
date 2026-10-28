@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import type { SiteLanguage } from "../../content/locales";
 import { productApi } from "./product-api";
 import type { ProductListParams } from "./product-types";
-import { localizeProduct } from "./localize-product";
-import { AddToCartButton } from "../cart/AddToCartButton";
+import { ProductCard } from "./ProductCard";
 import { Seo } from "../../components/Seo";
-import { ProductImage } from "../../components/ProductImage";
 import "./catalog.css";
 
 const SORT_OPTIONS = [
   { value: "name-asc", label: "sortNameAsc" },
+  { value: "newest", label: "sortNewest" },
   { value: "price-asc", label: "sortPriceAsc" },
   { value: "price-desc", label: "sortPriceDesc" },
+] as const;
+
+const PRICE_RANGES = [
+  { value: "0-50", min: 0, max: 50 },
+  { value: "50-100", min: 50, max: 100 },
+  { value: "100-200", min: 100, max: 200 },
+  { value: "200-", min: 200, max: undefined },
 ] as const;
 
 function queryLanguage(queryKey: readonly unknown[]): SiteLanguage | null {
@@ -23,44 +29,51 @@ function queryLanguage(queryKey: readonly unknown[]): SiteLanguage | null {
   return params.lang === "en" || params.lang === "ar" ? params.lang : null;
 }
 
+// Page buttons around the current page, with gaps for long catalogues.
+function pageWindow(current: number, total: number): Array<number | "gap"> {
+  const pages = new Set([1, total, current - 1, current, current + 1].filter((page) => page >= 1 && page <= total));
+  const sorted = [...pages].sort((a, b) => a - b);
+  return sorted.flatMap((page, index) => (index > 0 && page - sorted[index - 1] > 1 ? ["gap" as const, page] : [page]));
+}
+
 export function CatalogPage() {
   const { content, language, isArabic } = useSiteLanguage();
   const settings = useStoreSettings();
   const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchValue, setSearchValue] = useState(
-    searchParams.get("q") ?? "",
-  );
+  const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const t = content.catalog;
+
+  useEffect(() => { setSearchValue(searchParams.get("q") ?? ""); }, [searchParams]);
 
   const requestedSort = searchParams.get("sort");
   const sort: ProductListParams["sort"] =
-    orderingEnabled && SORT_OPTIONS.some((option) => option.value === requestedSort)
+    SORT_OPTIONS.some((option) => option.value === requestedSort) && (orderingEnabled || !requestedSort?.startsWith("price"))
       ? requestedSort as ProductListParams["sort"]
       : "name-asc";
+  const priceRange = PRICE_RANGES.find((range) => range.value === searchParams.get("price"));
+  const category = searchParams.get("category") || undefined;
 
   const params: ProductListParams = {
     q: searchParams.get("q") ?? undefined,
-    category: searchParams.get("category") || undefined,
+    category,
     light: searchParams.get("light") || undefined,
+    minPrice: orderingEnabled ? priceRange?.min : undefined,
+    maxPrice: orderingEnabled ? priceRange?.max : undefined,
+    inStock: searchParams.get("inStock") === "1" ? "1" : undefined,
     page: Number(searchParams.get("page") ?? 1) || 1,
     sort,
     lang: language,
   };
 
-  const {
-    data: filters,
-    isPending: filtersPending,
-  } = useQuery({
+  const { data: filters, isPending: filtersPending } = useQuery({
     queryKey: ["catalog-filters"],
     queryFn: () => productApi.filters(),
+    staleTime: 300_000,
   });
 
-  const {
-    data: result,
-    isPending,
-    isError,
-    error,
-  } = useQuery({
+  const { data: result, isPending, isError, error, isPlaceholderData } = useQuery({
     queryKey: ["products", params],
     queryFn: () => productApi.list(params),
     placeholderData: (previous, previousQuery) =>
@@ -68,236 +81,169 @@ export function CatalogPage() {
     staleTime: 60_000,
   });
 
+  const counts = filters?.categoryCounts ?? {};
+  const categories = filters?.categoryCounts ? Object.keys(counts).sort() : filters?.categories ?? [];
+  const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  const label = (value: string, labels?: Record<string, string>) => (isArabic ? labels?.[value] || value : value);
   const totalPages = result?.totalPages ?? 0;
 
-  function applyFilter(key: string, value: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set(key, value);
-      next.delete("page");
+  function update(changes: Record<string, string | undefined>, keepPage = false) {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      for (const [key, value] of Object.entries(changes)) {
+        if (value) next.set(key, value); else next.delete(key);
+      }
+      if (!keepPage) next.delete("page");
       return next;
     });
-  }
-
-  function clearFilters() {
-    setSearchParams({});
   }
 
   function goTo(page: number) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("page", String(page));
-      return next;
-    });
+    update({ page: page > 1 ? String(page) : undefined }, true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function toggleSort(value: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("sort", value);
-      next.delete("page");
-      return next;
-    });
-  }
-
-  function submitSearch(event: React.FormEvent<HTMLFormElement>) {
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (searchValue.trim()) {
-        next.set("q", searchValue);
-      } else {
-        next.delete("q");
-      }
-      next.delete("page");
-      return next;
-    });
+    update({ q: searchValue.trim() || undefined });
   }
+
+  const activeFilters = [
+    params.q ? { key: "q", text: `“${params.q}”` } : null,
+    params.light ? { key: "light", text: label(params.light, filters?.lightLabels) } : null,
+    priceRange && orderingEnabled ? { key: "price", text: `${priceRange.min}${priceRange.max ? `–${priceRange.max}` : "+"} QAR` } : null,
+    params.inStock ? { key: "inStock", text: t.inStockOnly } : null,
+  ].filter((filter): filter is { key: string; text: string } => Boolean(filter));
+
+  const heading = category ? label(category, filters?.categoryLabels) : t.title;
 
   return (
-    <section className="catalog" data-testid="catalog-page">
-      <Seo title={content.catalog.title} description={isArabic ? "تسوق نباتات QLeaves الداخلية المتوفرة في قطر مع الأسعار والمخزون الحالي." : "Shop QLeaves indoor plants available in Qatar, with current prices and stock."} path="/shop" />
-      <h1 className="catalog__title">{content.catalog.title}</h1>
+    <section className="catalog container" data-testid="catalog-page">
+      <Seo
+        title={heading}
+        description={isArabic ? "تسوق نباتات QLeaves الداخلية والخارجية ومستلزماتها مع التوصيل داخل قطر." : "Shop QLeaves indoor and outdoor plants and plant care essentials, delivered across Qatar."}
+        path={category ? `/shop?category=${encodeURIComponent(category)}` : "/shop"}
+      />
 
-      <form
-        className="catalog__search"
-        onSubmit={submitSearch}
-        role="search"
-        data-testid="catalog-search"
-      >
-        <label htmlFor="catalog-search-input" className="sr-only">
-          {content.catalog.searchPlaceholder}
-        </label>
-        <input
-          id="catalog-search-input"
-          type="search"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder={content.catalog.searchPlaceholder}
-          data-testid="search-input"
-        />
-        <button type="submit" data-testid="search-submit">
-          {content.common.search}
+      <aside className={`catalog__sidebar${categoriesOpen ? " is-open" : ""}`} aria-label={t.filterCategory}>
+        <h2 className="catalog__sidebar-title">{t.filterCategory}</h2>
+        {/* Phones: one clear control that opens the category list instead of a hidden sideways scroll. */}
+        <button type="button" className="catalog__category-toggle" aria-expanded={categoriesOpen} aria-controls="catalog-categories" onClick={() => setCategoriesOpen((open) => !open)}>
+          <span className="catalog__category-toggle-label">{t.filterCategory}</span>
+          <strong>{category ? label(category, filters?.categoryLabels) : t.filterAllCategories}</strong>
+          <span className="catalog__count">{category ? counts[category] ?? "" : totalCount || ""}</span>
+          <span className="catalog__chevron" aria-hidden="true" />
         </button>
-      </form>
+        <ul id="catalog-categories" className="catalog__categories" data-testid="category-filter">
+          <li>
+            <button type="button" aria-pressed={!category} onClick={() => { update({ category: undefined }); setCategoriesOpen(false); }}>
+              <span>{t.filterAllCategories}</span>
+              {totalCount ? <span className="catalog__count">{totalCount}</span> : null}
+            </button>
+          </li>
+          {categories.map((value) => (
+            <li key={value}>
+              <button type="button" aria-pressed={category === value} disabled={filtersPending} onClick={() => { update({ category: value }); setCategoriesOpen(false); }}>
+                <span>{label(value, filters?.categoryLabels)}</span>
+                {counts[value] ? <span className="catalog__count">{counts[value]}</span> : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </aside>
 
-      <div className="catalog__filters" data-testid="catalog-filters">
-        <label>
-          {content.catalog.filterCategory}
-          <select
-            value={params.category ?? ""}
-            onChange={(e) =>
-              e.target.value
-                ? applyFilter("category", e.target.value)
-                : setSearchParams((prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.delete("category");
-                    return next;
-                  })
-            }
-            data-testid="category-filter"
-            disabled={filtersPending}
-          >
-            <option value="">{content.catalog.filterAllCategories}</option>
-            {filters?.categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {isArabic ? filters.categoryLabels?.[cat] || cat : cat}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="catalog__main">
+        <header className="catalog__header">
+          <div>
+            <p className="eyebrow">{t.collection}</p>
+            <h1 className="catalog__title">{heading}</h1>
+          </div>
+          <form className="catalog__search" onSubmit={submitSearch} role="search" data-testid="catalog-search">
+            <label htmlFor="catalog-search-input" className="sr-only">{t.searchPlaceholder}</label>
+            <input id="catalog-search-input" type="search" value={searchValue} onChange={(event) => setSearchValue(event.target.value)} placeholder={t.searchPlaceholder} data-testid="search-input" />
+            <button type="submit" className="button" data-testid="search-submit">{content.common.search}</button>
+          </form>
+        </header>
 
-        <label>
-          {content.catalog.filterLight}
-          <select
-            value={params.light ?? ""}
-            onChange={(e) =>
-              e.target.value
-                ? applyFilter("light", e.target.value)
-                : setSearchParams((prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.delete("light");
-                    return next;
-                  })
-            }
-            data-testid="light-filter"
-            disabled={filtersPending}
-          >
-            <option value="">{content.catalog.filterAllLights}</option>
-            {filters?.lights.map((light) => (
-              <option key={light} value={light}>
-                {isArabic ? filters.lightLabels?.[light] || light : light}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="catalog__toolbar" data-testid="catalog-filters">
+          <label>
+            <span>{t.filterLight}</span>
+            <select value={params.light ?? ""} onChange={(event) => update({ light: event.target.value || undefined })} data-testid="light-filter" disabled={filtersPending}>
+              <option value="">{t.filterAllLights}</option>
+              {filters?.lights.map((light) => <option key={light} value={light}>{label(light, filters.lightLabels)}</option>)}
+            </select>
+          </label>
+          {orderingEnabled ? (
+            <label>
+              <span>{t.filterPrice}</span>
+              <select value={priceRange?.value ?? ""} onChange={(event) => update({ price: event.target.value || undefined })} data-testid="price-filter">
+                <option value="">{t.filterAnyPrice}</option>
+                {PRICE_RANGES.map((range) => <option key={range.value} value={range.value}>{range.max ? `${range.min}–${range.max} QAR` : `${range.min}+ QAR`}</option>)}
+              </select>
+            </label>
+          ) : null}
+          <label>
+            <span>{t.sortBy}</span>
+            <select value={sort} onChange={(event) => update({ sort: event.target.value === "name-asc" ? undefined : event.target.value })} data-testid="sort-select">
+              {SORT_OPTIONS.filter((option) => orderingEnabled || !option.value.startsWith("price")).map((option) => (
+                <option key={option.value} value={option.value}>{t[option.label]}</option>
+              ))}
+            </select>
+          </label>
+          <label className="catalog__check">
+            <input type="checkbox" checked={Boolean(params.inStock)} onChange={(event) => update({ inStock: event.target.checked ? "1" : undefined })} data-testid="in-stock-filter" />
+            <span>{t.inStockOnly}</span>
+          </label>
+        </div>
 
-        <label>
-          {content.catalog.sortBy}
-          <select
-            value={sort}
-            onChange={(e) => toggleSort(e.target.value)}
-            data-testid="sort-select"
-          >
-            {(orderingEnabled ? SORT_OPTIONS : SORT_OPTIONS.slice(0, 1)).map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {content.catalog[opt.label]}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button
-          type="button"
-          onClick={clearFilters}
-          data-testid="clear-filters"
-        >
-          {content.common.clear}
-        </button>
-      </div>
-
-      {isError ? (
-        <p role="alert" data-testid="catalog-error">
-          {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
-        </p>
-      ) : (
-        <>
-          {isPending ? (
-            <p data-testid="catalog-loading">{isArabic ? "جارٍ تحميل النباتات…" : "Loading plants…"}</p>
-          ) : !result || result.items.length === 0 ? (
-            <p data-testid="catalog-empty">
-              {content.catalog.noResults}
-            </p>
-          ) : (
-            <ul
-              className="catalog__grid"
-              data-testid="product-grid"
-              aria-label={content.catalog.title}
-            >
-              {result.items.map((product) => {
-                const localized = localizeProduct(product, isArabic);
-                return <li
-                  key={product.id}
-                  className="product-card"
-                  dir={language === "ar" ? "rtl" : "ltr"}
-                  lang={language}
-                >
-                  <ProductImage
-                    media={product.media?.length ? product.media : product.image}
-                    alt={isArabic ? localized.name : product.image?.altText || localized.name}
-                    className="product-card__image"
-                    loading="lazy"
-                    decoding="async"
-                    sizes="(max-width: 720px) 100vw, 33vw"
-                  />
-                  <h2 className="product-card__name">{localized.name}</h2>
-                  {orderingEnabled ? (
-                    <p className="product-card__price">{product.priceQar} QAR</p>
-                  ) : null}
-                  <Link
-                    to={`/plants/${product.slug}`}
-                    className="product-card__link"
-                    data-testid={`view-${product.slug}`}
-                  >
-                    {content.catalog.viewProduct(localized.name)}
-                  </Link>
-                  {orderingEnabled ? (
-                    <AddToCartButton product={product} className="product-card__cart" />
-                  ) : null}
-                </li>;
-              })}
+        <div className="catalog__status">
+          <p aria-live="polite">{result ? t.resultCount(result.totalItems) : ""}</p>
+          {activeFilters.length ? (
+            <ul className="catalog__chips">
+              {activeFilters.map((filter) => (
+                <li key={filter.key}>
+                  <button type="button" onClick={() => update({ [filter.key]: undefined })} aria-label={`${t.removeFilter}: ${filter.text}`}>
+                    {filter.text} <span aria-hidden="true">×</span>
+                  </button>
+                </li>
+              ))}
+              <li><button type="button" className="catalog__clear" onClick={() => setSearchParams(category ? { category } : {})} data-testid="clear-filters">{content.common.clear}</button></li>
             </ul>
-          )}
+          ) : null}
+        </div>
 
-          {result && totalPages > 1 && (
-            <nav
-              className="catalog__pagination"
-              aria-label={content.aria.pagination}
-              data-testid="pagination"
-            >
-              <button
-                type="button"
-                onClick={() => goTo(result.page - 1)}
-                disabled={result.page <= 1}
-                data-testid="prev-page"
-              >
-                {content.common.previous}
-              </button>
-              <span data-testid="page-indicator">
-                {content.catalog.page(result.page, totalPages || 1)}
-              </span>
-              <button
-                type="button"
-                onClick={() => goTo(result.page + 1)}
-                disabled={result.page >= totalPages}
-                data-testid="next-page"
-              >
-                {content.common.next}
-              </button>
-            </nav>
-          )}
-        </>
-      )}
+        {isError ? (
+          <p role="alert" data-testid="catalog-error">
+            {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
+          </p>
+        ) : isPending ? (
+          <p data-testid="catalog-loading" role="status">{isArabic ? "جارٍ تحميل النباتات…" : "Loading plants…"}</p>
+        ) : !result || result.items.length === 0 ? (
+          <div className="catalog__empty" data-testid="catalog-empty">
+            <p>{t.noResults}</p>
+            <button type="button" className="button button--secondary" onClick={() => setSearchParams({})}>{t.showAll}</button>
+          </div>
+        ) : (
+          <ul className="product-grid" data-testid="product-grid" aria-label={heading} aria-busy={isPlaceholderData}>
+            {result.items.map((product, index) => (
+              <ProductCard key={product.id} product={product} orderingEnabled={orderingEnabled} eager={index < 4} />
+            ))}
+          </ul>
+        )}
+
+        {result && totalPages > 1 ? (
+          <nav className="catalog__pagination" aria-label={content.aria.pagination} data-testid="pagination">
+            <button type="button" className="button button--secondary" onClick={() => goTo(result.page - 1)} disabled={result.page <= 1} data-testid="prev-page">{content.common.previous}</button>
+            <ol>
+              {pageWindow(result.page, totalPages).map((page, index) => page === "gap"
+                ? <li key={`gap-${index}`} aria-hidden="true">…</li>
+                : <li key={page}><button type="button" aria-current={page === result.page ? "page" : undefined} onClick={() => goTo(page)}>{page}</button></li>)}
+            </ol>
+            <span className="sr-only" data-testid="page-indicator">{t.page(result.page, totalPages)}</span>
+            <button type="button" className="button button--secondary" onClick={() => goTo(result.page + 1)} disabled={result.page >= totalPages} data-testid="next-page">{content.common.next}</button>
+          </nav>
+        ) : null}
+      </div>
     </section>
   );
 }

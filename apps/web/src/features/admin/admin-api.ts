@@ -11,9 +11,10 @@ export interface AdminProduct {
   descriptionAr?: string | null;
   category: string;
   categoryAr?: string | null;
-  light: string;
+  light: string | null;
   lightAr?: string | null;
   priceQar: number;
+  costPrice?: number;
   stock: number;
   image?: { url: string; altText: string } | null;
   published?: boolean;
@@ -28,13 +29,28 @@ export interface CreateAdminProductFields {
   descriptionAr: string;
   category: string;
   categoryAr: string;
-  light: string;
-  lightAr: string;
+  light?: string;
+  lightAr?: string;
   priceQar: number;
   costPrice: number;
   stock: number;
   imageAltText: string;
 }
+
+export type AdminProductPatch = Partial<{
+  priceQar: number;
+  costPrice: number;
+  stock: number;
+  published: boolean;
+  name: string;
+  description: string;
+  category: string;
+  light: string | null;
+  nameAr: string;
+  descriptionAr: string;
+  categoryAr: string;
+  lightAr: string;
+}>;
 
 export interface StagedProductImage {
   stagingPath: string;
@@ -180,6 +196,13 @@ async function uploadVariant(variant: ProductImageVariant): Promise<StagedProduc
   };
 }
 
+async function uploadImageVariants(file: File): Promise<StagedProductImage[]> {
+  const variants = await createProductImageVariants(file);
+  const stagedImages: StagedProductImage[] = [];
+  for (const variant of variants) stagedImages.push(await uploadVariant(variant));
+  return stagedImages;
+}
+
 export const adminApi = {
   login: async (password: string): Promise<AdminSession> =>
     (await request<{ admin: AdminSession }>("/auth/login", {
@@ -196,21 +219,22 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  updateProduct: (
-    id: string,
-    patch: {
-      priceQar?: number;
-      stock?: number;
-      published?: boolean;
-      nameAr?: string;
-      descriptionAr?: string;
-      categoryAr?: string;
-      lightAr?: string;
-    },
-  ): Promise<AdminProduct> =>
+  updateProduct: (id: string, patch: AdminProductPatch): Promise<AdminProduct> =>
     request<AdminProduct>(`/admin/products/${id}`, {
       method: "PATCH",
       body: JSON.stringify(patch),
+    }),
+  replaceProductImage: async (
+    id: string,
+    file: File,
+    imageAltText: string,
+    directUpload = import.meta.env.PROD,
+  ): Promise<AdminProduct> =>
+    request<AdminProduct>(`/admin/products/${id}/images`, {
+      method: "PUT",
+      body: JSON.stringify(directUpload
+        ? { imageAltText, stagedImages: await uploadImageVariants(file) }
+        : { imageAltText, imageDataUrl: await fileAsDataUrl(file) }),
     }),
   deleteProduct: (id: string): Promise<void> =>
     request<void>(`/admin/products/${id}`, { method: "DELETE" }),
@@ -271,12 +295,9 @@ export const adminApi = {
       });
     }
 
-    const variants = await createProductImageVariants(file);
-    const stagedImages: StagedProductImage[] = [];
-    for (const variant of variants) stagedImages.push(await uploadVariant(variant));
     return request<AdminProduct>("/admin/products", {
       method: "POST",
-      body: JSON.stringify({ ...input, stagedImages }),
+      body: JSON.stringify({ ...input, stagedImages: await uploadImageVariants(file) }),
     });
   },
 };

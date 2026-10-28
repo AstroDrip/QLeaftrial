@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -61,7 +62,7 @@ describe("CatalogPage", () => {
     await userEvent.click(screen.getByTestId("language-toggle"));
 
     expect(await screen.findByRole("heading", { name: "نبات منزلي" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "نباتات داخلية" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "نباتات داخلية" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "أضف نبات منزلي إلى السلة" })).toBeInTheDocument();
   });
 
@@ -194,7 +195,9 @@ describe("CatalogPage", () => {
     await screen.findByTestId("product-grid");
     expect(screen.queryByText("180 QAR")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /add house plant to cart/i })).not.toBeInTheDocument();
-    expect(screen.getByTestId("sort-select").querySelectorAll("option")).toHaveLength(1);
+    const sortValues = [...screen.getByTestId("sort-select").querySelectorAll("option")].map((option) => option.value);
+    expect(sortValues).toEqual(["name-asc", "newest"]);
+    expect(screen.queryByTestId("price-filter")).not.toBeInTheDocument();
   });
 
   it("adds the selected in-stock catalogue product to the cart", async () => {
@@ -266,12 +269,9 @@ describe("CatalogPage", () => {
     renderWithClient(<CatalogPage />);
 
     await waitFor(() => expect(mockFilters).toHaveBeenCalled());
-    await waitFor(() =>
-      expect(screen.getByRole("option", { name: "Indoor" })).toBeInTheDocument(),
-    );
-
-    const category = screen.getByTestId("category-filter");
-    await userEvent.selectOptions(category, "Indoor");
+    const category = await screen.findByRole("button", { name: "Indoor" });
+    await userEvent.click(category);
+    expect(category).toHaveAttribute("aria-pressed", "true");
     await waitFor(() =>
       expect(mockList).toHaveBeenCalledWith(
         expect.objectContaining({ category: "Indoor" }),
@@ -322,5 +322,25 @@ describe("CatalogPage", () => {
     fireEvent.error(image);
 
     expect(image).toHaveAttribute("src", "/images/hero/leaf-1.svg");
+  });
+
+  it("lists categories with counts in the sidebar and filters by price and stock", async () => {
+    mockFilters.mockResolvedValue({ categories: ["Indoor Plants", "Outdoor Plants"], lights: [], categoryCounts: { "Indoor Plants": 8, "Outdoor Plants": 4 } });
+    mockList.mockResolvedValue({ items: [], page: 1, pageSize: 24, totalItems: 0, totalPages: 0 });
+    renderWithClient(<CatalogPage />);
+
+    const list = await screen.findByTestId("category-filter");
+    expect(await within(list).findByRole("button", { name: /all categories\s*12/i })).toHaveAttribute("aria-pressed", "true");
+    expect(within(list).getByRole("button", { name: /indoor plants\s*8/i })).toBeInTheDocument();
+
+    const toggle = screen.getByRole("button", { expanded: false });
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await userEvent.click(within(list).getByRole("button", { name: /indoor plants/i }));
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    await userEvent.selectOptions(screen.getByTestId("price-filter"), "50-100");
+    await userEvent.click(screen.getByTestId("in-stock-filter"));
+    await waitFor(() => expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ minPrice: 50, maxPrice: 100, inStock: "1" })));
   });
 });

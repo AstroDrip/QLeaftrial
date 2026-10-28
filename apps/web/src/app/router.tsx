@@ -5,6 +5,7 @@ import { NotFoundPage } from "../components/NotFoundPage";
 import { RouteErrorPage } from "../components/RouteErrorPage";
 import { HomePage } from "../features/home/HomePage";
 import { useSiteLanguage, useStoreSettings } from "./providers";
+import { loadCart, loadCatalog, loadCheckout, loadConfirmation, loadLegal, loadProduct } from "./route-modules";
 
 const AdminDashboardPage = lazy(() => import("../features/admin/AdminDashboardPage").then((module) => ({ default: module.AdminDashboardPage })));
 const AdminLayout = lazy(() => import("../features/admin/AdminLayout").then((module) => ({ default: module.AdminLayout })));
@@ -12,15 +13,15 @@ const AdminLoginPage = lazy(() => import("../features/admin/AdminLoginPage").the
 const AdminOrdersPage = lazy(() => import("../features/admin/AdminOrdersPage").then((module) => ({ default: module.AdminOrdersPage })));
 const AdminSalesPage = lazy(() => import("../features/admin/AdminSalesPage").then((module) => ({ default: module.AdminSalesPage })));
 const AdminProductsPage = lazy(() => import("../features/admin/AdminProductsPage").then((module) => ({ default: module.AdminProductsPage })));
-const CartPage = lazy(() => import("../features/cart/CartPage").then((module) => ({ default: module.CartPage })));
-const CheckoutPage = lazy(() => import("../features/checkout/CheckoutPage").then((module) => ({ default: module.CheckoutPage })));
-const OrderConfirmationPage = lazy(() => import("../features/checkout/OrderConfirmationPage").then((module) => ({ default: module.OrderConfirmationPage })));
-const CatalogPage = lazy(() => import("../features/catalog/CatalogPage").then((module) => ({ default: module.CatalogPage })));
-const ProductPage = lazy(() => import("../features/catalog/ProductPage").then((module) => ({ default: module.ProductPage })));
-const PrivacyPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.PrivacyPage })));
-const TermsPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.TermsPage })));
-const ShippingReturnsPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.ShippingReturnsPage })));
-const AboutPage = lazy(() => import("../features/legal/LegalPages").then((module) => ({ default: module.AboutPage })));
+const CartPage = lazy(() => loadCart().then((module) => ({ default: module.CartPage })));
+const CheckoutPage = lazy(() => loadCheckout().then((module) => ({ default: module.CheckoutPage })));
+const OrderConfirmationPage = lazy(() => loadConfirmation().then((module) => ({ default: module.OrderConfirmationPage })));
+const CatalogPage = lazy(() => loadCatalog().then((module) => ({ default: module.CatalogPage })));
+const ProductPage = lazy(() => loadProduct().then((module) => ({ default: module.ProductPage })));
+const PrivacyPage = lazy(() => loadLegal().then((module) => ({ default: module.PrivacyPage })));
+const TermsPage = lazy(() => loadLegal().then((module) => ({ default: module.TermsPage })));
+const ShippingReturnsPage = lazy(() => loadLegal().then((module) => ({ default: module.ShippingReturnsPage })));
+const AboutPage = lazy(() => loadLegal().then((module) => ({ default: module.AboutPage })));
 
 function LoadingPage() {
   const { content } = useSiteLanguage();
@@ -31,8 +32,9 @@ const deferred = (element: ReactNode) => <Suspense fallback={<LoadingPage />}>{e
 
 function OrderingRoute({ children }: { children: ReactNode }) {
   const settings = useStoreSettings();
-  if (settings.isPending) return <p className="page-shell" role="status">Loading storefront settings…</p>;
-  if (settings.isError) return <p className="page-shell" role="alert">Storefront settings could not be loaded. Please try again.</p>;
+  const { isArabic } = useSiteLanguage();
+  if (settings.isPending) return <p className="page-shell" role="status">{isArabic ? "جارٍ تحميل إعدادات المتجر…" : "Loading storefront settings…"}</p>;
+  if (settings.isError) return <p className="page-shell" role="alert">{isArabic ? "تعذر تحميل إعدادات المتجر. حاول مرة أخرى." : "Storefront settings could not be loaded. Please try again."}</p>;
   if (!settings.data.orderingEnabled) return <Navigate to="/shop" replace />;
   return children;
 }

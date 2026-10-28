@@ -1,134 +1,84 @@
-.add-to-cart {
-  --cart-ink: var(--ink);
-  --cart-fill: var(--moss);
-  --cart-paper: var(--paper);
-  --cart-control-height: 56px;
+/* The height lives on the shared container so the add button and the
+   decrement button always resolve to exactly the same size. */
+.add-to-cart__controls {
+  --cart-control-height: 44px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+.add-to-cart__controls--with-decrement { grid-template-columns: var(--cart-control-height) minmax(0, 1fr); }
+
+.add-to-cart,
+.add-to-cart__decrement {
   box-sizing: border-box;
   height: var(--cart-control-height);
-  position: relative;
+  min-height: 0;
+  margin: 0;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-full);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), transform 120ms ease;
+}
+
+.add-to-cart {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  border: 1px solid var(--cart-ink);
-  background: var(--cart-ink);
-  color: var(--cart-paper);
-  font-family: var(--sans);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  cursor: pointer;
+  gap: .5rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0 .9rem;
+  font-size: .85rem;
   overflow: hidden;
-  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, transform 120ms ease;
 }
 
-.add-to-cart:hover:not(:disabled) {
-  background: var(--cart-fill);
-  border-color: var(--cart-fill);
+.add-to-cart__decrement {
+  display: grid;
+  place-items: center;
+  width: var(--cart-control-height);
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+  font-size: 1.2rem;
 }
 
-.add-to-cart:active:not(:disabled) {
-  transform: translateY(1px);
-}
+.add-to-cart:hover:not(:disabled) { background: var(--moss-deep); border-color: var(--moss-deep); }
+.add-to-cart__decrement:hover { background: var(--surface-sunk); border-color: var(--ink); }
+.add-to-cart:active:not(:disabled),
+.add-to-cart__decrement:active { transform: translateY(1px); }
+.add-to-cart:disabled { cursor: not-allowed; opacity: .5; }
+.add-to-cart[data-state="added"] { background: var(--moss); border-color: var(--moss); }
 
-.add-to-cart:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--rust) 72%, white);
-  outline-offset: 3px;
-}
-
-.add-to-cart:disabled {
-  cursor: not-allowed;
-  opacity: 0.52;
-}
-
-.add-to-cart__icon {
-  width: 1.05rem;
-  height: 1.05rem;
-  flex: 0 0 auto;
-  transition: transform 180ms ease;
-}
-
-.add-to-cart:hover:not(:disabled) .add-to-cart__icon {
-  transform: translateX(2px) rotate(-2deg);
-}
-
-.add-to-cart__label {
-  white-space: nowrap;
-}
-
+.add-to-cart__icon { width: 1.05rem; height: 1.05rem; flex: 0 0 auto; }
+/* min-width: 0 lets long labels (e.g. Arabic) shrink with an ellipsis instead of widening the button. */
+.add-to-cart__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .add-to-cart__quantity {
-  min-width: 1.35rem;
-  height: 1.35rem;
   display: inline-grid;
   place-items: center;
-  border-radius: 999px;
-  padding-inline: 0.28rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding-inline: .3rem;
+  border-radius: var(--radius-full);
   background: var(--paper);
   color: var(--ink);
-  font-size: 0.66rem;
-  line-height: 1;
-  letter-spacing: 0;
+  font-size: .7rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.add-to-cart[data-state="added"] {
-  background: var(--moss);
-  border-color: var(--moss);
-}
-
-.add-to-cart[data-reduced-motion="true"] {
-  transition: none;
-}
-
-.add-to-cart[data-reduced-motion="true"] .add-to-cart__icon {
-  transition: none;
+@media (max-width: 520px) {
+  .add-to-cart__controls { --cart-control-height: 40px; }
+  .add-to-cart { gap: .35rem; padding: 0 .6rem; font-size: .78rem; }
+  .add-to-cart__icon { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .add-to-cart,
-  .add-to-cart__icon {
-    transition: none;
-  }
-
-  .add-to-cart:hover:not(:disabled) .add-to-cart__icon,
-  .add-to-cart:active:not(:disabled) {
-    transform: none;
-  }
-}
-.add-to-cart__controls{
-  display:grid;
-  grid-template-columns:minmax(0,1fr);
-  align-items:stretch;
-  gap:8px;
-  width:100%;
-}
-.add-to-cart__controls--with-decrement{grid-template-columns:52px minmax(0,1fr)}
-.add-to-cart__controls>.add-to-cart{
-  width:100%;
-  min-width:0;
-}
-.add-to-cart__decrement{
-  --decrement-ink: var(--ink);
-  --decrement-fill: var(--moss);
-  --decrement-paper: var(--paper);
-  box-sizing:border-box;
-  width:100%;
-  height:var(--cart-control-height);
-  display:inline-grid;
-  place-items:center;
-  padding:0;
-  border:1px solid var(--decrement-ink);
-  background:var(--decrement-ink);
-  color:var(--decrement-paper);
-  font-family:var(--sans);
-  font-size:1.25rem;
-  font-weight:700;
-  line-height:1;
-  transition:background-color 180ms ease,border-color 180ms ease,transform 120ms ease;
-}
-.add-to-cart__decrement:hover{background:var(--decrement-fill);border-color:var(--decrement-fill)}
-.add-to-cart__decrement:active{transform:translateY(1px)}
-.add-to-cart__decrement:focus-visible{outline:3px solid color-mix(in srgb, var(--rust) 72%, white);outline-offset:3px}
-@media(max-width:560px){
-  .add-to-cart{--cart-control-height:52px}
-  .add-to-cart__controls--with-decrement{grid-template-columns:48px minmax(0,1fr)}
+  .add-to-cart, .add-to-cart__decrement { transition: none; }
+  .add-to-cart:active:not(:disabled), .add-to-cart__decrement:active { transform: none; }
 }

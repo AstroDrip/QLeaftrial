@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../middleware/error-handler.js";
-import type { CreateAdminProductInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
-import { removeStoredProductImage, storeProductImage } from "./product-image-storage.js";
+import type { CreateAdminProductInput, ReplaceProductImagesInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
+import { removeStoredProductImage, storagePathFromPublicUrl, storeProductImage } from "./product-image-storage.js";
 import { finalizeProductImages, removeProductImagePaths } from "./product-upload.service.js";
 
 const adminProductSelection = {
@@ -16,6 +16,7 @@ const adminProductSelection = {
   light: true,
   lightAr: true,
   priceQar: true,
+  costPrice: true,
   published: true,
   media: {
     select: { url: true, altText: true },
@@ -34,9 +35,10 @@ type AdminProductRecord = {
   descriptionAr: string | null;
   category: string;
   categoryAr: string | null;
-  light: string;
+  light: string | null;
   lightAr: string | null;
   priceQar: number;
+  costPrice: number;
   published: boolean;
   media: Array<{ url: string; altText: string }>;
   inventory: { quantity: number } | null;
@@ -51,9 +53,10 @@ export type AdminProduct = {
   descriptionAr: string | null;
   category: string;
   categoryAr: string | null;
-  light: string;
+  light: string | null;
   lightAr: string | null;
   priceQar: number;
+  costPrice: number;
   stock: number;
   image: { url: string; altText: string } | null;
   published: boolean;
@@ -77,7 +80,7 @@ type AdminProductCreateRepository = {
       descriptionAr?: string;
       category: string;
       categoryAr?: string;
-      light: string;
+      light?: string;
       lightAr?: string;
       priceQar: number;
       costPrice: number;
@@ -98,7 +101,12 @@ type AdminProductCreateRepository = {
 
 type ProductUpdateData = {
   priceQar?: number;
+  costPrice?: number;
   published?: boolean;
+  name?: string;
+  description?: string;
+  category?: string;
+  light?: string | null;
   nameAr?: string;
   descriptionAr?: string;
   categoryAr?: string;
@@ -162,6 +170,7 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
     light: product.light,
     lightAr: product.lightAr,
     priceQar: product.priceQar,
+    costPrice: product.costPrice,
     stock: product.inventory?.quantity ?? 0,
     image: product.media[0] ?? null,
     published: product.published,
@@ -189,14 +198,10 @@ export async function updateAdminProduct(
       throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
     }
 
-    const productFields = {
-      ...(input.priceQar !== undefined ? { priceQar: input.priceQar } : {}),
-      ...(input.published !== undefined ? { published: input.published } : {}),
-      ...(input.nameAr !== undefined ? { nameAr: input.nameAr } : {}),
-      ...(input.descriptionAr !== undefined ? { descriptionAr: input.descriptionAr } : {}),
-      ...(input.categoryAr !== undefined ? { categoryAr: input.categoryAr } : {}),
-      ...(input.lightAr !== undefined ? { lightAr: input.lightAr } : {}),
-    };
+    const { stock: _stock, ...requested } = input;
+    const productFields = Object.fromEntries(
+      Object.entries(requested).filter(([, value]) => value !== undefined),
+    ) as ProductUpdateData;
     const product = Object.keys(productFields).length === 0
       ? existing
       : await transaction.product.update({
@@ -219,6 +224,34 @@ export async function updateAdminProduct(
 
     return toAdminProduct({ ...product, inventory });
   });
+}
+
+type MediaRow = {
+  url: string;
+  altText: string;
+  sortOrder: number;
+  width?: number;
+  height?: number;
+  purpose?: string;
+};
+
+// Catalogue variant first, so list views (which take the first image) get the small one.
+function mediaRows(
+  finalizedImages: Awaited<ReturnType<typeof finalizeProductImages>>,
+  legacyImage: { url: string } | undefined,
+  altText: string,
+): MediaRow[] {
+  if (finalizedImages.length === 0) return [{ url: legacyImage!.url, altText, sortOrder: 0 }];
+  return [...finalizedImages]
+    .sort((left, right) => left.purpose === "catalog" ? -1 : right.purpose === "catalog" ? 1 : 0)
+    .map((image, sortOrder) => ({
+      url: image.url,
+      altText,
+      sortOrder,
+      width: image.width,
+      height: image.height,
+      purpose: image.purpose,
+    }));
 }
 
 export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
@@ -247,25 +280,14 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         ...(input.descriptionAr !== undefined ? { descriptionAr: input.descriptionAr } : {}),
         category: input.category,
         ...(input.categoryAr !== undefined ? { categoryAr: input.categoryAr } : {}),
-        light: input.light,
+        ...(input.light !== undefined ? { light: input.light } : {}),
         ...(input.lightAr !== undefined ? { lightAr: input.lightAr } : {}),
         priceQar: input.priceQar,
         costPrice: input.costPrice,
         published: true,
         inventory: { create: { quantity: input.stock } },
         media: {
-          create: finalizedImages.length > 0
-            ? finalizedImages
-                .sort((left, right) => left.purpose === "catalog" ? -1 : right.purpose === "catalog" ? 1 : 0)
-                .map((image, sortOrder) => ({
-                  url: image.url,
-                  altText: input.imageAltText,
-                  sortOrder,
-                  width: image.width,
-                  height: image.height,
-                  purpose: image.purpose,
-                }))
-            : [{ url: legacyImage!.url, altText: input.imageAltText, sortOrder: 0 }],
+          create: mediaRows(finalizedImages, legacyImage, input.imageAltText),
         },
       },
       select: adminProductSelection,
@@ -328,4 +350,66 @@ export async function deleteAdminProduct(id: string): Promise<void> {
     }
     throw error;
   }
+}
+
+type MediaReplaceDatabase = {
+  product: { findUnique(args: { where: { id: string }; select: { slug: true; media: { select: { url: true } } } }): Promise<{ slug: string; media: Array<{ url: string }> } | null> };
+  $transaction<T>(operation: (transaction: {
+    productMedia: {
+      deleteMany(args: { where: { productId: string } }): Promise<unknown>;
+      createMany(args: { data: Array<MediaRow & { productId: string }> }): Promise<unknown>;
+    };
+    product: { findUnique(args: { where: { id: string }; select: typeof adminProductSelection }): Promise<AdminProductRecord | null> };
+  }) => Promise<T>): Promise<T>;
+};
+
+const mediaDatabase = prisma as unknown as MediaReplaceDatabase;
+
+export async function replaceAdminProductImages(id: string, input: ReplaceProductImagesInput): Promise<AdminProduct> {
+  if (process.env.QLEAVES_DATABASE_PROVIDER === "postgresql" && input.imageDataUrl) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Production image replacement requires staged image variants");
+  }
+  const existing = await mediaDatabase.product.findUnique({
+    where: { id },
+    select: { slug: true, media: { select: { url: true } } },
+  });
+  if (!existing) throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
+
+  const finalizedImages = input.stagedImages ? await finalizeProductImages(input.stagedImages, existing.slug) : [];
+  const legacyImage = input.imageDataUrl ? await storeProductImage(input.imageDataUrl, existing.slug) : undefined;
+
+  let product: AdminProductRecord | null;
+  try {
+    product = await mediaDatabase.$transaction(async (transaction) => {
+      await transaction.productMedia.deleteMany({ where: { productId: id } });
+      await transaction.productMedia.createMany({
+        data: mediaRows(finalizedImages, legacyImage, input.imageAltText).map((row) => ({ ...row, productId: id })),
+      });
+      return transaction.product.findUnique({ where: { id }, select: adminProductSelection });
+    });
+  } catch (error) {
+    await Promise.allSettled([
+      removeProductImagePaths(finalizedImages.map((image) => image.storagePath)),
+      ...(legacyImage ? [removeStoredProductImage(legacyImage)] : []),
+    ]);
+    throw error;
+  }
+
+  // The new photos are saved; old files and staging copies are best-effort cleanup.
+  const obsolete = [
+    ...existing.media.map((media) => storagePathFromPublicUrl(media.url)).filter((path): path is string => Boolean(path)),
+    ...(input.stagedImages?.map((image) => image.stagingPath) ?? []),
+  ];
+  if (obsolete.length > 0) {
+    try {
+      await removeProductImagePaths(obsolete);
+    } catch (cleanupError) {
+      console.error(JSON.stringify({
+        level: "error",
+        event: "replaced-product-image-cleanup-failed",
+        errorType: cleanupError instanceof Error ? cleanupError.name : typeof cleanupError,
+      }));
+    }
+  }
+  return toAdminProduct(product!);
 }

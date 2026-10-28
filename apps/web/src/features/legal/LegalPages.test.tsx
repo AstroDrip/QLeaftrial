@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ function renderPage(page: ReactNode) {
 
 describe("legal pages", () => {
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
   });
 
@@ -52,7 +53,7 @@ describe("legal pages", () => {
     expect(screen.getByText(/advertising or analytics tracking cookies/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /contact qleaves on whatsapp/i })).toHaveAttribute(
       "href",
-      "https://wa.me/97477551056",
+      "https://wa.me/97452040988",
     );
   });
 
@@ -60,9 +61,32 @@ describe("legal pages", () => {
     renderPage(<TermsPage />);
 
     expect(screen.getByRole("heading", { name: "Terms & Conditions" })).toBeInTheDocument();
-    expect(screen.getByText(/cash on delivery/i)).toBeInTheDocument();
-    expect(screen.getByText(/payment link/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/cash on delivery/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/payment link/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/7 days/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Decree-Law No. 16 of 2010/)).toBeInTheDocument();
+  });
+
+  it("explains customer rights under Qatar's personal data law", () => {
+    renderPage(<PrivacyPage />);
+
+    expect(screen.getByText(/Law No. 13 of 2016/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your rights" })).toBeInTheDocument();
+    expect(screen.getByText(/receive a copy/i)).toBeInTheDocument();
+  });
+
+  it("hides business details that have not been entered instead of showing placeholders", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ orderingEnabled: true, commercialRegistration: null, ecommerceLicense: null, businessAddress: null, supportEmail: null, supportPhone: null, deliveryFeeQar: 20 }),
+    }));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><MemoryRouter><AboutPage /></MemoryRouter></QueryClientProvider>);
+
+    expect(await screen.findByRole("heading", { name: "Customer support" })).toBeInTheDocument();
+    expect(screen.queryByText(/to be provided/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Business identity and licensing" })).not.toBeInTheDocument();
+    client.clear();
   });
 
   it("explains delivery, cancellation, and issue reporting without a fixed deadline", () => {

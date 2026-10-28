@@ -79,14 +79,14 @@ describe("product catalogue", () => {
 
     expect(listResponse.status).toBe(200);
     expect(listResponse.headers["content-encoding"]).toBe("gzip");
-    expect(listResponse.headers["cache-control"]).toBe("public, max-age=0, must-revalidate");
+    expect(listResponse.headers["cache-control"]).toBe("public, max-age=0, s-maxage=30, stale-while-revalidate=300");
 
     const detailResponse = await request(createApp())
       .get("/api/v1/products/house-plant")
       .set("Accept-Encoding", "gzip");
 
     expect(detailResponse.status).toBe(200);
-    expect(detailResponse.headers["cache-control"]).toBe("public, max-age=0, must-revalidate");
+    expect(detailResponse.headers["cache-control"]).toBe("public, max-age=0, s-maxage=30, stale-while-revalidate=300");
   });
 
   it("returns Arabic product copy alongside the canonical product fields", async () => {

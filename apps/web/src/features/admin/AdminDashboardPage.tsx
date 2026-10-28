@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useStoreSettings, type StoreSettings } from "../../app/providers";
@@ -6,7 +5,10 @@ import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
 
 export function AdminDashboardPage() {
-  const { content } = useSiteLanguage();
+  const { content, isArabic } = useSiteLanguage();
+  const t = isArabic
+    ? { ordersToday: "طلبات اليوم", inventory: "المخزون المتاح", lowStock: "مخزون منخفض", pending: "مدفوعات معلقة", loading: "جارٍ تحميل لوحة التحكم…", loadError: "تعذر تحميل لوحة التحكم.", orderingTitle: "الطلب من المتجر", orderingBody: "أوقف الطلبات لإخفاء الأسعار وأزرار السلة من المتجر.", settingsLoading: "جارٍ تحميل إعدادات المتجر…", settingsError: "تعذر تحميل إعدادات المتجر.", orderingError: "تعذر تحديث حالة الطلبات.", enabled: "الطلبات مفعّلة", disabled: "الطلبات متوقفة", businessTitle: "بيانات النشاط والتوصيل", businessBody: "أدخل بيانات النشاط التجاري الموثقة ورسوم التوصيل التي يراها العملاء عند الدفع.", gatewayNote: "اختيار رابط الدفع ليس ربطًا ببوابة دفع. اربط مزود دفع مرخصًا في قطر وتحقق منه قبل الإطلاق.", businessError: "تعذر حفظ بيانات النشاط.", cr: "رقم السجل التجاري", license: "رقم ترخيص التجارة الإلكترونية", address: "العنوان المسجل", email: "بريد خدمة العملاء", phone: "هاتف خدمة العملاء في قطر", fee: "رسوم التوصيل (ر.ق)", feeWarning: "حدد رسوم التوصيل حتى يتمكن العملاء من الطلب.", saving: "جارٍ الحفظ…", save: "حفظ بيانات النشاط" }
+    : { ordersToday: "Orders today", inventory: "Live inventory", lowStock: "Low stock", pending: "Pending payouts", loading: "Loading dashboard…", loadError: "Could not load dashboard.", orderingTitle: "Storefront ordering", orderingBody: "Turn off ordering to hide prices and cart controls from the storefront.", settingsLoading: "Loading storefront settings…", settingsError: "Could not load storefront settings.", orderingError: "Could not update storefront ordering.", enabled: "Ordering enabled", disabled: "Ordering disabled", businessTitle: "Business details and delivery", businessBody: "Enter verified business information and the delivery charge customers will see at checkout.", gatewayNote: "Payment-link selection is not a payment-gateway integration. Connect and verify your Qatar-licensed provider separately before launch.", businessError: "Could not save business details.", cr: "Commercial Registration (CR) number", license: "E-commerce license number", address: "Registered business address", email: "Customer service email", phone: "Qatar customer service phone", fee: "Delivery charge (QAR)", feeWarning: "Set a delivery charge before customers can place orders.", saving: "Saving…", save: "Save business details" };
   const dashboard = useQuery({ queryKey: ["admin", "dashboard"], queryFn: adminApi.dashboard });
   const settings = useStoreSettings();
   const queryClient = useQueryClient();
@@ -34,10 +36,10 @@ export function AdminDashboardPage() {
     setBusiness(details);
   }, [settings.data]);
   const stats = dashboard.data ? [
-    { label: "Orders today", value: String(dashboard.data.ordersToday) },
-    { label: "Live inventory", value: String(dashboard.data.liveInventory) },
-    { label: "Low stock", value: String(dashboard.data.lowStock) },
-    { label: "Pending payouts", value: `QAR ${dashboard.data.pendingPayoutsQar}` },
+    { label: t.ordersToday, value: String(dashboard.data.ordersToday) },
+    { label: t.inventory, value: String(dashboard.data.liveInventory) },
+    { label: t.lowStock, value: String(dashboard.data.lowStock) },
+    { label: t.pending, value: `QAR ${dashboard.data.pendingPayoutsQar}` },
   ] : [];
   return (
     <section className="page-shell admin-page" data-testid="admin-dashboard-page">
@@ -54,17 +56,17 @@ export function AdminDashboardPage() {
           </article>
         ))}
       </div>
-      {dashboard.isPending ? <p>Loading dashboard…</p> : null}
-      {dashboard.isError ? <p role="alert">Could not load dashboard.</p> : null}
+      {dashboard.isPending ? <p className="admin-state" role="status">{t.loading}</p> : null}
+      {dashboard.isError ? <p className="admin-state" role="alert">{t.loadError}</p> : null}
 
       <section className="admin-store-settings" aria-labelledby="ordering-setting-title">
         <div>
-          <h2 id="ordering-setting-title">Storefront ordering</h2>
-          <p>Turn off ordering to hide prices and cart controls from the storefront.</p>
+          <h2 id="ordering-setting-title">{t.orderingTitle}</h2>
+          <p>{t.orderingBody}</p>
         </div>
-        {settings.isPending ? <p role="status">Loading storefront settings…</p> : null}
-        {settings.isError ? <p role="alert">Could not load storefront settings.</p> : null}
-        {updateOrdering.isError ? <p role="alert">Could not update storefront ordering.</p> : null}
+        {settings.isPending ? <p role="status">{t.settingsLoading}</p> : null}
+        {settings.isError ? <p role="alert">{t.settingsError}</p> : null}
+        {updateOrdering.isError ? <p role="alert">{t.orderingError}</p> : null}
         {settings.data ? (
           <label className="admin-ordering-toggle">
             <input
@@ -73,18 +75,18 @@ export function AdminDashboardPage() {
               disabled={updateOrdering.isPending}
               onChange={(event) => updateOrdering.mutate(event.target.checked)}
             />
-            <span>{settings.data.orderingEnabled ? "Ordering enabled" : "Ordering disabled"}</span>
+            <span>{settings.data.orderingEnabled ? t.enabled : t.disabled}</span>
           </label>
         ) : null}
       </section>
 
       <section className="admin-business-settings" aria-labelledby="business-setting-title">
         <div>
-          <h2 id="business-setting-title">Business details and delivery</h2>
-          <p>Enter verified business information and the delivery charge customers will see at checkout.</p>
-          <p>Payment-link selection is not a payment-gateway integration. Connect and verify your Qatar-licensed provider separately before launch.</p>
+          <h2 id="business-setting-title">{t.businessTitle}</h2>
+          <p>{t.businessBody}</p>
+          <p>{t.gatewayNote}</p>
         </div>
-        {updateBusiness.isError ? <p role="alert">Could not save business details.</p> : null}
+        {updateBusiness.isError ? <p role="alert">{t.businessError}</p> : null}
         <form
           className="admin-business-settings__form"
           onSubmit={(event) => {
@@ -92,42 +94,31 @@ export function AdminDashboardPage() {
             updateBusiness.mutate(business);
           }}
         >
-          <label>Commercial Registration (CR) number
+          <label>{t.cr}
             <input value={business.commercialRegistration ?? ""} onChange={(event) => setBusiness({ ...business, commercialRegistration: event.target.value || null })} />
           </label>
-          <label>E-commerce license number
+          <label>{t.license}
             <input value={business.ecommerceLicense ?? ""} onChange={(event) => setBusiness({ ...business, ecommerceLicense: event.target.value || null })} />
           </label>
-          <label>Registered business address
+          <label>{t.address}
             <input value={business.businessAddress ?? ""} onChange={(event) => setBusiness({ ...business, businessAddress: event.target.value || null })} />
           </label>
-          <label>Customer service email
+          <label>{t.email}
             <input type="email" value={business.supportEmail ?? ""} onChange={(event) => setBusiness({ ...business, supportEmail: event.target.value || null })} />
           </label>
-          <label>Qatar customer service phone
+          <label>{t.phone}
             <input type="tel" value={business.supportPhone ?? ""} onChange={(event) => setBusiness({ ...business, supportPhone: event.target.value || null })} />
           </label>
-          <label>Delivery charge (QAR)
+          <label>{t.fee}
             <input type="number" min="0" step="1" required value={business.deliveryFeeQar ?? ""} onChange={(event) => setBusiness({ ...business, deliveryFeeQar: event.target.value === "" ? null : Number(event.target.value) })} />
           </label>
-          {business.deliveryFeeQar === null ? <p className="admin-business-settings__warning">Set a delivery charge before customers can place orders.</p> : null}
+          {business.deliveryFeeQar === null ? <p className="admin-business-settings__warning">{t.feeWarning}</p> : null}
           <button type="submit" className="primary-button" disabled={updateBusiness.isPending}>
-            {updateBusiness.isPending ? "Saving…" : "Save business details"}
+            {updateBusiness.isPending ? t.saving : t.save}
           </button>
         </form>
       </section>
 
-      <div className="admin-actions">
-        <Link to="/admin/products" className="primary-button">
-          {content.admin.products}
-        </Link>
-        <Link to="/admin/orders" className="primary-button primary-button--secondary">
-          {content.admin.orders}
-        </Link>
-        <Link to="/admin/sales" className="primary-button primary-button--secondary">
-          {content.admin.sales}
-        </Link>
-      </div>
     </section>
   );
 }

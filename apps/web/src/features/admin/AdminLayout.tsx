@@ -7,6 +7,22 @@ import { adminApi } from "./admin-api";
 import { LanguageToggle } from "../../components/LanguageToggle";
 import { Seo } from "../../components/Seo";
 
+// Below 720px the sidebar is an off-canvas drawer; while closed it must not be
+// reachable by keyboard or assistive technology.
+function useCompactLayout(): boolean {
+  const query = "(max-width: 720px)";
+  const [compact, setCompact] = useState(() => typeof window !== "undefined" && Boolean(window.matchMedia?.(query).matches));
+  useEffect(() => {
+    const media = window.matchMedia?.(query);
+    if (!media) return;
+    const update = () => setCompact(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  return compact;
+}
+
 export function AdminLayout() {
   const { content, isArabic } = useSiteLanguage();
   const links = [
@@ -18,6 +34,7 @@ export function AdminLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const isCompact = useCompactLayout();
   const session = useQuery({
     queryKey: ["admin", "session"],
     queryFn: adminApi.session,
@@ -76,6 +93,7 @@ export function AdminLayout() {
       <aside
         id="admin-navigation"
         className={navigationOpen ? "admin-sidebar is-open" : "admin-sidebar"}
+        inert={isCompact && !navigationOpen}
       >
         <div className="admin-sidebar__head">
           <div>
@@ -108,7 +126,6 @@ export function AdminLayout() {
         </nav>
 
         <div className="admin-sidebar__footer">
-          <span>Signed in as {session.data.name}</span>
           <button
             type="button"
             className="admin-logout"
@@ -117,6 +134,7 @@ export function AdminLayout() {
           >
             {logout.isPending ? "Signing out…" : content.admin.logout}
           </button>
+          {logout.isError ? <span role="alert" className="admin-logout-error">{isArabic ? "تعذر تسجيل الخروج. حاول مرة أخرى." : "Could not sign out. Try again."}</span> : null}
         </div>
       </aside>
 

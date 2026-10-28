@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { requireAdmin } from "../auth/auth.middleware.js";
 import { ApiError } from "../../middleware/error-handler.js";
-import { createAdminProductSchema, productUploadMetadataSchema, updateAdminProductSchema } from "./admin-product.schemas.js";
-import { createAdminProduct, deleteAdminProduct, listAdminProducts, updateAdminProduct } from "./admin-product.service.js";
+import { createAdminProductSchema, productUploadMetadataSchema, replaceProductImagesSchema, updateAdminProductSchema } from "./admin-product.schemas.js";
+import { createAdminProduct, deleteAdminProduct, listAdminProducts, replaceAdminProductImages, updateAdminProduct } from "./admin-product.service.js";
 import { authorizeProductUpload } from "./product-upload.service.js";
 import { consumeRateLimit } from "../../lib/rate-limit.js";
 
@@ -53,11 +53,20 @@ adminProductRouter.post("/admin/products", async (request, response) => {
 adminProductRouter.patch("/admin/products/:id", async (request, response) => {
   const parsed = updateAdminProductSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new ApiError(400, "VALIDATION_ERROR", "Price and stock must be non-negative integers");
+    throw new ApiError(400, "VALIDATION_ERROR", parsed.error.issues[0]?.message ?? "Invalid product changes");
   }
 
   response.setHeader("Cache-Control", "no-store");
   response.json(await updateAdminProduct(request.params.id, parsed.data));
+});
+
+adminProductRouter.put("/admin/products/:id/images", async (request, response) => {
+  const parsed = replaceProductImagesSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new ApiError(400, "VALIDATION_ERROR", parsed.error.issues[0]?.message ?? "Invalid product image");
+  }
+  response.setHeader("Cache-Control", "no-store");
+  response.json(await replaceAdminProductImages(request.params.id, parsed.data));
 });
 
 adminProductRouter.delete("/admin/products/:id", async (request, response) => {

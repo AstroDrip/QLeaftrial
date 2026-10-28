@@ -39,7 +39,8 @@ describe("AdminLoginPage", () => {
     expect(await screen.findByText("Dashboard")).toBeInTheDocument();
   });
 
-  it("lets the admin change the login page language", async () => {
+  it("has no language switch but follows the language chosen on the site", () => {
+    localStorage.setItem("qleaves-language", "ar");
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <Providers client={client}>
@@ -49,13 +50,7 @@ describe("AdminLoginPage", () => {
       </Providers>,
     );
 
-    const languageToggle = screen.getByTestId("language-toggle").querySelector("input");
-    expect(languageToggle).not.toBeNull();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
-
-    await userEvent.click(languageToggle!);
-
-    expect(languageToggle).toBeChecked();
+    expect(screen.queryByTestId("language-toggle")).not.toBeInTheDocument();
     expect(screen.getByLabelText("كلمة المرور")).toBeInTheDocument();
     expect(screen.getByTestId("admin-login-page")).toHaveAttribute("dir", "rtl");
   });

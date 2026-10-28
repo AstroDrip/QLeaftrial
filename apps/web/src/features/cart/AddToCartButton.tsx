@@ -113,7 +113,7 @@ export function AddToCartButton({
       : (isArabic ? `أضف ${localizedProduct.name} إلى السلة` : `Add ${product.name} to cart`);
 
   return (
-    <div className={`add-to-cart__controls${quantity > 0 ? " add-to-cart__controls--with-decrement" : ""}`}>
+    <div className={["add-to-cart__controls", quantity > 0 ? "add-to-cart__controls--with-decrement" : "", className].filter(Boolean).join(" ")}>
       {quantity > 0 ? (
         <button
           type="button"
@@ -126,7 +126,7 @@ export function AddToCartButton({
       ) : null}
       <button
         type="button"
-        className={["add-to-cart", className].filter(Boolean).join(" ")}
+        className="add-to-cart"
         aria-label={accessibleName}
         disabled={disabled}
         data-state={isConfirming ? "added" : outOfStock ? "out" : maxInCart ? "max" : quantity > 0 ? "in-cart" : "default"}

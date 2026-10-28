@@ -1,6 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,450;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,450&family=Archivo:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap");
-
+/* Fonts are loaded from index.html (preconnect + display=swap) so they never block CSS. */
 :root {
+  /* Brand palette (unchanged from the original QLeaves theme). */
   --ink: #161f18;
   --paper: #fffbce;
   --paper-2: #f5efbd;
@@ -8,44 +8,65 @@
   --moss-deep: #28382b;
   --rust: #b0603a;
   --sand: #e8dfae;
-  --line: rgba(22, 31, 24, 0.14);
-  --serif: "Fraunces", serif;
-  --sans: "Archivo", sans-serif;
+  --gold: #d7c58a;
 
+  /* Derived surfaces and text, tinted toward the palette instead of pure greys. */
+  --surface: #fffdec;
+  --surface-sunk: #f8f2c8;
+  --line: rgba(22, 31, 24, .12);
+  --line-strong: rgba(22, 31, 24, .24);
+  --text-muted: #4f5a51;
+  --text-soft: #6b7268;
+  --on-dark: #f6f1d6;
+  --on-dark-muted: rgba(246, 241, 214, .72);
+  --danger: #a3402a;
+
+  --serif: "Fraunces", Georgia, serif;
+  --sans: "Archivo", "Segoe UI", sans-serif;
+  --arabic: "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+
+  --step--1: .8125rem;
+  --step-0: 1rem;
+  --step-1: 1.125rem;
+  --step-2: clamp(1.35rem, 1.1rem + .9vw, 1.75rem);
+  --step-3: clamp(1.8rem, 1.3rem + 2vw, 2.75rem);
+  --step-4: clamp(2.4rem, 1.5rem + 3.6vw, 4.25rem);
+
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --gutter: clamp(16px, 4vw, 48px);
+  --page-max: 1280px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+  --shadow-sm: 0 1px 2px rgba(22, 31, 24, .06);
+  --shadow-md: 0 10px 30px -12px rgba(22, 31, 24, .22);
+
+  --control-height: 46px;
+  --header-height: 68px;
+  --ease-out: cubic-bezier(.2, 0, 0, 1);
+  --duration: 200ms;
+
+  /* Aliases kept for components that already use the q- prefix. */
   --q-color-background: var(--paper);
-  --q-color-surface: var(--paper);
+  --q-color-surface: var(--surface);
   --q-color-on-background: var(--ink);
-  --q-color-on-surface: var(--ink);
   --q-color-border: var(--line);
   --q-color-accent: var(--rust);
-  --q-color-deep-olive: var(--ink);
-  --q-color-forest-olive: var(--moss-deep);
   --q-color-moss: var(--moss);
-  --q-color-sage: #6b7268;
-  --q-color-warm-ivory: var(--paper);
-  --q-color-soft-sand: var(--sand);
-  --q-color-terracotta: var(--rust);
-  --q-color-gold: #d7c58a;
   --q-font-display: var(--serif);
   --q-font-body: var(--sans);
-  --q-space-3xs: .25rem;
-  --q-space-2xs: .5rem;
-  --q-space-xs: .75rem;
-  --q-space-sm: 1rem;
-  --q-space-md: 1.25rem;
-  --q-space-lg: 1.5rem;
-  --q-space-xl: 2rem;
-  --q-space-2xl: 2.5rem;
-  --q-space-3xl: 3rem;
-  --q-space-4xl: 4rem;
-  --q-radius-sm: 0;
-  --q-radius-md: 0;
-  --q-radius-lg: 0;
-  --q-radius-xl: 0;
-  --q-radius-full: 0;
   --q-duration-fast: 150ms;
   --q-duration-base: 250ms;
   --q-duration-slow: 650ms;
-  --q-ease-out: cubic-bezier(.2,0,0,1);
-  --q-ease-in-out: cubic-bezier(.4,0,.2,1);
+  --q-ease-out: var(--ease-out);
+  --q-ease-in-out: cubic-bezier(.4, 0, .2, 1);
 }
