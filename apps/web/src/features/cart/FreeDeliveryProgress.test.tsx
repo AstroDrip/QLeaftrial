@@ -35,8 +35,10 @@ describe("free delivery progress", () => {
 
   it("has a colour layer that runs back along the track once the goal is met", () => {
     const { rerender } = render(<Providers><FreeDeliveryProgress subtotalQar={100} /></Providers>);
-    const track = screen.getByRole("progressbar");
-    expect(track.querySelector("[data-testid=free-delivery-sweep]")).not.toBeNull();
+    const sweep = screen.getByTestId("free-delivery-sweep");
+    // Beside the track, not inside it: the track clips, and the glow has to spill out around the line.
+    expect(sweep.parentElement).toBe(screen.getByRole("progressbar").parentElement);
+    expect(screen.getByRole("progressbar")).not.toContainElement(sweep);
     expect(screen.getByTestId("free-delivery")).not.toHaveClass("is-unlocked");
 
     rerender(<Providers><FreeDeliveryProgress subtotalQar={150} /></Providers>);

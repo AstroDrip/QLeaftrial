@@ -1,9 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import { useFreeDeliveryStore, FREE_DELIVERY_TIMINGS } from "./free-delivery-store";
 
-// The finished track is the light's gold (it sweeps back along the track as the light arrives), and the
-// line keeps that colour all the way round the cart button.
-const GOLD = "rgb(215,197,138)";
+// The line is the finished track's yellow gold and keeps it, glow and all, all the way round the cart
+// button; the colour and the glow come from the stylesheet (.free-delivery-flyer).
 // The ring sits 5px outside the cart button with a 2px stroke, so the stroke's centre is 4px out.
 const RING_OUTSET_PX = 4;
 const RING_STROKE_PX = 2;
@@ -86,7 +85,6 @@ export function FreeDeliveryFlyer() {
         const retract = ease(progress);
         line.setAttribute("d", joined(start.cx, start.half * (1 - retract), (distance) => ({ x: start.cx - distance, y: start.cy })));
         line.setAttribute("stroke-width", String(start.thickness));
-        line.setAttribute("stroke", GOLD);
         line.setAttribute("opacity", String(1 - retract));
       } else {
         const rect = target.getBoundingClientRect();
@@ -101,7 +99,6 @@ export function FreeDeliveryFlyer() {
         const wrap = ease(clamp01((progress - 0.45) / 0.55));
         const thickness = mix(start.thickness, RING_STROKE_PX, glide);
         line.setAttribute("stroke-width", String(thickness));
-        line.setAttribute("stroke", GOLD);
         line.setAttribute("opacity", "1");
         if (wrap === 0) {
           const middle = mix(start.cx, ringMiddle, glide);

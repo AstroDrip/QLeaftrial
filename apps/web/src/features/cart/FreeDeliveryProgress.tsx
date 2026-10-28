@@ -80,8 +80,8 @@ export function FreeDeliveryProgress({ subtotalQar, compact = false }: { subtota
               aria-valuetext={`${subtotalQar} / ${FREE_DELIVERY_THRESHOLD_QAR} QAR`}
             >
               <span className="free-delivery__fill" style={{ width: `${shown}%` }} />
-              <span className="free-delivery__sweep" data-testid="free-delivery-sweep" />
             </div>
+            <span className="free-delivery__sweep" data-testid="free-delivery-sweep" aria-hidden="true" />
             <span className="free-delivery__glow" aria-hidden="true" />
           </div>
           <LeafIcon className="free-delivery__anchor free-delivery__anchor--goal" />
