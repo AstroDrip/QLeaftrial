@@ -11,7 +11,6 @@ const settingsSelect = {
   businessAddress: true,
   supportEmail: true,
   supportPhone: true,
-  deliveryFeeQar: true,
 } as const;
 
 // Read with a single query; the row is only created the first time, because an upsert on every
@@ -30,7 +29,6 @@ export async function updateStoreSettings(
     businessAddress: string | null;
     supportEmail: string | null;
     supportPhone: string | null;
-    deliveryFeeQar: number | null;
   }>,
 ) {
   return db.storeSettings.upsert({
@@ -44,7 +42,6 @@ export async function updateStoreSettings(
       businessAddress: true,
       supportEmail: true,
       supportPhone: true,
-      deliveryFeeQar: true,
     },
   });
 }

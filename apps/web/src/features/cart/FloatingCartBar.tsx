@@ -3,8 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { BagIcon } from "../../components/icons";
 import { cartSubtotal, useCartStore } from "./cart-store";
+import { FreeDeliveryProgress } from "./FreeDeliveryProgress";
 
-const HIDDEN_ON = /^\/(cart|checkout|order\/)/;
+const HIDDEN_ON = /^\/(cart|checkout|order\/|invoice\/)/;
 
 export type FloatingCartPlacement = { docked: boolean; footerHeight: number };
 
@@ -58,6 +59,7 @@ export function FloatingCartBar({ footer }: { footer: RefObject<HTMLElement | nu
 
   return (
     <div className={className} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined}>
+      <FreeDeliveryProgress subtotalQar={total} compact />
       <Link to="/cart" className="floating-cart__button" aria-label={label} data-testid="floating-cart">
         <BagIcon />
         <span className="floating-cart__total" aria-hidden="true">{total} QAR</span>

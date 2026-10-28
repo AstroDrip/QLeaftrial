@@ -8,7 +8,8 @@ export const createOrderSchema = z.object({
   area: z.string().trim().min(2).max(100),
   deliveryNotes: z.string().trim().max(500).optional(),
   paymentMethod: z.enum(["COD", "PAYMENT_LINK"]),
-  deliveryFeeQar: z.number().int().nonnegative(),
+  // Delivery is no longer priced. Older cached storefront pages may still send this; it is ignored.
+  deliveryFeeQar: z.number().int().nonnegative().optional(),
   items: z.array(z.object({ productId: z.string().min(1), quantity: z.number().int().positive().max(100) })).min(1).max(50),
 }).strict();
 

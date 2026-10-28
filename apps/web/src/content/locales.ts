@@ -17,7 +17,7 @@ export const localeContent = {
       basedIn: "Plants delivered across Qatar",
       promisesLabel: "Why shop with QLeaves",
       promises: [
-        ["Delivered across Qatar", "Doha, Al Rayyan, Al Wakrah and Al Khor, with the delivery charge shown before you order."],
+        ["Delivered across Qatar", "Doha, Al Rayyan, Al Wakrah and Al Khor. Free delivery on orders of 150 QAR or more."],
         ["Healthy, hand-picked plants", "Every plant is checked before it leaves us, so it arrives ready for your space."],
         ["Care help when you need it", "Not sure where a plant will thrive? Message us on WhatsApp for advice."],
       ] as Array<[string, string]>,
@@ -94,8 +94,6 @@ export const localeContent = {
       addressLine1: "Address line 1",
       area: "Area or town",
       selectDeliveryArea: "Select a delivery area",
-      deliveryFee: "Delivery charge",
-      deliveryNotConfigured: "Delivery pricing is not available yet. Please contact QLeaves.",
       total: "Total",
       deliveryAreas: {
         doha: "Doha",
@@ -203,7 +201,7 @@ export const localeContent = {
         description: "Terms for using the QLeaves Qatar storefront and placing plant orders.",
         sections: [
           ["Using the storefront", "You may browse the QLeaves catalogue and submit orders for lawful purposes. Do not misuse the site, interfere with its operation, attempt unauthorized access, or submit false or abusive orders."],
-          ["Products, prices, and availability", "Product prices are shown in QAR. Delivery charges are shown before an order is submitted. Availability and stock can change. Because plants are living products, natural variation in size, shape, colour, foliage, and appearance is expected."],
+          ["Products, prices, and availability", "Product prices are shown in QAR. Delivery is free on orders of 150 QAR or more. Availability and stock can change. Because plants are living products, natural variation in size, shape, colour, foliage, and appearance is expected."],
           ["Orders and payment", "Submitting checkout creates an order request using the prices and availability confirmed by the QLeaves server. The storefront currently supports cash on delivery and payment link as payment-method options."],
           ["Your order information", "You are responsible for providing accurate contact and delivery information. If you notice an error after submitting an order, contact QLeaves as soon as possible and include the order number."],
           ["Intellectual property and site content", "The QLeaves name, branding, photographs, written content, and site design may not be copied or reused in a way that infringes QLeaves or third-party rights."],
@@ -214,7 +212,7 @@ export const localeContent = {
         title: "Shipping & Returns",
         description: "QLeaves delivery, cancellation, damaged-item, and return guidance for plant orders in Qatar.",
         sections: [
-          ["Delivery", "Checkout offers Doha, Al Rayyan, Al Wakrah, and Al Khor as delivery areas. The configured delivery charge is shown in QAR before an order is submitted; an order cannot be placed until a delivery charge is configured. Delivery timing is confirmed with the customer."],
+          ["Delivery", "Checkout offers Doha, Al Rayyan, Al Wakrah, and Al Khor as delivery areas. Delivery is free on orders of 150 QAR or more, and orders below that can still be placed. Delivery timing is confirmed with the customer."],
           ["Changing or cancelling an order", "If you need to change or cancel an order, contact QLeaves as soon as possible and provide your order number. Whether a change or cancellation is possible depends on how far the order has progressed."],
           ["Damaged, incorrect, or missing items", "If an item arrives damaged, is different from what was ordered, or is missing, contact QLeaves promptly with your order number and enough information to review the issue."],
           ["Plant condition and natural variation", "Plants are living products and natural variation is expected. Differences in foliage, growth, size, shape, colour, or other natural characteristics do not by themselves mean that an item is defective."],
@@ -254,7 +252,7 @@ export const localeContent = {
       basedIn: "توصيل النباتات في جميع أنحاء قطر",
       promisesLabel: "لماذا تتسوق من QLeaves",
       promises: [
-        ["توصيل في جميع أنحاء قطر", "الدوحة والريان والوكرة والخور، مع عرض رسوم التوصيل قبل الطلب."],
+        ["توصيل في جميع أنحاء قطر", "الدوحة والريان والوكرة والخور. توصيل مجاني للطلبات من 150 ر.ق فأكثر."],
         ["نباتات صحية مختارة بعناية", "نفحص كل نبات قبل إرساله ليصل جاهزًا لمساحتك."],
         ["مساعدة في العناية عند الحاجة", "لست متأكدًا من المكان المناسب للنبات؟ راسلنا عبر واتساب."],
       ] as Array<[string, string]>,
@@ -331,8 +329,6 @@ export const localeContent = {
       addressLine1: "عنوان السكن",
       area: "المنطقة أو المدينة",
       selectDeliveryArea: "اختر منطقة التوصيل",
-      deliveryFee: "رسوم التوصيل",
-      deliveryNotConfigured: "رسوم التوصيل غير متاحة حاليًا. يُرجى التواصل مع QLeaves.",
       total: "الإجمالي",
       deliveryAreas: {
         doha: "الدوحة",
@@ -440,7 +436,7 @@ export const localeContent = {
         description: "شروط استخدام متجر QLeaves في قطر وتقديم طلبات النباتات.",
         sections: [
           ["استخدام المتجر", "يمكنك تصفح كتالوج QLeaves وتقديم طلبات لأغراض مشروعة. لا تسيء استخدام الموقع أو تعطل تشغيله أو تحاول الوصول غير المصرح به أو تقدم طلبات وهمية أو مسيئة."],
-          ["المنتجات والأسعار والتوفر", "تعرض الأسعار بالريال القطري وتظهر رسوم التوصيل قبل إرسال الطلب. قد يتغير المخزون والتوفر. وبما أن النباتات منتجات حية، فمن الطبيعي وجود اختلافات في الحجم والشكل واللون والأوراق والمظهر."],
+          ["المنتجات والأسعار والتوفر", "تعرض الأسعار بالريال القطري، والتوصيل مجاني للطلبات من 150 ر.ق فأكثر. قد يتغير المخزون والتوفر. وبما أن النباتات منتجات حية، فمن الطبيعي وجود اختلافات في الحجم والشكل واللون والأوراق والمظهر."],
           ["الطلبات والدفع", "يؤدي تأكيد الدفع إلى إنشاء طلب بالأسعار والتوفر اللذين يؤكدهما خادم QLeaves. يدعم المتجر حاليًا الدفع نقدًا عند الاستلام ورابط الدفع."],
           ["معلومات طلبك", "أنت مسؤول عن تقديم معلومات اتصال وتوصيل صحيحة. إذا لاحظت خطأ بعد تقديم الطلب، فتواصل مع QLeaves في أقرب وقت واذكر رقم الطلب."],
           ["الملكية الفكرية ومحتوى الموقع", "لا يجوز نسخ اسم QLeaves أو العلامة التجارية أو الصور أو المحتوى المكتوب أو تصميم الموقع أو إعادة استخدامها بطريقة تنتهك حقوق QLeaves أو حقوق الغير."],
@@ -451,7 +447,7 @@ export const localeContent = {
         title: "الشحن والإرجاع",
         description: "إرشادات QLeaves للتوصيل والإلغاء والمنتجات المتضررة والإرجاع لطلبات النباتات في قطر.",
         sections: [
-          ["التوصيل", "يوفر الدفع مناطق الدوحة والريان والوكرة والخور. تظهر رسوم التوصيل المحددة بالريال القطري قبل إرسال الطلب، ولا يمكن إرسال الطلب قبل تحديد الرسوم. يتم تأكيد موعد التوصيل مع العميل."],
+          ["التوصيل", "يوفر الدفع مناطق الدوحة والريان والوكرة والخور. التوصيل مجاني للطلبات من 150 ر.ق فأكثر، ويمكن تقديم طلبات أقل من ذلك. يتم تأكيد موعد التوصيل مع العميل."],
           ["تعديل الطلب أو إلغاؤه", "إذا احتجت إلى تعديل طلب أو إلغائه، فتواصل مع QLeaves في أسرع وقت واذكر رقم الطلب. تعتمد إمكانية التعديل أو الإلغاء على مرحلة التجهيز والتوصيل."],
           ["منتج متضرر أو غير صحيح أو مفقود", "إذا وصل منتج متضررًا أو مختلفًا عما طلبته أو كان أحد المنتجات مفقودًا، فتواصل مع QLeaves سريعًا برقم الطلب والمعلومات اللازمة لمراجعة المشكلة."],
           ["حالة النبات والاختلاف الطبيعي", "النباتات منتجات حية ومن الطبيعي وجود اختلافات. لا تعني الفروق الطبيعية في الأوراق أو النمو أو الحجم أو الشكل أو اللون وحدها أن المنتج معيب."],

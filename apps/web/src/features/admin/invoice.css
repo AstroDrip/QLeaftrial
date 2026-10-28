@@ -1,4 +1,10 @@
 /* The invoice is always a light "paper" sheet, on screen and in print, so it reads the same as a PDF. */
+/* Customers see the same sheet outside the admin shell, so the spacing scale it uses is defined here too. */
+.invoice-public { --a-1: 4px; --a-2: 8px; --a-3: 12px; --a-4: 16px; --a-5: 24px; --a-6: 32px; --admin-radius: 10px; display: grid; gap: var(--a-4); }
+@media print {
+  body:has(.invoice-public) .site-header, body:has(.invoice-public) .site-footer, body:has(.invoice-public) .floating-cart { display: none !important; }
+  .invoice-public .invoice-toolbar { display: none; }
+}
 .invoice-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--a-3); }
 .invoice {
   --inv-ink: #161f18;

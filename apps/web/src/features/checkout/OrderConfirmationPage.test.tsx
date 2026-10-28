@@ -11,7 +11,6 @@ const summary: OrderSummary = {
     { name: "Golden Pothos", nameAr: null, quantity: 1, unitPriceQar: 80 },
   ],
   subtotalQar: 370,
-  deliveryFeeQar: 25,
 };
 
 function renderAt(path: string, state?: unknown) {
@@ -35,7 +34,9 @@ describe("OrderConfirmationPage", () => {
     expect(screen.getByText("Peace Lily × 2")).toBeInTheDocument();
     expect(screen.getByText("290 QAR")).toBeInTheDocument();
     expect(screen.getByText("Golden Pothos")).toBeInTheDocument();
-    expect(screen.getByText("395 QAR")).toBeInTheDocument();
+    // The subtotal and the total are the same: delivery is not charged.
+    expect(screen.getAllByText("370 QAR")).toHaveLength(2);
+    expect(screen.queryByText(/delivery/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Monstera/)).not.toBeInTheDocument();
   });
 

@@ -45,7 +45,6 @@ export interface StoreSettings {
   businessAddress: string | null;
   supportEmail: string | null;
   supportPhone: string | null;
-  deliveryFeeQar: number | null;
 }
 
 export function useStoreSettings() {

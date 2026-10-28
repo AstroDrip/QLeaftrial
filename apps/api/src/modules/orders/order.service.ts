@@ -3,6 +3,7 @@ import { ApiError } from "../../middleware/error-handler.js";
 import { getStoreSettings } from "../admin/store-settings.service.js";
 import type { AcceptEditedOrderInput, CreateOrderInput } from "./order.schemas.js";
 import type { PrismaClient as SqlitePrismaClient } from "../../../generated/sqlite/index.js";
+import type { OrderChange } from "./order-changes.js";
 
 // Both generated clients expose the same application models; this removes the
 // provider union from query method overloads without weakening query typing.
@@ -110,12 +111,6 @@ export async function createOrder(input: CreateOrderInput) {
   if (!settings.orderingEnabled) {
     throw new ApiError(503, "ORDERING_DISABLED", "Ordering is currently unavailable");
   }
-  if (settings.deliveryFeeQar === null) {
-    throw new ApiError(503, "DELIVERY_NOT_CONFIGURED", "Delivery pricing is not configured yet");
-  }
-  if (input.deliveryFeeQar !== settings.deliveryFeeQar) {
-    throw new ApiError(409, "DELIVERY_PRICE_CHANGED", "Delivery pricing changed. Review the updated total before ordering");
-  }
   return db.$transaction(async (tx: any) => {
     const quantities = new Map<string, number>();
     for (const item of input.items) {
@@ -162,7 +157,7 @@ export async function createOrder(input: CreateOrderInput) {
         deliveryNotes: input.deliveryNotes,
         paymentMethod: input.paymentMethod,
         subtotalQar,
-        deliveryFeeQar: settings.deliveryFeeQar,
+        deliveryFeeQar: 0,
         items: { create: items },
       },
       include: { items: true },
@@ -310,6 +305,18 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
       0,
     );
 
+    const changes: OrderChange[] = [];
+    for (const edit of input.items) {
+      const original = originalById.get(edit.orderItemId)!;
+      if (!edit.included) {
+        changes.push({ type: "removed", name: original.productName, quantity: original.quantity });
+      } else if (edit.productId !== original.productId) {
+        changes.push({ type: "replaced", from: original.productName, to: productById.get(edit.productId)!.name, quantity: edit.quantity });
+      } else if (edit.quantity !== original.quantity) {
+        changes.push({ type: "quantity", name: original.productName, from: original.quantity, to: edit.quantity });
+      }
+    }
+
     await tx.orderItem.deleteMany({ where: { orderId: id } });
     for (const line of replacementLines) {
       await tx.orderItem.create({ data: { orderId: id, ...line } });
@@ -317,7 +324,7 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
 
     return tx.order.update({
       where: { id },
-      data: { status: "CONFIRMED", subtotalQar },
+      data: { status: "CONFIRMED", subtotalQar, editSummary: changes.length ? JSON.stringify(changes) : null },
       include: { items: true },
     });
   });

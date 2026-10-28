@@ -23,6 +23,7 @@ const ProductPage = lazy(() => loadProduct().then((module) => ({ default: module
 const PrivacyPage = lazy(() => loadLegal().then((module) => ({ default: module.PrivacyPage })));
 const TermsPage = lazy(() => loadLegal().then((module) => ({ default: module.TermsPage })));
 const ShippingReturnsPage = lazy(() => loadLegal().then((module) => ({ default: module.ShippingReturnsPage })));
+const PublicInvoicePage = lazy(() => import("../features/invoice/PublicInvoicePage").then((module) => ({ default: module.PublicInvoicePage })));
 const AboutPage = lazy(() => loadLegal().then((module) => ({ default: module.AboutPage })));
 
 function LoadingPage() {
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
       { path: "cart", element: deferred(<OrderingRoute><CartPage /></OrderingRoute>) },
       { path: "checkout", element: deferred(<OrderingRoute><CheckoutPage /></OrderingRoute>) },
       { path: "order/:orderNumber", element: deferred(<OrderConfirmationPage />) },
+      { path: "invoice/:orderNumber", element: deferred(<PublicInvoicePage />) },
       { path: "privacy", element: deferred(<PrivacyPage />) },
       { path: "terms", element: deferred(<TermsPage />) },
       { path: "shipping-returns", element: deferred(<ShippingReturnsPage />) },

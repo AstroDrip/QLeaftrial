@@ -26,7 +26,12 @@ function formatDate(iso: string, language: "en" | "ar"): string {
   return new Intl.DateTimeFormat(language === "ar" ? "ar-QA-u-nu-latn" : "en-GB", { timeZone: "Asia/Qatar", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(iso));
 }
 
-export function InvoiceDocument({ order, language }: { order: AdminOrder; language: "en" | "ar" }) {
+// The part of an order an invoice needs; customers receive this without their email address.
+export type InvoiceOrder = Pick<AdminOrder, "id" | "orderNumber" | "createdAt" | "customerName" | "phone" | "addressLine1" | "area" | "deliveryNotes" | "paymentMethod" | "paymentStatus" | "status" | "subtotalQar" | "deliveryFeeQar"> & {
+  items: Array<Pick<AdminOrder["items"][number], "id" | "productName" | "sku" | "unitPriceQar" | "quantity">>;
+};
+
+export function InvoiceDocument({ order, language }: { order: InvoiceOrder; language: "en" | "ar" }) {
   const t = copy[language];
   const settings = useStoreSettings().data;
   const business = [
@@ -88,7 +93,7 @@ export function InvoiceDocument({ order, language }: { order: AdminOrder; langua
 
       <dl className="invoice__totals">
         <div><dt>{t.subtotal}</dt><dd>{order.subtotalQar} QAR</dd></div>
-        <div><dt>{t.delivery}</dt><dd>{order.deliveryFeeQar} QAR</dd></div>
+        {order.deliveryFeeQar > 0 ? <div><dt>{t.delivery}</dt><dd>{order.deliveryFeeQar} QAR</dd></div> : null}
         <div className="invoice__grand"><dt>{t.total}</dt><dd>{invoiceTotal(order)} QAR</dd></div>
       </dl>
 

@@ -5,8 +5,8 @@ import { filterInvoices, groupByDay, invoiceNumber, invoiceTotal, invoiceTotals,
 function order(overrides: Partial<AdminOrder>): AdminOrder {
   return {
     id: "o1", orderNumber: "QL-20261028-AAA111", customerName: "Aisha", phone: "+974 5555 1234", email: "a@example.com",
-    addressLine1: "Villa 1", area: "Doha", paymentMethod: "COD", subtotalQar: 100, deliveryFeeQar: 20,
-    status: "DELIVERED", paymentStatus: "PAID", createdAt: "2026-10-28T09:00:00Z", items: [], ...overrides,
+    addressLine1: "Villa 1", area: "Doha", paymentMethod: "COD", subtotalQar: 100, deliveryFeeQar: 0,
+    status: "DELIVERED", paymentStatus: "PAID", createdAt: "2026-10-28T09:00:00Z", items: [], editChanges: [], invoiceToken: "token", ...overrides,
   };
 }
 

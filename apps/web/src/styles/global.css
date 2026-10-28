@@ -149,7 +149,9 @@ label { color: var(--text-muted); font-size: .8125rem; font-weight: 600; }
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   z-index: 35;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   pointer-events: none;
 }
 .floating-cart--docked { position: absolute; bottom: calc(var(--footer-height, 0px) + 20px); }
@@ -296,4 +298,4 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 
 /* Page root anchors the docked floating cart; the extra padding keeps it off the last row of products. */
 .page-root { position: relative; }
-body.has-floating-cart .main-content { padding-bottom: 72px; }
+body.has-floating-cart .main-content { padding-bottom: 150px; }

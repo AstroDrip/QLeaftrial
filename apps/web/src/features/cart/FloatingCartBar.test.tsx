@@ -40,6 +40,12 @@ describe("FloatingCartBar", () => {
     expect(screen.queryByTestId("floating-cart")).not.toBeInTheDocument();
   });
 
+  it("stays out of the way on the customer invoice page", () => {
+    useCartStore.setState({ items: [item] });
+    renderAt("/invoice/QL-1");
+    expect(screen.queryByTestId("floating-cart")).not.toBeInTheDocument();
+  });
+
   it("is fixed before the footer and docks above it once the footer is visible", () => {
     expect(floatingCartStyle({ docked: false, footerHeight: 300 })).toEqual({ className: "floating-cart" });
     expect(floatingCartStyle({ docked: true, footerHeight: 300 })).toEqual({ className: "floating-cart floating-cart--docked", footerHeight: "300px" });

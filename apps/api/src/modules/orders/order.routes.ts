@@ -23,6 +23,7 @@ import {
 import { publicOrderRateLimit } from "./order-rate-limit.js";
 import { getStoreSettings } from "../admin/store-settings.service.js";
 import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
+import { toAdminOrder } from "./order-view.js";
 
 export const orderRouter = Router();
 
@@ -53,7 +54,7 @@ orderRouter.use("/admin/orders", requireAdmin);
 
 orderRouter.get("/admin/orders", async (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  res.json({ items: await listOrders() });
+  res.json({ items: (await listOrders()).map(toAdminOrder) });
 });
 
 orderRouter.delete("/admin/orders", async (req, res) => {
@@ -68,7 +69,7 @@ orderRouter.patch("/admin/orders/:id/status", async (req, res) => {
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order status");
   const order = await updateOrderStatus(req.params.id, parsed.data.status);
   await mirrorOrderToSheet(order);
-  res.json(order);
+  res.json(toAdminOrder(order));
 });
 
 orderRouter.post("/admin/orders/:id/accept-edited", async (req, res) => {
@@ -76,7 +77,7 @@ orderRouter.post("/admin/orders/:id/accept-edited", async (req, res) => {
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid edited order");
   const order = await acceptEditedOrder(req.params.id, parsed.data);
   await mirrorOrderToSheet(order);
-  res.json(order);
+  res.json(toAdminOrder(order));
 });
 
 orderRouter.patch("/admin/orders/:id/payment", async (req, res) => {
@@ -84,7 +85,7 @@ orderRouter.patch("/admin/orders/:id/payment", async (req, res) => {
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid payment status");
   const order = await updatePaymentStatus(req.params.id, parsed.data.paymentStatus);
   await mirrorOrderToSheet(order);
-  res.json(order);
+  res.json(toAdminOrder(order));
 });
 
 orderRouter.post("/admin/orders/bulk-delete", async (req, res) => {

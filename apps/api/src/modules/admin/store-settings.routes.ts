@@ -19,7 +19,6 @@ storeSettingsRouter.put("/admin/storefront-settings", requireAdmin, async (reque
     businessAddress: z.string().trim().max(300).nullable().optional(),
     supportEmail: z.string().trim().email().max(200).nullable().optional(),
     supportPhone: z.string().trim().max(40).nullable().optional(),
-    deliveryFeeQar: z.number().int().nonnegative().nullable().optional(),
   }).strict().refine((value) => Object.keys(value).length > 0).safeParse(request.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid storefront settings");
   response.setHeader("Cache-Control", "no-store");

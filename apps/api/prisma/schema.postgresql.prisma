@@ -47,7 +47,7 @@ model StoreSettings {
   businessAddress        String?
   supportEmail           String?
   supportPhone           String?
-  deliveryFeeQar         Int?
+  deliveryFeeQar         Int? // unused: delivery is no longer priced; kept so no data migration is needed
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 }
@@ -124,6 +124,7 @@ model Order {
   paymentMethod   PaymentMethod
   paymentStatus   PaymentStatus @default(PENDING)
   paymentUrl      String?
+  editSummary     String?
   status          OrderStatus   @default(PENDING)
   subtotalQar     Int
   deliveryFeeQar  Int           @default(0)

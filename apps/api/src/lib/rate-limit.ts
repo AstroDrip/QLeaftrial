@@ -49,6 +49,11 @@ function salt(): string {
   return TEST_SALT;
 }
 
+// Shared server secret for signing values such as invoice links.
+export function linkSigningKey(): string {
+  return salt();
+}
+
 function hashKey(limiter: string, clientKey: string): string {
   return createHmac("sha256", salt())
     .update(`${limiter}\0${clientKey.trim().toLowerCase()}`)

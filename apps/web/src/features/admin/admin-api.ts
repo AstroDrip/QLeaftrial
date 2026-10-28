@@ -75,6 +75,12 @@ export interface AdminOrderItem {
   unitPriceQar: number;
 }
 
+// What the shop changed when it accepted an edited pending order.
+export type OrderChange =
+  | { type: "removed"; name: string; quantity: number }
+  | { type: "quantity"; name: string; from: number; to: number }
+  | { type: "replaced"; from: string; to: string; quantity: number };
+
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -91,6 +97,8 @@ export interface AdminOrder {
   paymentStatus: string;
   createdAt: string;
   items: AdminOrderItem[];
+  editChanges: OrderChange[];
+  invoiceToken: string;
 }
 
 export interface EditedOrderLine {
@@ -114,7 +122,6 @@ export interface StoreSettings {
   businessAddress: string | null;
   supportEmail: string | null;
   supportPhone: string | null;
-  deliveryFeeQar: number | null;
 }
 
 export interface AdminSalesReport {

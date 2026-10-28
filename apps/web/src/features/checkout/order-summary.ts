@@ -5,7 +5,6 @@ export type OrderSummary = {
   orderNumber: string;
   items: Array<{ name: string; nameAr: string | null; quantity: number; unitPriceQar: number }>;
   subtotalQar: number;
-  deliveryFeeQar: number;
 };
 
 const STORAGE_KEY = "qleaves-last-order";
@@ -15,8 +14,7 @@ function isOrderSummary(value: unknown): value is OrderSummary {
   const candidate = value as Partial<OrderSummary>;
   return typeof candidate.orderNumber === "string"
     && Array.isArray(candidate.items)
-    && typeof candidate.subtotalQar === "number"
-    && typeof candidate.deliveryFeeQar === "number";
+    && typeof candidate.subtotalQar === "number";
 }
 
 export function rememberOrderSummary(summary: OrderSummary): void {

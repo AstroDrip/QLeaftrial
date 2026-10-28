@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { cartSubtotal, useCartStore } from "./cart-store";
 import { Seo } from "../../components/Seo";
+import { FreeDeliveryProgress } from "./FreeDeliveryProgress";
 
 function CartQuantity({ id, name, quantity, stock, onCommit, quantityLabel }: { id: string; name: string; quantity: number; stock: number; onCommit: (id: string, quantity: number) => void; quantityLabel: string }) {
   const [draft, setDraft] = useState(String(quantity));
@@ -55,6 +56,8 @@ export function CartPage() {
         <p className="eyebrow">{content.cart.title}</p>
         <h1>{content.cart.title}</h1>
       </div>
+
+      <FreeDeliveryProgress subtotalQar={subtotal} />
 
       <div className="cart-layout">
         <div className="cart-list" aria-label={content.cart.title}>

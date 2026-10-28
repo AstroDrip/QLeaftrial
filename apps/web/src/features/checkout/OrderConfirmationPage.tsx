@@ -41,14 +41,10 @@ export function OrderConfirmationPage() {
               <span>{content.order.subtotal}</span>
               <strong>{summary.subtotalQar} QAR</strong>
             </li>
-            <li>
-              <span>{content.checkout.deliveryFee}</span>
-              <strong>{summary.deliveryFeeQar} QAR</strong>
-            </li>
           </ul>
           <div className="checkout-summary__total">
             <span>{content.checkout.total}</span>
-            <strong>{summary.subtotalQar + summary.deliveryFeeQar} QAR</strong>
+            <strong>{summary.subtotalQar} QAR</strong>
           </div>
         </div>
       ) : (

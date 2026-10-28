@@ -13,9 +13,9 @@ describe("storefront ordering settings", () => {
     expect(publicSettings.status).toBe(200);
     expect(publicSettings.body).toEqual(expect.objectContaining({
       orderingEnabled: true,
-      deliveryFeeQar: null,
       commercialRegistration: null,
     }));
+    expect(publicSettings.body).not.toHaveProperty("deliveryFeeQar");
     expect(publicSettings.headers["cache-control"]).toBe("no-store");
 
     const anonymousUpdate = await request(createApp())
@@ -47,52 +47,23 @@ describe("storefront ordering settings", () => {
     expect(reloaded.body).toEqual(expect.objectContaining({ orderingEnabled: false }));
   });
 
-  it("shows the configured delivery charge at checkout and saves it on the order", async () => {
+  it("takes orders of any size without a delivery charge, even from older pages that still send one", async () => {
     const product = await seededProduct("house-plant");
-    const admin = await loggedInAgent();
-    await admin.put("/api/v1/admin/storefront-settings").send({ deliveryFeeQar: 15 });
+    await prisma.storeSettings.update({ where: { id: "storefront" }, data: { deliveryFeeQar: 20 } });
 
     const response = await request(createApp())
       .post("/api/v1/orders")
       .send(validOrder({ deliveryFeeQar: 15, items: [{ productId: product.id, quantity: 1 }] }));
 
     expect(response.status).toBe(201);
-    expect(response.body).toEqual(expect.objectContaining({
-      subtotalQar: product.priceQar,
-      deliveryFeeQar: 15,
-    }));
-    expect(await prisma.order.findUnique({ where: { id: response.body.id } }))
-      .toMatchObject({ deliveryFeeQar: 15 });
+    expect(response.body).toEqual(expect.objectContaining({ subtotalQar: product.priceQar, deliveryFeeQar: 0 }));
+    expect(await prisma.order.findUnique({ where: { id: response.body.id } })).toMatchObject({ deliveryFeeQar: 0 });
   });
 
-  it("rejects checkout until the delivery fee is configured", async () => {
-    const product = await seededProduct("house-plant");
-    await prisma.storeSettings.update({
-      where: { id: "storefront" },
-      data: { deliveryFeeQar: null },
-    });
-    const response = await request(createApp())
-      .post("/api/v1/orders")
-      .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
-
-    expect(response.status).toBe(503);
-    expect(response.body.error.code).toBe("DELIVERY_NOT_CONFIGURED");
-    expect(await prisma.order.count()).toBe(0);
-  });
-
-  it("rejects an order if the displayed delivery fee has changed", async () => {
-    const product = await seededProduct("house-plant");
-    await prisma.storeSettings.update({
-      where: { id: "storefront" },
-      data: { deliveryFeeQar: 20 },
-    });
-    const response = await request(createApp())
-      .post("/api/v1/orders")
-      .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
-
-    expect(response.status).toBe(409);
-    expect(response.body.error.code).toBe("DELIVERY_PRICE_CHANGED");
-    expect(await prisma.order.count()).toBe(0);
+  it("no longer accepts a delivery charge in the business settings", async () => {
+    const admin = await loggedInAgent();
+    const response = await admin.put("/api/v1/admin/storefront-settings").send({ deliveryFeeQar: 15 });
+    expect(response.status).toBe(400);
   });
 
   it("rejects new orders while ordering is disabled", async () => {

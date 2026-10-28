@@ -8,6 +8,7 @@ export function invoiceNumber(order: Pick<AdminOrder, "orderNumber">): string {
 }
 
 export function invoiceTotal(order: Pick<AdminOrder, "subtotalQar" | "deliveryFeeQar">): number {
+  // Delivery is no longer charged; older orders may still carry a fee, which stays in their total.
   return order.subtotalQar + order.deliveryFeeQar;
 }
 

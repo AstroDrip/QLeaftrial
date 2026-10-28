@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { OrderStatusTabs, type StatusTab } from "./OrderStatusTabs";
+import { describeDraftChanges, whatsappText } from "./order-messages";
 import { useSiteLanguage } from "../../app/providers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -89,10 +90,10 @@ function OrderCard({
   onDelete: (id: string) => void;
   acceptingEdited: boolean;
 }) {
-  const { content, isArabic } = useSiteLanguage();
+  const { content, language, isArabic } = useSiteLanguage();
   const stageLabels: Record<string, string> = { PREPARING: content.order.statusPreparing, OUT_FOR_DELIVERY: content.order.statusOutForDelivery };
-  const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", invoice: "الفاتورة", paymentPending: "الدفع معلق", paid: "مدفوع", failed: "فشل الدفع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", invoice: "Invoice", paymentPending: "Payment pending", paid: "Paid", failed: "Payment failed" };
-  const paymentLabels: Record<string, string> = { PENDING: t.paymentPending, PAID: t.paid, FAILED: t.failed };
+  const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", invoice: "الفاتورة", paid: "مدفوع", notPaid: "غير مدفوع", markPaid: "اضغط لتحديده كمدفوع", markNotPaid: "اضغط لتحديده كغير مدفوع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", invoice: "Invoice", paid: "Paid", notPaid: "Not paid", markPaid: "Click to mark as paid", markNotPaid: "Click to mark as not paid" };
+  const isPaid = order.paymentStatus === "PAID";
   const isPending = order.status === "PENDING";
   const isAccepted = acceptedStatuses.has(order.status);
   const [expanded, setExpanded] = useState(false);
@@ -122,14 +123,15 @@ function OrderCard({
 
   const includedCount = draft.filter((line) => line.included).length;
   const phone = order.phone.replace(/[^\d]/g, "");
-  const whatsappCopy = order.status === "CANCELLED"
-    ? `Hello ${order.customerName}, we're sorry, but order ${order.orderNumber} could not be fulfilled.`
-    : order.status === "DELIVERED"
-      ? `Hello ${order.customerName}, thank you. Order ${order.orderNumber} has been completed.`
-      : isAccepted
-        ? `Hello ${order.customerName}, order ${order.orderNumber} has been accepted.`
-        : `Hello ${order.customerName}, regarding order ${order.orderNumber}.`;
-  const whatsappMessage = encodeURIComponent(whatsappCopy);
+  // A pending order's message lists whatever is currently changed in the editor; once accepted it
+  // lists the changes the shop saved, and includes the customer's invoice link.
+  const draftChanges = isPending ? describeDraftChanges(order.items, draft, products) : [];
+  const whatsappMessage = encodeURIComponent(whatsappText({
+    order,
+    language,
+    origin: window.location.origin,
+    pending: isPending ? { changes: draftChanges, total: includedTotal } : undefined,
+  }));
 
   function updateDraft(orderItemId: string, patch: Partial<EditedOrderLine>) {
     setDraft((current) => current.map((line) =>
@@ -154,7 +156,7 @@ function OrderCard({
         </div>
         <div className="admin-order-card__total">
           <strong>{order.subtotalQar + order.deliveryFeeQar} QAR</strong>
-          <span>{order.subtotalQar} + {order.deliveryFeeQar} delivery · {paymentMethodLabel(order.paymentMethod)}</span>
+          <span>{paymentMethodLabel(order.paymentMethod)}</span>
         </div>
       </div>
 
@@ -357,15 +359,17 @@ function OrderCard({
           </button>
         ) : null}
 
-        <select
-          aria-label={`${t.payment} ${order.orderNumber}`}
-          value={order.paymentStatus}
-          onChange={(event) => onPaymentChange(order.id, event.target.value)}
+        {/* Same switch as the product's Published badge: Paid ⇄ Not paid. */}
+        <button
+          type="button"
+          className={`admin-product-status-pill admin-product-status-pill--${isPaid ? "published" : "draft"}`}
+          aria-pressed={isPaid}
+          aria-label={`${t.payment} ${order.orderNumber}: ${isPaid ? t.paid : t.notPaid}`}
+          title={isPaid ? t.markNotPaid : t.markPaid}
+          onClick={() => onPaymentChange(order.id, isPaid ? "PENDING" : "PAID")}
         >
-          {["PENDING", "PAID", "FAILED"].map((paymentStatus) => (
-            <option key={paymentStatus} value={paymentStatus}>{paymentLabels[paymentStatus]}</option>
-          ))}
-        </select>
+          {isPaid ? t.paid : t.notPaid}
+        </button>
 
         <a
           href={`https://wa.me/${phone}?text=${whatsappMessage}`}

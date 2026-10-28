@@ -231,6 +231,7 @@
 .admin-product-status-pill--draft { border: 1px dashed rgba(217, 189, 114, .5); background: transparent; color: var(--admin-accent); }
 .admin-product-status-pill--draft:hover:not(:disabled) { background: rgba(217, 189, 114, .12); }
 .admin-product-status-pill:disabled { opacity: .6; cursor: progress; }
+.admin-order-card .admin-actions .admin-product-status-pill { min-height: 34px; padding: 0 var(--a-3); }
 .admin-product-save-status { min-height: 1.2em; color: var(--admin-success); font-size: .8rem; }
 .admin-product-save-status:empty { display: none; }
 .admin-product-delete-error { color: var(--admin-danger); font-size: .78rem; }

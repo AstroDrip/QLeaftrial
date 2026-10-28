@@ -8,9 +8,9 @@ const DEFAULT_TAB = "Orders";
 
 export const SHEET_HEADER = [
   "Order no.", "Invoice no.", "Date (Qatar)", "Customer", "Phone", "Area", "Address", "Items",
-  "Subtotal (QAR)", "Delivery (QAR)", "Total (QAR)", "Payment method", "Payment status", "Order status", "Delivery notes", "Updated (Qatar)",
+  "Subtotal (QAR)", "Total (QAR)", "Payment method", "Payment status", "Order status", "Delivery notes", "Updated (Qatar)",
 ];
-const LAST_COLUMN = "P";
+const LAST_COLUMN = "O";
 
 export type SheetOrder = {
   orderNumber: string;
@@ -27,6 +27,11 @@ export type SheetOrder = {
   deliveryFeeQar: number;
   items: Array<{ productName: string; quantity: number }>;
 };
+
+// The sheet is the books for finished sales: an order is written once it is completed and paid.
+export function qualifiesForSheet(order: Pick<SheetOrder, "status" | "paymentStatus">): boolean {
+  return order.status === "DELIVERED" && order.paymentStatus === "PAID";
+}
 
 export type SheetsConfig = { spreadsheetId: string; tab: string; account: ServiceAccount };
 
@@ -66,7 +71,6 @@ export function orderToRow(order: SheetOrder, now: Date = new Date()): Array<str
     order.addressLine1,
     order.items.map((item) => `${item.productName} × ${item.quantity}`).join("; "),
     order.subtotalQar,
-    order.deliveryFeeQar,
     order.subtotalQar + order.deliveryFeeQar,
     METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod,
     PAYMENT_LABELS[order.paymentStatus] ?? order.paymentStatus,
@@ -120,8 +124,12 @@ async function orderNumberColumn(config: SheetsConfig): Promise<string[]> {
 }
 
 export async function syncOrder(order: SheetOrder, config: SheetsConfig): Promise<void> {
+  const qualifies = qualifiesForSheet(order);
+  // A completed order that has since been marked unpaid is only corrected if it is already in the sheet.
+  if (!qualifies && order.status !== "DELIVERED") return;
   await ensureSheet(config);
   const index = (await orderNumberColumn(config)).indexOf(order.orderNumber);
+  if (index < 0 && !qualifies) return;
   const row = orderToRow(order);
   if (index >= 0) {
     const line = index + 1;
@@ -131,8 +139,8 @@ export async function syncOrder(order: SheetOrder, config: SheetsConfig): Promis
   }
 }
 
-// Updates rows that exist and appends the rest. It never deletes, so orders removed from the
-// shop admin stay in the sheet as a record.
+// Updates rows that exist and appends completed, paid orders that are missing. It never deletes, so
+// orders removed from the shop admin stay in the sheet as a record. Returns how many orders it wrote.
 export async function syncAllOrders(orders: SheetOrder[], config: SheetsConfig): Promise<number> {
   await ensureSheet(config);
   const existing = await orderNumberColumn(config);
@@ -141,11 +149,11 @@ export async function syncAllOrders(orders: SheetOrder[], config: SheetsConfig):
   for (const order of orders) {
     const index = existing.indexOf(order.orderNumber);
     if (index >= 0) updates.push({ range: `${quoted(config.tab)}!A${index + 1}:${LAST_COLUMN}${index + 1}`, values: [orderToRow(order)] });
-    else additions.push(orderToRow(order));
+    else if (qualifiesForSheet(order)) additions.push(orderToRow(order));
   }
   if (updates.length) await call(config, "/values:batchUpdate", { method: "POST", body: { valueInputOption: "RAW", data: updates } });
   if (additions.length) await call(config, `/values/${range(config, `A:${LAST_COLUMN}`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { method: "POST", body: { values: additions } });
-  return orders.length;
+  return updates.length + additions.length;
 }
 
 function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {

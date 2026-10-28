@@ -11,7 +11,7 @@ vi.mock("./admin-api", () => ({ adminApi: { orders: vi.fn() } }));
 function order(id: string, overrides: Partial<AdminOrder> = {}): AdminOrder {
   return {
     id, orderNumber: `QL-${id}`, customerName: `Customer ${id}`, phone: "+974 5555 1234", email: "c@example.com", addressLine1: "Villa 1, Street 30", area: "Doha",
-    paymentMethod: "COD", subtotalQar: 200, deliveryFeeQar: 25, status: "DELIVERED", paymentStatus: "PAID", createdAt: "2026-10-28T09:00:00Z", deliveryNotes: null,
+    paymentMethod: "COD", subtotalQar: 200, deliveryFeeQar: 0, status: "DELIVERED", paymentStatus: "PAID", createdAt: "2026-10-28T09:00:00Z", deliveryNotes: null, editChanges: [], invoiceToken: "token",
     items: [{ id: `${id}-1`, productId: "p1", productName: "Areca Palm", sku: "SP-1", quantity: 2, unitPriceQar: 100 }], ...overrides,
   };
 }
@@ -57,7 +57,9 @@ describe("admin invoices", () => {
     expect(within(invoice).getByText("Commercial Registration: CR-123")).toBeInTheDocument();
     expect(within(invoice).getByText("Customer a")).toBeInTheDocument();
     expect(within(invoice).getByText("Areca Palm")).toBeInTheDocument();
-    expect(within(invoice).getByText("225 QAR")).toBeInTheDocument();
+    // 2 x 100 QAR: the line, the subtotal and the total. There is no delivery line.
+    expect(within(invoice).getAllByText("200 QAR")).toHaveLength(2);
+    expect(within(invoice).queryByText("Delivery")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Print / save as PDF" }));
     expect(print).toHaveBeenCalledOnce();

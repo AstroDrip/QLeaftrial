@@ -1,16 +1,15 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSiteLanguage, useStoreSettings } from "../../app/providers";
+import { useSiteLanguage } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
 import { errorFromResponse } from "../../lib/api-error";
 import { rememberOrderSummary, type OrderSummary } from "./order-summary";
+import { FreeDeliveryProgress } from "../cart/FreeDeliveryProgress";
 
 type PlacedOrderResponse = {
   orderNumber: string;
   subtotalQar: number;
-  deliveryFeeQar: number;
   items: Array<{ productId: string; productName: string; quantity: number; unitPriceQar: number }>;
 };
 
@@ -26,8 +25,6 @@ const initialForm = {
 
 export function CheckoutPage() {
   const { content, isArabic } = useSiteLanguage();
-  const settings = useStoreSettings();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const items = useCartStore((state) => state.items);
@@ -48,10 +45,6 @@ export function CheckoutPage() {
       setError(isArabic ? "سلة المشتريات فارغة." : "Your cart is empty.");
       return;
     }
-    if (settings.isPending || settings.isError || settings.data?.deliveryFeeQar == null) {
-      setError(content.checkout.deliveryNotConfigured);
-      return;
-    }
     try {
       const response = await fetch("/api/v1/orders", {
         method: "POST",
@@ -64,17 +57,10 @@ export function CheckoutPage() {
           area: form.area,
           deliveryNotes: form.notes,
           paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK",
-          deliveryFeeQar: settings.data.deliveryFeeQar,
           items: items.map(({ id, quantity }) => ({ productId: id, quantity })),
         }),
       });
-      if (!response.ok) {
-        const responseError = await errorFromResponse(response);
-        if (responseError.code === "DELIVERY_PRICE_CHANGED") {
-          await queryClient.invalidateQueries({ queryKey: ["storefront-settings"] });
-        }
-        throw responseError;
-      }
+      if (!response.ok) throw await errorFromResponse(response);
       const body = await response.json() as PlacedOrderResponse;
       const arabicNames = new Map(items.map((item) => [item.id, item.nameAr?.trim() || null]));
       const summary: OrderSummary = {
@@ -86,7 +72,6 @@ export function CheckoutPage() {
           unitPriceQar: item.unitPriceQar,
         })),
         subtotalQar: body.subtotalQar,
-        deliveryFeeQar: body.deliveryFeeQar,
       };
       rememberOrderSummary(summary);
       clearCart();
@@ -103,6 +88,8 @@ export function CheckoutPage() {
       </div>
 
       <p className="page-shell__lead">{content.checkout.guestNotice}</p>
+
+      <FreeDeliveryProgress subtotalQar={cartSubtotal(items)} />
 
       {error ? <p role="alert">{error}</p> : null}
       <form className="checkout-form" onSubmit={handleSubmit}>
@@ -197,25 +184,19 @@ export function CheckoutPage() {
 
         <div className="checkout-summary">
           <h2>{content.order.summary}</h2>
-          {settings.isError ? <p role="alert">{content.checkout.deliveryNotConfigured}</p> : null}
-          {settings.data?.deliveryFeeQar === null ? <p role="alert">{content.checkout.deliveryNotConfigured}</p> : null}
           <ul>
             <li>
               <span>{items.map((item) => `${isArabic ? item.nameAr?.trim() || item.name : item.name} × ${item.quantity}`).join(isArabic ? "، " : ", ")}</span>
               <strong>{cartSubtotal(items)} QAR</strong>
             </li>
-            <li>
-              <span>{content.checkout.deliveryFee}</span>
-              <strong>{settings.data?.deliveryFeeQar == null || settings.isError || settings.isPending ? "—" : `${settings.data.deliveryFeeQar} QAR`}</strong>
-            </li>
           </ul>
           <div className="checkout-summary__total">
             <span>{content.checkout.total}</span>
-            <strong>{settings.data?.deliveryFeeQar == null || settings.isError || settings.isPending ? "—" : `${cartSubtotal(items) + settings.data.deliveryFeeQar} QAR`}</strong>
+            <strong>{cartSubtotal(items)} QAR</strong>
           </div>
         </div>
 
-        <button type="submit" className="primary-button" disabled={items.length === 0 || settings.isPending || settings.isError || settings.data?.deliveryFeeQar == null}>
+        <button type="submit" className="primary-button" disabled={items.length === 0}>
           {content.checkout.placeOrder}
         </button>
         <p className="checkout-form__legal">

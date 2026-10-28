@@ -16,6 +16,14 @@ export function EyeOffIcon(props: IconProps) {
   return <svg {...base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M9.9 5.7A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-2.6 3.3M6.2 7.2C3.9 8.9 2.5 12 2.5 12S6 18.5 12 18.5c1.4 0 2.7-.3 3.8-.8" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /><path d="m3.5 3.5 17 17" /></svg>;
 }
 
+export function LeafIcon(props: IconProps) {
+  return <svg {...base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 19c0-8 5-13.5 14-14 0 9-5 14-14 14Z" /><path d="M5 19 14 10" /></svg>;
+}
+
+export function SproutIcon(props: IconProps) {
+  return <svg {...base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 20v-7" /><path d="M12 13c0-3.2-2.3-5-5.5-5 0 3.2 2.1 5 5.5 5Z" /><path d="M12 13c0-3.2 2.3-5 5.5-5 0 3.2-2.1 5-5.5 5Z" /></svg>;
+}
+
 export function BagIcon(props: IconProps) {
   return <svg {...base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5.5 8.5h13l-1 11.5h-11l-1-11.5Z" /><path d="M9 10V7a3 3 0 0 1 6 0v3" /></svg>;
 }

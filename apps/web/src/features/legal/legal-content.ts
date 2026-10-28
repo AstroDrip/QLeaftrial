@@ -50,7 +50,7 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
       sections: [
         { title: "About these terms", body: ["These terms apply to purchases made on qleaves.qa from QLeaves, a business operating in the State of Qatar. By placing an order you agree to them. They are governed by the laws of Qatar, including Decree-Law No. 16 of 2010 on Electronic Commerce and Transactions and Law No. 8 of 2008 on Consumer Protection, and nothing in them limits the rights those laws give you. Our business registration details are on our About us page."] },
         { title: "Using the store", body: ["You may browse the catalogue and place orders for lawful purposes. Do not misuse the site, interfere with its operation, attempt unauthorised access, or submit false or abusive orders."] },
-        { title: "Products and prices", body: ["Prices are shown in Qatari Riyals (QAR). The delivery charge is shown before you place your order. Plants are living products, so natural variation in size, shape, colour and foliage is expected and photos are representative."] },
+        { title: "Products and prices", body: ["Prices are shown in Qatari Riyals (QAR). Delivery is free on orders of 150 QAR or more. Plants are living products, so natural variation in size, shape, colour and foliage is expected and photos are representative."] },
         { title: "Orders", body: ["When you submit checkout you send us an order request at the prices and availability confirmed by our server. We confirm your order by phone, WhatsApp or email. We may decline or cancel an order if a product is unavailable, your details cannot be verified, or a price was shown in error; if this happens we will tell you and refund anything you have paid."] },
         { title: "Payment", body: ["You can pay by cash on delivery, or by a payment link that we send after you place your order through a licensed payment provider. We will never ask for your card details on this website, by phone or by chat."] },
         { title: "Delivery", body: ["Delivery areas, charges and timing are explained on our Shipping & Returns page."] },
@@ -66,7 +66,7 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
       title: "Shipping & Returns",
       description: "QLeaves delivery areas, charges, cancellations, faulty items and returns for plant orders in Qatar.",
       sections: [
-        { title: "Delivery areas and charges", body: ["We deliver to Doha, Al Rayyan, Al Wakrah and Al Khor. The delivery charge is shown in QAR at checkout before you place your order. After ordering, we contact you to confirm a delivery time."] },
+        { title: "Delivery areas and charges", body: ["We deliver to Doha, Al Rayyan, Al Wakrah and Al Khor. Delivery is free on orders of 150 QAR or more, and you can still order below that amount. After ordering, we contact you to confirm a delivery time."] },
         { title: "Receiving your plants", body: ["Please keep your phone available on the delivery day and check your plants when they arrive. Unpack them promptly and keep them out of harsh direct sun until they settle in."] },
         { title: "Changing or cancelling an order", body: ["To change or cancel an order, contact us as soon as possible with your order number. Orders that have not been prepared or dispatched can be changed or cancelled; after dispatch it depends on how far the delivery has progressed."] },
         { title: "Damaged, incorrect or missing items", body: ["If an item arrives damaged, is different from what you ordered, or is missing, contact us promptly with your order number and a photo. In line with the Consumer Protection Law we will replace it, refund it, or fix the problem free of charge, including any collection needed."] },
@@ -118,10 +118,10 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
       sections: [
         { title: "عن هذه الشروط", body: ["تنطبق هذه الشروط على المشتريات من qleaves.qa التابع لـ QLeaves، وهو نشاط تجاري يعمل في دولة قطر. بتقديم طلبك فإنك توافق عليها. تخضع هذه الشروط لقوانين دولة قطر، بما في ذلك المرسوم بقانون رقم 16 لسنة 2010 بشأن المعاملات والتجارة الإلكترونية والقانون رقم 8 لسنة 2008 بشأن حماية المستهلك، ولا يحد أي شيء فيها من الحقوق التي تمنحها لك هذه القوانين. تفاصيل تسجيل النشاط التجاري موجودة في صفحة من نحن."] },
         { title: "استخدام المتجر", body: ["يمكنك تصفح الكتالوج وتقديم الطلبات لأغراض مشروعة. لا تسئ استخدام الموقع أو تعرقل تشغيله أو تحاول الوصول غير المصرح به أو تقدم طلبات زائفة أو مسيئة."] },
-        { title: "المنتجات والأسعار", body: ["تظهر الأسعار بالريال القطري، وتظهر رسوم التوصيل قبل تقديم الطلب. النباتات منتجات حية، لذا يُتوقع اختلاف طبيعي في الحجم والشكل واللون والأوراق، والصور تمثيلية."] },
+        { title: "المنتجات والأسعار", body: ["تظهر الأسعار بالريال القطري، والتوصيل مجاني للطلبات من 150 ر.ق فأكثر. النباتات منتجات حية، لذا يُتوقع اختلاف طبيعي في الحجم والشكل واللون والأوراق، والصور تمثيلية."] },
         { title: "الطلبات", body: ["عند إرسال نموذج الدفع فإنك ترسل طلبًا وفق الأسعار والتوفر المؤكدين من خادمنا، ونؤكد طلبك عبر الهاتف أو واتساب أو البريد الإلكتروني. يجوز لنا رفض الطلب أو إلغاؤه إذا كان المنتج غير متوفر أو تعذر التحقق من بياناتك أو ظهر السعر بالخطأ، وفي هذه الحالة سنبلغك ونرد أي مبلغ دفعته."] },
         { title: "الدفع", body: ["يمكنك الدفع نقدًا عند الاستلام أو عبر رابط دفع نرسله بعد تقديم الطلب من خلال مزود دفع مرخص. لن نطلب بيانات بطاقتك على هذا الموقع أو عبر الهاتف أو المحادثة."] },
-        { title: "التوصيل", body: ["مناطق التوصيل ورسومه ومواعيده موضحة في صفحة الشحن والإرجاع."] },
+        { title: "التوصيل", body: ["مناطق التوصيل ومواعيده موضحة في صفحة الشحن والإرجاع."] },
         { title: "المنتجات المعيبة أو غير المطابقة", body: ["وفقًا لقانون حماية المستهلك، إذا كان المنتج معيبًا أو غير مطابق لما طلبته، يحق لك استبداله أو استرداد قيمته أو إصلاح المشكلة مجانًا. يرجى مراجعة صفحة الشحن والإرجاع لمعرفة طريقة الإبلاغ."] },
         { title: "معلومات طلبك", body: ["أنت مسؤول عن تقديم معلومات اتصال وتوصيل دقيقة. إذا لاحظت خطأ بعد تقديم الطلب، تواصل معنا في أقرب وقت مع رقم الطلب."] },
         { title: "الملكية الفكرية", body: ["لا يجوز نسخ اسم QLeaves أو شعارها أو صورها أو نصوصها أو تصميم موقعها أو إعادة استخدامها دون إذننا."] },
@@ -134,7 +134,7 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
       title: "الشحن والإرجاع",
       description: "مناطق التوصيل والرسوم والإلغاء والمنتجات المعيبة والإرجاع لطلبات النباتات من QLeaves في قطر.",
       sections: [
-        { title: "مناطق التوصيل والرسوم", body: ["نوصل إلى الدوحة والريان والوكرة والخور. تظهر رسوم التوصيل بالريال القطري عند الدفع قبل تقديم الطلب، وبعد الطلب نتواصل معك لتأكيد موعد التوصيل."] },
+        { title: "مناطق التوصيل والرسوم", body: ["نوصل إلى الدوحة والريان والوكرة والخور. التوصيل مجاني للطلبات من 150 ر.ق فأكثر، ويمكنك الطلب بأقل من ذلك. وبعد الطلب نتواصل معك لتأكيد موعد التوصيل."] },
         { title: "استلام نباتاتك", body: ["يرجى إبقاء هاتفك متاحًا يوم التوصيل وفحص النباتات عند وصولها. أخرجها من التغليف سريعًا وأبعدها عن الشمس المباشرة القوية حتى تستقر."] },
         { title: "تعديل الطلب أو إلغاؤه", body: ["لتعديل طلب أو إلغائه تواصل معنا في أسرع وقت مع رقم الطلب. يمكن تعديل الطلبات أو إلغاؤها قبل تجهيزها أو إرسالها، وبعد الإرسال يعتمد ذلك على مرحلة التوصيل."] },
         { title: "العناصر التالفة أو الخاطئة أو الناقصة", body: ["إذا وصل عنصر تالفًا أو مختلفًا عما طلبته أو كان ناقصًا، تواصل معنا سريعًا مع رقم الطلب وصورة. ووفقًا لقانون حماية المستهلك سنستبدله أو نرد قيمته أو نصلح المشكلة مجانًا، بما في ذلك أي استلام لازم."] },

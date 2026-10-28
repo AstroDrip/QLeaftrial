@@ -37,7 +37,7 @@ function fakeGoogle(options: { sheetsStatus?: number; tokenStatus?: number } = {
       for (const entry of (body as { data: Array<{ range: string; values: Cell[][] }> }).data) state.rows[Number(/!A(\d+):/.exec(entry.range)![1]) - 1] = entry.values[0];
       return respond(200, {});
     }
-    if (method === "GET" && cells === "A1:P1") return respond(200, state.rows[0] ? { values: [state.rows[0]] } : {});
+    if (method === "GET" && cells === "A1:O1") return respond(200, state.rows[0] ? { values: [state.rows[0]] } : {});
     if (method === "GET" && cells === "A:A") return respond(200, state.rows.length ? { values: state.rows.map((row) => [row[0]]) } : {});
     if (method === "PUT") { state.rows[Number(/!A(\d+):/.exec(path)![1]) - 1] = (body as { values: Cell[][] }).values[0]; return respond(200, {}); }
     if (method === "POST" && path.includes(":append")) { state.rows.push(...(body as { values: Cell[][] }).values); return respond(200, {}); }
@@ -49,7 +49,7 @@ function fakeGoogle(options: { sheetsStatus?: number; tokenStatus?: number } = {
 function sheetOrder(overrides: Partial<SheetOrder> = {}): SheetOrder {
   return {
     orderNumber: "QL-20261028-AAA111", createdAt: "2026-10-27T22:30:00Z", customerName: "Aisha Al-Mansoori", phone: "+974 5555 1234", area: "Doha",
-    addressLine1: "Villa 12, Street 30", deliveryNotes: null, paymentMethod: "COD", paymentStatus: "PENDING", status: "PENDING", subtotalQar: 245, deliveryFeeQar: 25,
+    addressLine1: "Villa 12, Street 30", deliveryNotes: null, paymentMethod: "COD", paymentStatus: "PAID", status: "DELIVERED", subtotalQar: 245, deliveryFeeQar: 0,
     items: [{ productName: "Areca Palm", quantity: 2 }, { productName: "Orchid", quantity: 1 }], ...overrides,
   };
 }
@@ -104,9 +104,9 @@ describe("Google Sheets order sync", () => {
 
   describe("rows", () => {
     it("builds a tidy row in Qatar time with the total and invoice number, and without the email", () => {
-      const row = orderToRow(sheetOrder({ paymentStatus: "PAID", status: "DELIVERED" }), new Date("2026-10-28T10:05:00Z"));
+      const row = orderToRow(sheetOrder(), new Date("2026-10-28T10:05:00Z"));
       expect(row).toHaveLength(SHEET_HEADER.length);
-      expect(row).toEqual(["QL-20261028-AAA111", "INV-QL-20261028-AAA111", "2026-10-28 01:30", "Aisha Al-Mansoori", "+974 5555 1234", "Doha", "Villa 12, Street 30", "Areca Palm × 2; Orchid × 1", 245, 25, 270, "Cash on delivery", "Paid", "Completed", "", "2026-10-28 13:05"]);
+      expect(row).toEqual(["QL-20261028-AAA111", "INV-QL-20261028-AAA111", "2026-10-28 01:30", "Aisha Al-Mansoori", "+974 5555 1234", "Doha", "Villa 12, Street 30", "Areca Palm × 2; Orchid × 1", 245, 245, "Cash on delivery", "Paid", "Completed", "", "2026-10-28 13:05"]);
     });
   });
 
@@ -122,14 +122,32 @@ describe("Google Sheets order sync", () => {
       expect(state.rows).toHaveLength(2);
       expect(state.rows[0]).toEqual(SHEET_HEADER);
 
-      await syncOrder(sheetOrder({ status: "CONFIRMED", paymentStatus: "PAID" }), config);
+      // A completed order later marked unpaid is corrected in place, not duplicated.
+      await syncOrder(sheetOrder({ paymentStatus: "PENDING" }), config);
       expect(state.rows).toHaveLength(2);
-      expect(state.rows[1][13]).toBe("Accepted");
-      expect(state.rows[1][12]).toBe("Paid");
+      expect(state.rows[1][12]).toBe("Completed");
+      expect(state.rows[1][11]).toBe("Pending");
 
       await syncOrder(sheetOrder({ orderNumber: "QL-20261028-BBB222" }), config);
       expect(state.rows.map((row) => row[0])).toEqual(["Order no.", "QL-20261028-AAA111", "QL-20261028-BBB222"]);
       expect(state.tokenRequests).toBe(1);
+    });
+
+    it("only writes orders that are both completed and paid", async () => {
+      configureSheets();
+      const { state, fetchMock } = fakeGoogle();
+      vi.stubGlobal("fetch", fetchMock);
+      const config = sheetsConfig()!;
+
+      await syncOrder(sheetOrder({ status: "PENDING", paymentStatus: "PENDING" }), config);
+      await syncOrder(sheetOrder({ status: "CONFIRMED", paymentStatus: "PAID" }), config);
+      expect(fetchMock).not.toHaveBeenCalled();
+
+      await syncOrder(sheetOrder({ paymentStatus: "PENDING" }), config);
+      expect(state.rows.slice(1)).toEqual([]);
+
+      await syncOrder(sheetOrder(), config);
+      expect(state.rows).toHaveLength(2);
     });
 
     it("writes values as plain text so a hostile customer name cannot become a formula", async () => {
@@ -152,11 +170,17 @@ describe("Google Sheets order sync", () => {
       const config = sheetsConfig()!;
       await syncOrder(sheetOrder({ orderNumber: "QL-OLD" }), config);
 
-      const count = await syncAllOrders([sheetOrder({ orderNumber: "QL-NEW-1" }), sheetOrder({ orderNumber: "QL-NEW-2" }), sheetOrder({ orderNumber: "QL-OLD", status: "DELIVERED" })], config);
+      const count = await syncAllOrders([
+        sheetOrder({ orderNumber: "QL-NEW-1" }),
+        sheetOrder({ orderNumber: "QL-NEW-2" }),
+        sheetOrder({ orderNumber: "QL-NOT-DONE", status: "CONFIRMED" }),
+        sheetOrder({ orderNumber: "QL-NOT-PAID", paymentStatus: "PENDING" }),
+        sheetOrder({ orderNumber: "QL-OLD", paymentStatus: "PENDING" }),
+      ], config);
 
       expect(count).toBe(3);
       expect(state.rows.map((row) => row[0])).toEqual(["Order no.", "QL-OLD", "QL-NEW-1", "QL-NEW-2"]);
-      expect(state.rows[1][13]).toBe("Completed");
+      expect(state.rows[1][11]).toBe("Pending");
     });
   });
 
@@ -201,34 +225,41 @@ describe("Google Sheets in the API", () => {
     return request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
   }
 
-  it("adds a row when an order is placed and updates it when the admin changes payment and status", async () => {
+  it("adds the order to the sheet only once it is completed and paid, and corrects it if payment is undone", async () => {
     configureSheets();
     const { state, fetchMock } = fakeGoogle();
     vi.stubGlobal("fetch", fetchMock);
 
     const created = await placeOrder();
     expect(created.status).toBe(201);
-    expect(state.rows[1][0]).toBe(created.body.orderNumber);
-    expect(state.rows[1][13]).toBe("Pending");
-
     const agent = await loggedInAgent();
-    await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "CONFIRMED" }).expect(200);
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
+    expect(state.rows).toHaveLength(0);
 
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);
     expect(state.rows).toHaveLength(2);
-    expect(state.rows[1][12]).toBe("Paid");
-    expect(state.rows[1][13]).toBe("Accepted");
+    expect(state.rows[1][0]).toBe(created.body.orderNumber);
+    expect(state.rows[1][11]).toBe("Paid");
+    expect(state.rows[1][12]).toBe("Completed");
+
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PENDING" }).expect(200);
+    expect(state.rows).toHaveLength(2);
+    expect(state.rows[1][11]).toBe("Pending");
   });
 
-  it("still takes the order when Google is failing", async () => {
+  it("still saves the change when Google is failing", async () => {
     configureSheets();
     vi.stubGlobal("fetch", fakeGoogle({ tokenStatus: 500 }).fetchMock);
     vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const created = await placeOrder();
+    const agent = await loggedInAgent();
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "CONFIRMED" }).expect(200);
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);
 
-    expect(created.status).toBe(201);
-    expect(await prisma.order.count()).toBe(1);
+    expect(await prisma.order.findUnique({ where: { id: created.body.id } })).toMatchObject({ status: "DELIVERED", paymentStatus: "PAID" });
   });
 
   it("keeps ordering unchanged when the sheet is not configured", async () => {
@@ -251,7 +282,9 @@ describe("Google Sheets in the API", () => {
     expect((await agent.post("/api/v1/admin/sheets/sync")).body.error.code).toBe("SHEETS_NOT_CONFIGURED");
 
     const product = await seededProduct("house-plant");
-    for (let index = 0; index < 2; index += 1) await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const placed: string[] = [];
+    for (let index = 0; index < 3; index += 1) placed.push((await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }))).body.id);
+    await prisma.order.updateMany({ where: { id: { in: placed.slice(0, 2) } }, data: { status: "DELIVERED", paymentStatus: "PAID" } });
     configureSheets();
     const { state, fetchMock } = fakeGoogle();
     vi.stubGlobal("fetch", fetchMock);
