@@ -1,5 +1,5 @@
 /* Palette: the banner is the header's deep moss green, so the light has a dark ground to glow against (a glow
-   barely shows on a pale card). Contrast on that green: text 10.9:1, leaf green 6.6:1, yellow gold 7.9:1, and the
+   barely shows on a pale card). Contrast on that green: text 10.9:1, leaf green 6.6:1, light green glow 8.3:1, and the
    leaf-green fill against its unfilled track 4.1:1 (WCAG asks 3:1 for the filled part of a progress bar). */
 :root {
   --fd-surface: #28382b;        /* deep moss: the same green as the site header */
@@ -8,9 +8,9 @@
   --fd-text-muted: rgba(246, 241, 214, .72);
   --fd-track: rgba(246, 241, 214, .16);
   --fd-leaf: #a7c957;           /* fresh leaf green: the fill and the seed */
-  /* The finished line's colour: a yellow gold, with the light it gives off. */
-  --fd-yellow: #f6c933;
-  --fd-yellow-rgb: 246, 201, 51;
+  /* The finished line's colour: a light green, with the light it gives off. */
+  --fd-glow: #8ee6a0;
+  --fd-glow-rgb: 142, 230, 160;
   /* The last stretch: a long, gentle slowing-down, so the light eases into the finish instead of snapping to it. */
   --fd-arrive: cubic-bezier(.22, .7, .25, 1);
 }
@@ -49,7 +49,7 @@
   background: var(--fd-surface);
   transition: inset 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), border-radius 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), opacity 300ms ease 175ms, background-color 200ms var(--ease-out), border-color 200ms var(--ease-out);
 }
-.free-delivery.is-unlocked::before { border-color: rgba(var(--fd-yellow-rgb), .4); }
+.free-delivery.is-unlocked::before { border-color: rgba(var(--fd-glow-rgb), .4); }
 .free-delivery.is-collapsing::before {
   inset: var(--fd-top, 0px) var(--fd-right, 0px) var(--fd-bottom, 0px) var(--fd-left, 0px);
   border-radius: var(--radius-full);
@@ -64,7 +64,7 @@
 .free-delivery__rail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
 .free-delivery__anchor { width: 16px; height: 16px; color: var(--fd-text-muted); transition: opacity 225ms ease, color 200ms var(--ease-out), transform 200ms var(--ease-out); }
 .free-delivery__anchor--start { color: var(--fd-leaf); }
-.free-delivery.is-unlocked .free-delivery__anchor--goal { color: var(--fd-yellow); transform: scale(1.2) rotate(-8deg); }
+.free-delivery.is-unlocked .free-delivery__anchor--goal { color: var(--fd-glow); transform: scale(1.2) rotate(-8deg); }
 
 .free-delivery__trackwrap { position: relative; min-width: 0; }
 .free-delivery__track { position: relative; height: 4px; overflow: hidden; border-radius: var(--radius-full); background: var(--fd-track); }
@@ -80,12 +80,12 @@
   inset-inline-end: 0;
   width: 0;
   border-radius: var(--radius-full);
-  background: var(--fd-yellow);
+  background: var(--fd-glow);
   pointer-events: none;
 }
 .free-delivery.is-unlocked .free-delivery__sweep {
   width: 100%;
-  box-shadow: 0 0 4px 1px rgba(var(--fd-yellow-rgb), 1), 0 0 11px 3px rgba(var(--fd-yellow-rgb), .8), 0 0 22px 7px rgba(var(--fd-yellow-rgb), .45);
+  box-shadow: 0 0 4px 1px rgba(var(--fd-glow-rgb), 1), 0 0 11px 3px rgba(var(--fd-glow-rgb), .8), 0 0 22px 7px rgba(var(--fd-glow-rgb), .45);
   transition: width 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)) 500ms, box-shadow 450ms ease 500ms;
   animation: free-delivery-aura 1.2s ease-in-out 950ms infinite;
 }
@@ -96,7 +96,7 @@
 /* The line is replaced by the flying copy for the flight itself. */
 .free-delivery.is-flying .free-delivery__track { visibility: hidden; }
 
-/* A bright light riding the head of the fill, in the same yellow gold the finished line takes on. The box
+/* A bright light riding the head of the fill, in the same light green the finished line takes on. The box
    places it and blooms it; the light itself (and its pulse) is the ::after, so the two never fight. */
 .free-delivery__glow {
   position: absolute;
@@ -113,8 +113,8 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle, #fffdf0 0 26%, #ffe27a 46%, rgba(var(--fd-yellow-rgb), 0) 76%);
-  box-shadow: 0 0 8px 2px rgba(var(--fd-yellow-rgb), .9), 0 0 18px 6px rgba(var(--fd-yellow-rgb), .45);
+  background: radial-gradient(circle, #f3fff5 0 26%, #c9f7d2 46%, rgba(var(--fd-glow-rgb), 0) 76%);
+  box-shadow: 0 0 8px 2px rgba(var(--fd-glow-rgb), .9), 0 0 18px 6px rgba(var(--fd-glow-rgb), .45);
   animation: free-delivery-glow 1.8s ease-in-out infinite;
 }
 [dir="rtl"] .free-delivery__glow { translate: 50% -50%; }
@@ -135,5 +135,5 @@
 .free-delivery--compact .free-delivery__track { height: 3px; }
 
 /* The line in flight: positioned and sized every frame by FreeDeliveryFlyer. */
-.free-delivery-flyer { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 2px rgba(var(--fd-yellow-rgb), 1)) drop-shadow(0 0 6px rgba(var(--fd-yellow-rgb), .8)) drop-shadow(0 0 14px rgba(var(--fd-yellow-rgb), .5)); }
-.free-delivery-flyer path { stroke: var(--fd-yellow); }
+.free-delivery-flyer { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 2px rgba(var(--fd-glow-rgb), 1)) drop-shadow(0 0 6px rgba(var(--fd-glow-rgb), .8)) drop-shadow(0 0 14px rgba(var(--fd-glow-rgb), .5)); }
+.free-delivery-flyer path { stroke: var(--fd-glow); }

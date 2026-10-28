@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { useFreeDeliveryStore, FREE_DELIVERY_TIMINGS } from "./free-delivery-store";
 
-// The line is the finished track's yellow gold and keeps it, glow and all, all the way round the cart
+// The line is the finished track's light green and keeps it, glow and all, all the way round the cart
 // button; the colour and the glow come from the stylesheet (.free-delivery-flyer).
 // The ring sits 5px outside the cart button with a 1.5px stroke, so the stroke's centre is 4.25px out.
 const RING_OUTSET_PX = 4.25;
