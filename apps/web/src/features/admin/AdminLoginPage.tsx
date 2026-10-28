@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
 import { Seo } from "../../components/Seo";
+import { EyeIcon, EyeOffIcon } from "../../components/icons";
 import "./admin.css";
 
 export function AdminLoginPage() {
@@ -11,6 +12,8 @@ export function AdminLoginPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [password, setPassword] = useState("");
+  const [revealed, setRevealed] = useState(false);
+  const passwordId = useId();
   const login = useMutation({ mutationFn: adminApi.login, onSuccess: (admin) => { queryClient.setQueryData(["admin", "session"], admin); navigate("/admin"); } });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -27,16 +30,28 @@ export function AdminLoginPage() {
       </div>
 
       <form className="admin-login-form" onSubmit={handleSubmit}>
-        <label>
-          <span>{content.admin.password}</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </label>
+        <div className="admin-password-field">
+          <label htmlFor={passwordId}>{content.admin.password}</label>
+          <div className="admin-password-field__control">
+            <input
+              id={passwordId}
+              type={revealed ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              className="admin-password-field__toggle"
+              aria-label={revealed ? (isArabic ? "إخفاء كلمة المرور" : "Hide password") : (isArabic ? "إظهار كلمة المرور" : "Show password")}
+              aria-pressed={revealed}
+              onClick={() => setRevealed((current) => !current)}
+            >
+              {revealed ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
+        </div>
 
         {login.isError ? <p role="alert">{isArabic ? "تعذر تسجيل الدخول. تحقق من كلمة المرور وحاول مجددًا." : login.error.message}</p> : null}
 

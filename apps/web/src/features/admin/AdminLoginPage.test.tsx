@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,7 +16,7 @@ describe("AdminLoginPage", () => {
     localStorage.removeItem("qleaves-language");
     vi.mocked(adminApi.login).mockResolvedValue({ name: "QLeaves Admin" });
   });
-  afterEach(() => localStorage.clear());
+  afterEach(() => { cleanup(); localStorage.clear(); });
 
   it("authenticates with a password only", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -32,11 +32,31 @@ describe("AdminLoginPage", () => {
     );
 
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText(/password/i), "secret");
+    await userEvent.type(screen.getByLabelText("Password"), "secret");
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     expect(vi.mocked(adminApi.login).mock.calls[0]?.[0]).toBe("secret");
     expect(await screen.findByText("Dashboard")).toBeInTheDocument();
+  });
+
+  it("reveals and hides the password with the eye button", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <Providers client={client}>
+        <MemoryRouter initialEntries={["/admin/login"]}><AdminLoginPage /></MemoryRouter>
+      </Providers>,
+    );
+    const field = screen.getByLabelText("Password");
+    await userEvent.type(field, "secret");
+    expect(field).toHaveAttribute("type", "password");
+
+    await userEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(field).toHaveAttribute("type", "text");
+    expect(field).toHaveValue("secret");
+    expect(screen.getByRole("button", { name: "Hide password" })).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(field).toHaveAttribute("type", "password");
   });
 
   it("has no language switch but follows the language chosen on the site", () => {
