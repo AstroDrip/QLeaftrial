@@ -4,6 +4,7 @@ import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { BagIcon } from "../../components/icons";
 import { cartSubtotal, useCartStore } from "./cart-store";
 import { FreeDeliveryProgress } from "./FreeDeliveryProgress";
+import { useFreeDeliveryRing } from "./free-delivery-store";
 
 const HIDDEN_ON = /^\/(cart|checkout|order\/|invoice\/)/;
 
@@ -44,6 +45,7 @@ export function FloatingCartBar({ footer }: { footer: RefObject<HTMLElement | nu
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
   const visible = count > 0 && (settings.data?.orderingEnabled ?? true) && !HIDDEN_ON.test(pathname);
   const placement = useFooterPlacement(footer, visible);
+  const freeDeliveryRing = useFreeDeliveryRing();
 
   useEffect(() => {
     document.body.classList.toggle("has-floating-cart", visible);
@@ -60,7 +62,7 @@ export function FloatingCartBar({ footer }: { footer: RefObject<HTMLElement | nu
   return (
     <div className={className} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined}>
       <FreeDeliveryProgress subtotalQar={total} compact />
-      <Link to="/cart" className="floating-cart__button" aria-label={label} data-testid="floating-cart">
+      <Link to="/cart" className="floating-cart__button" aria-label={label} data-testid="floating-cart" data-fd-target="floating" data-fd-ring={freeDeliveryRing ? "on" : undefined}>
         <BagIcon />
         <span className="floating-cart__total" aria-hidden="true">{total} QAR</span>
       </Link>

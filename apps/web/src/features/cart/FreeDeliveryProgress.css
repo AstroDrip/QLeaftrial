@@ -1,25 +1,103 @@
 /* Free-delivery banner. Every element sits in its own grid cell, so the text, anchors and track can
-   never overlap at any width, in either text direction (columns follow the writing direction). */
+   never overlap at any width, in either text direction (columns follow the writing direction).
+   Motion follows one idea: a held, readable moment, then slow, eased moves; only the glow is lively. */
+.free-delivery-wrap {
+  --fd-ease: cubic-bezier(.65, 0, .35, 1);
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 800ms var(--fd-ease), margin-block-end 800ms var(--fd-ease);
+}
+/* The line has left: the row folds shut and the page below slides up into the space (the grid's own gap too). */
+.free-delivery-wrap.is-flying { grid-template-rows: 0fr; }
+.free-delivery-wrap.is-flying:not(.free-delivery-wrap--compact) { margin-block-end: calc(var(--space-6) * -1); }
+
 .free-delivery {
+  position: relative;
+  isolation: isolate;
+  min-height: 0;
   display: grid;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
+}
+.free-delivery.is-flying { overflow: hidden; }
+
+/* The card's outline and tint live on their own layer so they can close in on the line while it stays put. */
+.free-delivery::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--moss) 8%, var(--surface));
-  transition: background-color 400ms var(--ease-out), border-color 400ms var(--ease-out);
+  transition: inset 900ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), border-radius 900ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), opacity 600ms ease 350ms, background-color 400ms var(--ease-out), border-color 400ms var(--ease-out);
 }
-.free-delivery.is-unlocked { border-color: color-mix(in srgb, var(--moss) 45%, transparent); background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
+.free-delivery.is-unlocked::before { border-color: color-mix(in srgb, var(--moss) 45%, transparent); background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
+.free-delivery.is-collapsing::before {
+  inset: var(--fd-top, 0px) var(--fd-right, 0px) var(--fd-bottom, 0px) var(--fd-left, 0px);
+  border-radius: var(--radius-full);
+  opacity: 0;
+}
+
+.free-delivery__message, .free-delivery__note, .free-delivery__anchor { transition: opacity 450ms ease; }
 .free-delivery__message { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 600; overflow-wrap: anywhere; }
 .free-delivery__note { margin: 0; color: var(--text-muted); font-size: .8rem; }
+.free-delivery.is-collapsing .free-delivery__message, .free-delivery.is-collapsing .free-delivery__note, .free-delivery.is-collapsing .free-delivery__anchor { opacity: 0; }
+
 .free-delivery__rail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); }
-.free-delivery__anchor { width: 22px; height: 22px; color: var(--text-muted); transition: color 400ms var(--ease-out), transform 400ms var(--ease-out); }
+.free-delivery__anchor { width: 22px; height: 22px; color: var(--text-muted); transition: opacity 450ms ease, color 400ms var(--ease-out), transform 400ms var(--ease-out); }
 .free-delivery__anchor--start { color: var(--moss); }
 .free-delivery.is-unlocked .free-delivery__anchor--goal { color: var(--moss); transform: scale(1.2) rotate(-8deg); }
+
+.free-delivery__trackwrap { position: relative; min-width: 0; }
 .free-delivery__track { position: relative; height: 8px; overflow: hidden; border-radius: var(--radius-full); background: color-mix(in srgb, var(--ink) 12%, transparent); }
 .free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--moss); transition: width 500ms var(--ease-out); }
-.free-delivery--compact { gap: 6px; width: min(340px, calc(100vw - 32px)); padding: var(--space-3) var(--space-4); background: var(--surface); box-shadow: var(--shadow-md); pointer-events: auto; }
-.free-delivery--compact.is-unlocked { background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
+/* The line is replaced by the flying copy for the flight itself. */
+.free-delivery.is-flying .free-delivery__track { visibility: hidden; }
+
+/* A warm light riding the head of the fill. It is the only thing that keeps moving while you read.
+   Gold, not neon: it belongs to the brand palette. */
+.free-delivery__glow {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: var(--fd-progress, 0%);
+  width: 14px;
+  height: 14px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, #fffbe0 0 24%, var(--gold) 46%, rgba(215, 197, 138, 0) 74%);
+  box-shadow: 0 0 10px 2px rgba(215, 197, 138, .6), 0 0 22px 6px rgba(63, 91, 67, .2);
+  transition: inset-inline-start 500ms var(--ease-out), opacity 400ms ease;
+  animation: free-delivery-glow 1.8s ease-in-out infinite;
+}
+[dir="rtl"] .free-delivery__glow { translate: 50% -50%; }
+.free-delivery.is-unlocked .free-delivery__glow { box-shadow: 0 0 14px 4px rgba(215, 197, 138, .85), 0 0 28px 10px rgba(63, 91, 67, .28); }
+.free-delivery.is-collapsing .free-delivery__glow { opacity: 0; animation: none; }
+@keyframes free-delivery-glow { 0%, 100% { opacity: .85; scale: .88; } 50% { opacity: 1; scale: 1.2; } }
+
+.free-delivery--compact { gap: 6px; width: min(340px, calc(100vw - 32px)); padding: var(--space-3) var(--space-4); pointer-events: auto; }
+.free-delivery--compact::before { box-shadow: var(--shadow-md); background: var(--surface); }
+.free-delivery--compact.is-unlocked::before { background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
 .free-delivery--compact .free-delivery__message { font-size: .8rem; }
 .free-delivery--compact .free-delivery__anchor { width: 18px; height: 18px; }
 .free-delivery--compact .free-delivery__track { height: 6px; }
+
+/* The line in flight: positioned and sized every frame by FreeDeliveryFlyer. */
+.free-delivery-flyer { position: fixed; top: 0; left: 0; z-index: 80; box-sizing: border-box; border-style: solid; border-radius: 999px; pointer-events: none; will-change: transform, width, height; }
+
+/* The ring the cart icon keeps while free delivery is unlocked. It is exactly where the flyer lands. */
+[data-fd-ring="on"] { position: relative; }
+[data-fd-ring="on"]::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  box-sizing: border-box;
+  border: 2px solid var(--gold);
+  border-radius: 999px;
+  box-shadow: 0 0 14px 2px rgba(215, 197, 138, .55);
+  pointer-events: none;
+  animation: free-delivery-ring-settle 1100ms var(--ease-out);
+}
+.icon-button[data-fd-ring="on"]::after { inset: -6px; }
+@keyframes free-delivery-ring-settle { 0% { box-shadow: 0 0 26px 7px rgba(215, 197, 138, .95); } }

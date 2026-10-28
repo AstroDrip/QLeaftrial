@@ -24,6 +24,10 @@ export function SproutIcon(props: IconProps) {
   return <svg {...base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 20v-7" /><path d="M12 13c0-3.2-2.3-5-5.5-5 0 3.2 2.1 5 5.5 5Z" /><path d="M12 13c0-3.2 2.3-5 5.5-5 0 3.2-2.1 5-5.5 5Z" /></svg>;
 }
 
+export function TrashIcon(props: IconProps) {
+  return <svg {...base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4.5 7h15" /><path d="M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2" /><path d="M6.5 7l.8 12a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4l.8-12" /><path d="M10 11v6M14 11v6" /></svg>;
+}
+
 export function BagIcon(props: IconProps) {
   return <svg {...base} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5.5 8.5h13l-1 11.5h-11l-1-11.5Z" /><path d="M9 10V7a3 3 0 0 1 6 0v3" /></svg>;
 }

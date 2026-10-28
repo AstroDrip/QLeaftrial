@@ -156,6 +156,7 @@ label { color: var(--text-muted); font-size: .8125rem; font-weight: 600; }
 }
 .floating-cart--docked { position: absolute; bottom: calc(var(--footer-height, 0px) + 20px); }
 .floating-cart__button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: .875rem;
@@ -218,7 +219,9 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 .cart-item h2 { margin-bottom: .25rem; font-family: var(--sans); font-size: 1.05rem; font-weight: 600; }
 .cart-item__actions { display: flex; align-items: center; gap: var(--space-3); }
 .cart-item__actions input { width: 76px; }
-.cart-item__actions button { border: 0; background: none; color: var(--danger); font-weight: 600; }
+.cart-item__remove { display: inline-grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border: 0; border-radius: var(--radius-full); background: none; color: var(--danger); cursor: pointer; transition: background-color var(--duration) var(--ease-out); }
+.cart-item__remove:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.cart-item__remove svg { width: 20px; height: 20px; }
 .order-summary, .checkout-summary, .confirmation-summary { display: grid; gap: var(--space-4); align-self: start; }
 .order-summary dl, .checkout-summary ul, .confirmation-summary ul { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none; }
 .order-summary dl div, .checkout-summary li, .confirmation-summary li, .checkout-summary__total { display: flex; justify-content: space-between; gap: var(--space-4); }
@@ -289,7 +292,8 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
   .site-header__wordmark { display: none; }
 }
 @media (max-width: 420px) {
-  .site-header__actions { gap: .25rem; }
+  /* The gold ring around the cart icon sits 6px outside it, so the controls keep a little more room. */
+  .site-header__actions { gap: .625rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

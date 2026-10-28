@@ -4,6 +4,7 @@ import { useSiteLanguage } from "../../app/providers";
 import { cartSubtotal, useCartStore } from "./cart-store";
 import { Seo } from "../../components/Seo";
 import { FreeDeliveryProgress } from "./FreeDeliveryProgress";
+import { TrashIcon } from "../../components/icons";
 
 function CartQuantity({ id, name, quantity, stock, onCommit, quantityLabel }: { id: string; name: string; quantity: number; stock: number; onCommit: (id: string, quantity: number) => void; quantityLabel: string }) {
   const [draft, setDraft] = useState(String(quantity));
@@ -31,7 +32,6 @@ export function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
 
   const subtotal = useMemo(() => cartSubtotal(items), [items]);
-  const itemCount = useMemo(() => items.reduce((total, item) => total + item.quantity, 0), [items]);
 
   if (items.length === 0) {
     return (
@@ -73,8 +73,8 @@ export function CartPage() {
                   <span className="sr-only">{content.cart.quantity}</span>
                   <CartQuantity id={item.id} name={isArabic ? item.nameAr?.trim() || item.name : item.name} quantity={item.quantity} stock={item.stock} onCommit={setQuantity} quantityLabel={content.cart.quantity} />
                 </label>
-                <button type="button" onClick={() => removeItem(item.id)}>
-                  {content.cart.remove}
+                <button type="button" className="cart-item__remove" aria-label={`${content.cart.remove}: ${isArabic ? item.nameAr?.trim() || item.name : item.name}`} title={content.cart.remove} onClick={() => removeItem(item.id)}>
+                  <TrashIcon />
                 </button>
               </div>
             </article>
@@ -85,11 +85,7 @@ export function CartPage() {
           <h2>{content.order.summary}</h2>
           <dl>
             <div>
-              <dt>{content.cart.itemCount(itemCount, subtotal)}</dt>
-              <dd>{subtotal} QAR</dd>
-            </div>
-            <div>
-              <dt>{content.cart.subtotal}</dt>
+              <dt>{content.cart.total}</dt>
               <dd>{subtotal} QAR</dd>
             </div>
           </dl>

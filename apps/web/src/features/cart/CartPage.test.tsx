@@ -31,7 +31,22 @@ describe("CartPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "House Plant" })).toBeInTheDocument();
-    expect(screen.getAllByText("360 QAR")).toHaveLength(2);
+    // One total, no separate item count, and the old "item(s)" wording is gone.
+    expect(screen.getAllByText("360 QAR")).toHaveLength(1);
+    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.queryByText(/item\(s\)/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Subtotal")).not.toBeInTheDocument();
+  });
+
+  it("removes an item with an icon button that is still named for screen readers", async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+
+    const remove = screen.getByRole("button", { name: "Remove: House Plant" });
+    expect(remove).not.toHaveTextContent(/\S/);
+    expect(remove.querySelector("svg")).not.toBeNull();
+    await userEvent.click(remove);
+
+    expect(useCartStore.getState().items).toHaveLength(0);
   });
 
   it("does not remove an item while its quantity field is temporarily empty", async () => {
