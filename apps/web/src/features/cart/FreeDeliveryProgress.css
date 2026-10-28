@@ -1,5 +1,10 @@
 /* The finished line's colour: a yellow gold, with the light it gives off. */
-:root { --fd-yellow: #f6c933; --fd-yellow-rgb: 246, 201, 51; }
+:root {
+  --fd-yellow: #f6c933;
+  --fd-yellow-rgb: 246, 201, 51;
+  /* The last stretch: a long, gentle slowing-down, so the light eases into the finish instead of snapping to it. */
+  --fd-arrive: cubic-bezier(.22, .7, .25, 1);
+}
 
 /* Free-delivery banner. Every element sits in its own grid cell, so the text, anchors and track can
    never overlap at any width, in either text direction (columns follow the writing direction).
@@ -57,8 +62,8 @@
 /* Once the light reaches the finish the whole track is one solid colour; only the light itself glows. */
 .free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--moss); transition: width 300ms var(--ease-out); }
 .free-delivery.is-unlocked .free-delivery__track { background: var(--moss); }
-/* At the moment the light arrives (the fill's own 300ms), its colour runs back along the track from the finish
-   line to the start, and the whole line glows. It sits beside the track, not inside it, because the track
+/* At the moment the light arrives (the 500ms of its final approach), its colour runs back along the track from the
+   finish line to the start, and the whole line glows. It sits beside the track, not inside it, because the track
    clips its contents and the glow has to spill out around the line. */
 .free-delivery__sweep {
   position: absolute;
@@ -72,8 +77,8 @@
 .free-delivery.is-unlocked .free-delivery__sweep {
   width: 100%;
   box-shadow: 0 0 4px 1px rgba(var(--fd-yellow-rgb), 1), 0 0 11px 3px rgba(var(--fd-yellow-rgb), .8), 0 0 22px 7px rgba(var(--fd-yellow-rgb), .45);
-  transition: width 400ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)) 300ms, box-shadow 400ms ease 300ms;
-  animation: free-delivery-aura 1.2s ease-in-out 700ms infinite;
+  transition: width 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)) 500ms, box-shadow 450ms ease 500ms;
+  animation: free-delivery-aura 1.2s ease-in-out 950ms infinite;
 }
 .free-delivery.is-collapsing .free-delivery__sweep { animation: none; }
 /* The flying copy takes over from here, glow and all. */
@@ -82,7 +87,8 @@
 /* The line is replaced by the flying copy for the flight itself. */
 .free-delivery.is-flying .free-delivery__track { visibility: hidden; }
 
-/* A bright light riding the head of the fill, in the same yellow gold the finished line takes on. */
+/* A bright light riding the head of the fill, in the same yellow gold the finished line takes on. The box
+   places it and blooms it; the light itself (and its pulse) is the ::after, so the two never fight. */
 .free-delivery__glow {
   position: absolute;
   top: 50%;
@@ -90,16 +96,27 @@
   width: 11px;
   height: 11px;
   translate: -50% -50%;
-  border-radius: 50%;
   pointer-events: none;
+  transition: inset-inline-start 300ms var(--ease-out);
+}
+.free-delivery__glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
   background: radial-gradient(circle, #fffdf0 0 26%, #ffe27a 46%, rgba(var(--fd-yellow-rgb), 0) 76%);
   box-shadow: 0 0 8px 2px rgba(var(--fd-yellow-rgb), .9), 0 0 18px 6px rgba(var(--fd-yellow-rgb), .45);
-  transition: inset-inline-start 300ms var(--ease-out), opacity 200ms ease;
   animation: free-delivery-glow 1.8s ease-in-out infinite;
 }
 [dir="rtl"] .free-delivery__glow { translate: 50% -50%; }
-/* It arrives at the finish line, then hands over to the sweep: the line itself carries the glow from here. */
-.free-delivery.is-unlocked .free-delivery__glow { opacity: 0; animation: none; transition: inset-inline-start 300ms var(--ease-out), opacity 120ms ease 300ms; }
+/* The finish: the fill and the light ease in together, slowing as they arrive. Then the light blooms, swelling
+   and fading, as its glow spreads back along the line (the sweep above begins at that same moment). */
+.free-delivery.is-unlocked .free-delivery__fill { transition: width 500ms var(--fd-arrive); }
+.free-delivery.is-unlocked .free-delivery__glow {
+  scale: 3.2;
+  opacity: 0;
+  transition: inset-inline-start 500ms var(--fd-arrive), scale 450ms ease-out 500ms, opacity 450ms ease-in 500ms;
+}
 @keyframes free-delivery-glow { 0%, 100% { opacity: .85; scale: .88; } 50% { opacity: 1; scale: 1.2; } }
 
 .free-delivery--compact { gap: 4px; width: min(280px, calc(100vw - 32px)); padding: 8px 12px; pointer-events: auto; }
