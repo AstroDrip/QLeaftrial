@@ -6,6 +6,7 @@ import { orderRouter } from "./modules/orders/order.routes.js";
 import { storeSettingsRouter } from "./modules/admin/store-settings.routes.js";
 import { securityRouter } from "./modules/security/security.routes.js";
 import { sitemapRouter } from "./modules/seo/sitemap.routes.js";
+import { sheetsRouter } from "./modules/sheets/sheets.routes.js";
 
 export const apiRouter = Router();
 export const siteRouter = Router();
@@ -18,3 +19,4 @@ apiRouter.use(productRouter);
 apiRouter.use(orderRouter);
 apiRouter.use(storeSettingsRouter);
 apiRouter.use(securityRouter);
+apiRouter.use(sheetsRouter);

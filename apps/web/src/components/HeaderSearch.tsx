@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../app/providers";
@@ -7,6 +7,9 @@ import { localizeProduct } from "../features/catalog/localize-product";
 import { CloseIcon, SearchIcon } from "./icons";
 
 const SUGGESTION_LIMIT = 5;
+const EDGE_GAP = 16;
+const MIN_WIDTH = 180;
+const MAX_WIDTH = 300;
 
 function useDebounced(value: string, delay = 250): string {
   const [debounced, setDebounced] = useState(value);
@@ -26,7 +29,8 @@ export function HeaderSearch() {
   const input = useRef<HTMLInputElement>(null);
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [expandedWidth, setExpandedWidth] = useState(MAX_WIDTH);
   const [active, setActive] = useState(-1);
   const query = useDebounced(term.trim());
 
@@ -37,18 +41,44 @@ export function HeaderSearch() {
     staleTime: 60_000,
   });
   const items = (suggestions.data?.items ?? []).slice(0, SUGGESTION_LIMIT);
-  const showResults = open && query.length >= 2 && !suggestions.isPending;
+  const showResults = expanded && open && query.length >= 2 && !suggestions.isPending;
 
-  useEffect(() => { setOpen(false); setMobileOpen(false); }, [pathname]);
+  useEffect(() => { setOpen(false); setExpanded(false); }, [pathname]);
   useEffect(() => { setActive(-1); }, [query]);
+  // The capsule grows away from the icon, so it can only be as wide as the room left on that side.
   useEffect(() => {
-    if (!open && !mobileOpen) return;
+    if (!expanded) return;
+    const measure = () => {
+      const rect = container.current?.getBoundingClientRect();
+      const viewport = document.documentElement.clientWidth;
+      const room = rect ? (isArabic ? viewport - rect.left : rect.right) - EDGE_GAP : 0;
+      const preferred = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, viewport * 0.22));
+      setExpandedWidth(room > 0 ? Math.min(preferred, room) : preferred);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [expanded, isArabic]);
+
+  useEffect(() => {
+    if (!expanded) return;
     const close = (event: MouseEvent) => {
-      if (!container.current?.contains(event.target as Node)) { setOpen(false); setMobileOpen(false); }
+      if (!container.current?.contains(event.target as Node)) { setOpen(false); setExpanded(false); }
     };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
-  }, [open, mobileOpen]);
+  }, [expanded]);
+
+  function toggle() {
+    if (expanded) {
+      setOpen(false);
+      setExpanded(false);
+      return;
+    }
+    setExpanded(true);
+    // The input only becomes focusable once the open class has been applied.
+    requestAnimationFrame(() => input.current?.focus({ preventScroll: true }));
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,7 +93,7 @@ export function HeaderSearch() {
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Escape") { setOpen(false); setMobileOpen(false); return; }
+    if (event.key === "Escape") { setOpen(false); setExpanded(false); container.current?.querySelector<HTMLButtonElement>(".header-search__toggle")?.focus(); return; }
     if (!showResults || items.length === 0) return;
     if (event.key === "ArrowDown") { event.preventDefault(); setActive((index) => (index + 1) % items.length); }
     if (event.key === "ArrowUp") { event.preventDefault(); setActive((index) => (index - 1 + items.length) % items.length); }
@@ -71,21 +101,28 @@ export function HeaderSearch() {
 
   const label = isArabic ? "ابحث عن نبات" : "Search plants";
   return (
-    <div ref={container} className={`header-search${mobileOpen ? " header-search--open" : ""}`}>
-      <button
-        type="button"
-        className="icon-button header-search__toggle"
-        aria-label={mobileOpen ? (isArabic ? "إغلاق البحث" : "Close search") : label}
-        aria-expanded={mobileOpen}
-        onClick={() => {
-          setMobileOpen((current) => !current);
-          requestAnimationFrame(() => input.current?.focus());
-        }}
-      >
-        {mobileOpen ? <CloseIcon /> : <SearchIcon />}
-      </button>
+    <div
+      ref={container}
+      className={`header-search${expanded ? " header-search--open" : ""}`}
+      style={{ "--search-open-width": `${expandedWidth}px` } as CSSProperties}
+      // Only a keyboard move to another element closes it. A null target (a mouse press on a
+      // suggestion in Safari, or switching windows) must not, or the click would be lost.
+      onBlur={(event) => {
+        const next = event.relatedTarget as Node | null;
+        if (expanded && next && !event.currentTarget.contains(next)) { setOpen(false); if (!term.trim()) setExpanded(false); }
+      }}
+    >
       <form className="header-search__form" role="search" onSubmit={submit}>
-        <SearchIcon />
+        <button
+          type="button"
+          className="icon-button header-search__toggle"
+          aria-label={expanded ? (isArabic ? "إغلاق البحث" : "Close search") : label}
+          aria-expanded={expanded}
+          onClick={toggle}
+        >
+          <SearchIcon className="header-search__glyph header-search__glyph--search" />
+          <CloseIcon className="header-search__glyph header-search__glyph--close" />
+        </button>
         <input
           ref={input}
           type="search"
@@ -98,6 +135,7 @@ export function HeaderSearch() {
           aria-autocomplete="list"
           aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
           enterKeyHint="search"
+          tabIndex={expanded ? 0 : -1}
           onChange={(event) => { setTerm(event.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}

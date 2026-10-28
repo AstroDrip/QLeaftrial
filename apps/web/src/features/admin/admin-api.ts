@@ -264,6 +264,10 @@ export const adminApi = {
     }),
   dashboard: (): Promise<AdminDashboard> =>
     request<AdminDashboard>("/admin/dashboard"),
+  sheetsStatus: (): Promise<{ configured: boolean; tab?: string; sheetUrl?: string }> =>
+    request("/admin/sheets/status"),
+  syncSheets: (): Promise<{ synced: number }> =>
+    request("/admin/sheets/sync", { method: "POST" }),
   updateOrderingEnabled: (orderingEnabled: boolean): Promise<StoreSettings> =>
     request<StoreSettings>("/admin/storefront-settings", {
       method: "PUT",

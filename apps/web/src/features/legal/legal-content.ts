@@ -29,7 +29,7 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
         { title: "Cookies and local storage", body: ["The storefront does not use advertising or analytics tracking cookies. Your browser stores your cart and language choice on your own device so they are remembered between visits; you can clear them at any time in your browser settings. The staff admin area uses one strictly necessary sign-in cookie."] },
         { title: "Who we share it with", body: [
           "We do not sell personal data. We share only what is needed with:",
-          ["The people delivering your order.", "A licensed payment provider, if you choose to pay by payment link.", "Our technology providers for website hosting, database and image storage."],
+          ["The people delivering your order.", "A licensed payment provider, if you choose to pay by payment link.", "Our technology providers for website hosting, database and image storage.", "A private Google Sheet kept by the shop, where order details (but not your email address) may be copied for record keeping."],
           "Some of these providers may store data on servers outside Qatar. Where that happens we use reputable providers that apply appropriate security safeguards to protect your data, as the law requires.",
         ] },
         { title: "How long we keep it", body: ["We keep order and customer information only for as long as needed for the purposes above, including any period required for accounting, tax or legal reasons. After that it is deleted or anonymised."] },
@@ -97,7 +97,7 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
         { title: "ملفات تعريف الارتباط والتخزين المحلي", body: ["لا يستخدم المتجر ملفات تعريف ارتباط إعلانية أو تحليلية للتتبع. يحفظ متصفحك سلة التسوق واختيار اللغة على جهازك فقط ليتذكرهما بين الزيارات، ويمكنك حذفهما في أي وقت من إعدادات المتصفح. وتستخدم منطقة إدارة الموظفين ملف تعريف ارتباط ضروريًا واحدًا لتسجيل الدخول."] },
         { title: "مع من نشاركها", body: [
           "لا نبيع البيانات الشخصية. نشارك فقط ما يلزم مع:",
-          ["الأشخاص الذين يوصلون طلبك.", "مزود دفع مرخص، إذا اخترت الدفع عبر رابط الدفع.", "مزودي التقنية لاستضافة الموقع وقاعدة البيانات وتخزين الصور."],
+          ["الأشخاص الذين يوصلون طلبك.", "مزود دفع مرخص، إذا اخترت الدفع عبر رابط الدفع.", "مزودي التقنية لاستضافة الموقع وقاعدة البيانات وتخزين الصور.", "جدول Google خاص يحتفظ به المتجر، قد تُنسخ إليه تفاصيل الطلب (دون بريدك الإلكتروني) لأغراض حفظ السجلات."],
           "قد يخزن بعض هؤلاء المزودين البيانات على خوادم خارج قطر، وفي هذه الحالة نستخدم مزودين موثوقين يطبقون ضمانات أمنية مناسبة لحماية بياناتك كما يتطلب القانون.",
         ] },
         { title: "مدة الاحتفاظ", body: ["نحتفظ بمعلومات الطلبات والعملاء فقط للمدة اللازمة للأغراض المذكورة أعلاه، بما في ذلك أي مدة مطلوبة لأسباب محاسبية أو ضريبية أو قانونية، ثم تُحذف أو تُجعل مجهولة الهوية."] },

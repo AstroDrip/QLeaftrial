@@ -84,6 +84,13 @@
 .admin-business-settings > div { display: grid; gap: var(--a-2); }
 .admin-ordering-toggle { display: flex; align-items: center; gap: var(--a-2); color: var(--admin-text); white-space: nowrap; }
 .admin-ordering-toggle input { min-height: 0; accent-color: var(--admin-accent); }
+.admin-sheet-sync { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--a-4); padding: var(--a-5); border: 1px solid var(--admin-border); border-radius: var(--admin-radius); background: var(--admin-surface); }
+.admin-sheet-sync > div:first-child { display: grid; gap: var(--a-2); max-width: 62ch; }
+.admin-sheet-sync h2 { font-family: var(--sans); font-size: 1rem; font-weight: 700; }
+.admin-sheet-sync p { color: var(--admin-muted); font-size: .875rem; }
+.admin-sheet-sync .admin-sheet-sync__status { color: var(--admin-text); }
+.admin-sheet-sync .admin-sheet-sync__ok { color: var(--admin-success); }
+.admin-sheet-sync .admin-sheet-sync__error { color: var(--admin-danger); }
 .admin-business-settings__form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--a-4); }
 .admin-business-settings__form label { display: grid; gap: var(--a-2); }
 .admin-business-settings__form button { justify-self: start; }

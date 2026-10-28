@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminOrdersPage } from "./AdminOrdersPage";
 import { adminApi, type AdminOrder } from "./admin-api";
@@ -33,7 +34,7 @@ describe("AdminOrdersPage", () => {
 
   it("keeps preparing and out-for-delivery orders under the Accepted tab", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(<QueryClientProvider client={client}><AdminOrdersPage /></QueryClientProvider>);
+    render(<QueryClientProvider client={client}><MemoryRouter><AdminOrdersPage /></MemoryRouter></QueryClientProvider>);
 
     const acceptedTab = await screen.findByRole("tab", { name: "Accepted (3)" });
     expect(screen.getByRole("tab", { name: "Pending (1)" })).toBeInTheDocument();
@@ -45,4 +46,16 @@ describe("AdminOrdersPage", () => {
     expect(within(screen.getByTestId("order-QL-3")).getByRole("button", { name: "Complete" })).toBeInTheDocument();
     expect(screen.queryByTestId("order-QL-4")).not.toBeInTheDocument();
   });
+
+  it("links every non-declined order to its invoice", async () => {
+    vi.mocked(adminApi.orders).mockResolvedValue([order("QL-1", "CONFIRMED"), order("QL-9", "CANCELLED")]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><MemoryRouter><AdminOrdersPage /></MemoryRouter></QueryClientProvider>);
+
+    await userEvent.click(await screen.findByRole("tab", { name: /Accepted/ }));
+    expect(within(screen.getByTestId("order-QL-1")).getByRole("link", { name: "Invoice" })).toHaveAttribute("href", "/admin/invoices/QL-1");
+    await userEvent.click(screen.getByRole("tab", { name: /Declined/ }));
+    expect(within(screen.getByTestId("order-QL-9")).queryByRole("link", { name: "Invoice" })).not.toBeInTheDocument();
+  });
 });
+

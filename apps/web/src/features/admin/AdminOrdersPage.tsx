@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { OrderStatusTabs, type StatusTab } from "./OrderStatusTabs";
 import { useSiteLanguage } from "../../app/providers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -90,7 +91,7 @@ function OrderCard({
 }) {
   const { content, isArabic } = useSiteLanguage();
   const stageLabels: Record<string, string> = { PREPARING: content.order.statusPreparing, OUT_FOR_DELIVERY: content.order.statusOutForDelivery };
-  const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", paymentPending: "الدفع معلق", paid: "مدفوع", failed: "فشل الدفع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", paymentPending: "Payment pending", paid: "Paid", failed: "Payment failed" };
+  const t = isArabic ? { hello: "مرحبًا", regarding: "بخصوص الطلب", accept: "قبول", decline: "رفض", complete: "إكمال", delete: "حذف", payment: "حالة الدفع للطلب", notify: "إشعار عبر واتساب", invoice: "الفاتورة", paymentPending: "الدفع معلق", paid: "مدفوع", failed: "فشل الدفع" } : { hello: "Hello", regarding: "regarding order", accept: "Accept", decline: "Decline", complete: "Complete", delete: "Delete", payment: "Payment status for", notify: "Notify on WhatsApp", invoice: "Invoice", paymentPending: "Payment pending", paid: "Paid", failed: "Payment failed" };
   const paymentLabels: Record<string, string> = { PENDING: t.paymentPending, PAID: t.paid, FAILED: t.failed };
   const isPending = order.status === "PENDING";
   const isAccepted = acceptedStatuses.has(order.status);
@@ -374,6 +375,10 @@ function OrderCard({
         >
           {t.notify}
         </a>
+
+        {order.status !== "CANCELLED" ? (
+          <Link to={`/admin/invoices/${order.id}`} className="primary-button primary-button--secondary">{t.invoice}</Link>
+        ) : null}
       </div>
     </article>
   );

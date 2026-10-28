@@ -51,6 +51,22 @@ SUPABASE_PRODUCT_IMAGE_BUCKET=product-images
 
 `SUPABASE_SERVICE_ROLE_KEY` is a legacy alternative to `SUPABASE_SECRET_KEY`. `DIRECT_URL` is used only by deliberate schema administration and is not required by the running application. Never create a `VITE_*` copy of any server credential, database URL, salt, or seed password. The build verifier rejects such copies and reports variable names only.
 
+## Optional: mirror orders into a Google Sheet
+
+Every new order, status change, payment change and edited order is copied to one row of a private Google Sheet (matched by order number), and **Admin → Dashboard → Sync all orders now** brings the sheet fully up to date. Customer email is never written to the sheet. The sheet is a convenience copy: if Google is slow or down the order is still saved and the customer is not affected.
+
+1. In Google Cloud, create a project, enable the **Google Sheets API**, create a **service account**, and download a JSON key for it.
+2. Create an empty Google Sheet and share it (Editor) with the service account's `client_email`. Keep it private.
+3. Add three server-only variables in Vercel (Production, and any Preview that should write to the sheet):
+
+```text
+GOOGLE_SHEETS_ID=<the long id in the sheet URL between /d/ and /edit>
+GOOGLE_SERVICE_ACCOUNT_EMAIL=<client_email from the JSON key>
+GOOGLE_PRIVATE_KEY=<private_key from the JSON key, pasted as-is>
+```
+
+`GOOGLE_SHEETS_TAB` is optional and defaults to `Orders`; the tab and header row are created automatically. Redeploy after saving the variables. Never create a `VITE_*` copy and never commit or share the JSON key; the build verifier rejects public copies of these names.
+
 ## Database connections and initialization
 
 Use Supavisor transaction mode on port `6543` for serverless `DATABASE_URL`; with Prisma 6, append `pgbouncer=true&connection_limit=1`. Percent-encode reserved password characters. Use the direct endpoint or Supavisor session mode on port `5432` for administrative `DIRECT_URL`.

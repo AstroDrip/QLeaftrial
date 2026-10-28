@@ -22,6 +22,7 @@ import {
 } from "./order.service.js";
 import { publicOrderRateLimit } from "./order-rate-limit.js";
 import { getStoreSettings } from "../admin/store-settings.service.js";
+import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
 
 export const orderRouter = Router();
 
@@ -43,7 +44,9 @@ orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
   }
   const parsed = createOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order details");
-  res.status(201).json(await createOrder(parsed.data));
+  const order = await createOrder(parsed.data);
+  await mirrorOrderToSheet(order);
+  res.status(201).json(order);
 });
 
 orderRouter.use("/admin/orders", requireAdmin);
@@ -63,19 +66,25 @@ orderRouter.delete("/admin/orders", async (req, res) => {
 orderRouter.patch("/admin/orders/:id/status", async (req, res) => {
   const parsed = updateOrderStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order status");
-  res.json(await updateOrderStatus(req.params.id, parsed.data.status));
+  const order = await updateOrderStatus(req.params.id, parsed.data.status);
+  await mirrorOrderToSheet(order);
+  res.json(order);
 });
 
 orderRouter.post("/admin/orders/:id/accept-edited", async (req, res) => {
   const parsed = acceptEditedOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid edited order");
-  res.json(await acceptEditedOrder(req.params.id, parsed.data));
+  const order = await acceptEditedOrder(req.params.id, parsed.data);
+  await mirrorOrderToSheet(order);
+  res.json(order);
 });
 
 orderRouter.patch("/admin/orders/:id/payment", async (req, res) => {
   const parsed = updatePaymentStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid payment status");
-  res.json(await updatePaymentStatus(req.params.id, parsed.data.paymentStatus));
+  const order = await updatePaymentStatus(req.params.id, parsed.data.paymentStatus);
+  await mirrorOrderToSheet(order);
+  res.json(order);
 });
 
 orderRouter.post("/admin/orders/bulk-delete", async (req, res) => {

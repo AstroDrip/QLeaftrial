@@ -44,7 +44,8 @@ describe("Layout", () => {
     expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Shop" })).toHaveAttribute("href", "/shop");
     expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "About us" })).toHaveAttribute("href", "/about");
-    expect(screen.getByRole("link", { name: "Cart" })).toHaveAttribute("href", "/cart");
+    expect(within(screen.getByTestId("primary-nav")).queryByRole("link", { name: /cart/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Cart, \d+ items?$/ })).toHaveAttribute("href", "/cart");
     expect(screen.getByText("Founded in 2020")).toBeInTheDocument();
     for (const link of screen.getAllByRole("link", { name: /instagram/i })) expect(link).toHaveAttribute("href", "https://www.instagram.com/qleaves.qa");
     for (const link of screen.getAllByRole("link", { name: /whatsapp/i })) expect(link).toHaveAttribute("href", "https://wa.me/97452040988");
@@ -57,7 +58,7 @@ describe("Layout", () => {
   it("hides the cart destination when ordering is disabled", () => {
     renderWithSettings(false);
 
-    expect(screen.queryByRole("link", { name: "Cart" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^Cart/ })).not.toBeInTheDocument();
     expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "About us" })).toHaveAttribute("href", "/about");
   });
 
@@ -78,7 +79,7 @@ describe("Layout", () => {
 
     expect(screen.getByRole("link", { name: "المتجر" })).toHaveAttribute("href", "/shop");
     expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "من نحن" })).toHaveAttribute("href", "/about");
-    expect(screen.getByRole("link", { name: "السلة" })).toHaveAttribute("href", "/cart");
+    expect(screen.getByRole("link", { name: /^السلة،/ })).toHaveAttribute("href", "/cart");
     expect(document.documentElement).toHaveAttribute("lang", "ar");
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
     expect(screen.getByTestId("site-footer")).toHaveAttribute("lang", "ar");

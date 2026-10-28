@@ -14,7 +14,6 @@ export function SiteHeader() {
   const navLinks = [
     { to: "/shop", label: content.nav.shop },
     { to: "/about", label: content.nav.about },
-    ...(orderingEnabled ? [{ to: "/cart", label: content.nav.cart }] : []),
   ];
   const cartLabel = isArabic ? `السلة، ${cartCount} منتجات` : `Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`;
 

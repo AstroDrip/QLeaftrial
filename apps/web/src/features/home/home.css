@@ -61,7 +61,7 @@
    and the fade mask; the Gaussian blur stays on the screen-edge side. */
 @media (min-width: 861px) {
   .hero-carousel__blur--start { display: none; }
-}}
+}
 
 .home-hero__copy { display: grid; gap: var(--space-4); justify-items: start; }
 .home-hero h1 { max-width: 14ch; font-size: var(--step-4); font-weight: 400; }

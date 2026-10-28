@@ -12,6 +12,8 @@ const AdminLayout = lazy(() => import("../features/admin/AdminLayout").then((mod
 const AdminLoginPage = lazy(() => import("../features/admin/AdminLoginPage").then((module) => ({ default: module.AdminLoginPage })));
 const AdminOrdersPage = lazy(() => import("../features/admin/AdminOrdersPage").then((module) => ({ default: module.AdminOrdersPage })));
 const AdminSalesPage = lazy(() => import("../features/admin/AdminSalesPage").then((module) => ({ default: module.AdminSalesPage })));
+const AdminInvoicesPage = lazy(() => import("../features/admin/AdminInvoicesPage").then((module) => ({ default: module.AdminInvoicesPage })));
+const AdminInvoicePage = lazy(() => import("../features/admin/AdminInvoicePage").then((module) => ({ default: module.AdminInvoicePage })));
 const AdminProductsPage = lazy(() => import("../features/admin/AdminProductsPage").then((module) => ({ default: module.AdminProductsPage })));
 const CartPage = lazy(() => loadCart().then((module) => ({ default: module.CartPage })));
 const CheckoutPage = lazy(() => loadCheckout().then((module) => ({ default: module.CheckoutPage })));
@@ -68,6 +70,8 @@ export const router = createBrowserRouter([
       { path: "products", element: deferred(<AdminProductsPage />) },
       { path: "orders", element: deferred(<AdminOrdersPage />) },
       { path: "sales", element: deferred(<AdminSalesPage />) },
+      { path: "invoices", element: deferred(<AdminInvoicesPage />) },
+      { path: "invoices/:orderId", element: deferred(<AdminInvoicePage />) },
       { path: "*", element: <Navigate to="/admin" replace /> },
     ],
   },
