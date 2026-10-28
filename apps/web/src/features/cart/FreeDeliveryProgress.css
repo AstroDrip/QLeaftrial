@@ -5,7 +5,7 @@
   --fd-ease: cubic-bezier(.65, 0, .35, 1);
   display: grid;
   grid-template-rows: 1fr;
-  transition: grid-template-rows 800ms var(--fd-ease), margin-block-end 800ms var(--fd-ease);
+  transition: grid-template-rows 400ms var(--fd-ease), margin-block-end 400ms var(--fd-ease);
 }
 /* The line has left: the row folds shut and the page below slides up into the space (the grid's own gap too). */
 .free-delivery-wrap.is-flying { grid-template-rows: 0fr; }
@@ -30,7 +30,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--moss) 8%, var(--surface));
-  transition: inset 900ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), border-radius 900ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), opacity 600ms ease 350ms, background-color 400ms var(--ease-out), border-color 400ms var(--ease-out);
+  transition: inset 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), border-radius 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), opacity 300ms ease 175ms, background-color 200ms var(--ease-out), border-color 200ms var(--ease-out);
 }
 .free-delivery.is-unlocked::before { border-color: color-mix(in srgb, var(--moss) 45%, transparent); background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
 .free-delivery.is-collapsing::before {
@@ -39,19 +39,21 @@
   opacity: 0;
 }
 
-.free-delivery__message, .free-delivery__note, .free-delivery__anchor { transition: opacity 450ms ease; }
+.free-delivery__message, .free-delivery__note, .free-delivery__anchor { transition: opacity 225ms ease; }
 .free-delivery__message { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 600; overflow-wrap: anywhere; }
 .free-delivery__note { margin: 0; color: var(--text-muted); font-size: .8rem; }
 .free-delivery.is-collapsing .free-delivery__message, .free-delivery.is-collapsing .free-delivery__note, .free-delivery.is-collapsing .free-delivery__anchor { opacity: 0; }
 
 .free-delivery__rail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); }
-.free-delivery__anchor { width: 22px; height: 22px; color: var(--text-muted); transition: opacity 450ms ease, color 400ms var(--ease-out), transform 400ms var(--ease-out); }
+.free-delivery__anchor { width: 22px; height: 22px; color: var(--text-muted); transition: opacity 225ms ease, color 200ms var(--ease-out), transform 200ms var(--ease-out); }
 .free-delivery__anchor--start { color: var(--moss); }
 .free-delivery.is-unlocked .free-delivery__anchor--goal { color: var(--moss); transform: scale(1.2) rotate(-8deg); }
 
 .free-delivery__trackwrap { position: relative; min-width: 0; }
 .free-delivery__track { position: relative; height: 8px; overflow: hidden; border-radius: var(--radius-full); background: color-mix(in srgb, var(--ink) 12%, transparent); }
-.free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--moss); transition: width 500ms var(--ease-out); }
+/* Once the light reaches the finish the whole track is one solid colour; only the light itself glows. */
+.free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--moss); transition: width 300ms var(--ease-out); }
+.free-delivery.is-unlocked .free-delivery__track { background: var(--moss); }
 /* The line is replaced by the flying copy for the flight itself. */
 .free-delivery.is-flying .free-delivery__track { visibility: hidden; }
 
@@ -68,12 +70,12 @@
   pointer-events: none;
   background: radial-gradient(circle, #fffbe0 0 24%, var(--gold) 46%, rgba(215, 197, 138, 0) 74%);
   box-shadow: 0 0 10px 2px rgba(215, 197, 138, .6), 0 0 22px 6px rgba(63, 91, 67, .2);
-  transition: inset-inline-start 500ms var(--ease-out), opacity 400ms ease;
+  transition: inset-inline-start 300ms var(--ease-out), opacity 200ms ease;
   animation: free-delivery-glow 1.8s ease-in-out infinite;
 }
 [dir="rtl"] .free-delivery__glow { translate: 50% -50%; }
-.free-delivery.is-unlocked .free-delivery__glow { box-shadow: 0 0 14px 4px rgba(215, 197, 138, .85), 0 0 28px 10px rgba(63, 91, 67, .28); }
-.free-delivery.is-collapsing .free-delivery__glow { opacity: 0; animation: none; }
+/* It arrives at the finish line, then goes out: nothing glows along the finished track. */
+.free-delivery.is-unlocked .free-delivery__glow { opacity: 0; animation: none; transition: inset-inline-start 300ms var(--ease-out), opacity 250ms ease 300ms; }
 @keyframes free-delivery-glow { 0%, 100% { opacity: .85; scale: .88; } 50% { opacity: 1; scale: 1.2; } }
 
 .free-delivery--compact { gap: 6px; width: min(340px, calc(100vw - 32px)); padding: var(--space-3) var(--space-4); pointer-events: auto; }
@@ -84,20 +86,16 @@
 .free-delivery--compact .free-delivery__track { height: 6px; }
 
 /* The line in flight: positioned and sized every frame by FreeDeliveryFlyer. */
-.free-delivery-flyer { position: fixed; top: 0; left: 0; z-index: 80; box-sizing: border-box; border-style: solid; border-radius: 999px; pointer-events: none; will-change: transform, width, height; }
+.free-delivery-flyer { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 
-/* The ring the cart icon keeps while free delivery is unlocked. It is exactly where the flyer lands. */
-[data-fd-ring="on"] { position: relative; }
-[data-fd-ring="on"]::after {
+/* The ring the floating cart button keeps while free delivery is unlocked: a plain line, no glow. It is
+   exactly where the flying line ends, so the hand-over is invisible. */
+.floating-cart__button[data-fd-ring="on"]::after {
   content: "";
   position: absolute;
   inset: -5px;
   box-sizing: border-box;
   border: 2px solid var(--gold);
   border-radius: 999px;
-  box-shadow: 0 0 14px 2px rgba(215, 197, 138, .55);
   pointer-events: none;
-  animation: free-delivery-ring-settle 1100ms var(--ease-out);
 }
-.icon-button[data-fd-ring="on"]::after { inset: -6px; }
-@keyframes free-delivery-ring-settle { 0% { box-shadow: 0 0 26px 7px rgba(215, 197, 138, .95); } }

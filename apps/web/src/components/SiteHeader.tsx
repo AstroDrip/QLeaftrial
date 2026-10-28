@@ -4,7 +4,7 @@ import { HeaderSearch } from "./HeaderSearch";
 import { BagIcon } from "./icons";
 import { useSiteLanguage, useStoreSettings } from "../app/providers";
 import { useCartStore } from "../features/cart/cart-store";
-import { useFreeDeliveryController, useFreeDeliveryRing } from "../features/cart/free-delivery-store";
+import { useFreeDeliveryController } from "../features/cart/free-delivery-store";
 import { prefetchRoute } from "../app/route-modules";
 
 export function SiteHeader() {
@@ -12,14 +12,12 @@ export function SiteHeader() {
   const settings = useStoreSettings();
   const orderingEnabled = settings.data?.orderingEnabled ?? true;
   useFreeDeliveryController();
-  const freeDeliveryRing = useFreeDeliveryRing();
   const cartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const navLinks = [
     { to: "/shop", label: content.nav.shop },
     { to: "/about", label: content.nav.about },
   ];
-  const cartLabel = (isArabic ? `السلة، ${cartCount} منتجات` : `Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`)
-    + (freeDeliveryRing ? (isArabic ? "، توصيل مجاني" : ", free delivery unlocked") : "");
+  const cartLabel = isArabic ? `السلة، ${cartCount} منتجات` : `Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`;
 
   return (
     <header className="site-header" data-testid="site-header">
@@ -40,7 +38,7 @@ export function SiteHeader() {
           <HeaderSearch />
           <LanguageToggle />
           {orderingEnabled ? (
-            <Link to="/cart" className="icon-button" aria-label={cartLabel} data-fd-target="header" data-fd-ring={freeDeliveryRing ? "on" : undefined} onMouseEnter={() => prefetchRoute("/cart")}>
+            <Link to="/cart" className="icon-button" aria-label={cartLabel} onMouseEnter={() => prefetchRoute("/cart")}>
               <BagIcon />
               {cartCount > 0 ? <span className="icon-button__badge" aria-hidden="true">{cartCount > 99 ? "99+" : cartCount}</span> : null}
             </Link>

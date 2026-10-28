@@ -6,23 +6,30 @@ import { Seo } from "../../components/Seo";
 import { FreeDeliveryProgress } from "./FreeDeliveryProgress";
 import { TrashIcon } from "../../components/icons";
 
-function CartQuantity({ id, name, quantity, stock, onCommit, quantityLabel }: { id: string; name: string; quantity: number; stock: number; onCommit: (id: string, quantity: number) => void; quantityLabel: string }) {
+// A minus and a plus on either side of the number; the number can still be typed over.
+function CartQuantity({ id, name, quantity, stock, onCommit, quantityLabel, decreaseLabel, increaseLabel }: { id: string; name: string; quantity: number; stock: number; onCommit: (id: string, quantity: number) => void; quantityLabel: string; decreaseLabel: string; increaseLabel: string }) {
   const [draft, setDraft] = useState(String(quantity));
   useEffect(() => setDraft(String(quantity)), [quantity]);
-  return <input
-    aria-label={`${name} ${quantityLabel}`}
-    type="number"
-    min={0}
-    max={stock}
-    step={1}
-    value={draft}
-    onChange={(event) => {
-      const value = event.target.value;
-      setDraft(value);
-      if (value.trim() !== "" && Number.isInteger(Number(value))) onCommit(id, Number(value));
-    }}
-    onBlur={() => { if (draft.trim() === "") setDraft(String(quantity)); }}
-  />;
+  return (
+    <div className="quantity-stepper" role="group" aria-label={`${name} ${quantityLabel}`}>
+      <button type="button" aria-label={`${decreaseLabel} ${name}`} disabled={quantity <= 1} onClick={() => onCommit(id, quantity - 1)}>−</button>
+      <input
+        aria-label={`${name} ${quantityLabel}`}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={draft}
+        onChange={(event) => {
+          const value = event.target.value;
+          if (!/^\d*$/.test(value)) return;
+          setDraft(value);
+          if (value !== "") onCommit(id, Number(value));
+        }}
+        onBlur={() => { if (draft.trim() === "") setDraft(String(quantity)); }}
+      />
+      <button type="button" aria-label={`${increaseLabel} ${name}`} disabled={quantity >= stock} onClick={() => onCommit(id, quantity + 1)}>+</button>
+    </div>
+  );
 }
 
 export function CartPage() {
@@ -69,10 +76,7 @@ export function CartPage() {
               </div>
 
               <div className="cart-item__actions">
-                <label>
-                  <span className="sr-only">{content.cart.quantity}</span>
-                  <CartQuantity id={item.id} name={isArabic ? item.nameAr?.trim() || item.name : item.name} quantity={item.quantity} stock={item.stock} onCommit={setQuantity} quantityLabel={content.cart.quantity} />
-                </label>
+                <CartQuantity id={item.id} name={isArabic ? item.nameAr?.trim() || item.name : item.name} quantity={item.quantity} stock={item.stock} onCommit={setQuantity} quantityLabel={content.cart.quantity} decreaseLabel={isArabic ? "إنقاص" : "Decrease"} increaseLabel={isArabic ? "زيادة" : "Increase"} />
                 <button type="button" className="cart-item__remove" aria-label={`${content.cart.remove}: ${isArabic ? item.nameAr?.trim() || item.name : item.name}`} title={content.cart.remove} onClick={() => removeItem(item.id)}>
                   <TrashIcon />
                 </button>

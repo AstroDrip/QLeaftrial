@@ -12,8 +12,8 @@ export const FREE_DELIVERY_THRESHOLD_QAR = 150;
 // done      - the banner is gone; the cart icon keeps the ring while the goal is met
 export type FreeDeliveryPhase = "progress" | "celebrate" | "collapse" | "fly" | "done";
 
-// Slow for transitions, still while reading: the message gets a long hold, the moves are unhurried.
-export const FREE_DELIVERY_TIMINGS = { celebrateMs: 2200, collapseMs: 1100, flyMs: 1000, flyFallbackMs: 2600 } as const;
+// The message holds still just long enough to read; the moves after it are quick and eased.
+export const FREE_DELIVERY_TIMINGS = { celebrateMs: 1100, collapseMs: 550, flyMs: 500, flyFallbackMs: 1500 } as const;
 
 type FreeDeliveryState = { phase: FreeDeliveryPhase; setPhase: (phase: FreeDeliveryPhase) => void };
 

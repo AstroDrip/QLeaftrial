@@ -1,69 +1,117 @@
 import { useLayoutEffect, useRef } from "react";
 import { useFreeDeliveryStore, FREE_DELIVERY_TIMINGS } from "./free-delivery-store";
 
-// The line's own colours on the card, and the warm gold it takes on as it joins the dark cart icon.
+// The line's colour on the card, and the warm gold it takes on once it circles the dark cart button.
 const FROM = [63, 91, 67];
 const TO = [215, 197, 138];
-const RING_GAP_PX = 5;
+// The ring sits 5px outside the cart button with a 2px stroke, so the stroke's centre is 4px out.
+const RING_OUTSET_PX = 4;
 const RING_STROKE_PX = 2;
-const LINE_HEIGHT_PX = 8;
+const SAMPLES = 40;
 
 const ease = (value: number) => (value < 0.5 ? 4 * value ** 3 : 1 - (-2 * value + 2) ** 3 / 2);
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const mix = (a: number, b: number, amount: number) => a + (b - a) * amount;
-const tint = (amount: number, alpha = 1) => `rgba(${FROM.map((from, index) => Math.round(mix(from, TO[index], amount))).join(",")},${alpha})`;
+const tint = (amount: number) => `rgb(${FROM.map((from, index) => Math.round(mix(from, TO[index], amount))).join(",")})`;
 
-// The cart icon the line should join: the floating cart button where it is on screen, otherwise the
-// one in the header.
+type Point = { x: number; y: number };
+type Box = { left: number; top: number; width: number; height: number };
+
+// The floating cart button, when it is on screen. On the cart and checkout pages it is not, and the
+// line simply draws itself back in.
 function findTarget(): HTMLElement | null {
-  const candidates = [...document.querySelectorAll<HTMLElement>("[data-fd-target]")];
-  const visible = (element: HTMLElement) => element.getBoundingClientRect().width > 0;
-  return candidates.find((element) => element.dataset.fdTarget === "floating" && visible(element))
-    ?? candidates.find((element) => element.dataset.fdTarget === "header" && visible(element))
-    ?? null;
+  const target = document.querySelector<HTMLElement>("[data-fd-target='floating']");
+  return target && target.getBoundingClientRect().width > 0 ? target : null;
 }
 
-// Draws the finished line leaving the banner and opening into a ring around the cart icon. It follows
-// the icon's live position every frame, so scrolling during the flight cannot make it miss. The ring it
-// ends on is the one the icon itself then keeps (see the data-fd-ring styles).
+// A point on the LEFT half of a stadium (pill) outline, `distance` along it from the top middle, going
+// left, down around the cap and along the bottom to the bottom middle. The right half is its mirror image.
+export function outlinePoint(box: Box, distance: number): Point {
+  const radius = Math.min(box.width, box.height) / 2;
+  const middle = box.left + box.width / 2;
+  const straight = Math.max(0, box.width / 2 - radius);
+  if (distance <= straight) return { x: middle - distance, y: box.top };
+  const afterTop = distance - straight;
+  const cap = Math.PI * radius;
+  if (afterTop <= cap) {
+    const angle = afterTop / radius;
+    return { x: middle - straight - radius * Math.sin(angle), y: box.top + radius - radius * Math.cos(angle) };
+  }
+  return { x: middle - straight + (afterTop - cap), y: box.top + 2 * radius };
+}
+
+export function outlineHalfLength(box: Box): number {
+  const radius = Math.min(box.width, box.height) / 2;
+  return 2 * Math.max(0, box.width / 2 - radius) + Math.PI * radius;
+}
+
+// Both halves of a line, each `halfLength` long, laid out by `place(distance)` for the left half (the
+// right half mirrors it around x = middle), joined into one polyline from the left end to the right end.
+function joined(middle: number, halfLength: number, place: (distance: number) => Point): string {
+  const left: Point[] = [];
+  for (let step = SAMPLES; step >= 0; step -= 1) left.push(place((halfLength * step) / SAMPLES));
+  const right = left.slice(0, -1).reverse().map((point) => ({ x: 2 * middle - point.x, y: point.y }));
+  return [...left, ...right].map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+}
+
+// Draws the finished line leaving the banner. Above the floating cart button it slides down onto the
+// button's top edge, then both ends bend away like curves, down around the sides, until they meet at
+// the bottom middle: the line has become a ring around the button. Everywhere else the line simply
+// draws itself back in. The button's live position is read every frame, so scrolling cannot make it miss,
+// and the ring it ends on is the one the button then keeps (see the data-fd-ring styles).
 export function FreeDeliveryFlyer() {
   const phase = useFreeDeliveryStore((state) => state.phase);
   const setPhase = useFreeDeliveryStore((state) => state.setPhase);
-  const element = useRef<HTMLDivElement>(null);
+  const path = useRef<SVGPathElement>(null);
 
   useLayoutEffect(() => {
     if (phase !== "fly") return;
-    const flyer = element.current;
+    const line = path.current;
     const track = document.querySelector<HTMLElement>("[data-fd-track]");
     const first = track?.getBoundingClientRect();
-    if (!flyer || !first || first.width === 0 || !findTarget()) {
+    if (!line || !first || first.width === 0) {
       setPhase("done");
       return;
     }
 
-    const start = { cx: first.left + first.width / 2, cy: first.top + first.height / 2, width: first.width };
+    const start = { cx: first.left + first.width / 2, cy: first.top + first.height / 2, half: first.width / 2, thickness: first.height };
     const began = performance.now();
     let frame = 0;
 
     const draw = (now: number) => {
-      const target = findTarget();
-      if (!target) { setPhase("done"); return; }
       const progress = clamp01((now - began) / FREE_DELIVERY_TIMINGS.flyMs);
-      const box = target.getBoundingClientRect();
-      const ring = { cx: box.left + box.width / 2, cy: box.top + box.height / 2, width: box.width + RING_GAP_PX * 2, height: box.height + RING_GAP_PX * 2 };
+      const target = findTarget();
 
-      // First the line glides over and narrows to the icon's width, then it opens up into the ring.
-      const travel = ease(clamp01(progress / 0.58));
-      const open = ease(clamp01((progress - 0.5) / 0.5));
-      const width = mix(start.width, ring.width, travel);
-      const height = mix(LINE_HEIGHT_PX, ring.height, open);
-      flyer.style.width = `${width}px`;
-      flyer.style.height = `${height}px`;
-      flyer.style.transform = `translate(${mix(start.cx, ring.cx, travel) - width / 2}px, ${mix(start.cy, ring.cy, travel) - height / 2}px)`;
-      flyer.style.borderColor = tint(open);
-      flyer.style.background = tint(travel, 1 - open);
-      flyer.style.boxShadow = `0 0 ${Math.round(mix(6, 14, open))}px ${Math.round(mix(1, 2, open))}px ${tint(1, mix(0.35, 0.6, open))}`;
-      flyer.style.opacity = "1";
+      if (!target) {
+        // Nothing to circle: the line draws itself back in towards its middle and fades.
+        const retract = ease(progress);
+        line.setAttribute("d", joined(start.cx, start.half * (1 - retract), (distance) => ({ x: start.cx - distance, y: start.cy })));
+        line.setAttribute("stroke-width", String(start.thickness));
+        line.setAttribute("stroke", tint(0));
+        line.setAttribute("opacity", String(1 - retract));
+      } else {
+        const rect = target.getBoundingClientRect();
+        const ring: Box = { left: rect.left - RING_OUTSET_PX, top: rect.top - RING_OUTSET_PX, width: rect.width + RING_OUTSET_PX * 2, height: rect.height + RING_OUTSET_PX * 2 };
+        const ringMiddle = ring.left + ring.width / 2;
+        const topHalf = Math.max(0, ring.width / 2 - Math.min(ring.width, ring.height) / 2);
+        const fullHalf = outlineHalfLength(ring);
+
+        // First the line glides onto the button's top edge, narrowing to that edge's length...
+        const glide = ease(clamp01(progress / 0.45));
+        // ...then both ends bend away along the outline until they meet underneath.
+        const wrap = ease(clamp01((progress - 0.45) / 0.55));
+        const thickness = mix(start.thickness, RING_STROKE_PX, glide);
+        line.setAttribute("stroke-width", String(thickness));
+        line.setAttribute("stroke", tint(wrap));
+        line.setAttribute("opacity", "1");
+        if (wrap === 0) {
+          const middle = mix(start.cx, ringMiddle, glide);
+          const y = mix(start.cy, ring.top, glide);
+          line.setAttribute("d", joined(middle, mix(start.half, topHalf, glide), (distance) => ({ x: middle - distance, y })));
+        } else {
+          line.setAttribute("d", joined(ringMiddle, mix(topHalf, fullHalf, wrap), (distance) => outlinePoint(ring, distance)));
+        }
+      }
 
       if (progress >= 1) { setPhase("done"); return; }
       frame = requestAnimationFrame(draw);
@@ -73,5 +121,9 @@ export function FreeDeliveryFlyer() {
   }, [phase, setPhase]);
 
   if (phase !== "fly") return null;
-  return <div ref={element} className="free-delivery-flyer" style={{ borderWidth: RING_STROKE_PX, opacity: 0 }} aria-hidden="true" data-testid="free-delivery-flyer" />;
+  return (
+    <svg className="free-delivery-flyer" aria-hidden="true" focusable="false" data-testid="free-delivery-flyer">
+      <path ref={path} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity="0" />
+    </svg>
+  );
 }

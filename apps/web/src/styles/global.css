@@ -218,7 +218,14 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 .cart-item:last-child { padding-bottom: 0; border-bottom: 0; }
 .cart-item h2 { margin-bottom: .25rem; font-family: var(--sans); font-size: 1.05rem; font-weight: 600; }
 .cart-item__actions { display: flex; align-items: center; gap: var(--space-3); }
-.cart-item__actions input { width: 76px; }
+/* - [ number ] + : the controls and the digit each get their own box, so nothing can overlap. */
+.quantity-stepper { display: inline-grid; grid-template-columns: 40px 52px 40px; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-full); background: var(--surface); }
+.quantity-stepper button { display: grid; place-items: center; height: 40px; border: 0; border-radius: var(--radius-full); background: none; color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; transition: background-color var(--duration) var(--ease-out); }
+.quantity-stepper button:hover:not(:disabled) { background: var(--surface-sunk); }
+.quantity-stepper button:disabled { color: var(--text-soft); opacity: .45; cursor: default; }
+.quantity-stepper input { width: 100%; min-height: 0; height: 40px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.quantity-stepper input:focus { border: 0; box-shadow: none; }
+.quantity-stepper:focus-within { border-color: var(--moss); box-shadow: 0 0 0 3px rgba(63, 91, 67, .16); }
 .cart-item__remove { display: inline-grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border: 0; border-radius: var(--radius-full); background: none; color: var(--danger); cursor: pointer; transition: background-color var(--duration) var(--ease-out); }
 .cart-item__remove:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
 .cart-item__remove svg { width: 20px; height: 20px; }

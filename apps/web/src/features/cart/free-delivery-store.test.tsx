@@ -1,7 +1,7 @@
 import { act, cleanup, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Providers } from "../../app/providers";
-import { FreeDeliveryFlyer } from "./FreeDeliveryFlyer";
+import { FreeDeliveryFlyer, outlineHalfLength, outlinePoint } from "./FreeDeliveryFlyer";
 import { useCartStore } from "./cart-store";
 import { FREE_DELIVERY_TIMINGS, useFreeDeliveryController, useFreeDeliveryRing, useFreeDeliveryStore } from "./free-delivery-store";
 
@@ -93,58 +93,103 @@ describe("free delivery flyer", () => {
   });
   afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); document.body.innerHTML = ""; });
 
-  function layOut(targets: Array<"header" | "floating">) {
+  const rect = (left: number, top: number, width: number, height: number) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
+
+  // A 300px line at y=400, and (optionally) a 150x52 floating cart button below it.
+  function layOut(withButton: boolean) {
     const track = document.createElement("div");
     track.setAttribute("data-fd-track", "");
     document.body.append(track);
-    const boxes = new Map<Element, DOMRect>([[track, { left: 100, top: 400, width: 300, height: 8, right: 400, bottom: 408, x: 100, y: 400, toJSON: () => ({}) }]]);
-    for (const kind of targets) {
-      const target = document.createElement("a");
-      target.dataset.fdTarget = kind;
-      document.body.append(target);
-      boxes.set(target, kind === "header"
-        ? { left: 320, top: 12, width: 42, height: 42, right: 362, bottom: 54, x: 320, y: 12, toJSON: () => ({}) }
-        : { left: 120, top: 700, width: 150, height: 52, right: 270, bottom: 752, x: 120, y: 700, toJSON: () => ({}) });
+    const boxes = new Map<Element, DOMRect>([[track, rect(100, 396, 300, 8)]]);
+    if (withButton) {
+      const button = document.createElement("a");
+      button.dataset.fdTarget = "floating";
+      document.body.append(button);
+      boxes.set(button, rect(175, 460, 150, 52));
     }
-    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
-      return boxes.get(this) ?? ({ left: 0, top: 0, width: 0, height: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect);
-    });
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) { return boxes.get(this) ?? rect(0, 0, 0, 0); });
   }
 
-  it("carries the line to the header cart icon and ends as a ring around it", () => {
-    layOut(["header"]);
+  const points = (flyer: HTMLElement) => [...flyer.querySelector("path")!.getAttribute("d")!.matchAll(/[ML]([\d.-]+) ([\d.-]+)/g)].map((match) => ({ x: Number(match[1]), y: Number(match[2]) }));
+  const span = (line: Array<{ x: number }>) => Math.max(...line.map((point) => point.x)) - Math.min(...line.map((point) => point.x));
+
+  it("lays out a stadium outline from the top middle, round the left cap, to the bottom middle", () => {
+    const box = { left: 100, top: 200, width: 158, height: 60 };
+    const straight = 158 / 2 - 30;
+    expect(outlinePoint(box, 0)).toEqual({ x: 179, y: 200 });
+    expect(outlinePoint(box, straight)).toEqual({ x: 179 - straight, y: 200 });
+    const bottomOfCap = outlinePoint(box, straight + Math.PI * 30);
+    expect(bottomOfCap.x).toBeCloseTo(179 - straight, 5);
+    expect(bottomOfCap.y).toBeCloseTo(260, 5);
+    const end = outlinePoint(box, outlineHalfLength(box));
+    expect(end.x).toBeCloseTo(179, 5);
+    expect(end.y).toBeCloseTo(260, 5);
+  });
+
+  it("slides the line onto the button, then bends both ends round it until they meet underneath", () => {
+    layOut(true);
     render(<Providers><FreeDeliveryFlyer /></Providers>);
     expect(screen.queryByTestId("free-delivery-flyer")).not.toBeInTheDocument();
 
     act(() => useFreeDeliveryStore.setState({ phase: "fly" }));
     const flyer = screen.getByTestId("free-delivery-flyer");
     act(() => { vi.advanceTimersByTime(16); });
-    // It starts as the line: as wide as the track and 8px tall.
-    expect(parseFloat(flyer.style.width)).toBeCloseTo(300, 0);
-    expect(flyer.style.height).toBe("8px");
+    // It starts as the line: flat, and as wide as the track.
+    let line = points(flyer);
+    expect(new Set(line.map((point) => Math.round(point.y))).size).toBe(1);
+    expect(span(line)).toBeGreaterThan(290);
 
-    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs / 2); });
-    expect(parseFloat(flyer.style.width)).toBeLessThan(300);
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs * 0.4); });
+    // Part-way it lies flat on the button's top edge (ring top = 460 - 4) and has narrowed to it.
+    line = points(flyer);
+    expect(Math.round(line[0].y)).toBe(456);
+    expect(span(line)).toBeLessThan(140);
+
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs * 0.4); });
+    // Now the ends have bent down the sides: the line is no longer flat.
+    line = points(flyer);
+    expect(Math.max(...line.map((point) => point.y))).toBeGreaterThan(456 + 10);
 
     act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs); });
-    // 42px icon plus 5px each side = a 52px ring, and the sequence is over.
-    expect(flyer.style.width).toBe("52px");
-    expect(flyer.style.height).toBe("52px");
     expect(phase()).toBe("done");
     expect(screen.queryByTestId("free-delivery-flyer")).not.toBeInTheDocument();
   });
 
-  it("prefers the floating cart button when it is on screen", () => {
-    layOut(["header", "floating"]);
+  it("ends as a closed ring whose two ends meet at the bottom middle of the button", () => {
+    layOut(true);
     render(<Providers><FreeDeliveryFlyer /></Providers>);
     act(() => useFreeDeliveryStore.setState({ phase: "fly" }));
+    const flyer = screen.getByTestId("free-delivery-flyer");
 
-    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs + 50); });
+    // Stop on the last frames, just before the sequence hands over to the button's own ring.
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs - 20); });
+    const ring = points(flyer);
+    const first = ring[0];
+    const last = ring[ring.length - 1];
+    expect(Math.abs(first.x - last.x)).toBeLessThan(6);
+    expect(Math.abs(first.y - last.y)).toBeLessThan(6);
+    // The ring is the button's box grown by 4px: bottom = 460 + 52 + 4.
+    expect(first.y).toBeGreaterThan(500);
+    expect(Math.max(...ring.map((point) => point.y))).toBeLessThanOrEqual(516.5);
+    expect(Math.min(...ring.map((point) => point.x))).toBeGreaterThanOrEqual(170.5);
+    expect(Math.max(...ring.map((point) => point.x))).toBeLessThanOrEqual(329.5);
+  });
 
+  it("just draws the line back in when there is no floating cart button to circle", () => {
+    layOut(false);
+    render(<Providers><FreeDeliveryFlyer /></Providers>);
+    act(() => useFreeDeliveryStore.setState({ phase: "fly" }));
+    const flyer = screen.getByTestId("free-delivery-flyer");
+
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs / 2); });
+    expect(Number(flyer.querySelector("path")!.getAttribute("opacity"))).toBeLessThan(1);
+    expect(new Set(points(flyer).map((point) => Math.round(point.y))).size).toBe(1);
+
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs); });
     expect(phase()).toBe("done");
   });
 
-  it("finishes straight away when there is no banner line or no cart icon to fly to", () => {
+  it("finishes straight away when there is no banner line to start from", () => {
     render(<Providers><FreeDeliveryFlyer /></Providers>);
     act(() => useFreeDeliveryStore.setState({ phase: "fly" }));
 

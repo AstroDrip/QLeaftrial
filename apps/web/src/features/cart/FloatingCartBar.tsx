@@ -55,9 +55,10 @@ export function FloatingCartBar({ footer }: { footer: RefObject<HTMLElement | nu
   if (!visible) return null;
   const total = cartSubtotal(items);
   const { className, footerHeight } = floatingCartStyle(placement);
-  const label = isArabic
+  const label = (isArabic
     ? `فتح السلة، ${count} منتجات، المجموع ${total} ر.ق`
-    : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`;
+    : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`)
+    + (freeDeliveryRing ? (isArabic ? "، توصيل مجاني" : ", free delivery unlocked") : "");
 
   return (
     <div className={className} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined}>

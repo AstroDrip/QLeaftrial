@@ -51,7 +51,40 @@ describe("CartPage", () => {
 
   it("does not remove an item while its quantity field is temporarily empty", async () => {
     render(<MemoryRouter><CartPage /></MemoryRouter>);
-    await userEvent.clear(screen.getByRole("spinbutton", { name: /house plant quantity/i }));
+    await userEvent.clear(screen.getByRole("textbox", { name: /house plant quantity/i }));
     expect(useCartStore.getState().items[0]?.quantity).toBe(2);
+  });
+
+  it("has a minus and a plus on either side of the number instead of arrow spinners", async () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+    const group = screen.getByRole("group", { name: /house plant quantity/i });
+    const [minus, field, plus] = [...group.children] as HTMLElement[];
+    expect(minus).toHaveAccessibleName("Decrease House Plant");
+    expect(plus).toHaveAccessibleName("Increase House Plant");
+    expect(field).toHaveValue("2");
+
+    await userEvent.click(plus);
+    expect(useCartStore.getState().items[0]?.quantity).toBe(3);
+    await userEvent.click(minus);
+    await userEvent.click(minus);
+    expect(useCartStore.getState().items[0]?.quantity).toBe(1);
+    // At one plant the minus stops; the trash icon is how a plant is taken out.
+    expect(minus).toBeDisabled();
+  });
+
+  it("stops the plus at the stock available and only accepts digits when typing", async () => {
+    useCartStore.setState({ items: [{ ...useCartStore.getState().items[0], quantity: 11 }] });
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    const group = screen.getByRole("group", { name: /house plant quantity/i });
+    const [, field, plus] = [...group.children] as HTMLElement[];
+
+    await userEvent.click(plus);
+    expect(plus).toBeDisabled();
+    expect(useCartStore.getState().items[0]?.quantity).toBe(12);
+
+    await userEvent.type(field, "abc");
+    expect(field).toHaveValue("12");
   });
 });
