@@ -24,6 +24,30 @@
   ],
   "rewrites": [
     {
+      "source": "/media/plants/house-plant.jpg",
+      "destination": "/media/plants/schefflera-640.webp"
+    },
+    {
+      "source": "/media/plants/fiddle-leaf-fig.jpg",
+      "destination": "/media/plants/schefflera-640.webp"
+    },
+    {
+      "source": "/media/plants/snake-plant.jpg",
+      "destination": "/media/plants/sansevieria-snake-plant-big-size-640.webp"
+    },
+    {
+      "source": "/media/plants/monstera-deliciosa.jpg",
+      "destination": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp"
+    },
+    {
+      "source": "/media/plants/aloe-vera.jpg",
+      "destination": "/media/plants/aloe-vera-640.webp"
+    },
+    {
+      "source": "/media/plants/peace-lily.jpg",
+      "destination": "/media/plants/peace-lily-big-size-640.webp"
+    },
+    {
       "source": "/api/v1/:path*",
       "destination": "/api/index"
     },

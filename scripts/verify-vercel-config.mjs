@@ -29,6 +29,31 @@ if (config.outputDirectory !== "apps/web/dist") {
 }
 const rewrites = Array.isArray(config.rewrites) ? config.rewrites : [];
 const redirects = Array.isArray(config.redirects) ? config.redirects : [];
+const legacyPlantImages = {
+  "/media/plants/house-plant.jpg": "/media/plants/schefflera-640.webp",
+  "/media/plants/fiddle-leaf-fig.jpg": "/media/plants/schefflera-640.webp",
+  "/media/plants/snake-plant.jpg": "/media/plants/sansevieria-snake-plant-big-size-640.webp",
+  "/media/plants/monstera-deliciosa.jpg": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp",
+  "/media/plants/aloe-vera.jpg": "/media/plants/aloe-vera-640.webp",
+  "/media/plants/peace-lily.jpg": "/media/plants/peace-lily-big-size-640.webp",
+};
+for (const [source, destination] of Object.entries(legacyPlantImages)) {
+  const rewriteIndex = rewrites.findIndex(
+    (route) => route.source === source && route.destination === destination,
+  );
+  if (rewriteIndex < 0) {
+    problems.push(`Missing legacy plant image rewrite: ${source}`);
+    continue;
+  }
+  if (rewriteIndex > rewrites.findIndex((route) => route.destination === "/index.html")) {
+    problems.push(`Legacy plant image rewrite must precede the SPA fallback: ${source}`);
+  }
+  try {
+    await access(new URL(`../apps/web/public${destination}`, import.meta.url));
+  } catch {
+    problems.push(`Legacy plant image target does not exist: ${destination}`);
+  }
+}
 const wwwRedirect = redirects.find((route) =>
   route.source === "/:path*"
   && route.destination === "https://qleaves.qa/:path*"

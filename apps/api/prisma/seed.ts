@@ -17,7 +17,7 @@ const products = [
     priceQar: 180,
     costPrice: 90,
     quantity: 12,
-    media: { url: "/media/plants/house-plant.jpg", altText: "House plant in a ceramic pot" },
+    media: { url: "/media/plants/schefflera-640.webp", altText: "House plant in a ceramic pot" },
   },
   {
     slug: "fiddle-leaf-fig",
@@ -33,7 +33,7 @@ const products = [
     priceQar: 260,
     costPrice: 130,
     quantity: 8,
-    media: { url: "/media/plants/fiddle-leaf-fig.jpg", altText: "Fiddle leaf fig by a window" },
+    media: { url: "/media/plants/schefflera-640.webp", altText: "Fiddle leaf fig by a window" },
   },
   {
     slug: "snake-plant",
@@ -49,7 +49,7 @@ const products = [
     priceQar: 120,
     costPrice: 55,
     quantity: 16,
-    media: { url: "/media/plants/snake-plant.jpg", altText: "Snake plant in a woven basket" },
+    media: { url: "/media/plants/sansevieria-snake-plant-big-size-640.webp", altText: "Snake plant in a woven basket" },
   },
   {
     slug: "monstera-deliciosa",
@@ -65,7 +65,7 @@ const products = [
     priceQar: 220,
     costPrice: 105,
     quantity: 10,
-    media: { url: "/media/plants/monstera-deliciosa.jpg", altText: "Monstera deliciosa in a terracotta pot" },
+    media: { url: "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp", altText: "Monstera deliciosa in a terracotta pot" },
   },
   {
     slug: "aloe-vera",
@@ -81,7 +81,7 @@ const products = [
     priceQar: 75,
     costPrice: 30,
     quantity: 20,
-    media: { url: "/media/plants/aloe-vera.jpg", altText: "Aloe vera plant on a sunny shelf" },
+    media: { url: "/media/plants/aloe-vera-640.webp", altText: "Aloe vera plant on a sunny shelf" },
   },
   {
     slug: "peace-lily",
@@ -97,7 +97,7 @@ const products = [
     priceQar: 145,
     costPrice: 65,
     quantity: 14,
-    media: { url: "/media/plants/peace-lily.jpg", altText: "Peace lily with white blooms" },
+    media: { url: "/media/plants/peace-lily-big-size-640.webp", altText: "Peace lily with white blooms" },
   },
 ] as const;
 

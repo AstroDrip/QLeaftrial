@@ -1,4 +1,6 @@
 import argon2 from "argon2";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "../src/lib/prisma";
 import { seedDatabase } from "../prisma/seed";
@@ -31,6 +33,23 @@ describe("seedDatabase", () => {
         where: { email: "admin@qleaves.local" },
       }),
     ).not.toBeNull();
+  });
+
+  it("uses bundled image files for every seeded product", async () => {
+    await seedDatabase();
+
+    const products = await prisma.product.findMany({
+      include: { media: true },
+    });
+
+    for (const product of products) {
+      for (const media of product.media) {
+        expect(
+          existsSync(fileURLToPath(new URL(`../../web/public${media.url}`, import.meta.url))),
+          media.url,
+        ).toBe(true);
+      }
+    }
   });
 
   it("restores the development password for an existing stale admin", async () => {
