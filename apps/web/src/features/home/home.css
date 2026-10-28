@@ -20,7 +20,7 @@
 /* Flex Carousel hero: a looping, draggable row with blurred, softly fading edges. */
 /* No z-index or mask on this box: either would isolate it into its own layer, and the
    canvas's multiply blend would then mix with nothing instead of the cream page. */
-.hero-carousel { position: relative; overflow: hidden; height: clamp(400px, 42vw, 520px); color: var(--ink); }
+.hero-carousel { position: relative; overflow: hidden; overflow: clip; height: clamp(400px, 42vw, 520px); color: var(--ink); touch-action: pan-y; }
 .hero-carousel .flex-carousel { height: 100%; }
 /* Multiply turns the photos' white backgrounds into the page's cream, and the mask fades the
    row out on every side, so cards dissolve into the hero instead of ending at a box edge. */
