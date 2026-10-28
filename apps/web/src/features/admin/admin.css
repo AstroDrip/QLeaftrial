@@ -236,7 +236,11 @@
 .admin-product-delete-error { color: var(--admin-danger); font-size: .78rem; }
 /* "Edit details" and Delete share one row; the opened form spans the full card width. */
 .admin-product-card__footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; padding-top: var(--a-3); border-top: 1px solid var(--admin-border); }
-.admin-product-card__footer > details { grid-row: 1; grid-column: 1 / -1; }
+.admin-product-card__footer > details { grid-row: 1; grid-column: 1; }
+/* Closed: the editor summary and Delete share one row without touching. Open: the editor takes the full
+   width and Delete drops below it, so the form never sits underneath the button. */
+.admin-product-card__footer:has(> details[open]) > details { grid-column: 1 / -1; }
+.admin-product-card__footer:has(> details[open]) .admin-product-card__delete { grid-row: 2; grid-column: 1 / -1; justify-self: end; margin-top: var(--a-3); }
 .admin-product-card__delete { display: flex; grid-row: 1; grid-column: 2; align-items: center; min-height: 28px; padding: 0; line-height: 1; border: 0; background: transparent; color: var(--admin-danger); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .admin-product-card__delete:hover:not(:disabled) { text-decoration: underline; }
 .admin-product-card__editor { min-width: 0; }

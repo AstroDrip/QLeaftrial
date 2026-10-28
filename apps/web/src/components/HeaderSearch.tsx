@@ -8,6 +8,8 @@ import { CloseIcon, SearchIcon } from "./icons";
 
 const SUGGESTION_LIMIT = 5;
 const EDGE_GAP = 16;
+const OBSTACLE_GAP = 12;
+const PHONE_MAX = 720;
 const MIN_WIDTH = 180;
 const MAX_WIDTH = 300;
 
@@ -45,15 +47,24 @@ export function HeaderSearch() {
 
   useEffect(() => { setOpen(false); setExpanded(false); }, [pathname]);
   useEffect(() => { setActive(-1); }, [query]);
-  // The capsule grows away from the icon, so it can only be as wide as the room left on that side.
+  // The capsule grows away from the icon, so it may only use the free space on that side: it stops
+  // short of the logo and any visible navigation instead of covering them.
   useEffect(() => {
     if (!expanded) return;
     const measure = () => {
       const rect = container.current?.getBoundingClientRect();
       const viewport = document.documentElement.clientWidth;
-      const room = rect ? (isArabic ? viewport - rect.left : rect.right) - EDGE_GAP : 0;
-      const preferred = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, viewport * 0.22));
-      setExpandedWidth(room > 0 ? Math.min(preferred, room) : preferred);
+      if (!rect) return;
+      let edge = isArabic ? viewport - EDGE_GAP : EDGE_GAP;
+      container.current?.closest(".site-header__inner")?.querySelectorAll<HTMLElement>(".site-header__brand, .site-header__nav").forEach((element) => {
+        if (!element.offsetWidth) return;
+        const box = element.getBoundingClientRect();
+        edge = isArabic ? Math.min(edge, box.left - OBSTACLE_GAP) : Math.max(edge, box.right + OBSTACLE_GAP);
+      });
+      const room = isArabic ? edge - rect.left : rect.right - edge;
+      // On phones the capsule takes all the free space; on wider screens it stays a modest search field.
+      const preferred = viewport <= PHONE_MAX ? MAX_WIDTH : Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, viewport * 0.22));
+      setExpandedWidth(Math.max(rect.width, Math.min(preferred, room)));
     };
     measure();
     window.addEventListener("resize", measure);

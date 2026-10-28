@@ -275,8 +275,11 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
   .product-card__meta { flex-direction: column; align-items: flex-start; gap: 2px; }
   .product-card__category { max-width: 100%; }
 }
-@media (max-width: 420px) {
+@media (max-width: 520px) {
+  /* The round logo already carries the name; dropping the text leaves room for the search capsule. */
   .site-header__wordmark { display: none; }
+}
+@media (max-width: 420px) {
   .site-header__actions { gap: .25rem; }
 }
 @media (prefers-reduced-motion: reduce) {
