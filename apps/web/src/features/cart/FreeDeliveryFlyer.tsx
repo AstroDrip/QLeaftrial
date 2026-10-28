@@ -3,9 +3,9 @@ import { useFreeDeliveryStore, FREE_DELIVERY_TIMINGS } from "./free-delivery-sto
 
 // The line is the finished track's yellow gold and keeps it, glow and all, all the way round the cart
 // button; the colour and the glow come from the stylesheet (.free-delivery-flyer).
-// The ring sits 5px outside the cart button with a 2px stroke, so the stroke's centre is 4px out.
-const RING_OUTSET_PX = 4;
-const RING_STROKE_PX = 2;
+// The ring sits 5px outside the cart button with a 1.5px stroke, so the stroke's centre is 4.25px out.
+const RING_OUTSET_PX = 4.25;
+const RING_STROKE_PX = 1.5;
 const SAMPLES = 40;
 
 const ease = (value: number) => (value < 0.5 ? 4 * value ** 3 : 1 - (-2 * value + 2) ** 3 / 2);

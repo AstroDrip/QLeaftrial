@@ -19,8 +19,8 @@
   isolation: isolate;
   min-height: 0;
   display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
+  gap: 6px;
+  padding: 10px var(--space-4);
 }
 .free-delivery.is-flying { overflow: hidden; }
 
@@ -31,7 +31,7 @@
   inset: 0;
   z-index: -1;
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--moss) 8%, var(--surface));
   transition: inset 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), border-radius 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), opacity 300ms ease 175ms, background-color 200ms var(--ease-out), border-color 200ms var(--ease-out);
 }
@@ -43,17 +43,17 @@
 }
 
 .free-delivery__message, .free-delivery__note, .free-delivery__anchor { transition: opacity 225ms ease; }
-.free-delivery__message { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 600; overflow-wrap: anywhere; }
-.free-delivery__note { margin: 0; color: var(--text-muted); font-size: .8rem; }
+.free-delivery__message { margin: 0; color: var(--ink); font-size: .85rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.free-delivery__note { margin: 0; color: var(--text-muted); font-size: .72rem; line-height: 1.3; }
 .free-delivery.is-collapsing .free-delivery__message, .free-delivery.is-collapsing .free-delivery__note, .free-delivery.is-collapsing .free-delivery__anchor { opacity: 0; }
 
-.free-delivery__rail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); }
-.free-delivery__anchor { width: 22px; height: 22px; color: var(--text-muted); transition: opacity 225ms ease, color 200ms var(--ease-out), transform 200ms var(--ease-out); }
+.free-delivery__rail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.free-delivery__anchor { width: 16px; height: 16px; color: var(--text-muted); transition: opacity 225ms ease, color 200ms var(--ease-out), transform 200ms var(--ease-out); }
 .free-delivery__anchor--start { color: var(--moss); }
 .free-delivery.is-unlocked .free-delivery__anchor--goal { color: var(--moss); transform: scale(1.2) rotate(-8deg); }
 
 .free-delivery__trackwrap { position: relative; min-width: 0; }
-.free-delivery__track { position: relative; height: 8px; overflow: hidden; border-radius: var(--radius-full); background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.free-delivery__track { position: relative; height: 4px; overflow: hidden; border-radius: var(--radius-full); background: color-mix(in srgb, var(--ink) 12%, transparent); }
 /* Once the light reaches the finish the whole track is one solid colour; only the light itself glows. */
 .free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--moss); transition: width 300ms var(--ease-out); }
 .free-delivery.is-unlocked .free-delivery__track { background: var(--moss); }
@@ -71,7 +71,7 @@
 }
 .free-delivery.is-unlocked .free-delivery__sweep {
   width: 100%;
-  box-shadow: 0 0 6px 1px rgba(var(--fd-yellow-rgb), 1), 0 0 16px 4px rgba(var(--fd-yellow-rgb), .8), 0 0 34px 10px rgba(var(--fd-yellow-rgb), .45);
+  box-shadow: 0 0 4px 1px rgba(var(--fd-yellow-rgb), 1), 0 0 11px 3px rgba(var(--fd-yellow-rgb), .8), 0 0 22px 7px rgba(var(--fd-yellow-rgb), .45);
   transition: width 400ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)) 300ms, box-shadow 400ms ease 300ms;
   animation: free-delivery-aura 1.2s ease-in-out 700ms infinite;
 }
@@ -87,13 +87,13 @@
   position: absolute;
   top: 50%;
   inset-inline-start: var(--fd-progress, 0%);
-  width: 16px;
-  height: 16px;
+  width: 11px;
+  height: 11px;
   translate: -50% -50%;
   border-radius: 50%;
   pointer-events: none;
   background: radial-gradient(circle, #fffdf0 0 26%, #ffe27a 46%, rgba(var(--fd-yellow-rgb), 0) 76%);
-  box-shadow: 0 0 12px 3px rgba(var(--fd-yellow-rgb), .9), 0 0 28px 9px rgba(var(--fd-yellow-rgb), .45);
+  box-shadow: 0 0 8px 2px rgba(var(--fd-yellow-rgb), .9), 0 0 18px 6px rgba(var(--fd-yellow-rgb), .45);
   transition: inset-inline-start 300ms var(--ease-out), opacity 200ms ease;
   animation: free-delivery-glow 1.8s ease-in-out infinite;
 }
@@ -102,15 +102,15 @@
 .free-delivery.is-unlocked .free-delivery__glow { opacity: 0; animation: none; transition: inset-inline-start 300ms var(--ease-out), opacity 120ms ease 300ms; }
 @keyframes free-delivery-glow { 0%, 100% { opacity: .85; scale: .88; } 50% { opacity: 1; scale: 1.2; } }
 
-.free-delivery--compact { gap: 6px; width: min(340px, calc(100vw - 32px)); padding: var(--space-3) var(--space-4); pointer-events: auto; }
+.free-delivery--compact { gap: 4px; width: min(280px, calc(100vw - 32px)); padding: 8px 12px; pointer-events: auto; }
 .free-delivery--compact::before { box-shadow: var(--shadow-md); background: var(--surface); }
 .free-delivery--compact.is-unlocked::before { background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
-.free-delivery--compact .free-delivery__message { font-size: .8rem; }
-.free-delivery--compact .free-delivery__anchor { width: 18px; height: 18px; }
-.free-delivery--compact .free-delivery__track { height: 6px; }
+.free-delivery--compact .free-delivery__message { font-size: .75rem; }
+.free-delivery--compact .free-delivery__anchor { width: 14px; height: 14px; }
+.free-delivery--compact .free-delivery__track { height: 3px; }
 
 /* The line in flight: positioned and sized every frame by FreeDeliveryFlyer. */
-.free-delivery-flyer { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 3px rgba(var(--fd-yellow-rgb), 1)) drop-shadow(0 0 9px rgba(var(--fd-yellow-rgb), .8)) drop-shadow(0 0 20px rgba(var(--fd-yellow-rgb), .5)); }
+.free-delivery-flyer { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 2px rgba(var(--fd-yellow-rgb), 1)) drop-shadow(0 0 6px rgba(var(--fd-yellow-rgb), .8)) drop-shadow(0 0 14px rgba(var(--fd-yellow-rgb), .5)); }
 .free-delivery-flyer path { stroke: var(--fd-yellow); }
 
 /* The ring the floating cart button keeps while free delivery is unlocked: the same glowing yellow line. It
@@ -120,8 +120,8 @@
   position: absolute;
   inset: -5px;
   box-sizing: border-box;
-  border: 2px solid var(--fd-yellow);
+  border: 1.5px solid var(--fd-yellow);
   border-radius: 999px;
-  box-shadow: 0 0 4px 1px rgba(var(--fd-yellow-rgb), 1), 0 0 12px 3px rgba(var(--fd-yellow-rgb), .75), 0 0 24px 6px rgba(var(--fd-yellow-rgb), .4);
+  box-shadow: 0 0 3px 1px rgba(var(--fd-yellow-rgb), 1), 0 0 8px 2px rgba(var(--fd-yellow-rgb), .75), 0 0 16px 4px rgba(var(--fd-yellow-rgb), .4);
   pointer-events: none;
 }
