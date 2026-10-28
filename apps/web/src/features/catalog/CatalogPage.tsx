@@ -10,8 +10,8 @@ import { Seo } from "../../components/Seo";
 import "./catalog.css";
 
 const SORT_OPTIONS = [
-  { value: "name-asc", label: "sortNameAsc" },
   { value: "newest", label: "sortNewest" },
+  { value: "name-asc", label: "sortNameAsc" },
   { value: "price-asc", label: "sortPriceAsc" },
   { value: "price-desc", label: "sortPriceDesc" },
 ] as const;
@@ -51,7 +51,7 @@ export function CatalogPage() {
   const sort: ProductListParams["sort"] =
     SORT_OPTIONS.some((option) => option.value === requestedSort) && (orderingEnabled || !requestedSort?.startsWith("price"))
       ? requestedSort as ProductListParams["sort"]
-      : "name-asc";
+      : "newest";
   const priceRange = PRICE_RANGES.find((range) => range.value === searchParams.get("price"));
   const category = searchParams.get("category") || undefined;
 
@@ -166,13 +166,15 @@ export function CatalogPage() {
         </header>
 
         <div className="catalog__toolbar" data-testid="catalog-filters">
-          <label>
-            <span>{t.filterLight}</span>
-            <select value={params.light ?? ""} onChange={(event) => update({ light: event.target.value || undefined })} data-testid="light-filter" disabled={filtersPending}>
-              <option value="">{t.filterAllLights}</option>
-              {filters?.lights.map((light) => <option key={light} value={light}>{label(light, filters.lightLabels)}</option>)}
-            </select>
-          </label>
+          {filtersPending || filters?.lights.length ? (
+            <label>
+              <span>{t.filterLight}</span>
+              <select value={params.light ?? ""} onChange={(event) => update({ light: event.target.value || undefined })} data-testid="light-filter" disabled={filtersPending}>
+                <option value="">{t.filterAllLights}</option>
+                {filters?.lights.map((light) => <option key={light} value={light}>{label(light, filters.lightLabels)}</option>)}
+              </select>
+            </label>
+          ) : null}
           {orderingEnabled ? (
             <label>
               <span>{t.filterPrice}</span>
@@ -184,7 +186,7 @@ export function CatalogPage() {
           ) : null}
           <label>
             <span>{t.sortBy}</span>
-            <select value={sort} onChange={(event) => update({ sort: event.target.value === "name-asc" ? undefined : event.target.value })} data-testid="sort-select">
+            <select value={sort} onChange={(event) => update({ sort: event.target.value === "newest" ? undefined : event.target.value })} data-testid="sort-select">
               {SORT_OPTIONS.filter((option) => orderingEnabled || !option.value.startsWith("price")).map((option) => (
                 <option key={option.value} value={option.value}>{t[option.label]}</option>
               ))}

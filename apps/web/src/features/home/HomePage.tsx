@@ -79,7 +79,7 @@ export function HomePage() {
       <section className="home-section container" aria-labelledby="home-featured">
         <div className="section-head">
           <h2 id="home-featured">{t.featuredTitle}</h2>
-          <Link to="/shop?sort=newest">{t.viewAll}</Link>
+          <Link to="/shop">{t.viewAll}</Link>
         </div>
         {products.isError ? (
           <p className="home__notice" role="alert">

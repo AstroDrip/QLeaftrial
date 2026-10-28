@@ -14,7 +14,7 @@ export const productQuerySchema = z.object({
   maxPrice: z.coerce.number().int().nonnegative().optional(),
   inStock: z.enum(["1"]).optional(),
   page: z.coerce.number().int().positive().default(1),
-  sort: z.enum(["name-asc", "price-asc", "price-desc", "newest"]).default("name-asc"),
+  sort: z.enum(["name-asc", "price-asc", "price-desc", "newest"]).default("newest"),
 });
 
 export type ProductQuery = z.infer<typeof productQuerySchema>;
