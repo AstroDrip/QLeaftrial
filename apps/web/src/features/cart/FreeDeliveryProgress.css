@@ -137,16 +137,3 @@
 /* The line in flight: positioned and sized every frame by FreeDeliveryFlyer. */
 .free-delivery-flyer { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 2px rgba(var(--fd-yellow-rgb), 1)) drop-shadow(0 0 6px rgba(var(--fd-yellow-rgb), .8)) drop-shadow(0 0 14px rgba(var(--fd-yellow-rgb), .5)); }
 .free-delivery-flyer path { stroke: var(--fd-yellow); }
-
-/* The ring the floating cart button keeps while free delivery is unlocked: the same glowing yellow line. It
-   is exactly where the flying line ends, so the hand-over is invisible. */
-.floating-cart__button[data-fd-ring="on"]::after {
-  content: "";
-  position: absolute;
-  inset: -5px;
-  box-sizing: border-box;
-  border: 1.5px solid var(--fd-yellow);
-  border-radius: 999px;
-  box-shadow: 0 0 3px 1px rgba(var(--fd-yellow-rgb), 1), 0 0 8px 2px rgba(var(--fd-yellow-rgb), .75), 0 0 16px 4px rgba(var(--fd-yellow-rgb), .4);
-  pointer-events: none;
-}

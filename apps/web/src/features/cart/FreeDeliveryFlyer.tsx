@@ -54,9 +54,9 @@ function joined(middle: number, halfLength: number, place: (distance: number) =>
 
 // Draws the finished line leaving the banner. Above the floating cart button it slides down onto the
 // button's top edge, then both ends bend away like curves, down around the sides, until they meet at
-// the bottom middle: the line has become a ring around the button. Everywhere else the line simply
-// draws itself back in. The button's live position is read every frame, so scrolling cannot make it miss,
-// and the ring it ends on is the one the button then keeps (see the data-fd-ring styles).
+// the bottom middle: the line has become a ring around the button. It holds there for a beat and fades
+// away, leaving nothing behind. Everywhere else the line simply draws itself back in. The button's live
+// position is read every frame, so scrolling cannot make it miss.
 export function FreeDeliveryFlyer() {
   const phase = useFreeDeliveryStore((state) => state.phase);
   const setPhase = useFreeDeliveryStore((state) => state.setPhase);
@@ -76,8 +76,10 @@ export function FreeDeliveryFlyer() {
     const began = performance.now();
     let frame = 0;
 
+    const { flyMs, ringHoldMs, ringFadeMs } = FREE_DELIVERY_TIMINGS;
     const draw = (now: number) => {
-      const progress = clamp01((now - began) / FREE_DELIVERY_TIMINGS.flyMs);
+      const elapsed = now - began;
+      const progress = clamp01(elapsed / flyMs);
       const target = findTarget();
 
       if (!target) {
@@ -99,7 +101,8 @@ export function FreeDeliveryFlyer() {
         const wrap = ease(clamp01((progress - 0.45) / 0.55));
         const thickness = mix(start.thickness, RING_STROKE_PX, glide);
         line.setAttribute("stroke-width", String(thickness));
-        line.setAttribute("opacity", "1");
+        // Once the ends have met the ring holds for a beat, then fades away and is gone.
+        line.setAttribute("opacity", String(1 - ease(clamp01((elapsed - flyMs - ringHoldMs) / ringFadeMs))));
         if (wrap === 0) {
           const middle = mix(start.cx, ringMiddle, glide);
           const y = mix(start.cy, ring.top, glide);
@@ -109,7 +112,7 @@ export function FreeDeliveryFlyer() {
         }
       }
 
-      if (progress >= 1) { setPhase("done"); return; }
+      if (elapsed >= (target ? flyMs + ringHoldMs + ringFadeMs : flyMs)) { setPhase("done"); return; }
       frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);

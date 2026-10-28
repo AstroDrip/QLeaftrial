@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Providers } from "../../app/providers";
 import { FreeDeliveryFlyer, outlineHalfLength, outlinePoint } from "./FreeDeliveryFlyer";
 import { useCartStore } from "./cart-store";
-import { FREE_DELIVERY_TIMINGS, useFreeDeliveryController, useFreeDeliveryRing, useFreeDeliveryStore } from "./free-delivery-store";
+import { FREE_DELIVERY_TIMINGS, useFreeDeliveryController, useFreeDeliveryStore } from "./free-delivery-store";
 
 const item = (quantity: number) => ({ id: "p1", slug: "orchid", name: "Orchid", priceQar: 50, stock: 99, image: null, quantity });
 const phase = () => useFreeDeliveryStore.getState().phase;
@@ -46,15 +46,14 @@ describe("free delivery sequence", () => {
     expect(phase()).toBe("done");
   });
 
-  it("brings the banner back and takes the ring away when items are removed", () => {
+  it("brings the banner back when items are removed, and plays the celebration again on the next crossing", () => {
     useCartStore.setState({ items: [item(4)] });
-    const ring = renderHook(() => { useFreeDeliveryController(); return useFreeDeliveryRing(); });
-    expect(ring.result.current).toBe(true);
+    renderHook(() => useFreeDeliveryController());
+    expect(phase()).toBe("done");
 
     act(() => useCartStore.setState({ items: [item(2)] }));
 
     expect(phase()).toBe("progress");
-    expect(ring.result.current).toBe(false);
 
     act(() => useCartStore.setState({ items: [item(3)] }));
     expect(phase()).toBe("celebrate");
@@ -150,7 +149,19 @@ describe("free delivery flyer", () => {
     line = points(flyer);
     expect(Math.max(...line.map((point) => point.y))).toBeGreaterThan(456 + 10);
 
-    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs); });
+    // The ring is complete at flyMs. It holds for a beat, still fully visible...
+    const path = () => Number(flyer.querySelector("path")!.getAttribute("opacity"));
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.flyMs * 0.2 + FREE_DELIVERY_TIMINGS.ringHoldMs / 2); });
+    expect(path()).toBe(1);
+    expect(phase()).toBe("fly");
+
+    // ...then fades away...
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.ringHoldMs / 2 + FREE_DELIVERY_TIMINGS.flyMs * 0.3 + FREE_DELIVERY_TIMINGS.ringFadeMs / 2); });
+    expect(path()).toBeGreaterThan(0);
+    expect(path()).toBeLessThan(1);
+
+    // ...and disappears, leaving nothing on the page.
+    act(() => { vi.advanceTimersByTime(FREE_DELIVERY_TIMINGS.ringFadeMs); });
     expect(phase()).toBe("done");
     expect(screen.queryByTestId("free-delivery-flyer")).not.toBeInTheDocument();
   });

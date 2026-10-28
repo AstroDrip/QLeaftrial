@@ -8,16 +8,16 @@ export const FREE_DELIVERY_THRESHOLD_QAR = 150;
 // progress  - below the goal, the banner fills as the basket grows
 // celebrate - the goal was just reached: the message holds still so it can be read
 // collapse  - text and anchors fade and the card closes in around the line
-// fly       - the line travels to the cart icon and opens into a ring around it
-// done      - the banner is gone; the cart icon keeps the ring while the goal is met
+// fly       - the line travels to the cart icon, wraps round it, holds a beat and fades away
+// done      - the banner and the line are gone; nothing is left on screen
 export type FreeDeliveryPhase = "progress" | "celebrate" | "collapse" | "fly" | "done";
 
 // The light eases in and blooms (about a second), the finished line glows for a beat, then the moves are quick and eased.
-export const FREE_DELIVERY_TIMINGS = { celebrateMs: 1600, collapseMs: 550, flyMs: 500, flyFallbackMs: 1500 } as const;
+export const FREE_DELIVERY_TIMINGS = { celebrateMs: 1600, collapseMs: 550, flyMs: 500, ringHoldMs: 200, ringFadeMs: 450, flyFallbackMs: 2200 } as const;
 
 type FreeDeliveryState = { phase: FreeDeliveryPhase; setPhase: (phase: FreeDeliveryPhase) => void };
 
-// A basket that already met the goal when the site opened starts "done": no banner, just the ring.
+// A basket that already met the goal when the site opened starts "done": no banner, nothing to replay.
 const startsUnlocked = cartSubtotal(useCartStore.getState().items) >= FREE_DELIVERY_THRESHOLD_QAR;
 
 export const useFreeDeliveryStore = create<FreeDeliveryState>((set) => ({
@@ -69,11 +69,4 @@ export function useFreeDeliveryController(): void {
     else if (phase === "fly") timer = setTimeout(() => setPhase("done"), FREE_DELIVERY_TIMINGS.flyFallbackMs);
     return () => clearTimeout(timer);
   }, [phase, setPhase]);
-}
-
-// True while the basket meets the goal and the banner has finished its goodbye.
-export function useFreeDeliveryRing(): boolean {
-  const unlocked = useCartStore((state) => cartSubtotal(state.items)) >= FREE_DELIVERY_THRESHOLD_QAR;
-  const done = useFreeDeliveryStore((state) => state.phase === "done");
-  return unlocked && done;
 }
