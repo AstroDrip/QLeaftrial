@@ -55,8 +55,14 @@ function createPrismaClient(): PrismaClient {
   const provider = databaseProvider();
 
   if (provider === "postgresql") {
+    // Serverless instances are frozen between requests, so idle sockets are dropped quickly and a
+    // dead connection can never hang a request: it fails fast instead of waiting forever.
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL!,
+      max: 5,
+      idleTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 10_000,
+      keepAlive: true,
     });
 
     return new PostgreSqlPrismaClient({ adapter }) as unknown as PrismaClient;
