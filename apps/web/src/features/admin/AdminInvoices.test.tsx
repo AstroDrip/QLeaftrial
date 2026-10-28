@@ -63,6 +63,20 @@ describe("admin invoices", () => {
     expect(print).toHaveBeenCalledOnce();
   });
 
+  it("shows the invoice date and time in Qatar time whatever the browser time zone is", async () => {
+    // 21:30 UTC on the 28th is 00:30 on the 29th in Qatar (UTC+3).
+    vi.mocked(adminApi.orders).mockResolvedValue([order("a", { createdAt: "2026-10-28T21:30:00Z" })]);
+    render(
+      <QueryClientProvider client={client()}>
+        <MemoryRouter initialEntries={["/admin/invoices/a"]}><Routes><Route path="/admin/invoices/:orderId" element={<AdminInvoicePage />} /></Routes></MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const invoice = await screen.findByTestId("invoice");
+    expect(within(invoice).getByText("Date and time (Qatar)")).toBeInTheDocument();
+    expect(within(invoice).getByText(/^29 October 2026.*12:30\s?am$/i)).toBeInTheDocument();
+  });
+
   it("refuses to show an invoice for a declined order or an unknown id", async () => {
     const view = (id: string) => render(
       <QueryClientProvider client={client()}>

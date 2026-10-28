@@ -36,10 +36,10 @@ function tabForStatus(status: string): OrderTab | null {
   return tabs.find((tab) => tab.status === status)?.status ?? null;
 }
 
-function formatQatarDateTime(value: string): string {
+function formatQatarDateTime(value: string, arabic: boolean): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(arabic ? "ar-QA-u-nu-latn" : "en-GB", {
     timeZone: "Asia/Qatar",
     day: "2-digit",
     month: "short",
@@ -143,7 +143,7 @@ function OrderCard({
         <div className="admin-order-card__who">
           <p className="admin-order-card__ref">
             <span>{order.orderNumber}</span>
-            <time dateTime={order.createdAt}>{formatQatarDateTime(order.createdAt)}</time>
+            <time dateTime={order.createdAt}>{formatQatarDateTime(order.createdAt, isArabic)}</time>
             {stageLabels[order.status] ? <span className="status-pill">{stageLabels[order.status]}</span> : null}
           </p>
           <h2>{order.customerName}</h2>

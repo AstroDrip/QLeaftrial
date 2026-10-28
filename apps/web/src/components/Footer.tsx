@@ -33,7 +33,7 @@ export function Footer({ ref }: { ref?: Ref<HTMLElement> }) {
         </nav>
       </div>
       <div className="container site-footer__bottom">
-        <span>© {new Date().getFullYear()} QLeaves · {t.rights}</span>
+        <span>© {new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Qatar", year: "numeric" }).format(new Date())} QLeaves · {t.rights}</span>
         <span className="site-footer__credit">{t.built} <strong>QOZYD</strong></span>
       </div>
     </footer>

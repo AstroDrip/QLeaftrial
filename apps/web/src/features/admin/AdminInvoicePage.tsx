@@ -8,14 +8,14 @@ import "./invoice.css";
 const copy = {
   en: {
     title: "Invoice", back: "All invoices", print: "Print / save as PDF", loading: "Loading invoice…", missing: "This invoice could not be found.", declined: "Declined orders do not have an invoice.",
-    number: "Invoice no.", date: "Date", orderNo: "Order no.", billTo: "Bill to", payment: "Payment", method: { COD: "Cash on delivery", PAYMENT_LINK: "Payment link" },
+    number: "Invoice no.", date: "Date and time (Qatar)", orderNo: "Order no.", billTo: "Bill to", payment: "Payment", method: { COD: "Cash on delivery", PAYMENT_LINK: "Payment link" },
     status: { PAID: "Paid", PENDING: "Payment pending", FAILED: "Payment failed" } as Record<string, string>,
     item: "Item", sku: "SKU", qty: "Qty", unit: "Unit price", amount: "Amount", subtotal: "Subtotal", delivery: "Delivery", total: "Total", notes: "Delivery notes",
     cr: "Commercial Registration", license: "E-commerce license", thanks: "Thank you for choosing QLeaves.", currency: "All amounts are in Qatari Riyals (QAR).",
   },
   ar: {
     title: "فاتورة", back: "كل الفواتير", print: "طباعة / حفظ PDF", loading: "جارٍ تحميل الفاتورة…", missing: "تعذر العثور على هذه الفاتورة.", declined: "الطلبات المرفوضة ليس لها فاتورة.",
-    number: "رقم الفاتورة", date: "التاريخ", orderNo: "رقم الطلب", billTo: "العميل", payment: "الدفع", method: { COD: "الدفع عند الاستلام", PAYMENT_LINK: "رابط دفع" },
+    number: "رقم الفاتورة", date: "التاريخ والوقت (بتوقيت قطر)", orderNo: "رقم الطلب", billTo: "العميل", payment: "الدفع", method: { COD: "الدفع عند الاستلام", PAYMENT_LINK: "رابط دفع" },
     status: { PAID: "مدفوع", PENDING: "الدفع معلق", FAILED: "فشل الدفع" } as Record<string, string>,
     item: "المنتج", sku: "الرمز", qty: "الكمية", unit: "سعر الوحدة", amount: "المبلغ", subtotal: "المجموع الفرعي", delivery: "التوصيل", total: "الإجمالي", notes: "ملاحظات التوصيل",
     cr: "السجل التجاري", license: "ترخيص التجارة الإلكترونية", thanks: "شكرًا لاختياركم QLeaves.", currency: "جميع المبالغ بالريال القطري (QAR).",
@@ -23,7 +23,7 @@ const copy = {
 };
 
 function formatDate(iso: string, language: "en" | "ar"): string {
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-QA-u-nu-latn" : "en-GB", { timeZone: "Asia/Qatar", day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
+  return new Intl.DateTimeFormat(language === "ar" ? "ar-QA-u-nu-latn" : "en-GB", { timeZone: "Asia/Qatar", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(iso));
 }
 
 export function InvoiceDocument({ order, language }: { order: AdminOrder; language: "en" | "ar" }) {
