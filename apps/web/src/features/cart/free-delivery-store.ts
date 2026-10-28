@@ -6,14 +6,16 @@ import { cartSubtotal, useCartStore } from "./cart-store";
 export const FREE_DELIVERY_THRESHOLD_QAR = 150;
 
 // progress  - below the goal, the banner fills as the basket grows
-// celebrate - the goal was just reached: the message holds still so it can be read
+// celebrate - the goal was just reached: the light arrives and the finished line fills (about a second)
 // collapse  - text and anchors fade and the card closes in around the line
 // fly       - the line travels to the cart icon, wraps round it, holds a beat and fades away
 // done      - the banner and the line are gone; nothing is left on screen
 export type FreeDeliveryPhase = "progress" | "celebrate" | "collapse" | "fly" | "done";
 
-// The light eases in and blooms (about a second), the finished line glows for a beat, then the moves are quick and eased.
-export const FREE_DELIVERY_TIMINGS = { celebrateMs: 1600, collapseMs: 550, flyMs: 500, ringHoldMs: 200, ringFadeMs: 450, flyFallbackMs: 2200 } as const;
+// The light eases into the finish (500ms) and its glow runs back along the line (450ms). The moment the track is
+// filled the card closes in (450ms), and the line wraps the cart button straight after, with no pause in between.
+export const FREE_DELIVERY_FILL_MS = 500 + 450;
+export const FREE_DELIVERY_TIMINGS = { celebrateMs: FREE_DELIVERY_FILL_MS, collapseMs: 450, flyMs: 500, ringHoldMs: 200, ringFadeMs: 450, flyFallbackMs: 2200 } as const;
 
 type FreeDeliveryState = { phase: FreeDeliveryPhase; setPhase: (phase: FreeDeliveryPhase) => void };
 
