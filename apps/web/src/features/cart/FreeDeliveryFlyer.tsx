@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef } from "react";
 import { useFreeDeliveryStore, FREE_DELIVERY_TIMINGS } from "./free-delivery-store";
 
-// The line's colour on the card, and the warm gold it takes on once it circles the dark cart button.
-const FROM = [63, 91, 67];
-const TO = [215, 197, 138];
+// The finished track is the light's gold (it sweeps back along the track as the light arrives), and the
+// line keeps that colour all the way round the cart button.
+const GOLD = "rgb(215,197,138)";
 // The ring sits 5px outside the cart button with a 2px stroke, so the stroke's centre is 4px out.
 const RING_OUTSET_PX = 4;
 const RING_STROKE_PX = 2;
@@ -12,7 +12,6 @@ const SAMPLES = 40;
 const ease = (value: number) => (value < 0.5 ? 4 * value ** 3 : 1 - (-2 * value + 2) ** 3 / 2);
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const mix = (a: number, b: number, amount: number) => a + (b - a) * amount;
-const tint = (amount: number) => `rgb(${FROM.map((from, index) => Math.round(mix(from, TO[index], amount))).join(",")})`;
 
 type Point = { x: number; y: number };
 type Box = { left: number; top: number; width: number; height: number };
@@ -87,7 +86,7 @@ export function FreeDeliveryFlyer() {
         const retract = ease(progress);
         line.setAttribute("d", joined(start.cx, start.half * (1 - retract), (distance) => ({ x: start.cx - distance, y: start.cy })));
         line.setAttribute("stroke-width", String(start.thickness));
-        line.setAttribute("stroke", tint(0));
+        line.setAttribute("stroke", GOLD);
         line.setAttribute("opacity", String(1 - retract));
       } else {
         const rect = target.getBoundingClientRect();
@@ -102,7 +101,7 @@ export function FreeDeliveryFlyer() {
         const wrap = ease(clamp01((progress - 0.45) / 0.55));
         const thickness = mix(start.thickness, RING_STROKE_PX, glide);
         line.setAttribute("stroke-width", String(thickness));
-        line.setAttribute("stroke", tint(wrap));
+        line.setAttribute("stroke", GOLD);
         line.setAttribute("opacity", "1");
         if (wrap === 0) {
           const middle = mix(start.cx, ringMiddle, glide);

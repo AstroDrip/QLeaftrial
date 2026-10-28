@@ -54,6 +54,10 @@
 /* Once the light reaches the finish the whole track is one solid colour; only the light itself glows. */
 .free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--moss); transition: width 300ms var(--ease-out); }
 .free-delivery.is-unlocked .free-delivery__track { background: var(--moss); }
+/* At the moment the light arrives (the fill's own 300ms), the light's colour runs back along the track from
+   the finish line to the start, and the line keeps it for the rest of the sequence. */
+.free-delivery__sweep { position: absolute; inset-block: 0; inset-inline-end: 0; width: 0; border-radius: inherit; background: var(--gold); }
+.free-delivery.is-unlocked .free-delivery__sweep { width: 100%; transition: width 400ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)) 300ms; }
 /* The line is replaced by the flying copy for the flight itself. */
 .free-delivery.is-flying .free-delivery__track { visibility: hidden; }
 
@@ -74,8 +78,8 @@
   animation: free-delivery-glow 1.8s ease-in-out infinite;
 }
 [dir="rtl"] .free-delivery__glow { translate: 50% -50%; }
-/* It arrives at the finish line, then goes out: nothing glows along the finished track. */
-.free-delivery.is-unlocked .free-delivery__glow { opacity: 0; animation: none; transition: inset-inline-start 300ms var(--ease-out), opacity 250ms ease 300ms; }
+/* It arrives at the finish line, then goes out as the colour sweeps back: nothing glows along the track. */
+.free-delivery.is-unlocked .free-delivery__glow { opacity: 0; animation: none; transition: inset-inline-start 300ms var(--ease-out), opacity 120ms ease 300ms; }
 @keyframes free-delivery-glow { 0%, 100% { opacity: .85; scale: .88; } 50% { opacity: 1; scale: 1.2; } }
 
 .free-delivery--compact { gap: 6px; width: min(340px, calc(100vw - 32px)); padding: var(--space-3) var(--space-4); pointer-events: auto; }

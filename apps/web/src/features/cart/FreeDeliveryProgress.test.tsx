@@ -33,6 +33,17 @@ describe("free delivery progress", () => {
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
   });
 
+  it("has a colour layer that runs back along the track once the goal is met", () => {
+    const { rerender } = render(<Providers><FreeDeliveryProgress subtotalQar={100} /></Providers>);
+    const track = screen.getByRole("progressbar");
+    expect(track.querySelector("[data-testid=free-delivery-sweep]")).not.toBeNull();
+    expect(screen.getByTestId("free-delivery")).not.toHaveClass("is-unlocked");
+
+    rerender(<Providers><FreeDeliveryProgress subtotalQar={150} /></Providers>);
+    // The sweep is driven by this class (see the stylesheet), starting as the light arrives.
+    expect(screen.getByTestId("free-delivery")).toHaveClass("is-unlocked");
+  });
+
   it("is available in Arabic and has a compact form without the note", () => {
     localStorage.setItem("qleaves-language", "ar");
     render(<Providers><FreeDeliveryProgress subtotalQar={100} compact /></Providers>);
