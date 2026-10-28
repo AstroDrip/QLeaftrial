@@ -46,6 +46,24 @@ describe("free delivery progress", () => {
     expect(screen.getByTestId("free-delivery")).toHaveClass("is-unlocked");
   });
 
+  it("changes only the lead of the message, keeps 'free delivery' in place and adds the '!' on unlock", () => {
+    const { rerender, container } = render(<Providers><FreeDeliveryProgress subtotalQar={100} /></Providers>);
+    // Assistive technology hears one sentence; the cross-fading leads are only for the eye.
+    expect(screen.getByRole("status")).toHaveTextContent("Add 50 QAR more to get free delivery");
+    const visual = container.querySelectorAll(".free-delivery__message [aria-hidden=true]");
+    expect(visual.length).toBe(2);
+    const subject = container.querySelector(".free-delivery__subject")!;
+    expect(subject).toHaveTextContent("free delivery!");
+    expect(container.querySelector(".free-delivery__lead-text--remaining")).toHaveTextContent("Add 50 QAR more to get");
+    expect(container.querySelector(".free-delivery__lead-text--unlocked")).toHaveTextContent("You’ve unlocked");
+
+    rerender(<Providers><FreeDeliveryProgress subtotalQar={150} /></Providers>);
+    expect(screen.getByRole("status")).toHaveTextContent("You’ve unlocked free delivery!");
+    // The very same subject element stays on screen: it is not replaced, so it cannot jump.
+    expect(container.querySelector(".free-delivery__subject")).toBe(subject);
+    expect(screen.getByTestId("free-delivery")).toHaveClass("is-unlocked");
+  });
+
   it("is available in Arabic and has a compact form without the note", () => {
     localStorage.setItem("qleaves-language", "ar");
     render(<Providers><FreeDeliveryProgress subtotalQar={100} compact /></Providers>);
