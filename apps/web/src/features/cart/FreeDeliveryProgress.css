@@ -1,5 +1,14 @@
-/* The finished line's colour: a yellow gold, with the light it gives off. */
+/* Palette: the banner is the header's deep moss green, so the light has a dark ground to glow against (a glow
+   barely shows on a pale card). Contrast on that green: text 10.9:1, leaf green 6.6:1, yellow gold 7.9:1, and the
+   leaf-green fill against its unfilled track 4.1:1 (WCAG asks 3:1 for the filled part of a progress bar). */
 :root {
+  --fd-surface: #28382b;        /* deep moss: the same green as the site header */
+  --fd-border: rgba(246, 241, 214, .14);
+  --fd-text: #f6f1d6;           /* the header's cream */
+  --fd-text-muted: rgba(246, 241, 214, .72);
+  --fd-track: rgba(246, 241, 214, .16);
+  --fd-leaf: #a7c957;           /* fresh leaf green: the fill and the seed */
+  /* The finished line's colour: a yellow gold, with the light it gives off. */
   --fd-yellow: #f6c933;
   --fd-yellow-rgb: 246, 201, 51;
   /* The last stretch: a long, gentle slowing-down, so the light eases into the finish instead of snapping to it. */
@@ -35,12 +44,12 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  border: 1px solid var(--line);
+  border: 1px solid var(--fd-border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--moss) 8%, var(--surface));
+  background: var(--fd-surface);
   transition: inset 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), border-radius 450ms var(--fd-ease, cubic-bezier(.65, 0, .35, 1)), opacity 300ms ease 175ms, background-color 200ms var(--ease-out), border-color 200ms var(--ease-out);
 }
-.free-delivery.is-unlocked::before { border-color: color-mix(in srgb, var(--moss) 45%, transparent); background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
+.free-delivery.is-unlocked::before { border-color: rgba(var(--fd-yellow-rgb), .4); }
 .free-delivery.is-collapsing::before {
   inset: var(--fd-top, 0px) var(--fd-right, 0px) var(--fd-bottom, 0px) var(--fd-left, 0px);
   border-radius: var(--radius-full);
@@ -48,20 +57,20 @@
 }
 
 .free-delivery__message, .free-delivery__note, .free-delivery__anchor { transition: opacity 225ms ease; }
-.free-delivery__message { margin: 0; color: var(--ink); font-size: .85rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
-.free-delivery__note { margin: 0; color: var(--text-muted); font-size: .72rem; line-height: 1.3; }
+.free-delivery__message { margin: 0; color: var(--fd-text); font-size: .85rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.free-delivery__note { margin: 0; color: var(--fd-text-muted); font-size: .72rem; line-height: 1.3; }
 .free-delivery.is-collapsing .free-delivery__message, .free-delivery.is-collapsing .free-delivery__note, .free-delivery.is-collapsing .free-delivery__anchor { opacity: 0; }
 
 .free-delivery__rail { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
-.free-delivery__anchor { width: 16px; height: 16px; color: var(--text-muted); transition: opacity 225ms ease, color 200ms var(--ease-out), transform 200ms var(--ease-out); }
-.free-delivery__anchor--start { color: var(--moss); }
-.free-delivery.is-unlocked .free-delivery__anchor--goal { color: var(--moss); transform: scale(1.2) rotate(-8deg); }
+.free-delivery__anchor { width: 16px; height: 16px; color: var(--fd-text-muted); transition: opacity 225ms ease, color 200ms var(--ease-out), transform 200ms var(--ease-out); }
+.free-delivery__anchor--start { color: var(--fd-leaf); }
+.free-delivery.is-unlocked .free-delivery__anchor--goal { color: var(--fd-yellow); transform: scale(1.2) rotate(-8deg); }
 
 .free-delivery__trackwrap { position: relative; min-width: 0; }
-.free-delivery__track { position: relative; height: 4px; overflow: hidden; border-radius: var(--radius-full); background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.free-delivery__track { position: relative; height: 4px; overflow: hidden; border-radius: var(--radius-full); background: var(--fd-track); }
 /* Once the light reaches the finish the whole track is one solid colour; only the light itself glows. */
-.free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--moss); transition: width 300ms var(--ease-out); }
-.free-delivery.is-unlocked .free-delivery__track { background: var(--moss); }
+.free-delivery__fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: inherit; background: var(--fd-leaf); transition: width 300ms var(--ease-out); }
+.free-delivery.is-unlocked .free-delivery__track { background: var(--fd-leaf); }
 /* At the moment the light arrives (the 500ms of its final approach), its colour runs back along the track from the
    finish line to the start, and the whole line glows. It sits beside the track, not inside it, because the track
    clips its contents and the glow has to spill out around the line. */
@@ -120,8 +129,7 @@
 @keyframes free-delivery-glow { 0%, 100% { opacity: .85; scale: .88; } 50% { opacity: 1; scale: 1.2; } }
 
 .free-delivery--compact { gap: 4px; width: min(280px, calc(100vw - 32px)); padding: 8px 12px; pointer-events: auto; }
-.free-delivery--compact::before { box-shadow: var(--shadow-md); background: var(--surface); }
-.free-delivery--compact.is-unlocked::before { background: color-mix(in srgb, var(--moss) 14%, var(--surface)); }
+.free-delivery--compact::before { box-shadow: var(--shadow-md); }
 .free-delivery--compact .free-delivery__message { font-size: .75rem; }
 .free-delivery--compact .free-delivery__anchor { width: 14px; height: 14px; }
 .free-delivery--compact .free-delivery__track { height: 3px; }
