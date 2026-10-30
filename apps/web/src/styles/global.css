@@ -88,7 +88,6 @@ label { color: var(--text-muted); font-size: .8125rem; font-weight: 600; }
 .nav-link:hover, .nav-link.active { color: var(--on-dark); }
 .nav-link.active::after { content: ""; position: absolute; inset-inline: 0; bottom: -2px; height: 2px; border-radius: 2px; background: var(--gold); }
 .site-header__actions { display: flex; align-items: center; gap: var(--space-3); margin-inline-start: auto; }
-.site-header__alert { padding: .4rem var(--gutter); background: var(--surface-sunk); font-size: .8rem; }
 
 .icon-button { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; border: 1px solid transparent; border-radius: var(--radius-full); background: transparent; color: var(--ink); transition: background-color var(--duration) var(--ease-out); }
 .icon-button:hover { background: var(--surface-sunk); }

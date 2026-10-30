@@ -46,7 +46,6 @@ export function SiteHeader() {
           ) : null}
         </div>
       </div>
-      {settings.isError ? <p className="site-header__alert" role="alert">{isArabic ? "تعذر التحقق من حالة الطلبات." : "Ordering status could not be checked."}</p> : null}
     </header>
   );
 }
