@@ -96,7 +96,7 @@ export function HomePage() {
 
       <section className="home-story" aria-labelledby="home-story-title">
         <div className="container home-story__inner">
-          <img src="/brand/qleaves-logo.png" alt={t.emblemAlt} width={160} height={160} loading="lazy" decoding="async" />
+          <img src="/brand/qleaves-logo-white.png" alt={t.emblemAlt} width={220} height={77} loading="lazy" decoding="async" />
           <div>
             <p className="eyebrow">{t.about}</p>
             <h2 id="home-story-title">{t.aboutTitle}</h2>

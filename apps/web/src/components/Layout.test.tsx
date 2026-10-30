@@ -55,6 +55,19 @@ describe("Layout", () => {
     expect(screen.getByText("QOZYD").tagName).toBe("STRONG");
   });
 
+  it("shows the brand kit's own artwork, not typed text: the full logo reversed on the dark header and footer, the icon for phones", () => {
+    const { container } = renderWithSettings(true);
+
+    const header = within(screen.getByTestId("site-header"));
+    expect(header.getByRole("link", { name: /QLeaves home/ })).toHaveAttribute("href", "/");
+    expect(header.getByRole("img", { name: "QLeaves" })).toBeInTheDocument();
+    expect(container.querySelector(".site-header__logo-full")).toHaveAttribute("src", "/brand/qleaves-logo-white.png");
+    expect(container.querySelector(".site-header__logo-icon")).toHaveAttribute("src", "/brand/qleaves-icon-white.png");
+    // The old typed wordmark is gone.
+    expect(container.querySelector(".site-header__wordmark")).toBeNull();
+    expect(within(screen.getByTestId("site-footer")).getByRole("img", { name: "QLeaves" })).toHaveAttribute("src", "/brand/qleaves-logo-white.png");
+  });
+
   it("hides the cart destination when ordering is disabled", () => {
     renderWithSettings(false);
 

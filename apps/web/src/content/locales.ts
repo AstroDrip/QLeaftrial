@@ -31,7 +31,7 @@ export const localeContent = {
       aboutCta: "Our story",
       motto: "Thoughtfully chosen greenery to bring a little more life, warmth and beauty into the spaces you call home.",
       inventoryError: "Our plant list is temporarily unavailable",
-      emblemAlt: "QLeaves plant emblem",
+      emblemAlt: "QLeaves logo",
     },
     catalog: {
       title: "Plant collection",
@@ -265,7 +265,7 @@ export const localeContent = {
       aboutCta: "قصتنا",
       motto: "نباتات مختارة بعناية لتضيف مزيدًا من الحياة والدفء والجمال إلى المساحات التي تسميها منزلك.",
       inventoryError: "قائمة النباتات غير متاحة مؤقتًا",
-      emblemAlt: "شعار نبات QLeaves",
+      emblemAlt: "شعار QLeaves",
     },
     catalog: {
       title: "مجموعة النباتات",

@@ -90,7 +90,7 @@
 
 .home-story { background: var(--moss-deep); color: var(--on-dark); }
 .home-story__inner { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-7); padding-block: var(--space-8); }
-.home-story img { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; }
+.home-story img { width: 220px; height: auto; }
 .home-story__inner > div { display: grid; gap: var(--space-4); justify-items: start; max-width: 62ch; }
 .home-story .eyebrow { color: var(--gold); }
 .home-story h2 { font-size: var(--step-3); }
@@ -112,5 +112,5 @@
   .hero-carousel__blur { width: 12%; }
   .home-promises ul { grid-template-columns: 1fr; }
   .home-story__inner { grid-template-columns: 1fr; gap: var(--space-5); }
-  .home-story img { width: 96px; height: 96px; }
+  .home-story img { width: 160px; }
 }

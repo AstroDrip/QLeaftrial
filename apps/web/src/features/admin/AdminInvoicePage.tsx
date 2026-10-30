@@ -46,7 +46,7 @@ export function InvoiceDocument({ order, language }: { order: InvoiceOrder; lang
     <article className="invoice" dir={language === "ar" ? "rtl" : "ltr"} lang={language} data-testid="invoice">
       <header className="invoice__head">
         <div>
-          <p className="invoice__brand" lang="en" dir="ltr">QLeaves</p>
+          <img className="invoice__logo" src="/brand/qleaves-logo.png" alt="QLeaves" width={150} height={52} />
           {business.map((line) => <p key={line} className="invoice__muted">{line}</p>)}
         </div>
         <div className="invoice__title">

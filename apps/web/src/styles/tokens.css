@@ -51,7 +51,7 @@
   --shadow-md: 0 10px 30px -12px rgba(22, 31, 24, .22);
 
   --control-height: 46px;
-  --header-height: 68px;
+  --header-height: 76px; /* the 140px-wide logo is 49px tall and needs a quarter of that clear on each side */
   --ease-out: cubic-bezier(.2, 0, 0, 1);
   --duration: 200ms;
 

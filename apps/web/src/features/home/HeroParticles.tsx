@@ -1,22 +1,28 @@
 import { useEffect, useRef } from "react";
 
-// The original hero particle field (260 points drifting upward with gentle
-// pointer parallax), drawn with a 2D canvas instead of three.js so it adds no
-// library download. Same field size, camera and motion as before.
-const COUNT = 260;
+// The hero particle field, with the brand kit's leaf pair (its "Brand Elements" leaf pattern) as every
+// particle instead of a dot. The field, camera and motion are unchanged from the dot version: points
+// drifting upward with a slow turn and a gentle pointer parallax, in the same colour and with the same
+// depth-based fading, drawn on a 2D canvas so it adds no library download. Each leaf keeps the fixed,
+// random tilt the pattern gives its leaves.
+const COUNT = 90;
 const FIELD = { x: 22, y: 16, z: 12 };
 const CAMERA_Z = 12;
 const FOV = (55 * Math.PI) / 180;
 const DRIFT_PER_SECOND = 0.24;
-const POINT_SIZE = 0.09;
+// How wide a leaf is in field units (the dots were 0.09 across): about 24px at the middle of the field.
+const LEAF_WIDTH = 0.6;
+const COLOR = "#c9b46b";
+const SPRITE = "/brand/leaf-pair.png";
 
-type Point = { x: number; y: number; z: number };
+type Leaf = { x: number; y: number; z: number; tilt: number };
 
-export function createField(random = Math.random): Point[] {
+export function createField(random = Math.random): Leaf[] {
   return Array.from({ length: COUNT }, () => ({
     x: (random() - 0.5) * FIELD.x,
     y: (random() - 0.5) * FIELD.y,
     z: (random() - 0.5) * FIELD.z,
+    tilt: random() * Math.PI * 2,
   }));
 }
 
@@ -28,7 +34,7 @@ export function HeroParticles() {
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    const points = createField();
+    const leaves = createField();
     const pointer = { x: 0, y: 0 };
     let width = 0;
     let height = 0;
@@ -36,6 +42,26 @@ export function HeroParticles() {
     let visible = true;
     let last = 0;
     let elapsed = 0;
+    let leaf: HTMLCanvasElement | null = null;
+    let disposed = false;
+
+    // The brand artwork is a white silhouette; it is tinted once to the particle colour.
+    const sprite = new Image();
+    sprite.onload = () => {
+      if (disposed) return;
+      const tinted = document.createElement("canvas");
+      tinted.width = sprite.naturalWidth;
+      tinted.height = sprite.naturalHeight;
+      const paint = tinted.getContext("2d");
+      if (!paint) return;
+      paint.drawImage(sprite, 0, 0);
+      paint.globalCompositeOperation = "source-in";
+      paint.fillStyle = COLOR;
+      paint.fillRect(0, 0, tinted.width, tinted.height);
+      leaf = tinted;
+      if (reduced) draw();
+    };
+    sprite.src = SPRITE;
 
     const resize = () => {
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -46,14 +72,15 @@ export function HeroParticles() {
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
     };
 
-    const draw = () => {
-      context.clearRect(0, 0, width, height);
+    function draw() {
+      context!.clearRect(0, 0, width, height);
+      if (!leaf) return;
       const focal = height / 2 / Math.tan(FOV / 2);
       const yaw = elapsed * 0.02 + pointer.x * 0.15;
       const pitch = pointer.y * 0.08;
       const [cosY, sinY, cosX, sinX] = [Math.cos(yaw), Math.sin(yaw), Math.cos(pitch), Math.sin(pitch)];
-      context.fillStyle = "#c9b46b";
-      for (const point of points) {
+      const aspect = leaf.height / leaf.width;
+      for (const point of leaves) {
         const x1 = point.x * cosY + point.z * sinY;
         const z1 = -point.x * sinY + point.z * cosY;
         const y2 = point.y * cosX - z1 * sinX;
@@ -61,14 +88,16 @@ export function HeroParticles() {
         const depth = CAMERA_Z - z2;
         if (depth <= 0.1) continue;
         const scale = focal / depth;
-        const radius = Math.max(0.6, (POINT_SIZE * scale) / 2);
-        context.globalAlpha = Math.min(0.55, 0.25 + scale / focal);
-        context.beginPath();
-        context.arc(width / 2 + x1 * scale, height / 2 - y2 * scale, radius, 0, Math.PI * 2);
-        context.fill();
+        const size = Math.max(5, LEAF_WIDTH * scale);
+        context!.globalAlpha = Math.min(0.55, 0.25 + scale / focal);
+        context!.save();
+        context!.translate(width / 2 + x1 * scale, height / 2 - y2 * scale);
+        context!.rotate(point.tilt);
+        context!.drawImage(leaf, -size / 2, (-size * aspect) / 2, size, size * aspect);
+        context!.restore();
       }
-      context.globalAlpha = 1;
-    };
+      context!.globalAlpha = 1;
+    }
 
     const tick = (time: number) => {
       frame = requestAnimationFrame(tick);
@@ -76,7 +105,7 @@ export function HeroParticles() {
       last = time;
       if (!visible || document.hidden) return;
       elapsed += delta;
-      for (const point of points) {
+      for (const point of leaves) {
         point.y += DRIFT_PER_SECOND * delta;
         if (point.y > FIELD.y / 2) point.y = -FIELD.y / 2;
       }
@@ -98,14 +127,18 @@ export function HeroParticles() {
     const schedule = window.requestIdleCallback ?? ((callback: () => void) => window.setTimeout(callback, 300));
     const cancel = window.cancelIdleCallback ?? window.clearTimeout;
     const start = schedule(() => {
+      // A page that has already gone (an unmounted tree, a torn-down test) must not be touched.
+      if (disposed || typeof window === "undefined") return;
       if (reduced) { draw(); return; }
       window.addEventListener("pointermove", onPointer, { passive: true });
       frame = requestAnimationFrame(tick);
     });
 
     return () => {
+      disposed = true;
       cancel(start);
       cancelAnimationFrame(frame);
+      sprite.onload = null;
       window.removeEventListener("pointermove", onPointer);
       sizeObserver?.disconnect();
       viewObserver?.disconnect();

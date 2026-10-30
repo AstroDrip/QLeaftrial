@@ -77,15 +77,14 @@ label { color: var(--text-muted); font-size: .8125rem; font-weight: 600; }
 /* ---------- Header ---------- */
 .site-header { position: sticky; top: 0; z-index: 40; background: var(--moss-deep); color: var(--on-dark); border-bottom: 1px solid rgba(246, 241, 214, .12); }
 .site-header__inner { display: flex; align-items: center; gap: var(--space-5); height: var(--header-height); }
-.site-header__brand { display: inline-flex; align-items: center; gap: .55rem; flex-shrink: 0; color: var(--on-dark); font-weight: 700; letter-spacing: .08em; }
-.site-header__logo { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
-.site-header__wordmark { display: inline-flex; align-items: baseline; gap: .05em; line-height: 1; }
-.site-header__wordmark-q { font-size: 1.5em; }
-.site-header__wordmark-leaves { font-size: .9em; }
+.site-header__brand { display: inline-flex; align-items: center; flex-shrink: 0; color: var(--on-dark); }
+/* Brand kit: the full logo is never shown below 140px wide, and the icon alone never below 32px. */
+.site-header__logo { display: inline-flex; align-items: center; }
+.site-header__logo img { display: block; height: auto; }
+.site-header__logo .site-header__logo-full { width: 140px; }
+.site-header__logo .site-header__logo-icon { display: none; width: 40px; }
 .site-header__nav { display: flex; gap: var(--space-5); }
-/* The 1.5em "Q" pulls the wordmark baseline 4px below a centred 0.9rem line, so the links are
-   nudged down by the same amount (padding keeps their box height) to share one baseline. */
-.nav-link { position: relative; padding-block: calc(.4rem + 4px) calc(.4rem - 4px); color: var(--on-dark-muted); font-size: .9rem; font-weight: 500; }
+.nav-link { position: relative; padding-block: .4rem; color: var(--on-dark-muted); font-size: .9rem; font-weight: 500; }
 .nav-link:hover, .nav-link.active { color: var(--on-dark); }
 .nav-link.active::after { content: ""; position: absolute; inset-inline: 0; bottom: -2px; height: 2px; border-radius: 2px; background: var(--gold); }
 .site-header__actions { display: flex; align-items: center; gap: var(--space-3); margin-inline-start: auto; }
@@ -130,7 +129,7 @@ label { color: var(--text-muted); font-size: .8125rem; font-weight: 600; }
 .site-footer { margin-top: var(--space-6); background: var(--ink); color: var(--on-dark-muted); font-size: .9rem; }
 .site-footer__grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-6); padding-block: var(--space-7) var(--space-6); }
 .site-footer__brand { display: grid; align-content: start; gap: .5rem; }
-.site-footer__brand strong { color: var(--on-dark); font-family: var(--serif); font-size: 1.5rem; font-weight: 500; }
+.site-footer__logo { display: block; width: 150px; height: auto; }
 .site-footer h2 { margin-bottom: .8rem; color: var(--on-dark); font-family: var(--sans); font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .site-footer ul { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
 .site-footer a { color: var(--on-dark-muted); text-decoration: none; transition: color var(--duration) var(--ease-out); }
@@ -286,6 +285,9 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
   .admin-shell { grid-template-columns: 1fr; }
   .admin-sidebar { position: relative; }
   .header-search__results { position: fixed; top: calc(var(--header-height) - 4px); inset-inline: 16px; width: auto; }
+  /* Phones show the icon alone, which leaves room for the search capsule. */
+  .site-header__logo .site-header__logo-full { display: none; }
+  .site-header__logo .site-header__logo-icon { display: block; }
   .checkout-form__grid { grid-template-columns: 1fr; }
   .cart-item { display: grid; }
 }
@@ -293,10 +295,6 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 @media (max-width: 520px) {
   .product-card__meta { flex-direction: column; align-items: flex-start; gap: 2px; }
   .product-card__category { max-width: 100%; }
-}
-@media (max-width: 520px) {
-  /* The round logo already carries the name; dropping the text leaves room for the search capsule. */
-  .site-header__wordmark { display: none; }
 }
 @media (max-width: 420px) {
   /* The gold ring around the cart icon sits 6px outside it, so the controls keep a little more room. */

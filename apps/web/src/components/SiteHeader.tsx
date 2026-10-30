@@ -23,10 +23,11 @@ export function SiteHeader() {
     <header className="site-header" data-testid="site-header">
       <div className="container site-header__inner">
         <Link to="/" className="site-header__brand" aria-label="QLeaves home" lang="en" dir="ltr">
-          <img className="site-header__logo" src="/brand/qleaves-logo.png" alt="" aria-hidden="true" width={34} height={34} onError={(event) => { event.currentTarget.style.display = "none"; }} />
-          <span className="site-header__wordmark" aria-label={content.brand}>
-            <span className="site-header__wordmark-q">Q</span>
-            <span className="site-header__wordmark-leaves">LEAVES</span>
+          {/* The brand kit's own artwork, never retyped: the full logo (reversed for the dark header) with the
+              icon alone on phones, where the full logo would crowd the controls. */}
+          <span className="site-header__logo" role="img" aria-label={content.brand}>
+            <img className="site-header__logo-full" src="/brand/qleaves-logo-white.png" alt="" aria-hidden="true" width={140} height={49} />
+            <img className="site-header__logo-icon" src="/brand/qleaves-icon-white.png" alt="" aria-hidden="true" width={40} height={33} />
           </span>
         </Link>
         <nav aria-label={content.aria.primaryNavigation} className="site-header__nav" data-testid="primary-nav">

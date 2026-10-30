@@ -25,7 +25,7 @@
 .invoice p, .invoice h1, .invoice h2 { margin: 0; }
 .invoice__muted { color: var(--inv-muted); font-size: .85rem; }
 .invoice__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--a-5); padding-bottom: var(--a-4); border-bottom: 2px solid var(--inv-ink); }
-.invoice__brand { font-family: var(--serif); font-size: 1.9rem; line-height: 1.1; }
+.invoice__logo { display: block; width: 150px; height: auto; }
 .invoice__title { text-align: end; }
 .invoice__title h1 { font-family: var(--sans); font-size: 1.1rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 html[lang="ar"] .invoice__title h1 { letter-spacing: 0; }

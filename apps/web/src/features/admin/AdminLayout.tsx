@@ -98,7 +98,7 @@ export function AdminLayout() {
       >
         <div className="admin-sidebar__head">
           <div>
-            <div className="admin-sidebar__brand"><span lang="en" dir="ltr">QLeaves</span></div>
+            <div className="admin-sidebar__brand"><img src="/brand/qleaves-logo-white.png" alt="QLeaves" width={150} height={52} /></div>
             <span>{content.nav.admin}</span>
           </div>
           <button
@@ -153,7 +153,7 @@ export function AdminLayout() {
           </button>
 
           <div className="admin-topbar__title">
-            <strong>QLeaves</strong>
+            <img className="admin-topbar__logo" src="/brand/qleaves-icon-white.png" alt="QLeaves" width={34} height={28} />
             <span>{content.admin.dashboard}</span>
           </div>
 

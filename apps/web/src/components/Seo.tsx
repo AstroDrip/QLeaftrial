@@ -15,7 +15,7 @@ function upsertMeta(selector: string, attributes: Record<string, string>) {
   Object.entries(attributes).forEach(([key, value]) => element!.setAttribute(key, value));
 }
 
-export function Seo({ title, description, path, image = "/brand/qleaves-logo.png", noIndex = false, structuredData }: {
+export function Seo({ title, description, path, image = "/brand/qleaves-share.png", noIndex = false, structuredData }: {
   title: string;
   description: string;
   path: string;
@@ -60,6 +60,6 @@ export function Seo({ title, description, path, image = "/brand/qleaves-logo.png
 
 export const qleavesStructuredData = [
   { "@context": "https://schema.org", "@type": "Organization", name: "QLeaves", url: SITE_URL, logo: `${SITE_URL}/brand/qleaves-logo.png`, foundingDate: "2020", sameAs: ["https://www.instagram.com/qleaves.qa"] },
-  { "@context": "https://schema.org", "@type": "LocalBusiness", name: "QLeaves", url: SITE_URL, image: `${SITE_URL}/brand/qleaves-logo.png`, telephone: "+97477551056", address: { "@type": "PostalAddress", addressCountry: "QA" } },
+  { "@context": "https://schema.org", "@type": "LocalBusiness", name: "QLeaves", url: SITE_URL, image: `${SITE_URL}/brand/qleaves-share.png`, telephone: "+97477551056", address: { "@type": "PostalAddress", addressCountry: "QA" } },
   { "@context": "https://schema.org", "@type": "WebSite", name: "QLeaves", url: SITE_URL },
 ];

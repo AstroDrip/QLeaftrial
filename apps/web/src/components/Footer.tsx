@@ -14,7 +14,7 @@ export function Footer({ ref }: { ref?: Ref<HTMLElement> }) {
     <footer ref={ref} className="site-footer" data-testid="site-footer" dir={isArabic ? "rtl" : "ltr"} lang={language}>
       <div className="container site-footer__grid">
         <div className="site-footer__brand">
-          <strong lang="en" dir="ltr">QLeaves</strong>
+          <img className="site-footer__logo" src="/brand/qleaves-logo-white.png" alt="QLeaves" width={150} height={52} loading="lazy" decoding="async" />
           <span>{t.tagline}</span>
           <span>{t.founded}</span>
           <div className="site-footer__social">
