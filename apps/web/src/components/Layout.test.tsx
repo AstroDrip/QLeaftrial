@@ -46,7 +46,7 @@ describe("Layout", () => {
     expect(within(screen.getByTestId("primary-nav")).getByRole("link", { name: "About us" })).toHaveAttribute("href", "/about");
     expect(within(screen.getByTestId("primary-nav")).queryByRole("link", { name: /cart/i })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Cart, \d+ items?$/ })).toHaveAttribute("href", "/cart");
-    expect(screen.getByText("Founded in 2020")).toBeInTheDocument();
+    expect(screen.getByText("Founded in 2018")).toBeInTheDocument();
     for (const link of screen.getAllByRole("link", { name: /instagram/i })) expect(link).toHaveAttribute("href", "https://www.instagram.com/qleaves.qa");
     for (const link of screen.getAllByRole("link", { name: /whatsapp/i })) expect(link).toHaveAttribute("href", "https://wa.me/97452040988");
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
@@ -101,6 +101,6 @@ describe("Layout", () => {
     expect(screen.getByRole("link", { name: "الشروط والأحكام" })).toHaveAttribute("href", "/terms");
     expect(screen.getByRole("link", { name: "الشحن والإرجاع" })).toHaveAttribute("href", "/shipping-returns");
     expect(screen.getByLabelText("التبديل إلى اللغة الإنجليزية")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText("تأسست في 2020")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("تأسست في 2018")).toBeInTheDocument());
   });
 });

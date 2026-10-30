@@ -42,7 +42,7 @@ describe("runtime localization", () => {
     expect(document.documentElement).toHaveAttribute("dir", "rtl");
     expect(screen.getByTestId("site-footer")).toHaveAttribute("dir", "rtl");
     expect(screen.getByTestId("site-footer")).toHaveAttribute("lang", "ar");
-    expect(screen.getByText("تأسست في 2020")).toBeInTheDocument();
+    expect(screen.getByText("تأسست في 2018")).toBeInTheDocument();
     expect(screen.getByLabelText("QLeaves home")).toHaveAttribute("dir", "ltr");
   });
 });
