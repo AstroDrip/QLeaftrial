@@ -57,12 +57,15 @@ describe("ReviewStories", () => {
     expect(screen.getByText("Customer a")).toBeVisible();
     expect(screen.getByText("01")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /next story/i }));
+    // There are no arrow buttons; the arrow keys still step through.
+    expect(screen.queryByRole("button", { name: /next story|previous story/i })).not.toBeInTheDocument();
+    const region = screen.getByRole("group", { name: /customer stories/i });
+    fireEvent.keyDown(region, { key: "ArrowRight" });
     expect(slides.map((slide) => slide.getAttribute("data-place"))).toEqual(["after", "front", "next"]);
     expect(screen.getByText("02")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /previous story/i }));
-    await user.click(screen.getByRole("button", { name: /previous story/i }));
+    fireEvent.keyDown(region, { key: "ArrowLeft" });
+    fireEvent.keyDown(region, { key: "ArrowLeft" });
     // Going back past the first story wraps to the last one.
     expect(slides.map((slide) => slide.getAttribute("data-place"))).toEqual(["next", "after", "front"]);
 

@@ -3,13 +3,19 @@ import { Link } from "react-router-dom";
 
 export type RailItem = { key: string; to: string; image: string; name: string; count: string };
 
-// A gentle invitation to keep browsing, not a ticker: the row drifts at a walking pace and stops the moment
-// anyone touches it, hovers it, focuses a card, scrolls it or leaves the tab. It is a normal scrolling row, so
-// swiping, trackpads, the scrollbar and the arrow buttons all work, and drifting only changes scrollLeft.
-const SPEED = 24; // px per second
-const RESUME_AFTER = 2400; // ms of calm before drifting again
+// A gentle invitation to keep browsing, not a ticker: every few seconds the row glides on by exactly one
+// card with an eased start and a soft landing, then rests. It stops the moment anyone touches it, hovers it,
+// focuses a card, scrolls it or leaves the tab. It is a normal scrolling row, so swiping, trackpads, the
+// scrollbar and the arrow buttons all work, and the glide only changes scrollLeft.
+const GLIDE_MS = 760; // one card's glide
+const DWELL_MS = 2200; // rest between glides
+const NUDGE_MS = 520; // an arrow press answers at once and lands softly
+const RESUME_AFTER = 2400; // ms of calm before gliding again
+const AFTER_HOLD = 900; // rest after a hover, touch or focus ends
 const BUTTON_HOLD = 4200;
 const RECENTRE_AFTER = 160;
+const easeInOut = (t: number) => (t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4 / 2);
+const easeOut = (t: number) => 1 - (1 - t) ** 4;
 // Three copies of the row (the middle one is the real one): a drift or a swipe can go either way for
 // at least one full row before anyone could reach an edge, and the jump back to the middle is invisible.
 const COPIES = 3;
@@ -121,42 +127,77 @@ export function CategoryRail({
     return () => { frame.removeEventListener("scroll", onScroll); window.clearTimeout(timer); };
   }, [loop]);
 
+  // One card plus the gap after it: the distance of one glide or one arrow press.
+  const cardStep = () => {
+    const row = list.current;
+    const card = row?.children[0] as HTMLElement | undefined;
+    if (!row || !card) return 0;
+    return card.offsetWidth + (parseFloat(getComputedStyle(row).columnGap) || 0);
+  };
+
   const drifting = looping && !reduced && inView && !pageHidden;
   useEffect(() => {
     const frame = scroller.current;
     if (!frame || !drifting || loop === null) return;
     const direction = sign();
     let raf = 0;
-    let last = 0;
-    let position = Math.abs(frame.scrollLeft);
     let written = frame.scrollLeft;
-    let calmFrom = performance.now() + RESUME_AFTER;
+    let glide: { from: number; to: number; start: number } | null = null;
+    let nextAt = performance.now() + RESUME_AFTER;
 
     const step = (time: number) => {
       raf = requestAnimationFrame(step);
-      const elapsed = last ? Math.min(time - last, 64) : 0;
-      last = time;
       const hold = holds.current;
       const actual = frame.scrollLeft;
-      // Anything other than our own last write means a person moved it: follow them, then wait.
-      if (Math.abs(actual - written) > 1.5) { position = Math.abs(actual); calmFrom = time + RESUME_AFTER; }
-      if (hold.hover || hold.touch || hold.focus || time < hold.until || time < calmFrom) { written = actual; position = Math.abs(actual); return; }
-      position += (SPEED * elapsed) / 1000;
-      if (position >= loop * 2) position -= loop;
-      frame.scrollLeft = direction * position;
+      // Anything other than our own last write means a person moved it: let go, follow them, then wait.
+      if (Math.abs(actual - written) > 1.5) { glide = null; nextAt = time + RESUME_AFTER; written = actual; }
+      if (hold.hover || hold.touch || hold.focus || time < hold.until) {
+        glide = null;
+        written = actual;
+        nextAt = Math.max(nextAt, Math.max(time, hold.until) + AFTER_HOLD);
+        return;
+      }
+      if (!glide) {
+        if (time < nextAt) return;
+        const size = cardStep();
+        if (!size) return;
+        // Land on the next card edge (a card that is nearly there already counts as reached).
+        let from = Math.abs(actual);
+        let to = (Math.floor(from / size + 0.15) + 1) * size;
+        // Past the middle copy, step back one full row first: it looks identical, so nobody sees the jump.
+        if (to > loop * 2) { from -= loop; to -= loop; }
+        glide = { from, to, start: time };
+      }
+      const progress = Math.min((time - glide.start) / GLIDE_MS, 1);
+      frame.scrollLeft = direction * (glide.from + (glide.to - glide.from) * easeInOut(progress));
       written = frame.scrollLeft;
+      if (progress >= 1) { glide = null; nextAt = time + DWELL_MS; }
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [drifting, loop]);
 
+  // Arrow presses glide too; pressing again mid-glide carries on from where that glide was heading.
+  const nudging = useRef<{ raf: number; to: number } | null>(null);
+  useEffect(() => () => { if (nudging.current) cancelAnimationFrame(nudging.current.raf); }, []);
   function nudge(direction: 1 | -1) {
     const frame = scroller.current;
-    const card = list.current?.children[0] as HTMLElement | undefined;
-    if (!frame || !card) return;
-    const gap = parseFloat(getComputedStyle(list.current!).columnGap) || 0;
+    const size = cardStep();
+    if (!frame || !size) return;
     holds.current.until = performance.now() + BUTTON_HOLD;
-    frame.scrollBy({ left: direction * sign() * (card.offsetWidth + gap), behavior: reduced ? "auto" : "smooth" });
+    const delta = direction * sign() * size;
+    if (reduced) { frame.scrollBy({ left: delta, behavior: "auto" }); return; }
+    const from = frame.scrollLeft;
+    const to = (nudging.current ? nudging.current.to : from) + delta;
+    if (nudging.current) cancelAnimationFrame(nudging.current.raf);
+    const start = performance.now();
+    const run = (time: number) => {
+      const progress = Math.min(Math.max((time - start) / NUDGE_MS, 0), 1);
+      frame.scrollLeft = from + (to - from) * easeOut(progress);
+      if (progress < 1) nudging.current = { raf: requestAnimationFrame(run), to };
+      else nudging.current = null;
+    };
+    nudging.current = { raf: requestAnimationFrame(run), to };
   }
 
   const hold = (key: "hover" | "touch" | "focus", on: boolean) => {

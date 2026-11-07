@@ -94,32 +94,62 @@ describe("CategoryRail", () => {
     expect(screen.getByRole("button", { name: "Next categories" })).toBeInTheDocument();
   });
 
-  it("drifts slowly, wraps without a jump, and the arrow buttons move it one card", () => {
+  it("glides on by one card at a time with an eased start and landing, then rests", () => {
     stubLayout(500);
     const { container } = renderRail();
     const frame = row(container);
     const start = frame.scrollLeft;
+    const at = (ms: number) => { act(() => { vi.advanceTimersByTime(ms); }); return frame.scrollLeft - start; };
 
-    // Nothing moves straight after load: it waits a moment before drifting.
-    act(() => { vi.advanceTimersByTime(1500); });
-    expect(frame.scrollLeft).toBe(start);
+    // Nothing moves straight after load: it waits a moment first.
+    expect(at(1500)).toBe(0);
+    // A quarter of the way into the glide it has covered well under a quarter of the card (an eased start, not a jump)...
+    const early = at(900 + 190);
+    expect(early).toBeGreaterThan(0);
+    expect(early).toBeLessThan(CARD / 4);
+    // ...halfway it is mid-card, and it lands exactly one card on.
+    const middle = at(190);
+    expect(middle).toBeGreaterThan(CARD / 4);
+    expect(middle).toBeLessThan(CARD * 3 / 4);
+    expect(at(500)).toBe(CARD);
+    // Then it rests before the next card.
+    expect(at(1500)).toBe(CARD);
+    expect(at(2000)).toBe(2 * CARD);
+  });
 
-    act(() => { vi.advanceTimersByTime(6000); });
-    const drifted = frame.scrollLeft - start;
-    expect(drifted).toBeGreaterThan(40);
-    expect(drifted).toBeLessThan(140);
+  it("wraps from the end of the middle copy without a visible jump", () => {
+    stubLayout(500);
+    const { container } = renderRail();
+    const frame = row(container);
 
-    // Reaching the end of the middle copy continues from its start with no visible jump (the wrap is exactly one row).
+    // Left one pixel short of the end of the middle copy, it carries on from the same spot in the copy before.
     frame.scrollLeft = 2 * 5 * CARD - 1;
-    act(() => { vi.advanceTimersByTime(3000); });
-    expect(frame.scrollLeft).toBeGreaterThanOrEqual(5 * CARD);
-    expect(frame.scrollLeft).toBeLessThan(5 * CARD + 200);
+    act(() => { vi.advanceTimersByTime(2400 + 760 + 200); });
+    expect(frame.scrollLeft).toBe(5 * CARD + CARD);
+  });
 
+  it("glides one card per arrow press, and a second press mid-glide adds a card", () => {
+    stubLayout(500);
+    const { container } = renderRail();
+    const frame = row(container);
     const before = frame.scrollLeft;
+
     fireEvent.click(screen.getByRole("button", { name: "Next categories" }));
+    act(() => { vi.advanceTimersByTime(100); });
+    expect(frame.scrollLeft).toBeGreaterThan(before);
+    expect(frame.scrollLeft).toBeLessThan(before + CARD);
+    act(() => { vi.advanceTimersByTime(600); });
     expect(frame.scrollLeft).toBe(before + CARD);
+
     fireEvent.click(screen.getByRole("button", { name: "Previous categories" }));
+    act(() => { vi.advanceTimersByTime(700); });
     expect(frame.scrollLeft).toBe(before);
+
+    fireEvent.click(screen.getByRole("button", { name: "Next categories" }));
+    act(() => { vi.advanceTimersByTime(150); });
+    fireEvent.click(screen.getByRole("button", { name: "Next categories" }));
+    act(() => { vi.advanceTimersByTime(700); });
+    expect(frame.scrollLeft).toBe(before + 2 * CARD);
   });
 
   it("stops while hovered, touched or focused, and starts again a moment after", () => {
@@ -129,7 +159,8 @@ describe("CategoryRail", () => {
     act(() => { vi.advanceTimersByTime(4000); });
 
     const moves = (ms: number) => { const from = frame.scrollLeft; act(() => { vi.advanceTimersByTime(ms); }); return frame.scrollLeft - from; };
-    expect(moves(1500)).toBeGreaterThan(10);
+    // One full rest-and-glide cycle always contains a glide.
+    expect(moves(3200)).toBeGreaterThan(10);
 
     fireEvent.pointerEnter(frame);
     expect(moves(3000)).toBe(0);

@@ -40,12 +40,6 @@
 .stories__count { display: inline-flex; align-items: baseline; font-variant-numeric: tabular-nums; }
 .stories__count b { font-family: var(--serif); font-size: 2rem; font-weight: 400; line-height: 1; }
 .stories__count i { margin-inline-start: .45em; color: var(--on-dark-muted); font-size: .9rem; font-style: normal; }
-.stories__arrows { display: flex; gap: var(--space-2); }
-.stories__arrow { display: inline-grid; place-items: center; width: 46px; height: 46px; padding: 0; border: 1px solid rgba(246, 241, 214, .34); border-radius: var(--radius-full); background: transparent; color: var(--on-dark); cursor: pointer; transition: background-color 180ms var(--ease-out), border-color 180ms var(--ease-out), transform 120ms var(--ease-out); }
-.stories__arrow:hover { border-color: var(--gold); background: rgba(246, 241, 214, .1); }
-.stories__arrow:active { transform: scale(.94); }
-.stories__arrow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-[dir="rtl"] .stories__arrow svg, html[lang="ar"] .stories__arrow svg { transform: scaleX(-1); }
 
 .stories__ticks { display: flex; flex: 1 1 100%; flex-wrap: wrap; gap: 0 var(--space-1); }
 .stories__tick { position: relative; width: 22px; height: 26px; padding: 0; border: 0; background: transparent; cursor: pointer; transition: width 520ms var(--ease-story); }

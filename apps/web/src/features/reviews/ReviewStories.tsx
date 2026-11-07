@@ -173,14 +173,7 @@ function StoryCarousel({ items }: { items: PublicReview[] }) {
               <b>{String(current + 1).padStart(2, "0")}</b>
               <i>/ {String(total).padStart(2, "0")}</i>
             </span>
-            <div className="stories__arrows">
-              <button type="button" className="stories__arrow stories__arrow--prev" aria-label={t.previous} onClick={() => go(-1)}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5 8 12l7 7" /></svg>
-              </button>
-              <button type="button" className="stories__arrow stories__arrow--next" aria-label={t.next} onClick={() => go(1)}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>
-              </button>
-            </div>
+            {/* No arrow buttons: stories advance on their own, and can be swiped, picked from the ticks, or stepped with the arrow keys. */}
             <div className="stories__ticks">
               {items.map((review, index) => (
                 <button
