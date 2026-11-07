@@ -88,17 +88,6 @@
 
 .home__notice { padding: var(--space-4); border-radius: var(--radius-md); background: var(--surface-sunk); }
 
-.home-story { background: var(--moss-deep); color: var(--on-dark); }
-.home-story__inner { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-7); padding-block: var(--space-8); }
-.home-story img { width: 220px; height: auto; }
-.home-story__inner > div { display: grid; gap: var(--space-4); justify-items: start; max-width: 62ch; }
-.home-story .eyebrow { color: var(--gold); }
-.home-story h2 { font-size: var(--step-3); }
-.home-story p { color: var(--on-dark-muted); }
-.home-story blockquote { margin: 0; padding-inline-start: var(--space-4); border-inline-start: 2px solid var(--gold); font-family: var(--serif); font-size: var(--step-1); font-style: italic; }
-.home-story .button--secondary { border-color: rgba(246, 241, 214, .4); color: var(--on-dark); }
-.home-story .button--secondary:hover { background: var(--on-dark); color: var(--ink); }
-
 @media (max-width: 860px) {
   .home { gap: var(--space-7); }
   .home-hero { grid-template-columns: var(--gutter) minmax(0, 1fr) var(--gutter); row-gap: var(--space-5); padding-top: var(--space-5); }
@@ -111,6 +100,4 @@
   .hero-carousel { height: clamp(400px, 104vw, 440px); }
   .hero-carousel__blur { width: 12%; }
   .home-promises ul { grid-template-columns: 1fr; }
-  .home-story__inner { grid-template-columns: 1fr; gap: var(--space-5); }
-  .home-story img { width: 160px; }
 }

@@ -8,6 +8,7 @@ import { productApi } from "../catalog/product-api";
 import { ProductCard } from "../catalog/ProductCard";
 import { HeroCarousel } from "./HeroCarousel";
 import { HeroParticles } from "./HeroParticles";
+import { ReviewStories } from "../reviews/ReviewStories";
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "Indoor Plants": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp",
@@ -94,18 +95,7 @@ export function HomePage() {
         )}
       </section>
 
-      <section className="home-story" aria-labelledby="home-story-title">
-        <div className="container home-story__inner">
-          <img src="/brand/qleaves-logo-white.png" alt={t.emblemAlt} width={220} height={77} loading="lazy" decoding="async" />
-          <div>
-            <p className="eyebrow">{t.about}</p>
-            <h2 id="home-story-title">{t.aboutTitle}</h2>
-            <p>{t.aboutBody}</p>
-            <blockquote>{t.motto}</blockquote>
-            <Link to="/about" className="button button--secondary">{t.aboutCta}</Link>
-          </div>
-        </div>
-      </section>
+      <ReviewStories />
     </article>
   );
 }

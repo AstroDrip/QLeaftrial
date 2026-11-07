@@ -133,6 +133,35 @@ export interface AdminSalesReport {
   byDay: Array<{ date: string; orders: number; revenueQar: number }>;
 }
 
+export interface AdminReview {
+  id: string;
+  customerName: string;
+  body: string;
+  rating: number;
+  imageUrl: string | null;
+  productId: string | null;
+  productName: string | null;
+  reviewedAt: string | null;
+  location: string | null;
+  label: string | null;
+  sortOrder: number;
+  published: boolean;
+  createdAt: string;
+}
+
+export interface ReviewInput {
+  customerName: string;
+  body: string;
+  rating: number;
+  productId: string | null;
+  reviewedAt: string | null;
+  location: string | null;
+  label: string | null;
+  published: boolean;
+  imageDataUrl?: string;
+  removeImage?: boolean;
+}
+
 const BASE_URL = "/api/v1";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -269,6 +298,16 @@ export const adminApi = {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     }),
+  reviews: async (): Promise<AdminReview[]> =>
+    (await request<{ items: AdminReview[] }>("/admin/reviews")).items,
+  createReview: (input: ReviewInput): Promise<AdminReview> =>
+    request<AdminReview>("/admin/reviews", { method: "POST", body: JSON.stringify(input) }),
+  updateReview: (id: string, input: Partial<ReviewInput>): Promise<AdminReview> =>
+    request<AdminReview>(`/admin/reviews/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
+  deleteReview: (id: string): Promise<void> =>
+    request<void>(`/admin/reviews/${id}`, { method: "DELETE" }),
+  moveReview: async (id: string, direction: "up" | "down"): Promise<AdminReview[]> =>
+    (await request<{ items: AdminReview[] }>(`/admin/reviews/${id}/move`, { method: "POST", body: JSON.stringify({ direction }) })).items,
   dashboard: (): Promise<AdminDashboard> =>
     request<AdminDashboard>("/admin/dashboard"),
   sheetsStatus: (): Promise<{ configured: boolean; tab?: string; sheetUrl?: string }> =>

@@ -31,6 +31,7 @@ export function AdminLayout() {
     { to: "/admin/products", label: content.admin.products, index: "03", end: false },
     { to: "/admin/sales", label: content.admin.sales, index: "04", end: false },
     { to: "/admin/invoices", label: content.admin.invoices, index: "05", end: false },
+    { to: "/admin/reviews", label: content.admin.reviews, index: "06", end: false },
   ] as const;
   const navigate = useNavigate();
   const queryClient = useQueryClient();

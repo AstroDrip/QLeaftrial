@@ -7,6 +7,8 @@ import { HomePage } from "./HomePage";
 import { productApi } from "../catalog/product-api";
 import { useCartStore } from "../cart/cart-store";
 
+vi.mock("../reviews/review-api", () => ({ reviewApi: { list: vi.fn().mockResolvedValue([]) } }));
+
 vi.mock("../catalog/product-api", () => ({
   productApi: {
     list: vi.fn(),
