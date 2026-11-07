@@ -9,6 +9,14 @@ export function applyCacheHeaders(response: Response) {
   response.setHeader("Cache-Control", PUBLIC_CATALOG_CACHE);
 }
 
+// For content the shop edits and expects to see straight away (customer stories): Vercel's CDN may keep a
+// copy for a minute and serve a stale one while it refreshes, but browsers must always revalidate, so
+// nobody is shown their own cached copy after a reload.
+export function applyEdgeOnlyCacheHeaders(response: Response) {
+  response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+  response.setHeader("Vercel-CDN-Cache-Control", "s-maxage=60, stale-while-revalidate=86400");
+}
+
 export function cacheProductList(_request: Request, response: Response, next: NextFunction) {
   applyCacheHeaders(response);
   next();

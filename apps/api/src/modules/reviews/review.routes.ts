@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { applyCacheHeaders } from "../../middleware/cache-headers.js";
+import { applyEdgeOnlyCacheHeaders } from "../../middleware/cache-headers.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import { requireAdmin } from "../auth/auth.middleware.js";
 import { createReviewSchema, moveReviewSchema, updateReviewSchema } from "./review.schemas.js";
@@ -15,7 +15,7 @@ import {
 export const reviewRouter = Router();
 
 reviewRouter.get("/reviews", async (_request, response) => {
-  applyCacheHeaders(response);
+  applyEdgeOnlyCacheHeaders(response);
   response.json({ items: await listPublishedReviews() });
 });
 

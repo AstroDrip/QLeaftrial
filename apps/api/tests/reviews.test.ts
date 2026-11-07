@@ -35,7 +35,9 @@ describe("customer reviews", () => {
     expect(first.sortOrder).toBe(0);
     expect(second.sortOrder).toBe(1);
     const publicList = await request(createApp()).get("/api/v1/reviews");
-    expect(publicList.headers["cache-control"]).toContain("s-maxage");
+    // The CDN may serve it for a minute, but a browser never reuses its own copy without asking.
+    expect(publicList.headers["vercel-cdn-cache-control"]).toContain("s-maxage=60");
+    expect(publicList.headers["cache-control"]).toBe("public, max-age=0, must-revalidate");
     expect(publicList.body.items.map((item: { customerName: string }) => item.customerName)).toEqual(["Mariam Al-Kuwari", "Noor Hassan"]);
     expect(publicList.body.items[0]).not.toHaveProperty("published");
 
