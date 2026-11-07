@@ -6,7 +6,19 @@
 }
 [dir="rtl"] .stories, [dir="rtl"] .story-preview, html[lang="ar"] .stories, html[lang="ar"] .story-preview { --dir: -1; }
 
-.stories { background: var(--moss-deep); color: var(--on-dark); overflow-x: clip; }
+.stories { position: relative; isolation: isolate; background: var(--moss-deep); color: var(--on-dark); overflow-x: clip; }
+/* The brand line pattern sits under everything in the band. It is strongest low on the reading side, as in
+   the identity artwork, and thins out toward the heading and the far edge so it never competes with the words. */
+.review-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/brand/review-pattern.svg") left bottom / var(--pattern-tile, 300px) auto repeat;
+  opacity: .2;
+  -webkit-mask-image: linear-gradient(to top right, #000 0%, rgba(0, 0, 0, .7) 45%, rgba(0, 0, 0, .3) 100%);
+  mask-image: linear-gradient(to top right, #000 0%, rgba(0, 0, 0, .7) 45%, rgba(0, 0, 0, .3) 100%);
+}
 .stories :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .stories .eyebrow { color: var(--gold); }
 
@@ -124,6 +136,7 @@ html[lang="ar"] .story-sheet__tag { letter-spacing: 0; }
   .stories__figure { display: none; }
 }
 @media (max-width: 640px) {
+  .review-pattern { --pattern-tile: 220px; }
   .stories__inner { row-gap: var(--space-4); }
   .story-carousel { padding-block-end: 24px; padding-inline-end: 22px; }
   .story-slide[data-place="next"] { transform: translate(calc(var(--dir) * 11px), 9px) rotate(calc(var(--dir) * 1.1deg)); }

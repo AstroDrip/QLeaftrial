@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Keyb
 import { useQuery } from "@tanstack/react-query";
 import { useSiteLanguage } from "../../app/providers";
 import { LeafLines } from "./LeafLines";
+import { ReviewPattern } from "./ReviewPattern";
 import { ReviewSheet } from "./ReviewSheet";
 import { reviewApi } from "./review-api";
 import type { PublicReview } from "./review-types";
@@ -124,6 +125,7 @@ function StoryCarousel({ items }: { items: PublicReview[] }) {
       onBlur={() => setKeyboardFocus(false)}
       onKeyDown={keyDown}
     >
+      <ReviewPattern />
       <div className="container stories__inner">
         <div className="stories__intro">
           <p className="eyebrow">{t.eyebrow}</p>
