@@ -81,7 +81,9 @@
 
 /* Shop by category: one scrolling row (see CategoryRail). The row bleeds out over the page gutters so the
    next card shows at the edge, and a few pixels of padding keep a lifted card and its focus ring unclipped. */
-.rail__scroller { --rail-card: clamp(200px, 20vw, 280px); margin: -6px calc(var(--gutter) * -1); padding: 6px var(--gutter); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-padding-inline: var(--gutter); }
+/* A scrolling row's own width must never count toward its parent's minimum width, or on a phone the whole page lays out as wide as the row. */
+.home > * { min-width: 0; }
+.rail__scroller { --rail-card: clamp(200px, 20vw, 280px); margin: -6px calc(var(--gutter) * -1); padding: 6px var(--gutter); overflow-x: auto; overscroll-behavior-x: contain; contain: inline-size; scrollbar-width: none; scroll-padding-inline: var(--gutter); }
 .rail__scroller::-webkit-scrollbar { display: none; }
 .home-categories { display: flex; width: max-content; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
 .home-categories li { flex: 0 0 var(--rail-card); width: var(--rail-card); }
