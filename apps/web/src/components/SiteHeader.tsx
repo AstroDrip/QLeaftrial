@@ -142,7 +142,8 @@ export function SiteHeader() {
         <div className="site-header__actions">
           <HeaderSearch />
           {!compact ? <LanguageToggle /> : null}
-          {orderingEnabled ? (
+          {/* The cart button is the way to the cart, so it is not shown on the cart page itself. */}
+          {orderingEnabled && pathname !== "/cart" ? (
             <Link ref={cart} to="/cart" className="icon-button site-header__cart" aria-label={cartLabel} onMouseEnter={() => prefetchRoute("/cart")}>
               <BagIcon />
               {cartCount > 0 ? <span className="icon-button__badge" aria-hidden="true">{cartCount > 99 ? "99+" : cartCount}</span> : null}
@@ -164,9 +165,6 @@ export function SiteHeader() {
           <li><NavLink to="/" end className="site-menu__link" onMouseEnter={() => prefetchRoute("/")}>{t.home}</NavLink></li>
           <li><NavLink to="/shop" className="site-menu__link" onMouseEnter={() => prefetchRoute("/shop")}>{t.shop}</NavLink></li>
           <li><NavLink to="/about" className="site-menu__link" onMouseEnter={() => prefetchRoute("/about")}>{t.about}</NavLink></li>
-          {orderingEnabled ? (
-            <li><NavLink to="/cart" className="site-menu__link" onMouseEnter={() => prefetchRoute("/cart")}>{t.cart}{cartCount > 0 ? <span className="site-menu__count">{cartCount > 99 ? "99+" : cartCount}</span> : null}</NavLink></li>
-          ) : null}
         </ul>
         {compact ? (
           <div className="site-menu__language">

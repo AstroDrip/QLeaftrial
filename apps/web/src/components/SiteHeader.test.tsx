@@ -21,12 +21,12 @@ function Where() {
   return <output data-testid="where">{useLocation().pathname}</output>;
 }
 
-function renderHeader() {
+function renderHeader(path = "/") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnMount: false } } });
   client.setQueryData(["storefront-settings"], settings);
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter><Providers client={client}><SiteHeader /><Where /></Providers></MemoryRouter>
+      <MemoryRouter initialEntries={[path]}><Providers client={client}><SiteHeader /><Where /></Providers></MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -41,7 +41,7 @@ describe("SiteHeader menu", () => {
     vi.unstubAllGlobals();
   });
 
-  it("opens a compact menu from the centred button with Home, Shop, About us and Cart", async () => {
+  it("opens a compact menu from the centred button with Home, Shop and About us (the cart is its own button)", async () => {
     stubScreen(390);
     const user = userEvent.setup();
     renderHeader();
@@ -55,7 +55,7 @@ describe("SiteHeader menu", () => {
     expect(screen.getByRole("button", { name: "Close menu" })).toHaveAttribute("aria-expanded", "true");
     const menu = screen.getByRole("navigation", { name: "Menu" });
     expect(within(menu).getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
-      ["Home", "/"], ["Shop", "/shop"], ["About us", "/about"], ["Cart", "/cart"],
+      ["Home", "/"], ["Shop", "/shop"], ["About us", "/about"],
     ]);
     expect(within(menu).getByRole("link", { name: "Home" })).toHaveClass("active");
   });
@@ -94,7 +94,14 @@ describe("SiteHeader menu", () => {
     await user.click(screen.getByRole("button", { name: "Open menu" }));
     expect(icon()).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Cart, 2 items" })).toBeInTheDocument();
-    expect(within(screen.getByRole("navigation", { name: "Menu" })).getByRole("link", { name: /cart/i })).toHaveTextContent("2");
+    expect(within(screen.getByRole("navigation", { name: "Menu" })).queryByRole("link", { name: /cart/i })).not.toBeInTheDocument();
+  });
+
+  it("does not show the cart button on the cart page itself", () => {
+    stubScreen(390);
+    const { container } = renderHeader("/cart");
+    expect(container.querySelector(".site-header__cart")).toBeNull();
+    expect(screen.queryByRole("link", { name: /^cart,/i })).not.toBeInTheDocument();
   });
 
   it("puts the language switch in the menu on narrow phones only, and never twice", async () => {
