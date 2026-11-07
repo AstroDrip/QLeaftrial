@@ -8,6 +8,7 @@ import { securityRouter } from "./modules/security/security.routes.js";
 import { sitemapRouter } from "./modules/seo/sitemap.routes.js";
 import { sheetsRouter } from "./modules/sheets/sheets.routes.js";
 import { invoiceRouter } from "./modules/orders/invoice.routes.js";
+import { reviewRouter } from "./modules/reviews/review.routes.js";
 
 export const apiRouter = Router();
 export const siteRouter = Router();
@@ -22,3 +23,4 @@ apiRouter.use(storeSettingsRouter);
 apiRouter.use(securityRouter);
 apiRouter.use(sheetsRouter);
 apiRouter.use(invoiceRouter);
+apiRouter.use(reviewRouter);

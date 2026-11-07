@@ -80,6 +80,7 @@ model Product {
   media       ProductMedia[]
   inventory   Inventory?
   orderItems  OrderItem[]
+  reviews     Review[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -144,6 +145,28 @@ model OrderItem {
   unitPriceQar Int
   quantity     Int
   createdAt    DateTime @default(now())
+}
+
+// A customer's story shown in the homepage carousel. Only published rows are public; the shop manages
+// them from admin. The product link is optional and simply clears if that product is ever deleted.
+model Review {
+  id           String    @id @default(cuid())
+  customerName String
+  body         String
+  rating       Int
+  imageUrl     String?
+  productId    String?
+  product      Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  location     String?
+  label        String?
+  sortOrder    Int       @default(0)
+  published    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([published, sortOrder])
+  @@index([productId])
 }
 
 model RateLimitBucket {
