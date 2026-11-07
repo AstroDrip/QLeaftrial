@@ -83,13 +83,13 @@ describe("ReviewStories", () => {
     expect(slides[0]).toHaveAttribute("data-place", "front");
   });
 
-  it("gives each story 3.5 seconds, shown by the active tick filling over exactly that time", async () => {
+  it("gives each story 2⅓ seconds, shown by the active tick filling over exactly that time", async () => {
     vi.mocked(reviewApi.list).mockResolvedValue([story("a"), story("b")]);
     const { container } = renderStories();
 
     await screen.findByText("Customer a");
     const fill = container.querySelector<HTMLElement>(".stories__tick-fill");
-    expect(fill?.style.getPropertyValue("--advance")).toBe("3500ms");
+    expect(fill?.style.getPropertyValue("--advance")).toBe("2333ms");
     expect(container.querySelectorAll(".stories__tick-fill")).toHaveLength(1);
   });
 

@@ -14,8 +14,8 @@ const MENU_MAX = 960;
 // On narrow phones the language switch moves into the menu so the logo, menu button, search and cart all fit.
 const COMPACT_MAX = 480;
 const CART_GAP = 12;
-// The panel tucks this far up under the header's bottom edge so the two read as one piece.
-const PANEL_OVERLAP = 6;
+// The panel starts exactly at the header's bottom edge: its sheet unrolls from there.
+const PANEL_OVERLAP = 0;
 
 function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() => typeof window !== "undefined" && Boolean(window.matchMedia?.(query).matches));

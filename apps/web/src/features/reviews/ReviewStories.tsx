@@ -8,8 +8,8 @@ import { ReviewSheet } from "./ReviewSheet";
 import { reviewApi } from "./review-api";
 import type { PublicReview } from "./review-types";
 
-// Each story stays for 3.5 seconds (it was 7); the active tick fills over exactly this time.
-const ADVANCE_MS = 3500;
+// Each story stays for 2⅓ seconds (a third less than 3.5); the active tick fills over exactly this time.
+const ADVANCE_MS = 2333;
 const SWIPE_DISTANCE = 56;
 const DRAG_START = 8;
 
