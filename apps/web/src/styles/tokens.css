@@ -9,6 +9,8 @@
   --rust: #b0603a;
   --sand: #e8dfae;
   --gold: #d7c58a;
+  /* The warmer gold of the leaf emblem and line pattern in the QLeaves identity artwork. */
+  --leaf-gold: #e2b574;
 
   /* Derived surfaces and text, tinted toward the palette instead of pure greys. */
   --surface: #fffdec;

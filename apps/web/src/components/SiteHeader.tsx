@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { LanguageToggle } from "./LanguageToggle";
 import { HeaderSearch } from "./HeaderSearch";
 import { BagIcon } from "./icons";
+import { LeafMenuIcon } from "./LeafMenuIcon";
 import { useSiteLanguage, useStoreSettings } from "../app/providers";
 import { useCartStore } from "../features/cart/cart-store";
 import { useFreeDeliveryController } from "../features/cart/free-delivery-store";
@@ -136,7 +137,7 @@ export function SiteHeader() {
           aria-controls="site-menu"
           onClick={toggleMenu}
         >
-          <span className="site-header__menu-bars" aria-hidden="true"><i /><i /><i /></span>
+          <LeafMenuIcon open={open} />
         </button>
         <div className="site-header__actions">
           <HeaderSearch />

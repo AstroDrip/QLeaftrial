@@ -94,14 +94,10 @@ html[lang="ar"] .site-header__nav { top: 9px; }
 .nav-link:hover, .nav-link.active { color: var(--on-dark); }
 /* ---------- Menu button and panel (phones and tablets; the inline links take over above 960px) ---------- */
 .site-header .site-header__menu { display: none; }
-.site-header__menu-bars { position: relative; display: block; width: 20px; height: 14px; }
-.site-header__menu-bars i { position: absolute; inset-inline-start: 0; height: 2px; border-radius: 2px; background: currentColor; transition: transform 300ms var(--ease-menu), opacity 160ms var(--ease-out), width 300ms var(--ease-menu); }
-.site-header__menu-bars i:nth-child(1) { top: 0; width: 20px; }
-.site-header__menu-bars i:nth-child(2) { top: 6px; width: 13px; }
-.site-header__menu-bars i:nth-child(3) { top: 12px; width: 20px; }
-.site-header__menu.is-open .site-header__menu-bars i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-.site-header__menu.is-open .site-header__menu-bars i:nth-child(2) { width: 20px; opacity: 0; }
-.site-header__menu.is-open .site-header__menu-bars i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+/* The menu button's icon is the living leaf emblem (LeafMenuIcon): thin brand-gold strokes that keep their
+   weight at any size. Movement comes from the component; nothing here animates. */
+.leaf-menu-icon { display: block; width: 22px; height: 30px; overflow: visible; color: var(--leaf-gold); }
+.leaf-menu-icon path { fill: none; stroke: currentColor; stroke-width: 6.78; stroke-linejoin: miter; stroke-miterlimit: 12; }
 .site-menu { position: absolute; top: calc(100% - 6px); inset-inline: 0; z-index: 1; display: none; margin-inline: auto; width: min(236px, calc(100vw - 32px)); padding: var(--space-3) var(--space-2) var(--space-2); border: 1px solid rgba(246, 241, 214, .16); border-top: 0; border-radius: 0 0 var(--radius-lg) var(--radius-lg); background: var(--moss-deep); box-shadow: 0 22px 30px -22px rgba(0, 0, 0, .7); opacity: 0; transform: translateY(-10px) scale(.97); transform-origin: top center; visibility: hidden; transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out), visibility 0s linear 160ms; }
 .site-menu ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .site-menu__link { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-md); color: var(--on-dark-muted); font-size: .85rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out); }
