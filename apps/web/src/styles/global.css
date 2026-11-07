@@ -131,20 +131,41 @@ html[lang="ar"] .site-menu__language { letter-spacing: 0; }
 
 /* Header search: a 42px circle in the actions row. The capsule is absolutely positioned, so growing
    it never moves the language toggle or cart, and the icon stays put while the field opens away from it. */
-.header-search { --search-size: 42px; --search-ease: cubic-bezier(.22, 1, .36, 1); position: relative; width: var(--search-size); height: var(--search-size); }
-.header-search__form { position: absolute; inset-block-start: 0; inset-inline-end: 0; display: flex; flex-direction: row-reverse; align-items: center; box-sizing: border-box; width: var(--search-size); height: var(--search-size); overflow: hidden; border: 1px solid transparent; border-radius: var(--radius-full); background: transparent; transition: width 420ms var(--search-ease), background-color 240ms var(--ease-out), border-color 240ms var(--ease-out), box-shadow 240ms var(--ease-out); }
-.header-search--open .header-search__form { width: var(--search-open-width); border-color: var(--line-strong); background: var(--surface); }
+/* The capsule grows from the icon like a drop that is let go: its width follows a lightly damped spring (about
+   4% overshoot, which the measured free room already leaves space for), its leading corners squash and settle,
+   and it pinches back faster than it opened. Only width, radius and transform move; no filters. */
+.header-search { --search-size: 42px; --search-ease: cubic-bezier(.22, 1, .36, 1); --search-spring: var(--search-ease); --dir: 1; position: relative; width: var(--search-size); height: var(--search-size); }
+@supports (transition-timing-function: linear(0, 1)) {
+  .header-search { --search-spring: linear(0, 0.0278, 0.098, 0.1942, 0.3035, 0.4162, 0.5253, 0.6263, 0.7162, 0.7938, 0.8587, 0.9114, 0.9527, 0.984, 1.0067, 1.0222, 1.0318, 1.0368, 1.0384, 1.0375, 1.0349, 1.0313, 1.0271, 1.0228, 1.0186, 1.0147, 1); }
+}
+[dir="rtl"] .header-search, html[lang="ar"] .header-search { --dir: -1; }
+.header-search__form { position: absolute; inset-block-start: 0; inset-inline-end: 0; display: flex; flex-direction: row-reverse; align-items: center; box-sizing: border-box; width: var(--search-size); height: var(--search-size); overflow: hidden; border: 1px solid transparent; border-radius: calc(var(--search-size) / 2); background: transparent; transform-origin: 100% 50%; transition: width 340ms cubic-bezier(.5, 0, .2, 1), background-color 200ms var(--ease-out), border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+[dir="rtl"] .header-search__form, html[lang="ar"] .header-search__form { transform-origin: 0 50%; }
+.header-search--open .header-search__form { width: var(--search-open-width); border-color: var(--line-strong); background: var(--surface); transition: width 620ms var(--search-spring), background-color 240ms var(--ease-out), border-color 240ms var(--ease-out), box-shadow 240ms var(--ease-out); animation: search-goo 640ms var(--search-ease); }
+@keyframes search-goo {
+  0% { border-radius: 21px; transform: none; }
+  28% { border-radius: 13px 21px 21px 13px; transform: scale(1.012, .9); }
+  60% { border-radius: 19px 15px 15px 19px; transform: scale(.994, 1.04); }
+  100% { border-radius: 21px; transform: none; }
+}
+@keyframes search-goo-rtl {
+  0% { border-radius: 21px; transform: none; }
+  28% { border-radius: 21px 13px 13px 21px; transform: scale(1.012, .9); }
+  60% { border-radius: 15px 19px 19px 15px; transform: scale(.994, 1.04); }
+  100% { border-radius: 21px; transform: none; }
+}
+[dir="rtl"] .header-search--open .header-search__form, html[lang="ar"] .header-search--open .header-search__form { animation-name: search-goo-rtl; }
 .header-search--open .header-search__form:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(215, 197, 138, .28); }
 .header-search__toggle.header-search__toggle { flex-shrink: 0; width: calc(var(--search-size) - 2px); height: calc(var(--search-size) - 2px); border: 0; cursor: pointer; }
 .header-search__toggle:focus-visible { outline-offset: -3px; }
 .site-header .header-search--open .header-search__toggle { color: var(--ink); }
 .site-header .header-search--open .header-search__toggle:hover { background: rgba(31, 42, 34, .08); }
-.header-search__glyph { grid-area: 1 / 1; transition: opacity 200ms var(--ease-out), transform 420ms var(--search-ease); }
+.header-search__glyph { grid-area: 1 / 1; transition: opacity 200ms var(--ease-out), transform 520ms var(--search-spring); }
 .header-search__glyph--close { opacity: 0; transform: rotate(-90deg) scale(.6); }
 .header-search--open .header-search__glyph--search { opacity: 0; transform: rotate(90deg) scale(.6); }
 .header-search--open .header-search__glyph--close { opacity: 1; transform: none; }
-.header-search__form input { flex: 1 1 0; min-width: 0; width: auto; min-height: 0; height: 100%; padding: 0; padding-inline: .9rem .25rem; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: .9rem; opacity: 0; visibility: hidden; transition: opacity 180ms var(--ease-out), visibility 0s linear 240ms; }
-.header-search--open .header-search__form input { opacity: 1; visibility: visible; transition: opacity 260ms var(--ease-out) 140ms, visibility 0s; }
+.header-search__form input { flex: 1 1 0; min-width: 0; width: auto; min-height: 0; height: 100%; padding: 0; padding-inline: .9rem .25rem; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: .9rem; opacity: 0; visibility: hidden; transform: translateX(calc(var(--dir) * 12px)); transition: opacity 140ms var(--ease-out), transform 200ms var(--ease-out), visibility 0s linear 200ms; }
+.header-search--open .header-search__form input { opacity: 1; visibility: visible; transform: none; transition: opacity 240ms var(--ease-out) 120ms, transform 460ms var(--search-ease) 100ms, visibility 0s; }
 .header-search__form input::-webkit-search-cancel-button { appearance: none; display: none; }
 .header-search__form input:focus, .header-search__form input:focus-visible { border: 0; box-shadow: none; outline: none; }
 .header-search__results { color: var(--ink); position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 50; width: min(360px, calc(100vw - 32px)); margin: 0; padding: 6px; list-style: none; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-md); }
