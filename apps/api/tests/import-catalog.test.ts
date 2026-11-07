@@ -34,6 +34,28 @@ describe("client catalogue import", () => {
     expect(imported?.media.length).toBe(catalog[0].media.length);
   });
 
+  it("adds the eight Hybrid Bougainvillea photos as unpublished drafts with no invented details", async () => {
+    await importCatalog();
+
+    const drafts = await prisma.product.findMany({
+      where: { category: "Hybrid Bougainvillea" },
+      include: { inventory: true, media: { orderBy: { sortOrder: "asc" } } },
+      orderBy: { slug: "asc" },
+    });
+
+    expect(drafts).toHaveLength(8);
+    for (const draft of drafts) {
+      expect(draft).toMatchObject({ published: false, priceQar: 0, costPrice: 0 });
+      expect(draft.sku).toMatch(/^HB-DRAFT-\d$/);
+      expect(draft.inventory?.quantity).toBe(0);
+      expect(draft.media.map((media) => media.purpose)).toEqual(["catalog", "detail"]);
+      // Upright photos keep their own proportions instead of being squared.
+      for (const media of draft.media) expect(media.height! / media.width!).toBeGreaterThan(1.1);
+    }
+    const listing = await request(createApp()).get("/api/v1/products?category=Hybrid%20Bougainvillea");
+    expect(listing.body.totalItems).toBe(0);
+  });
+
   it("does not overwrite products that already exist", async () => {
     await importCatalog();
     const slug = readCatalog()[0].slug;

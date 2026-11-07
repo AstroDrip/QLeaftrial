@@ -7,14 +7,16 @@ type CatalogProduct = {
   slug: string;
   sku: string;
   name: string;
-  nameAr: string;
+  nameAr: string | null;
   description: string;
   category: string;
-  categoryAr: string;
+  categoryAr: string | null;
   light: string | null;
   lightAr: string | null;
   priceQar: number;
   published: boolean;
+  // Stock for a new product; draft listings set 0 so nothing is promised before the shop counts it.
+  stock?: number;
   altText: string;
   media: CatalogMedia[];
 };
@@ -36,7 +38,7 @@ export async function importCatalog(catalog = readCatalog()): Promise<{ created:
   const catalogSlugs = new Set(catalog.map((product) => product.slug));
   let created = 0;
   for (const product of catalog) {
-    const { media, altText, ...fields } = product;
+    const { media, altText, stock, ...fields } = product;
     const mediaRows = media.map((image, sortOrder) => ({ ...image, altText, sortOrder }));
     const existing = await prisma.product.findUnique({ where: { slug: product.slug }, select: { id: true, sku: true } });
     if (existing) {
@@ -52,7 +54,7 @@ export async function importCatalog(catalog = readCatalog()): Promise<{ created:
       data: {
         ...fields,
         costPrice: IMPORTED_COST_PRICE,
-        inventory: { create: { quantity: IMPORTED_STOCK } },
+        inventory: { create: { quantity: stock ?? IMPORTED_STOCK } },
         media: { create: mediaRows },
       },
     });

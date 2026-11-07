@@ -6,6 +6,7 @@
 .product-detail__media { position: sticky; top: calc(var(--header-height) + var(--space-4)); overflow: hidden; border-radius: var(--radius-lg); background: #fff; }
 .product-detail__media picture { display: block; }
 .product-detail__media img { width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; }
+.product-detail__media img[data-orientation="portrait"] { aspect-ratio: 4 / 5; }
 .product-detail__meta { display: grid; gap: var(--space-4); align-content: start; }
 .product-detail__name { font-size: var(--step-3); }
 .product-detail__price { font-size: var(--step-2); font-weight: 700; font-variant-numeric: tabular-nums; }

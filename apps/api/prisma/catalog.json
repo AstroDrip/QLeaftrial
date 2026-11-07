@@ -754,5 +754,237 @@
         "height": 500
       }
     ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-1",
+    "sku": "HB-DRAFT-1",
+    "name": "Hybrid Bougainvillea 1",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Close view of hybrid bougainvillea with magenta blooms",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-1-640.webp",
+        "purpose": "catalog",
+        "width": 480,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-1-detail.webp",
+        "purpose": "detail",
+        "width": 1200,
+        "height": 1600
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-2",
+    "sku": "HB-DRAFT-2",
+    "name": "Hybrid Bougainvillea 2",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Hybrid bougainvillea with pink and cream blooms",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-2-640.webp",
+        "purpose": "catalog",
+        "width": 480,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-2-detail.webp",
+        "purpose": "detail",
+        "width": 1200,
+        "height": 1600
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-3",
+    "sku": "HB-DRAFT-3",
+    "name": "Hybrid Bougainvillea 3",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Hybrid bougainvillea with orange blooms in a black pot",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-3-640.webp",
+        "purpose": "catalog",
+        "width": 480,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-3-detail.webp",
+        "purpose": "detail",
+        "width": 1200,
+        "height": 1600
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-4",
+    "sku": "HB-DRAFT-4",
+    "name": "Hybrid Bougainvillea 4",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Hybrid bougainvillea with apricot and pink blooms in a terracotta pot",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-4-640.webp",
+        "purpose": "catalog",
+        "width": 480,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-4-detail.webp",
+        "purpose": "detail",
+        "width": 1200,
+        "height": 1600
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-5",
+    "sku": "HB-DRAFT-5",
+    "name": "Hybrid Bougainvillea 5",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Hybrid bougainvillea with purple blooms in a black pot",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-5-640.webp",
+        "purpose": "catalog",
+        "width": 528,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-5-detail.webp",
+        "purpose": "detail",
+        "width": 1284,
+        "height": 1557
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-6",
+    "sku": "HB-DRAFT-6",
+    "name": "Hybrid Bougainvillea 6",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Hybrid bougainvillea with white blooms in a black pot",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-6-640.webp",
+        "purpose": "catalog",
+        "width": 546,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-6-detail.webp",
+        "purpose": "detail",
+        "width": 1284,
+        "height": 1505
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-7",
+    "sku": "HB-DRAFT-7",
+    "name": "Hybrid Bougainvillea 7",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Tall hybrid bougainvillea with orange blooms in a black pot",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-7-640.webp",
+        "purpose": "catalog",
+        "width": 498,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-7-detail.webp",
+        "purpose": "detail",
+        "width": 1246,
+        "height": 1600
+      }
+    ]
+  },
+  {
+    "slug": "hybrid-bougainvillea-8",
+    "sku": "HB-DRAFT-8",
+    "name": "Hybrid Bougainvillea 8",
+    "nameAr": null,
+    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
+    "category": "Hybrid Bougainvillea",
+    "categoryAr": null,
+    "light": null,
+    "lightAr": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Hybrid bougainvillea with red blooms in a black pot",
+    "media": [
+      {
+        "url": "/media/plants/hybrid-bougainvillea-8-640.webp",
+        "purpose": "catalog",
+        "width": 494,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/hybrid-bougainvillea-8-detail.webp",
+        "purpose": "detail",
+        "width": 1236,
+        "height": 1600
+      }
+    ]
   }
 ]

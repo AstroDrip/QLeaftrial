@@ -16,6 +16,12 @@ function hasDimensions(media: ProductMedia | undefined): media is ProductMedia &
   return Boolean(media && media.width && media.height);
 }
 
+// Photos taken upright (a plant shot top to bottom) keep their own proportions on cards and the product
+// page instead of being cut to a square, which would clip the canopy or the pot.
+function orientationOf(media: ProductMedia | undefined): "portrait" | undefined {
+  return hasDimensions(media) && media.width / media.height < 0.9 ? "portrait" : undefined;
+}
+
 export function ProductImage({
   media,
   alt,
@@ -42,6 +48,7 @@ export function ProductImage({
       width={hasDimensions(preferred) ? preferred.width : undefined}
       height={hasDimensions(preferred) ? preferred.height : undefined}
       sizes={responsive ? sizes : undefined}
+      data-orientation={orientationOf(preferred)}
       decoding={imageProps.decoding ?? "async"}
     />
   );

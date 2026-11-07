@@ -39,6 +39,22 @@ describe("ProductImage", () => {
     expect(screen.getByRole("img")).not.toHaveAttribute("width");
   });
 
+  it("marks upright photos so cards and the product page keep their proportions", () => {
+    const { rerender } = render(<ProductImage media={responsiveMedia} alt="Monstera" />);
+    expect(screen.getByRole("img")).not.toHaveAttribute("data-orientation");
+
+    rerender(
+      <ProductImage
+        media={[
+          { url: "/tall-640.webp", altText: "Bougainvillea", width: 480, height: 640, purpose: "catalog" },
+          { url: "/tall-detail.webp", altText: "Bougainvillea", width: 1200, height: 1600, purpose: "detail" },
+        ]}
+        alt="Bougainvillea"
+      />,
+    );
+    expect(screen.getByRole("img")).toHaveAttribute("data-orientation", "portrait");
+  });
+
   it("preserves the local fallback behavior", () => {
     render(<ProductImage media={responsiveMedia} alt="Monstera" />);
     const image = screen.getByRole("img");
