@@ -9,7 +9,7 @@ export const localeContent = {
   en: {
     brand: "QLeaves",
     tagline: "Indoor plants, thoughtfully selected in Qatar",
-    nav: { shop: "Shop", about: "About us", cart: "Cart", admin: "Admin" },
+    nav: { home: "Home", shop: "Shop", about: "About us", cart: "Cart", admin: "Admin", menu: "Menu", openMenu: "Open menu", closeMenu: "Close menu", language: "Language" },
     home: {
       heroTitle: "For the love of art and plants.",
       heroSubtitle: "Hand-picked indoor and outdoor plants, pots and care essentials, delivered across Qatar.",
@@ -251,7 +251,7 @@ export const localeContent = {
   ar: {
     brand: "QLeaves",
     tagline: "نباتات داخلية مختارة بعناية في قطر",
-    nav: { shop: "المتجر", about: "من نحن", cart: "السلة", admin: "الإدارة" },
+    nav: { home: "الرئيسية", shop: "المتجر", about: "من نحن", cart: "السلة", admin: "الإدارة", menu: "القائمة", openMenu: "فتح القائمة", closeMenu: "إغلاق القائمة", language: "اللغة" },
     home: {
       heroTitle: "من أجل حب الفن والنباتات.",
       heroSubtitle: "نباتات داخلية وخارجية مختارة بعناية، مع الأصص ومستلزمات العناية، وتوصيل إلى جميع أنحاء قطر.",

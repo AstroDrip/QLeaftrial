@@ -56,8 +56,9 @@ export function HeaderSearch() {
       const viewport = document.documentElement.clientWidth;
       if (!rect) return;
       let edge = isArabic ? viewport - EDGE_GAP : EDGE_GAP;
-      container.current?.closest(".site-header__inner")?.querySelectorAll<HTMLElement>(".site-header__brand, .site-header__nav").forEach((element) => {
-        if (!element.offsetWidth) return;
+      // On phones the logo and menu button step aside for the open capsule (see the header CSS), so only wider screens keep them as obstacles.
+      container.current?.closest(".site-header__inner")?.querySelectorAll<HTMLElement>(".site-header__brand, .site-header__nav, .site-header__menu").forEach((element) => {
+        if (!element.offsetWidth || viewport <= PHONE_MAX) return;
         const box = element.getBoundingClientRect();
         edge = isArabic ? Math.min(edge, box.left - OBSTACLE_GAP) : Math.max(edge, box.right + OBSTACLE_GAP);
       });

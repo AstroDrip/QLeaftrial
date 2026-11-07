@@ -75,14 +75,14 @@ input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent
 label { color: var(--text-muted); font-size: .8125rem; font-weight: 600; }
 
 /* ---------- Header ---------- */
-.site-header { position: sticky; top: 0; z-index: 40; background: var(--moss-deep); color: var(--on-dark); border-bottom: 1px solid rgba(246, 241, 214, .12); }
+.site-header { --ease-menu: cubic-bezier(.22, 1, .36, 1); position: sticky; top: 0; z-index: 40; background: var(--moss-deep); color: var(--on-dark); border-bottom: 1px solid rgba(246, 241, 214, .12); }
 .site-header__inner { display: flex; align-items: center; gap: var(--space-5); height: var(--header-height); }
 .site-header__brand { display: inline-flex; align-items: center; flex-shrink: 0; color: var(--on-dark); }
-/* Brand kit: the full logo is never shown below 140px wide, and the icon alone never below 32px. */
+/* The full logo at every width; on phones it scales down with the screen (see the 720px rules) rather than
+   swapping to the icon. */
 .site-header__logo { display: inline-flex; align-items: center; }
 .site-header__logo img { display: block; height: auto; }
 .site-header__logo .site-header__logo-full { width: 140px; }
-.site-header__logo .site-header__logo-icon { display: none; width: 40px; }
 /* The links sit on the line of the logo's "leaves" wordmark rather than on the header's middle: in the 140px-wide
    logo that lettering is centred 0.69 of the way down its 49px height, which is about 9px below the middle (11px here, as capitals sit a little high in their line box). */
 .site-header__nav { display: flex; gap: var(--space-5); position: relative; top: 11px; }
@@ -92,6 +92,33 @@ html[lang="ar"] .nav-link { font-weight: 700; letter-spacing: 0; }
 /* Arabic lines are taller and centred, so the same wordmark line needs a smaller nudge. */
 html[lang="ar"] .site-header__nav { top: 9px; }
 .nav-link:hover, .nav-link.active { color: var(--on-dark); }
+/* ---------- Menu button and panel (phones and tablets; the inline links take over above 960px) ---------- */
+.site-header .site-header__menu { display: none; }
+.site-header__menu-bars { position: relative; display: block; width: 20px; height: 14px; }
+.site-header__menu-bars i { position: absolute; inset-inline-start: 0; height: 2px; border-radius: 2px; background: currentColor; transition: transform 300ms var(--ease-menu), opacity 160ms var(--ease-out), width 300ms var(--ease-menu); }
+.site-header__menu-bars i:nth-child(1) { top: 0; width: 20px; }
+.site-header__menu-bars i:nth-child(2) { top: 6px; width: 13px; }
+.site-header__menu-bars i:nth-child(3) { top: 12px; width: 20px; }
+.site-header__menu.is-open .site-header__menu-bars i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.site-header__menu.is-open .site-header__menu-bars i:nth-child(2) { width: 20px; opacity: 0; }
+.site-header__menu.is-open .site-header__menu-bars i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+.site-menu { position: absolute; top: calc(100% - 6px); inset-inline: 0; z-index: 1; display: none; margin-inline: auto; width: min(236px, calc(100vw - 32px)); padding: var(--space-3) var(--space-2) var(--space-2); border: 1px solid rgba(246, 241, 214, .16); border-top: 0; border-radius: 0 0 var(--radius-lg) var(--radius-lg); background: var(--moss-deep); box-shadow: 0 22px 30px -22px rgba(0, 0, 0, .7); opacity: 0; transform: translateY(-10px) scale(.97); transform-origin: top center; visibility: hidden; transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out), visibility 0s linear 160ms; }
+.site-menu ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.site-menu__link { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-md); color: var(--on-dark-muted); font-size: .85rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out); }
+html[lang="ar"] .site-menu__link { font-weight: 700; letter-spacing: 0; }
+.site-menu__link:hover { background: rgba(246, 241, 214, .08); color: var(--on-dark); }
+.site-menu__link.active { color: var(--on-dark); }
+.site-menu__link.active::before { content: ""; position: absolute; inset-inline-start: 7px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-radius: 50%; background: var(--gold); }
+.site-menu__count { min-width: 20px; height: 20px; padding-inline: 6px; border-radius: var(--radius-full); background: var(--rust); color: #fff; font-size: .7rem; letter-spacing: 0; line-height: 20px; text-align: center; font-variant-numeric: tabular-nums; }
+.site-menu__language { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-2); padding: var(--space-3) var(--space-4) var(--space-2); border-top: 1px solid rgba(246, 241, 214, .12); color: var(--on-dark-muted); font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+html[lang="ar"] .site-menu__language { letter-spacing: 0; }
+.site-menu[data-open="true"] { opacity: 1; transform: none; visibility: visible; transition: opacity 200ms var(--ease-out), transform 360ms var(--ease-menu), visibility 0s; }
+.site-menu li { opacity: 0; transform: translateY(-6px); transition: opacity 140ms var(--ease-out), transform 140ms var(--ease-out); }
+.site-menu[data-open="true"] li { opacity: 1; transform: none; transition: opacity 260ms var(--ease-out) calc(60ms + var(--n, 0) * 40ms), transform 340ms var(--ease-menu) calc(60ms + var(--n, 0) * 40ms); }
+.site-menu li:nth-child(2) { --n: 1; } .site-menu li:nth-child(3) { --n: 2; } .site-menu li:nth-child(4) { --n: 3; }
+/* The one header cart rides to just under the opened menu (--cart-dx/--cart-dy are measured in SiteHeader). */
+.site-header__cart { transition: transform 420ms cubic-bezier(.22, 1, .36, 1), background-color var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out); }
+.site-header--menu-open .site-header__cart { transform: translate(var(--cart-dx, 0), var(--cart-dy, 0)); border-color: rgba(246, 241, 214, .3); background: var(--moss-deep); box-shadow: 0 12px 22px -14px rgba(0, 0, 0, .7); transition-duration: 460ms; }
 .site-header__actions { display: flex; align-items: center; gap: var(--space-3); margin-inline-start: auto; }
 
 .icon-button { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; border: 1px solid transparent; border-radius: var(--radius-full); background: transparent; color: var(--ink); transition: background-color var(--duration) var(--ease-out); }
@@ -278,6 +305,12 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
   .site-header__nav { display: none; }
+  /* Logo left, menu button exactly centred, search and cart right: equal outer columns keep the button centred. */
+  .site-header__inner { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--space-3); }
+  .site-header__brand { justify-self: start; }
+  .site-header .site-header__menu { display: inline-grid; }
+  .site-header__actions { justify-self: end; margin-inline-start: 0; }
+  .site-menu { display: block; }
   .cart-layout, .checkout-form { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
@@ -290,9 +323,11 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
   .admin-shell { grid-template-columns: 1fr; }
   .admin-sidebar { position: relative; }
   .header-search__results { position: fixed; top: calc(var(--header-height) - 4px); inset-inline: 16px; width: auto; }
-  /* Phones show the icon alone, which leaves room for the search capsule. */
-  .site-header__logo .site-header__logo-full { display: none; }
-  .site-header__logo .site-header__logo-icon { display: block; }
+  /* While the search is open on a phone it takes the logo's and menu button's room, so they step aside instead of being covered. */
+  .site-header__brand, .site-header__menu { transition: opacity 180ms var(--ease-out), visibility 0s; }
+  .site-header__inner:has(.header-search--open) .site-header__brand, .site-header__inner:has(.header-search--open) .site-header__menu { opacity: 0; visibility: hidden; transition: opacity 140ms var(--ease-out), visibility 0s linear 140ms; }
+  /* The whole logo on phones, scaled with the screen (the brand's own artwork, same proportions). */
+  .site-header__logo .site-header__logo-full { width: clamp(92px, 28vw, 128px); }
   .checkout-form__grid { grid-template-columns: 1fr; }
   .cart-item { display: grid; }
 }
