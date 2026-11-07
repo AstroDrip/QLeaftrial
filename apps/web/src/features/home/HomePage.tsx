@@ -7,6 +7,7 @@ import { Seo, qleavesStructuredData } from "../../components/Seo";
 import { productApi } from "../catalog/product-api";
 import { ProductCard } from "../catalog/ProductCard";
 import { HeroCarousel } from "./HeroCarousel";
+import { CategoryRail } from "./CategoryRail";
 import { HeroParticles } from "./HeroParticles";
 import { ReviewStories } from "../reviews/ReviewStories";
 
@@ -59,21 +60,21 @@ export function HomePage() {
 
       {categories.length ? (
         <section className="home-section container" aria-labelledby="home-categories">
-          <div className="section-head">
-            <h2 id="home-categories">{t.categoriesTitle}</h2>
-            <Link to="/shop">{t.viewAll}</Link>
-          </div>
-          <ul className="home-categories">
-            {categories.map(([category, count]) => (
-              <li key={category}>
-                <Link to={`/shop?category=${encodeURIComponent(category)}`} onMouseEnter={() => prefetchRoute("/shop")}>
-                  <img src={CATEGORY_IMAGES[category] ?? "/images/hero/leaf-1.svg"} alt="" width={640} height={640} loading="lazy" decoding="async" />
-                  <span className="home-categories__name">{isArabic ? filters.data?.categoryLabels?.[category] || category : category}</span>
-                  <span className="home-categories__count">{t.productCount(count)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <CategoryRail
+            items={categories.map(([category, count]) => ({
+              key: category,
+              to: `/shop?category=${encodeURIComponent(category)}`,
+              image: CATEGORY_IMAGES[category] ?? "/images/hero/leaf-1.svg",
+              name: isArabic ? filters.data?.categoryLabels?.[category] || category : category,
+              count: t.productCount(count),
+            }))}
+            headingId="home-categories"
+            title={t.categoriesTitle}
+            viewAll={t.viewAll}
+            previousLabel={t.categoriesPrevious}
+            nextLabel={t.categoriesNext}
+            onIntent={() => prefetchRoute("/shop")}
+          />
         </section>
       ) : null}
 

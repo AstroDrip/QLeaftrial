@@ -79,8 +79,25 @@
 .home-promises strong { font-family: var(--serif); font-size: var(--step-1); font-weight: 500; }
 .home-promises span { color: var(--text-muted); font-size: .9rem; }
 
-.home-categories { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+/* Shop by category: one scrolling row (see CategoryRail). The row bleeds out over the page gutters so the
+   next card shows at the edge, and a few pixels of padding keep a lifted card and its focus ring unclipped. */
+.rail__scroller { --rail-card: clamp(200px, 20vw, 280px); margin: -6px calc(var(--gutter) * -1); padding: 6px var(--gutter); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-padding-inline: var(--gutter); }
+.rail__scroller::-webkit-scrollbar { display: none; }
+.home-categories { display: flex; width: max-content; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.home-categories li { flex: 0 0 var(--rail-card); width: var(--rail-card); }
 .home-categories a { display: grid; gap: .2rem; }
+.section-head__aside { display: flex; align-items: center; gap: var(--space-4); }
+.rail__controls { display: flex; gap: var(--space-2); }
+.rail__arrow { display: inline-grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--line-strong); border-radius: var(--radius-full); background: transparent; color: var(--ink); transition: background-color 180ms var(--ease-out), border-color 180ms var(--ease-out), transform 120ms var(--ease-out); }
+.rail__arrow:hover { border-color: var(--moss); background: var(--surface-sunk); }
+.rail__arrow:active { transform: scale(.94); }
+.rail__arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+[dir="rtl"] .rail__arrow svg, html[lang="ar"] .rail__arrow svg { transform: scaleX(-1); }
+@media (max-width: 720px) {
+  /* Phones swipe; the next card peeks in from the edge to say so. */
+  .rail__scroller { --rail-card: min(72vw, 250px); }
+  .rail__controls { display: none; }
+}
 .home-categories img { width: 100%; height: auto; aspect-ratio: 1; margin-bottom: .5rem; border-radius: var(--radius-lg); background: #fff; object-fit: cover; transition: transform 500ms var(--ease-out); }
 .home-categories a:hover img { transform: translateY(-3px); }
 .home-categories__name { font-weight: 600; }
