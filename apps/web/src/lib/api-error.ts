@@ -13,6 +13,7 @@ export class ApiClientError extends Error {
     message: string,
     public readonly code?: string,
     public readonly requestId?: string,
+    public readonly status?: number,
   ) {
     super(
       code === "INTERNAL_SERVER_ERROR" && requestId
@@ -30,11 +31,12 @@ export async function errorFromResponse(response: Response): Promise<ApiClientEr
     ? body.error.message
     : `Request failed with ${response.status}`;
   const candidateRequestId = body.error?.requestId;
-  const requestId = code === "INTERNAL_SERVER_ERROR" &&
+  const requestId = (code === "INTERNAL_SERVER_ERROR" || response.status >= 500) &&
       typeof candidateRequestId === "string" &&
       SAFE_REQUEST_ID.test(candidateRequestId)
     ? candidateRequestId
     : undefined;
 
-  return new ApiClientError(message, code, requestId);
+  return new ApiClientError(message, code, requestId, response.status);
 }
+

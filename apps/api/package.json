@@ -15,7 +15,8 @@
     "prisma:seed": "node --experimental-strip-types prisma/seed.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "catalog:import": "node --experimental-strip-types prisma/import-catalog.ts"
+    "catalog:import": "node --experimental-strip-types prisma/import-catalog.ts",
+    "catalog:generate": "node --experimental-strip-types scripts/generate-catalogue.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.16.2",

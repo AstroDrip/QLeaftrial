@@ -3,6 +3,7 @@ import { ApiError } from "../../middleware/error-handler.js";
 import type { CreateAdminProductInput, ReplaceProductImagesInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
 import { removeStoredProductImage, storagePathFromPublicUrl, storeProductImage } from "./product-image-storage.js";
 import { finalizeProductImages, removeProductImagePaths } from "./product-upload.service.js";
+import { regeneratePublicCatalogue } from "../../lib/catalogue.js";
 
 const adminProductSelection = {
   id: true,
@@ -222,6 +223,19 @@ export async function updateAdminProduct(
           select: { quantity: true },
         });
 
+    // Rebuild the public catalogue after a product change so the customer
+    // catalogue stays in sync. Failures here must not roll back the update.
+    try {
+      await regeneratePublicCatalogue();
+    } catch (error) {
+      console.error(JSON.stringify({
+        level: "error",
+        endpoint: "/api/v1/admin/products/:id",
+        event: "catalogue-regeneration-post-update-failed",
+        error: error instanceof Error ? error.message : String(error),
+      }));
+    }
+
     return toAdminProduct({ ...product, inventory });
   });
 }
@@ -304,6 +318,21 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         }));
       }
     }
+
+    // Rebuild the public catalogue after an admin product creation so the
+    // customer catalogue stays in sync. A regeneration failure must not roll
+    // back the product creation.
+    try {
+      await regeneratePublicCatalogue();
+    } catch (error) {
+      console.error(JSON.stringify({
+        level: "error",
+        endpoint: "/api/v1/admin/products",
+        event: "catalogue-regeneration-post-create-failed",
+        error: error instanceof Error ? error.message : String(error),
+      }));
+    }
+
     return toAdminProduct(product);
   } catch (error) {
     if (finalStoragePaths.length > 0) {
@@ -349,6 +378,20 @@ export async function deleteAdminProduct(id: string): Promise<void> {
       throw productHasOrders();
     }
     throw error;
+  }
+
+  // Rebuild the public catalogue after an admin product deletion so the
+  // customer catalogue stays in sync. A regeneration failure is logged but does
+  // not change the (already-deleted) product state.
+  try {
+    await regeneratePublicCatalogue();
+  } catch (error) {
+    console.error(JSON.stringify({
+      level: "error",
+      endpoint: "/api/v1/admin/products/:id",
+      event: "catalogue-regeneration-post-delete-failed",
+      error: error instanceof Error ? error.message : String(error),
+    }));
   }
 }
 
@@ -411,5 +454,20 @@ export async function replaceAdminProductImages(id: string, input: ReplaceProduc
       }));
     }
   }
+
+  // Rebuild the public catalogue after an admin image replacement so the
+  // customer catalogue stays in sync. A regeneration failure must not roll back
+  // the image replacement.
+  try {
+    await regeneratePublicCatalogue();
+  } catch (error) {
+    console.error(JSON.stringify({
+      level: "error",
+      endpoint: "/api/v1/admin/products/:id/images",
+      event: "catalogue-regeneration-post-image-replace-failed",
+      error: error instanceof Error ? error.message : String(error),
+    }));
+  }
+
   return toAdminProduct(product!);
 }

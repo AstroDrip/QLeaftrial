@@ -242,6 +242,7 @@ export const localeContent = {
       skipToContent: "Skip to content",
     },
     errors: {
+      retry: "Retry",
       retryFailed: "Could not load this page. Please try again.",
     },
     aria: {
@@ -486,6 +487,7 @@ export const localeContent = {
       skipToContent: "انتقل إلى المحتوى",
     },
     errors: {
+      retry: "إعادة المحاولة",
       retryFailed: "تعذر تحميل الصفحة. يُرجى المحاولة مرة أخرى.",
     },
     aria: {

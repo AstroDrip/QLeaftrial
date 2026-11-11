@@ -102,29 +102,47 @@ const products = [
 ] as const;
 
 export async function seedDatabase(): Promise<void> {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_SEED !== "true") {
+    throw new Error(
+      "Production seeding is disabled by default. Set ALLOW_PRODUCTION_SEED=true to proceed with explicit authorization.",
+    );
+  }
+
   const password = adminPasswordForSeed();
 
   for (const product of products) {
     const { media, quantity, ...productData } = product;
 
-    await prisma.product.upsert({
+    // Check if product already exists to preserve custom modifications, inventory, and images
+    const existing = await prisma.product.findUnique({
       where: { slug: product.slug },
-      create: {
-        ...productData,
-        published: true,
-        inventory: { create: { quantity } },
-        media: { create: { ...media, sortOrder: 0 } },
-      },
-      update: {
-        ...productData,
-        published: true,
-        inventory: { upsert: { create: { quantity }, update: { quantity } } },
-        media: {
-          deleteMany: {},
-          create: { ...media, sortOrder: 0 },
-        },
-      },
+      include: { inventory: true, media: true },
     });
+
+    if (!existing) {
+      await prisma.product.create({
+        data: {
+          ...productData,
+          published: true,
+          inventory: { create: { quantity } },
+          media: { create: { ...media, sortOrder: 0 } },
+        },
+      });
+    } else {
+      // Preserve existing inventory quantity if inventory record already exists
+      if (!existing.inventory) {
+        await prisma.inventory.create({
+          data: { productId: existing.id, quantity },
+        });
+      }
+
+      // Preserve existing media if photos have already been attached
+      if (!existing.media || existing.media.length === 0) {
+        await prisma.productMedia.create({
+          data: { productId: existing.id, ...media, sortOrder: 0 },
+        });
+      }
+    }
   }
 
   const developmentAdmin = await prisma.adminUser.findUnique({

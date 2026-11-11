@@ -24,6 +24,7 @@ export function ProductPage() {
     isPending,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["product", fallbackSlug, language],
     queryFn: () => productApi.detail(`${encodeURIComponent(fallbackSlug)}?lang=${language}`),
@@ -50,9 +51,14 @@ export function ProductPage() {
         <p role="alert">
           {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
         </p>
-        <button type="button" onClick={() => navigate(-1)}>
-          {content.common.back}
-        </button>
+        <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+          <button type="button" className="button button-primary" onClick={() => refetch()} data-testid="product-retry">
+            {content.errors.retry}
+          </button>
+          <button type="button" className="button button-secondary" onClick={() => navigate(-1)}>
+            {content.common.back}
+          </button>
+        </div>
       </section>
     );
   }

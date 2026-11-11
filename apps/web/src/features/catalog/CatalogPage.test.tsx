@@ -48,6 +48,19 @@ describe("CatalogPage", () => {
   beforeEach(() => {
     window.localStorage.removeItem("qleaves-language");
     useCartStore.setState({ items: [] });
+    vi.mocked(productApi.detail).mockResolvedValue({
+      id: "1",
+      slug: "house-plant",
+      name: "House Plant",
+      description: "Glossy foliage.",
+      category: "Indoor",
+      light: "Bright indirect",
+      priceQar: 180,
+      stock: 12,
+      inStock: true,
+      image: null,
+      media: [],
+    });
     mockFilters.mockResolvedValue({
       categories: ["Indoor", "Succulent"],
       lights: ["Bright indirect", "Direct sun"],
@@ -342,5 +355,37 @@ describe("CatalogPage", () => {
     await userEvent.selectOptions(screen.getByTestId("price-filter"), "50-100");
     await userEvent.click(screen.getByTestId("in-stock-filter"));
     await waitFor(() => expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ minPrice: 50, maxPrice: 100, inStock: "1" })));
+  });
+
+  it("displays an error state with a retry button and allows recovery without losing filters", async () => {
+    mockList.mockRejectedValueOnce(new Error("Connection failed. Please check your network and try again."));
+    renderWithClient(<CatalogPage />);
+
+    expect(await screen.findByTestId("catalog-error")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(/could not load this page/i);
+
+    const retryButton = screen.getByTestId("catalog-retry");
+    expect(retryButton).toBeInTheDocument();
+
+    mockList.mockResolvedValueOnce({
+      items: [{
+        id: "1",
+        slug: "house-plant",
+        name: "House Plant",
+        category: "Indoor",
+        light: "Bright indirect",
+        priceQar: 180,
+        stock: 12,
+        inStock: true,
+        image: null,
+      }],
+      page: 1,
+      pageSize: 24,
+      totalItems: 1,
+      totalPages: 1,
+    });
+
+    await userEvent.click(retryButton);
+    expect(await screen.findByRole("heading", { name: "House Plant" })).toBeInTheDocument();
   });
 });

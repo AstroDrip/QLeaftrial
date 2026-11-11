@@ -1,13 +1,18 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import type { SiteLanguage } from "../../content/locales";
 import { productApi } from "./product-api";
-import type { ProductListParams } from "./product-types";
+import type { ProductListParams, ProductListResponse, ProductMedia, ProductSummary } from "./product-types";
+import { loadCatalogue } from "./catalogue-client";
+import type { CatalogueMedia, CatalogueProduct, CatalogueSnapshot } from "./catalogue-types";
+import { localizeProduct } from "./localize-product";
 import { ProductCard } from "./ProductCard";
 import { Seo } from "../../components/Seo";
 import "./catalog.css";
+
+const PAGE_SIZE = 24;
 
 const SORT_OPTIONS = [
   { value: "newest", label: "sortNewest" },
@@ -36,6 +41,71 @@ function pageWindow(current: number, total: number): Array<number | "gap"> {
   return sorted.flatMap((page, index) => (index > 0 && page - sorted[index - 1] > 1 ? ["gap" as const, page] : [page]));
 }
 
+function catalogueProductToSummary(product: CatalogueProduct, language: SiteLanguage): ProductSummary {
+  const localizedName = language === "ar" && product.nameAr?.trim() ? product.nameAr : product.name;
+  const localizedCategory = language === "ar" && product.categoryAr?.trim() ? product.categoryAr : product.category;
+  const localizedLight = language === "ar" && product.lightAr?.trim() ? product.lightAr : product.light;
+
+  const mediaToSummary = (medium: CatalogueMedia | null): ProductMedia | null => {
+    if (!medium) return null;
+    return {
+      url: medium.url,
+      altText: medium.altText,
+      width: medium.width,
+      height: medium.height,
+      purpose: (medium.purpose === "catalog" || medium.purpose === "detail") ? medium.purpose : undefined,
+    };
+  };
+
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: localizedName,
+    nameAr: product.nameAr,
+    category: localizedCategory,
+    categoryAr: product.categoryAr,
+    light: localizedLight,
+    lightAr: product.lightAr,
+    priceQar: product.priceQar,
+    stock: product.stock,
+    inStock: product.inStock,
+    image: mediaToSummary(product.image),
+    media: product.media.map(mediaToSummary).filter((value): value is ProductMedia => Boolean(value)),
+  };
+}
+
+function filterSnapshotProducts(products: CatalogueProduct[], params: ProductListParams): CatalogueProduct[] {
+  return products.filter((product) => {
+    if (params.q) {
+      const query = params.q.toLowerCase();
+      const haystack = [
+        product.name,
+        product.description,
+        product.slug,
+        product.category,
+      ]
+        .filter((value): value is string => typeof value === "string")
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    if (params.category && product.category !== params.category) return false;
+    if (params.light && product.light !== params.light) return false;
+    if (params.inStock && !product.inStock) return false;
+    if (params.minPrice !== undefined && product.priceQar < params.minPrice) return false;
+    if (params.maxPrice !== undefined && product.priceQar > params.maxPrice) return false;
+    return true;
+  });
+}
+
+function sortSnapshotProducts(products: CatalogueProduct[], sort: ProductListParams["sort"]): CatalogueProduct[] {
+  return [...products].sort((a, b) => {
+    if (sort === "price-asc") return a.priceQar - b.priceQar || a.slug.localeCompare(b.slug);
+    if (sort === "price-desc") return b.priceQar - a.priceQar || a.slug.localeCompare(b.slug);
+    return a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug);
+  });
+}
+
 export function CatalogPage() {
   const { content, language, isArabic } = useSiteLanguage();
   const settings = useStoreSettings();
@@ -54,18 +124,55 @@ export function CatalogPage() {
       : "newest";
   const priceRange = PRICE_RANGES.find((range) => range.value === searchParams.get("price"));
   const category = searchParams.get("category") || undefined;
+  const light = searchParams.get("light") || undefined;
+  const inStock = searchParams.get("inStock") === "1";
+  const page = Number(searchParams.get("page") ?? 1) || 1;
 
   const params: ProductListParams = {
     q: searchParams.get("q") ?? undefined,
     category,
-    light: searchParams.get("light") || undefined,
+    light,
     minPrice: orderingEnabled ? priceRange?.min : undefined,
     maxPrice: orderingEnabled ? priceRange?.max : undefined,
-    inStock: searchParams.get("inStock") === "1" ? "1" : undefined,
-    page: Number(searchParams.get("page") ?? 1) || 1,
+    inStock: inStock ? "1" : undefined,
+    page,
     sort,
     lang: language,
   };
+
+  // Static-first: load the public catalogue snapshot so the page can render
+  // immediately without waiting for the backend. When the snapshot is
+  // unavailable (e.g. first visit before it is cached), staticSnapshot stays
+  // null and the normal react-query loading state is shown instead.
+  const [staticSnapshot, setStaticSnapshot] = useState<CatalogueSnapshot | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void loadCatalogue({ apiFallback: undefined }).then((result) => {
+      if (!cancelled && result.source === "static") {
+        setStaticSnapshot(result.snapshot ?? null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const placeholderData = useMemo(() => {
+    if (!staticSnapshot) return undefined;
+    const filtered = filterSnapshotProducts(staticSnapshot.products, params);
+    const sorted = sortSnapshotProducts(filtered, sort);
+    const totalItems = sorted.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    const currentPage = Math.min(Math.max(page, 1), totalPages);
+    const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    return {
+      items: paged.map((product) => catalogueProductToSummary(product, language)),
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      totalItems,
+      totalPages,
+    } as ProductListResponse;
+  }, [staticSnapshot, sort, language]);
 
   const { data: filters, isPending: filtersPending } = useQuery({
     queryKey: ["catalog-filters"],
@@ -73,11 +180,10 @@ export function CatalogPage() {
     staleTime: 300_000,
   });
 
-  const { data: result, isPending, isError, error, isPlaceholderData } = useQuery({
+  const { data: result, isPending, isError, error, isPlaceholderData, refetch } = useQuery({
     queryKey: ["products", params],
     queryFn: () => productApi.list(params),
-    placeholderData: (previous, previousQuery) =>
-      previousQuery && queryLanguage(previousQuery.queryKey) === language ? previous : undefined,
+    placeholderData: () => placeholderData,
     staleTime: 60_000,
   });
 
@@ -215,9 +321,19 @@ export function CatalogPage() {
         </div>
 
         {isError ? (
-          <p role="alert" data-testid="catalog-error">
-            {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
-          </p>
+          <div className="catalog__error" data-testid="catalog-error">
+            <p role="alert">
+              {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
+            </p>
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={() => refetch()}
+              data-testid="catalog-retry"
+            >
+              {content.errors.retry}
+            </button>
+          </div>
         ) : isPending ? (
           <p data-testid="catalog-loading" role="status">{isArabic ? "جارٍ تحميل النباتات…" : "Loading plants…"}</p>
         ) : !result || result.items.length === 0 ? (

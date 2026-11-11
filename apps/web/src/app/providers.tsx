@@ -2,13 +2,21 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { localeContent, type SiteLanguage } from "../content/locales";
 
+import { ApiClientError } from "../lib/api-error";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
       gcTime: 5 * 60_000,
-      // A cold server can fail the first request or two; back off and try again before showing an error.
-      retry: 2,
+      // Retry temporary 5xx and network failures with backoff; do not retry 4xx errors
+      retry: (failureCount, error) => {
+        if (failureCount >= 2) return false;
+        if (error instanceof ApiClientError && error.status && error.status >= 400 && error.status < 500) {
+          return false;
+        }
+        return true;
+      },
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
       refetchOnWindowFocus: false,
     },

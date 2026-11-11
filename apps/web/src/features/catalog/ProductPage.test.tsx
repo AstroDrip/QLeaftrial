@@ -20,6 +20,13 @@ describe("ProductPage cart action", () => {
   beforeEach(() => {
     document.head.querySelectorAll("[data-qleaves-seo]").forEach((node) => node.remove());
     useCartStore.setState({ items: [] });
+    vi.mocked(productApi.list).mockResolvedValue({
+      items: [],
+      totalItems: 0,
+      page: 1,
+      pageSize: 24,
+      totalPages: 0,
+    });
     vi.mocked(productApi.detail).mockResolvedValue({
       id: "plant-1",
       slug: "house-plant",

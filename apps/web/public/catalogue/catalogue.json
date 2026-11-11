@@ -1,0 +1,205 @@
+{
+  "version": "2026-11-11T10:28:56.571Z",
+  "generatedAt": "2026-11-11T10:28:56.576Z",
+  "productCount": 6,
+  "products": [
+    {
+      "id": "cmwbz82rb001kw31kc5zqm7em",
+      "slug": "aloe-vera",
+      "name": "Aloe Vera",
+      "nameAr": "الألوفيرا",
+      "description": "A useful, sun-loving succulent with architectural leaves.",
+      "descriptionAr": "نبات عصاري محب للشمس بأوراق هندسية ومفيدة.",
+      "category": "Succulent",
+      "categoryAr": "نباتات عصارية",
+      "light": "Direct sun",
+      "lightAr": "شمس مباشرة",
+      "priceQar": 75,
+      "stock": 20,
+      "inStock": true,
+      "image": {
+        "url": "/media/plants/aloe-vera-640.webp",
+        "altText": "Aloe vera plant on a sunny shelf",
+        "width": null,
+        "height": null,
+        "purpose": null,
+        "sortOrder": 0
+      },
+      "media": [
+        {
+          "url": "/media/plants/aloe-vera-640.webp",
+          "altText": "Aloe vera plant on a sunny shelf",
+          "width": null,
+          "height": null,
+          "purpose": null,
+          "sortOrder": 0
+        }
+      ]
+    },
+    {
+      "id": "cmwbz82qf001ew31ke62s2mfb",
+      "slug": "fiddle-leaf-fig",
+      "name": "Fiddle Leaf Fig",
+      "nameAr": "فيكس ليراتا",
+      "description": "Sculptural leaves that make a calm, vertical statement.",
+      "descriptionAr": "أوراق نحتية تمنح المكان حضورًا رأسيًا هادئًا.",
+      "category": "Indoor",
+      "categoryAr": "نباتات داخلية",
+      "light": "Bright indirect",
+      "lightAr": "إضاءة ساطعة غير مباشرة",
+      "priceQar": 260,
+      "stock": 8,
+      "inStock": true,
+      "image": {
+        "url": "/media/plants/schefflera-640.webp",
+        "altText": "Fiddle leaf fig by a window",
+        "width": null,
+        "height": null,
+        "purpose": null,
+        "sortOrder": 0
+      },
+      "media": [
+        {
+          "url": "/media/plants/schefflera-640.webp",
+          "altText": "Fiddle leaf fig by a window",
+          "width": null,
+          "height": null,
+          "purpose": null,
+          "sortOrder": 0
+        }
+      ]
+    },
+    {
+      "id": "cmwbz82q1001cw31ko8ge779j",
+      "slug": "house-plant",
+      "name": "House Plant",
+      "nameAr": "نبات منزلي",
+      "description": "A generous, glossy-leafed plant for bright living spaces.",
+      "descriptionAr": "نبات وارف بأوراق لامعة يناسب مساحات المعيشة المضيئة.",
+      "category": "Indoor",
+      "categoryAr": "نباتات داخلية",
+      "light": "Bright indirect",
+      "lightAr": "إضاءة ساطعة غير مباشرة",
+      "priceQar": 180,
+      "stock": 12,
+      "inStock": true,
+      "image": {
+        "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z2S8AAAAASUVORK5CYII=",
+        "altText": "Rubber plant in a white pot",
+        "width": null,
+        "height": null,
+        "purpose": null,
+        "sortOrder": 0
+      },
+      "media": [
+        {
+          "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z2S8AAAAASUVORK5CYII=",
+          "altText": "Rubber plant in a white pot",
+          "width": null,
+          "height": null,
+          "purpose": null,
+          "sortOrder": 0
+        }
+      ]
+    },
+    {
+      "id": "cmwbz82r1001iw31k09rldc51",
+      "slug": "monstera-deliciosa",
+      "name": "Monstera Deliciosa",
+      "nameAr": "مونستيرا ديليسيوسا",
+      "description": "Split tropical leaves for a lush, layered interior.",
+      "descriptionAr": "أوراق استوائية مشقوقة تمنح المساحة الداخلية مظهرًا غنيًا.",
+      "category": "Indoor",
+      "categoryAr": "نباتات داخلية",
+      "light": "Medium indirect",
+      "lightAr": "إضاءة متوسطة غير مباشرة",
+      "priceQar": 220,
+      "stock": 10,
+      "inStock": true,
+      "image": {
+        "url": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp",
+        "altText": "Monstera deliciosa in a terracotta pot",
+        "width": null,
+        "height": null,
+        "purpose": null,
+        "sortOrder": 0
+      },
+      "media": [
+        {
+          "url": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp",
+          "altText": "Monstera deliciosa in a terracotta pot",
+          "width": null,
+          "height": null,
+          "purpose": null,
+          "sortOrder": 0
+        }
+      ]
+    },
+    {
+      "id": "cmwbz82rl001mw31kumz7frv4",
+      "slug": "peace-lily",
+      "name": "Peace Lily",
+      "nameAr": "زنبق السلام",
+      "description": "Soft white blooms and deep foliage for quieter rooms.",
+      "descriptionAr": "أزهار بيضاء ناعمة وأوراق عميقة للغرف الهادئة.",
+      "category": "Indoor",
+      "categoryAr": "نباتات داخلية",
+      "light": "Low to medium indirect",
+      "lightAr": "إضاءة منخفضة إلى متوسطة غير مباشرة",
+      "priceQar": 145,
+      "stock": 14,
+      "inStock": true,
+      "image": {
+        "url": "/media/plants/peace-lily-big-size-640.webp",
+        "altText": "Peace lily with white blooms",
+        "width": null,
+        "height": null,
+        "purpose": null,
+        "sortOrder": 0
+      },
+      "media": [
+        {
+          "url": "/media/plants/peace-lily-big-size-640.webp",
+          "altText": "Peace lily with white blooms",
+          "width": null,
+          "height": null,
+          "purpose": null,
+          "sortOrder": 0
+        }
+      ]
+    },
+    {
+      "id": "cmwbz82qs001gw31kgxc4cjkd",
+      "slug": "snake-plant",
+      "name": "Snake Plant",
+      "nameAr": "نبات الثعبان",
+      "description": "An upright, resilient plant for low-maintenance corners.",
+      "descriptionAr": "نبات قوي ومستقيم للزوايا التي لا تحتاج إلى عناية كثيرة.",
+      "category": "Indoor",
+      "categoryAr": "نباتات داخلية",
+      "light": "Low to bright indirect",
+      "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+      "priceQar": 120,
+      "stock": 16,
+      "inStock": true,
+      "image": {
+        "url": "/media/plants/sansevieria-snake-plant-big-size-640.webp",
+        "altText": "Snake plant in a woven basket",
+        "width": null,
+        "height": null,
+        "purpose": null,
+        "sortOrder": 0
+      },
+      "media": [
+        {
+          "url": "/media/plants/sansevieria-snake-plant-big-size-640.webp",
+          "altText": "Snake plant in a woven basket",
+          "width": null,
+          "height": null,
+          "purpose": null,
+          "sortOrder": 0
+        }
+      ]
+    }
+  ]
+}

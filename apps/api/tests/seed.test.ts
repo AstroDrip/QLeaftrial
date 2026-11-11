@@ -154,4 +154,45 @@ describe("seedDatabase", () => {
       }
     }
   });
+
+  it("blocks seeding in production when ALLOW_PRODUCTION_SEED is not true", async () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousAllowSeed = process.env.ALLOW_PRODUCTION_SEED;
+    process.env.NODE_ENV = "production";
+    delete process.env.ALLOW_PRODUCTION_SEED;
+
+    try {
+      await expect(seedDatabase()).rejects.toThrow("Production seeding is disabled by default");
+    } finally {
+      process.env.NODE_ENV = previousNodeEnv;
+      if (previousAllowSeed === undefined) {
+        delete process.env.ALLOW_PRODUCTION_SEED;
+      } else {
+        process.env.ALLOW_PRODUCTION_SEED = previousAllowSeed;
+      }
+    }
+  });
+
+  it("preserves operational inventory quantity when re-seeded", async () => {
+    await seedDatabase();
+
+    // Simulate real business operation: stock sold down from 12 to 3
+    const housePlant = await prisma.product.findUniqueOrThrow({
+      where: { slug: "house-plant" },
+      include: { inventory: true },
+    });
+    await prisma.inventory.update({
+      where: { productId: housePlant.id },
+      data: { quantity: 3 },
+    });
+
+    // Run seed again
+    await seedDatabase();
+
+    const afterSeed = await prisma.inventory.findUniqueOrThrow({
+      where: { productId: housePlant.id },
+    });
+    expect(afterSeed.quantity).toBe(3);
+  });
 });
+

@@ -23,13 +23,36 @@ export function createApp(): Express {
   app.get("/api/v1/health", (_request, response) => {
     response.json({ status: "ok" });
   });
-  app.get("/api/v1/ready", async (_request, response, next) => {
+  app.get("/api/v1/ready", async (_request, response) => {
+    response.setHeader("Cache-Control", "no-store");
     try {
-      await productRepository.count();
-      response.setHeader("Cache-Control", "no-store");
+      const checkPromise = productRepository.count();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database readiness timeout")), 5000),
+      );
+      await Promise.race([checkPromise, timeoutPromise]);
       response.json({ status: "ready", database: "connected" });
     } catch (error) {
-      next(error);
+      const requestId = typeof response.locals.requestId === "string"
+        ? response.locals.requestId
+        : undefined;
+
+      console.error(JSON.stringify({
+        level: "error",
+        requestId,
+        endpoint: "/api/v1/ready",
+        error: error instanceof Error ? error.message : String(error),
+      }));
+
+      response.status(503).json({
+        status: "unavailable",
+        database: "disconnected",
+        error: {
+          code: "DATABASE_UNAVAILABLE",
+          message: "Database connection failed",
+          ...(requestId ? { requestId } : {}),
+        },
+      });
     }
   });
   app.use("/api/v1", apiRouter);
