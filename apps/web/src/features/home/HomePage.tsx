@@ -10,6 +10,7 @@ import { HeroCarousel } from "./HeroCarousel";
 import { CategoryRail } from "./CategoryRail";
 import { HeroParticles } from "./HeroParticles";
 import { ReviewStories } from "../reviews/ReviewStories";
+import { friendlyError } from "../../lib/friendly-error";
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "Indoor Plants": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp",
@@ -85,7 +86,7 @@ export function HomePage() {
         </div>
         {products.isError ? (
           <p className="home__notice" role="alert">
-            {t.inventoryError}{isArabic ? "" : `: ${(products.error as Error).message}`}
+            {friendlyError(products.error, language)}
           </p>
         ) : products.isPending ? (
           <p role="status">{content.catalog.loading}</p>

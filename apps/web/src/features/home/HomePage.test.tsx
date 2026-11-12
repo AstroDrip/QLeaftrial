@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HomePage } from "./HomePage";
 import { productApi } from "../catalog/product-api";
 import { useCartStore } from "../cart/cart-store";
+import { ApiClientError } from "../../lib/api-error";
 
 vi.mock("../reviews/review-api", () => ({ reviewApi: { list: vi.fn().mockResolvedValue([]) } }));
 
@@ -73,10 +74,10 @@ describe("HomePage", () => {
   });
 
   it("reports an API outage without inventing products", async () => {
-    vi.mocked(productApi.list).mockRejectedValue(new Error("API unavailable"));
+    vi.mocked(productApi.list).mockRejectedValue(new ApiClientError("The shop is briefly unavailable", "DATABASE_UNAVAILABLE", "req_1", 503));
     renderHome();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/API unavailable/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/briefly unavailable.*Reference: req_1/i);
     expect(screen.queryByRole("button", { name: /add .* to cart/i })).not.toBeInTheDocument();
   });
 });

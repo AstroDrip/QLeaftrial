@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { Seo } from "../../components/Seo";
@@ -6,6 +6,7 @@ import { useCartStore, cartSubtotal } from "../cart/cart-store";
 import { errorFromResponse } from "../../lib/api-error";
 import { rememberOrderSummary, type OrderSummary } from "./order-summary";
 import { FreeDeliveryProgress } from "../cart/FreeDeliveryProgress";
+import { friendlyError } from "../../lib/friendly-error";
 
 type PlacedOrderResponse = {
   orderNumber: string;
@@ -23,6 +24,16 @@ const initialForm = {
   payment: "cod",
 };
 
+// One key per checkout attempt for this cart. A retry after a timeout or a dropped connection sends the
+// same key, so the server returns the order it already saved instead of placing a second one. Changing
+// the cart starts a fresh attempt.
+function newAttemptKey(): string {
+  const random = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+  return `checkout-${random}`;
+}
+
 export function CheckoutPage() {
   const { content, isArabic } = useSiteLanguage();
   const navigate = useNavigate();
@@ -30,6 +41,8 @@ export function CheckoutPage() {
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clear);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const attempt = useRef<{ cart: string; key: string } | null>(null);
 
   function handleChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -45,10 +58,14 @@ export function CheckoutPage() {
       setError(isArabic ? "سلة المشتريات فارغة." : "Your cart is empty.");
       return;
     }
+    if (submitting) return;
+    const cart = JSON.stringify(items.map(({ id, quantity }) => [id, quantity]));
+    if (!attempt.current || attempt.current.cart !== cart) attempt.current = { cart, key: newAttemptKey() };
+    setSubmitting(true);
     try {
       const response = await fetch("/api/v1/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": attempt.current.key },
         body: JSON.stringify({
           customerName: form.name,
           phone: form.phone,
@@ -74,9 +91,14 @@ export function CheckoutPage() {
         subtotalQar: body.subtotalQar,
       };
       rememberOrderSummary(summary);
+      attempt.current = null;
       clearCart();
       navigate(`/order/${body.orderNumber}`, { state: { order: summary } });
-    } catch (submissionError) { setError(isArabic ? "تعذر إرسال الطلب" : submissionError instanceof Error ? submissionError.message : "Could not place order"); }
+    } catch (submissionError) {
+      setError(friendlyError(submissionError, isArabic ? "ar" : "en"));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -196,8 +218,8 @@ export function CheckoutPage() {
           </div>
         </div>
 
-        <button type="submit" className="primary-button" disabled={items.length === 0}>
-          {content.checkout.placeOrder}
+        <button type="submit" className="primary-button" disabled={items.length === 0 || submitting} aria-busy={submitting || undefined}>
+          {submitting ? content.checkout.submitting : content.checkout.placeOrder}
         </button>
         <p className="checkout-form__legal">
           {isArabic ? <>بإرسال الطلب، فإنك توافق على <Link to="/terms">الشروط والأحكام</Link> وتقر بالاطلاع على <Link to="/privacy">سياسة الخصوصية</Link> ومعلومات <Link to="/shipping-returns">الشحن والإرجاع</Link>.</> : <>By placing an order, you agree to the <Link to="/terms">Terms &amp; Conditions</Link> and acknowledge the <Link to="/privacy">Privacy Policy</Link> and <Link to="/shipping-returns">Shipping &amp; Returns</Link> information.</>}

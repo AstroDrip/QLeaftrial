@@ -7,6 +7,7 @@ import { LeafIcon } from "../../components/icons";
 import { ReviewSheet } from "../reviews/ReviewSheet";
 import { adminApi, type AdminReview, type ReviewInput } from "./admin-api";
 import { REVIEW_PHOTO_MAX_BYTES, REVIEW_PHOTO_TYPES, reviewPhotoDataUrl } from "./review-photo";
+import { friendlyError } from "../../lib/friendly-error";
 
 type Draft = {
   customerName: string;
@@ -60,6 +61,7 @@ function useReviewText() {
 }
 
 function ReviewEditor({ review, onDone }: { review: AdminReview | null; onDone: () => void }) {
+  const { language } = useSiteLanguage();
   const t = useReviewText();
   const queryClient = useQueryClient();
   const products = useQuery({ queryKey: ["admin", "products"], queryFn: adminApi.products });
@@ -92,7 +94,7 @@ function ReviewEditor({ review, onDone }: { review: AdminReview | null; onDone: 
       void queryClient.invalidateQueries({ queryKey: ["reviews"] });
       onDone();
     },
-    onError: (error) => setProblem(error instanceof Error ? error.message : t.failed),
+    onError: (error) => setProblem(friendlyError(error, language)),
   });
 
   async function choosePhoto(file: File | undefined) {
@@ -105,7 +107,7 @@ function ReviewEditor({ review, onDone }: { review: AdminReview | null; onDone: 
       const dataUrl = await reviewPhotoDataUrl(file);
       setDraft((current) => ({ ...current, photo: dataUrl, photoChanged: true }));
     } catch (error) {
-      setProblem(error instanceof Error ? error.message : t.photoProblem);
+      setProblem(friendlyError(error, language));
     }
   }
 
@@ -190,6 +192,7 @@ function ReviewEditor({ review, onDone }: { review: AdminReview | null; onDone: 
 }
 
 function ReviewRow({ review, index, total, onEdit }: { review: AdminReview; index: number; total: number; onEdit: () => void }) {
+  const { language } = useSiteLanguage();
   const t = useReviewText();
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
@@ -201,7 +204,7 @@ function ReviewRow({ review, index, total, onEdit }: { review: AdminReview; inde
   const toggle = useMutation({
     mutationFn: () => adminApi.updateReview(review.id, { published: !review.published }),
     onSuccess: refresh,
-    onError: (error) => setProblem(error instanceof Error ? error.message : t.failed),
+    onError: (error) => setProblem(friendlyError(error, language)),
   });
   const move = useMutation({
     mutationFn: (direction: "up" | "down") => adminApi.moveReview(review.id, direction),

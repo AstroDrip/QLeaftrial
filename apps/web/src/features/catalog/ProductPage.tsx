@@ -10,6 +10,7 @@ import { WhatsAppIcon } from "../../components/icons";
 import { Seo } from "../../components/Seo";
 import { ProductImage } from "../../components/ProductImage";
 import "./product-detail.css";
+import { friendlyError } from "../../lib/friendly-error";
 
 export function ProductPage() {
   const { content, language, isArabic } = useSiteLanguage();
@@ -49,7 +50,7 @@ export function ProductPage() {
     return (
       <section className="product-detail" data-testid="product-error">
         <p role="alert">
-          {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
+          {friendlyError(error, language)}
         </p>
         <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
           <button type="button" className="button button-primary" onClick={() => refetch()} data-testid="product-retry">

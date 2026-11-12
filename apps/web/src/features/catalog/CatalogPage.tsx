@@ -11,6 +11,7 @@ import { localizeProduct } from "./localize-product";
 import { ProductCard } from "./ProductCard";
 import { Seo } from "../../components/Seo";
 import "./catalog.css";
+import { friendlyError } from "../../lib/friendly-error";
 
 const PAGE_SIZE = 24;
 
@@ -323,7 +324,7 @@ export function CatalogPage() {
         {isError ? (
           <div className="catalog__error" data-testid="catalog-error">
             <p role="alert">
-              {content.errors.retryFailed}{isArabic ? "" : `: ${(error as Error).message}`}
+              {friendlyError(error, language)}
             </p>
             <button
               type="button"

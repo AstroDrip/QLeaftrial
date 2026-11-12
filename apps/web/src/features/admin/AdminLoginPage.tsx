@@ -6,6 +6,17 @@ import { adminApi } from "./admin-api";
 import { Seo } from "../../components/Seo";
 import { EyeIcon, EyeOffIcon } from "../../components/icons";
 import "./admin.css";
+import { friendlyError } from "../../lib/friendly-error";
+import { ApiClientError } from "../../lib/api-error";
+
+// A wrong password says so; anything else (database down, offline, too many tries) says what actually
+// happened, so a server problem is never mistaken for a wrong password.
+function loginProblem(error: unknown, isArabic: boolean): string {
+  if (error instanceof ApiClientError && error.code === "INVALID_CREDENTIALS") {
+    return isArabic ? "كلمة المرور غير صحيحة." : "That password is not correct.";
+  }
+  return friendlyError(error, isArabic ? "ar" : "en");
+}
 
 export function AdminLoginPage() {
   const { content, isArabic } = useSiteLanguage();
@@ -53,7 +64,7 @@ export function AdminLoginPage() {
           </div>
         </div>
 
-        {login.isError ? <p role="alert">{isArabic ? "تعذر تسجيل الدخول. تحقق من كلمة المرور وحاول مجددًا." : login.error.message}</p> : null}
+        {login.isError ? <p role="alert">{loginProblem(login.error, isArabic)}</p> : null}
 
         <button type="submit" className="primary-button" disabled={login.isPending}>
           {content.admin.signIn}

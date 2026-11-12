@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminReviewsPage } from "./AdminReviewsPage";
 import { adminApi, type AdminReview } from "./admin-api";
+import { ApiClientError } from "../../lib/api-error";
 
 vi.mock("./admin-api", () => ({
   adminApi: {
@@ -153,7 +154,7 @@ describe("AdminReviewsPage", () => {
 
   it("shows the server's message when saving fails and keeps the form open", async () => {
     vi.mocked(adminApi.reviews).mockResolvedValue([]);
-    vi.mocked(adminApi.createReview).mockRejectedValue(new Error("The review needs at least 10 characters"));
+    vi.mocked(adminApi.createReview).mockRejectedValue(new ApiClientError("The review needs at least 10 characters", "VALIDATION_ERROR", undefined, 400));
     const user = userEvent.setup();
     renderPage();
 

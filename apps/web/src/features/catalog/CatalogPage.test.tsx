@@ -267,7 +267,8 @@ describe("CatalogPage", () => {
     renderWithClient(<CatalogPage />);
 
     await waitFor(() => screen.findByTestId("catalog-error"));
-    expect(screen.getByRole("alert")).toHaveTextContent(/network down/i);
+    // A network failure reads as a connection problem, not as a raw "Network down" or "Failed to fetch".
+    expect(screen.getByRole("alert")).toHaveTextContent(/couldn't reach QLeaves/i);
   });
 
   it("applies a category filter on change", async () => {
@@ -362,7 +363,7 @@ describe("CatalogPage", () => {
     renderWithClient(<CatalogPage />);
 
     expect(await screen.findByTestId("catalog-error")).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveTextContent(/could not load this page/i);
+    expect(screen.getByRole("alert")).toHaveTextContent(/check your connection/i);
 
     const retryButton = screen.getByTestId("catalog-retry");
     expect(retryButton).toBeInTheDocument();

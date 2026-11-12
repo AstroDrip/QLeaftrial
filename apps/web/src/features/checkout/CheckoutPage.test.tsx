@@ -76,4 +76,54 @@ describe("CheckoutPage", () => {
     expect(body).not.toHaveProperty("deliveryFeeQar");
     expect(body.items).toEqual([{ productId: "plant-1", quantity: 1 }]);
   });
+
+  async function fillForm() {
+    await userEvent.type(screen.getByPlaceholderText("Aisha Rahman"), "Aisha Rahman");
+    await userEvent.type(screen.getByPlaceholderText("+974 5555 1234"), "+974 5555 1234");
+    await userEvent.type(screen.getByPlaceholderText("hello@example.com"), "aisha@example.com");
+    await userEvent.type(screen.getByPlaceholderText("Villa 12, Street 30"), "Villa 12, Street 30");
+    fireEvent.change(screen.getByRole("combobox", { name: /area/i }), { target: { value: "Al Khor" } });
+  }
+
+  it("sends one request for a double tap, and the same key when the customer retries after a failure", async () => {
+    useCartStore.setState({ items: [plant(20)] });
+    let release: (value: unknown) => void = () => undefined;
+    const fetchMock = vi.fn()
+      .mockImplementationOnce(() => new Promise((_, reject) => { release = () => reject(new TypeError("Failed to fetch")); }))
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ orderNumber: "QL-20261112-RETRY1", subtotalQar: 20, items: [{ productId: "plant-1", productName: "Plant", quantity: 1, unitPriceQar: 20 }] }),
+      });
+    renderCheckout(fetchMock);
+    await fillForm();
+
+    const button = screen.getByRole("button", { name: "Place order" });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(await screen.findByRole("button", { name: /placing your order/i })).toBeDisabled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    release(undefined);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/couldn't reach QLeaves/i);
+    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+
+    await waitFor(() => expect(screen.getByText("Order placed")).toBeInTheDocument());
+    const keys = fetchMock.mock.calls.map((call) => (call[1].headers as Record<string, string>)["Idempotency-Key"]);
+    expect(keys[0]).toMatch(/^checkout-[\w-]{16,}$/);
+    expect(keys[1]).toBe(keys[0]);
+  });
+
+  it("explains a briefly unavailable shop instead of showing a raw error", async () => {
+    useCartStore.setState({ items: [plant(20)] });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ error: { code: "DATABASE_UNAVAILABLE", message: "x", requestId: "req_9" } }),
+    });
+    renderCheckout(fetchMock);
+    await fillForm();
+    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/briefly unavailable.*req_9/i);
+  });
 });

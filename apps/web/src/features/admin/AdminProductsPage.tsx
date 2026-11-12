@@ -5,6 +5,7 @@ import { FallbackImage } from "../../components/FallbackImage";
 import { ApiClientError } from "../../lib/api-error";
 import { useSiteLanguage } from "../../app/providers";
 import { adminApi, type AdminProduct, type AdminProductPatch, type CreateAdminProductFields } from "./admin-api";
+import { friendlyError } from "../../lib/friendly-error";
 
 const emptyForm: CreateAdminProductFields = {
   name: "", nameAr: "", slug: "", sku: "", description: "", descriptionAr: "", category: "Indoor", categoryAr: "داخلي", light: "", lightAr: "",
@@ -42,7 +43,7 @@ function ProductPhoto({ product }: { product: AdminProduct }) {
   const replace = useMutation({
     mutationFn: (file: File) => adminApi.replaceProductImage(product.id, file, product.image?.altText || product.name),
     onSuccess: (updated) => { setProblem(""); applyUpdate(updated); },
-    onError: (error) => setProblem(error instanceof Error ? error.message : isArabic ? "تعذر تغيير الصورة" : "Could not change the photo"),
+    onError: (error) => setProblem(friendlyError(error, isArabic ? "ar" : "en")),
   });
 
   function choose(file: File | undefined) {
@@ -96,7 +97,7 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
     mutationFn: (patch: AdminProductPatch) => adminApi.updateProduct(product.id, patch),
     scope: { id: `admin-product-${product.id}` },
     onSuccess: (updated) => { applyUpdate(updated); setMessage(t.saved); },
-    onError: (error) => setMessage(error instanceof Error ? error.message : t.failed),
+    onError: (error) => setMessage(friendlyError(error, isArabic ? "ar" : "en")),
   });
 
   useEffect(() => { setDraft(draftFor(product, language)); setMessage(""); }, [language]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -324,7 +325,7 @@ export function AdminProductsPage() {
       if (imageInput.current) imageInput.current.value = "";
       setFormError("");
     },
-    onError: (error) => setFormError(error instanceof Error ? error.message : t.addError),
+    onError: (error) => setFormError(friendlyError(error, isArabic ? "ar" : "en")),
   });
 
   function updateField(field: keyof typeof form, value: string | number) {
