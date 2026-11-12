@@ -380,10 +380,6 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 .page-root { position: relative; }
 body.has-floating-cart .main-content { padding-bottom: 150px; }
 
-/* Delivery is free; the note says so, with the areas checkout offers. */
-.delivery-note { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .5rem; margin: 0 0 var(--space-5); padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); color: var(--text-muted); font-size: .9rem; }
-.delivery-note strong { color: var(--moss); font-weight: 700; }
-
 /* Prices: the current price, and a struck-through earlier price with the saving only for a genuine reduction. */
 .product-price { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 .4rem; }
 .product-price__was { color: var(--text-soft); font-size: .8em; font-weight: 500; }

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { cartSubtotal, useCartStore } from "./cart-store";
 import { Seo } from "../../components/Seo";
-import { DeliveryNote } from "./DeliveryNote";
+import { FreeDeliveryProgress } from "./FreeDeliveryProgress";
 import { TrashIcon } from "../../components/icons";
 
 // A minus and a plus on either side of the number; the number can still be typed over.
@@ -64,7 +64,7 @@ export function CartPage() {
         <h1>{content.cart.title}</h1>
       </div>
 
-      <DeliveryNote />
+      <FreeDeliveryProgress subtotalQar={subtotal} />
 
       <div className="cart-layout">
         <div className="cart-list" aria-label={content.cart.title}>
