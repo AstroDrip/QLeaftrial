@@ -74,12 +74,22 @@ function ProductPhoto({ product }: { product: AdminProduct }) {
   );
 }
 
-type DetailsDraft = { name: string; category: string; light: string; description: string; costPrice: string };
+type DetailsDraft = {
+  name: string; category: string; light: string; description: string; costPrice: string; watering: string;
+  // English card only: shared details that are not translated.
+  scientificName: string; compareAt: string; careLevel: string; placement: string; reviewNote: string;
+  featured: boolean; needsReview: boolean;
+};
 
 function draftFor(product: AdminProduct, language: SiteLanguage): DetailsDraft {
+  const shared = {
+    costPrice: String(product.costPrice ?? ""), scientificName: product.scientificName ?? "", compareAt: product.compareAtPriceQar ? String(product.compareAtPriceQar) : "",
+    careLevel: product.careLevel ?? "", placement: product.placement ?? "", reviewNote: product.reviewNote ?? "",
+    featured: Boolean(product.featured), needsReview: Boolean(product.needsReview),
+  };
   return language === "ar"
-    ? { name: product.nameAr ?? "", category: product.categoryAr ?? "", light: product.lightAr ?? "", description: product.descriptionAr ?? "", costPrice: String(product.costPrice ?? "") }
-    : { name: product.name, category: product.category, light: product.light ?? "", description: product.description, costPrice: String(product.costPrice ?? "") };
+    ? { ...shared, name: product.nameAr ?? "", category: product.categoryAr ?? "", light: product.lightAr ?? "", description: product.descriptionAr ?? "", watering: product.wateringAr ?? "" }
+    : { ...shared, name: product.name, category: product.category, light: product.light ?? "", description: product.description, watering: product.watering ?? "" };
 }
 
 // Edits the language the card is currently showing: English fields (plus cost)
@@ -87,8 +97,14 @@ function draftFor(product: AdminProduct, language: SiteLanguage): DetailsDraft {
 function ProductDetailsEditor({ product, language }: { product: AdminProduct; language: SiteLanguage }) {
   const { isArabic } = useSiteLanguage();
   const t = isArabic
-    ? { title: language === "ar" ? "تعديل التفاصيل العربية" : "تعديل التفاصيل الإنجليزية", name: "الاسم", category: "الفئة", light: "الإضاءة (اتركها فارغة للإكسسوارات)", description: "الوصف", cost: "التكلفة (ر.ق)", save: "حفظ التفاصيل", saving: "جارٍ الحفظ…", saved: "تم حفظ التفاصيل", invalidCost: "يجب أن تكون التكلفة رقمًا صحيحًا غير سالب", nothing: "لا توجد تغييرات", failed: "تعذر حفظ التفاصيل" }
-    : { title: language === "ar" ? "Edit Arabic details" : "Edit details", name: "Name", category: "Category", light: "Light (leave empty for accessories)", description: "Description", cost: "Cost (QAR)", save: "Save details", saving: "Saving…", saved: "Details saved", invalidCost: "Cost must be a non-negative whole number", nothing: "No changes to save", failed: "Could not save details" };
+    ? { title: language === "ar" ? "تعديل التفاصيل العربية" : "تعديل التفاصيل الإنجليزية", name: "الاسم", category: "الفئة", light: "الإضاءة (اتركها فارغة للإكسسوارات)", description: "الوصف", cost: "التكلفة (ر.ق)", save: "حفظ التفاصيل", saving: "جارٍ الحفظ…", saved: "تم حفظ التفاصيل", invalidCost: "يجب أن تكون التكلفة رقمًا صحيحًا غير سالب", nothing: "لا توجد تغييرات", failed: "تعذر حفظ التفاصيل",
+        watering: "الري", scientific: "الاسم العلمي", compareAt: "السعر قبل التخفيض (ر.ق، اختياري)", invalidCompare: "يجب أن يكون السعر قبل التخفيض رقمًا صحيحًا موجبًا", care: "مستوى العناية", placement: "المكان", none: "غير محدد",
+        careLevels: { easy: "سهل", moderate: "متوسط", demanding: "يحتاج عناية" }, placements: { indoor: "داخلي", outdoor: "خارجي", "indoor-outdoor": "داخلي وخارجي" },
+        featured: "منتج مميز (يظهر في الصفحة الرئيسية)", needsReview: "يحتاج إلى مراجعة قبل النشر", reviewNote: "ملاحظة المراجعة (للإدارة فقط)" }
+    : { title: language === "ar" ? "Edit Arabic details" : "Edit details", name: "Name", category: "Category", light: "Light (leave empty for accessories)", description: "Description", cost: "Cost (QAR)", save: "Save details", saving: "Saving…", saved: "Details saved", invalidCost: "Cost must be a non-negative whole number", nothing: "No changes to save", failed: "Could not save details",
+        watering: "Watering", scientific: "Botanical name", compareAt: "Original price before a reduction (QAR, optional)", invalidCompare: "The original price must be a positive whole number", care: "Care level", placement: "Placement", none: "Not set",
+        careLevels: { easy: "Easy", moderate: "Moderate", demanding: "Needs attention" }, placements: { indoor: "Indoor", outdoor: "Outdoor", "indoor-outdoor": "Indoor or outdoor" },
+        featured: "Featured on the home page", needsReview: "Needs checking before publishing", reviewNote: "Review note (admin only)" };
   const [draft, setDraft] = useState(() => draftFor(product, language));
   const [message, setMessage] = useState("");
   const [open, setOpen] = useState(false);
@@ -105,8 +121,20 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
   function englishPatch(): AdminProductPatch | string {
     const cost = Number(draft.costPrice);
     if (draft.costPrice.trim() === "" || !Number.isInteger(cost) || cost < 0) return t.invalidCost;
+    const compareAt = draft.compareAt.trim() === "" ? null : Number(draft.compareAt);
+    if (compareAt !== null && (!Number.isInteger(compareAt) || compareAt <= 0)) return t.invalidCompare;
     const light = draft.light.trim() || null;
+    const optional = (value: string) => value.trim() || null;
+    const differs = (value: string | boolean | number | null, current: string | boolean | number | null | undefined) => value !== (current ?? null);
     return {
+      ...(differs(optional(draft.watering), product.watering) ? { watering: optional(draft.watering) } : {}),
+      ...(differs(optional(draft.scientificName), product.scientificName) ? { scientificName: optional(draft.scientificName) } : {}),
+      ...(differs(compareAt, product.compareAtPriceQar) ? { compareAtPriceQar: compareAt } : {}),
+      ...(differs(optional(draft.careLevel), product.careLevel) ? { careLevel: optional(draft.careLevel) as AdminProductPatch["careLevel"] } : {}),
+      ...(differs(optional(draft.placement), product.placement) ? { placement: optional(draft.placement) as AdminProductPatch["placement"] } : {}),
+      ...(differs(optional(draft.reviewNote), product.reviewNote) ? { reviewNote: optional(draft.reviewNote) } : {}),
+      ...(draft.featured !== Boolean(product.featured) ? { featured: draft.featured } : {}),
+      ...(draft.needsReview !== Boolean(product.needsReview) ? { needsReview: draft.needsReview } : {}),
       ...(draft.name.trim() !== product.name ? { name: draft.name.trim() } : {}),
       ...(draft.category.trim() !== product.category ? { category: draft.category.trim() } : {}),
       ...(light !== (product.light ?? null) ? { light } : {}),
@@ -123,6 +151,7 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
       ...(changed(draft.category, product.categoryAr) ? { categoryAr: draft.category.trim() } : {}),
       ...(changed(draft.light, product.lightAr) ? { lightAr: draft.light.trim() } : {}),
       ...(changed(draft.description, product.descriptionAr) ? { descriptionAr: draft.description.trim() } : {}),
+      ...(changed(draft.watering, product.wateringAr) ? { wateringAr: draft.watering.trim() } : {}),
     };
   }
 
@@ -135,7 +164,7 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
     save.mutate(patch);
   }
 
-  const field = (key: keyof DetailsDraft) => ({
+  const field = (key: Exclude<keyof DetailsDraft, "featured" | "needsReview">) => ({
     value: draft[key],
     onChange: (event: { target: { value: string } }) => setDraft((current) => ({ ...current, [key]: event.target.value })),
   });
@@ -152,6 +181,28 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
           <label>{t.light}<input maxLength={80} aria-label={`${product.name} ${suffix} light`} {...field("light")} /></label>
           {arabic ? null : <label>{t.cost}<input type="number" min="0" step="1" aria-label={`${product.name} cost`} {...field("costPrice")} /></label>}
           <label className="admin-product-details-form__full">{t.description}<textarea required={!arabic} minLength={10} maxLength={2000} aria-label={`${product.name} ${suffix} description`} {...field("description")} /></label>
+          <label>{t.watering}<input maxLength={200} aria-label={`${product.name} ${suffix} watering`} {...field("watering")} /></label>
+          {arabic ? null : (
+            <>
+              <label>{t.scientific}<input maxLength={120} dir="ltr" aria-label={`${product.name} botanical name`} {...field("scientificName")} /></label>
+              <label>{t.compareAt}<input type="number" min="1" step="1" aria-label={`${product.name} original price`} {...field("compareAt")} /></label>
+              <label>{t.care}
+                <select aria-label={`${product.name} care level`} {...field("careLevel")}>
+                  <option value="">{t.none}</option>
+                  {(Object.keys(t.careLevels) as Array<keyof typeof t.careLevels>).map((key) => <option key={key} value={key}>{t.careLevels[key]}</option>)}
+                </select>
+              </label>
+              <label>{t.placement}
+                <select aria-label={`${product.name} placement`} {...field("placement")}>
+                  <option value="">{t.none}</option>
+                  {(Object.keys(t.placements) as Array<keyof typeof t.placements>).map((key) => <option key={key} value={key}>{t.placements[key]}</option>)}
+                </select>
+              </label>
+              <label className="admin-product-details-form__check"><input type="checkbox" checked={draft.featured} onChange={(event) => setDraft((current) => ({ ...current, featured: event.target.checked }))} />{t.featured}</label>
+              <label className="admin-product-details-form__check"><input type="checkbox" checked={draft.needsReview} onChange={(event) => setDraft((current) => ({ ...current, needsReview: event.target.checked }))} />{t.needsReview}</label>
+              <label className="admin-product-details-form__full">{t.reviewNote}<input maxLength={500} aria-label={`${product.name} review note`} {...field("reviewNote")} /></label>
+            </>
+          )}
           <div className="admin-product-details-form__actions">
             <button type="submit" className="primary-button" disabled={save.isPending}>{save.isPending ? t.saving : t.save}</button>
             <span aria-live="polite" role={save.isError ? "alert" : undefined}>{message}</span>
@@ -263,6 +314,17 @@ function ProductRow({ product }: { product: AdminProduct }) {
           </button>
         </div>
 
+        {product.featured || product.needsReview ? (
+          <p className="admin-product-card__flags">
+            {product.featured ? <span className="admin-flag admin-flag--featured">{adminIsArabic ? "مميز" : "Featured"}</span> : null}
+            {product.needsReview ? (
+              <span className="admin-flag admin-flag--review" title={product.reviewNote ?? undefined}>
+                {adminIsArabic ? "يحتاج مراجعة" : "Needs review"}{product.reviewNote ? `: ${product.reviewNote}` : ""}
+              </span>
+            ) : null}
+          </p>
+        ) : null}
+
         <div className="admin-product-card__details" dir={isArabic ? "rtl" : "ltr"} lang={cardLanguage}>
           <h2 className="admin-product-card__name">{shownName}</h2>
           <p className="admin-product-card__meta">
@@ -309,6 +371,7 @@ export function AdminProductsPage() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"all" | "drafts" | "review" | "featured">("all");
   const [formOpen, setFormOpen] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -369,10 +432,18 @@ export function AdminProductsPage() {
     });
   }
 
+  const views = {
+    all: { label: isArabic ? "الكل" : "All", test: () => true },
+    drafts: { label: isArabic ? "غير منشور" : "Unpublished", test: (p: AdminProduct) => p.published === false },
+    review: { label: isArabic ? "يحتاج مراجعة" : "Needs review", test: (p: AdminProduct) => Boolean(p.needsReview) },
+    featured: { label: isArabic ? "مميز" : "Featured", test: (p: AdminProduct) => Boolean(p.featured) },
+  } as const;
   const filteredProducts = (products.data ?? []).filter((p) =>
-    search.trim() === "" ||
-    p.name.toLowerCase().includes(search.trim().toLowerCase()) ||
-    (p.nameAr ?? "").includes(search.trim())
+    views[view].test(p) && (
+      search.trim() === "" ||
+      p.name.toLowerCase().includes(search.trim().toLowerCase()) ||
+      (p.nameAr ?? "").includes(search.trim()) ||
+      (p.scientificName ?? "").toLowerCase().includes(search.trim().toLowerCase()))
   );
 
   return (
@@ -424,7 +495,14 @@ export function AdminProductsPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-          {search && (
+          <div className="segmented admin-products-views" role="group" aria-label={isArabic ? "عرض المنتجات" : "Show products"}>
+            {(Object.keys(views) as Array<keyof typeof views>).map((key) => (
+              <button key={key} type="button" aria-pressed={view === key} onClick={() => setView(key)}>
+                {views[key].label} <span className="admin-products-views__count">{(products.data ?? []).filter(views[key].test).length}</span>
+              </button>
+            ))}
+          </div>
+          {(search || view !== "all") && (
             <p className="admin-products-search__count" aria-live="polite">
               {filteredProducts.length} of {products.data?.length ?? 0} products
             </p>
@@ -434,8 +512,8 @@ export function AdminProductsPage() {
         <ul className="admin-product-list">
           {filteredProducts.map((product) => <ProductRow key={product.id} product={product} />)}
         </ul>
-        {filteredProducts.length === 0 && search && products.data && products.data.length > 0 ? (
-          <p className="admin-products-search__empty">No products match "{search}".</p>
+        {filteredProducts.length === 0 && (search || view !== "all") && products.data && products.data.length > 0 ? (
+          <p className="admin-products-search__empty">{isArabic ? "لا توجد منتجات مطابقة." : search ? `No products match "${search}".` : "No products in this view."}</p>
         ) : null}
         {products.isPending ? <p>{t.loading}</p> : null}
         {products.isError ? <p role="alert">{t.loadError}</p> : null}

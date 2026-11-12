@@ -221,5 +221,30 @@ describe("AdminProductsPage", () => {
     expect(click).toHaveBeenCalled();
     expect(photo.querySelector("img")).not.toBeNull();
   });
-});
 
+  it("edits the featured flag, original price, care details and review flag, and filters by them", async () => {
+    const draft = { ...product, id: "plant-2", slug: "calathea", name: "Calathea Ornata", published: false, needsReview: true, reviewNote: "Confirm the variety" };
+    vi.mocked(adminApi.products).mockResolvedValue([product, draft]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+
+    expect(await screen.findByText(/needs review: confirm the variety/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /needs review 1/i }));
+    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toContain("Calathea Ornata");
+    expect(screen.queryByRole("heading", { name: "Monstera" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^all 2/i }));
+
+    const card = screen.getByRole("heading", { name: "Monstera" }).closest("li")!;
+    await user.click(within(card).getByText("Edit details"));
+    await user.click(within(card).getByLabelText(/featured on the home page/i));
+    await user.type(within(card).getByLabelText(/monstera original price/i), "220");
+    await user.selectOptions(within(card).getByLabelText(/monstera care level/i), "easy");
+    await user.type(within(card).getByLabelText(/monstera botanical name/i), "Monstera deliciosa");
+    await user.click(within(card).getByRole("button", { name: /save details/i }));
+
+    expect(adminApi.updateProduct).toHaveBeenCalledWith("plant-1", {
+      featured: true, compareAtPriceQar: 220, careLevel: "easy", scientificName: "Monstera deliciosa",
+    });
+  });
+});

@@ -18,6 +18,15 @@ export interface AdminProduct {
   stock: number;
   image?: { url: string; altText: string } | null;
   published?: boolean;
+  compareAtPriceQar?: number | null;
+  featured?: boolean;
+  scientificName?: string | null;
+  watering?: string | null;
+  wateringAr?: string | null;
+  careLevel?: "easy" | "moderate" | "demanding" | null;
+  placement?: "indoor" | "outdoor" | "indoor-outdoor" | null;
+  needsReview?: boolean;
+  reviewNote?: string | null;
 }
 
 export interface CreateAdminProductFields {
@@ -50,6 +59,15 @@ export type AdminProductPatch = Partial<{
   descriptionAr: string;
   categoryAr: string;
   lightAr: string;
+  compareAtPriceQar: number | null;
+  featured: boolean;
+  scientificName: string | null;
+  watering: string | null;
+  wateringAr: string;
+  careLevel: "easy" | "moderate" | "demanding" | null;
+  placement: "indoor" | "outdoor" | "indoor-outdoor" | null;
+  needsReview: boolean;
+  reviewNote: string | null;
 }>;
 
 export interface StagedProductImage {
