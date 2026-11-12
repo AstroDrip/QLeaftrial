@@ -1,17 +1,14 @@
-/* Hero: the room photograph with the text on the bare wall between the plants. */
-.botanical-hero {
-  /* Where the bare wall runs, as a share of the photo's width. */
-  --wall-start: 35.5%;
-  --wall-end: 70.5%;
-  position: relative;
-  overflow: hidden;
-  background: #efe2c9;
-}
-.botanical-hero__photo img { display: block; width: 100%; height: auto; }
+/* Hero: a room photograph with the text on its bare wall. The photo always fills the hero and the text
+   column is pinned to where the photo has empty wall, so no word or button ever sits over a leaf. */
+.botanical-hero { position: relative; overflow: hidden; width: 100%; background: #efe2c9; }
+.botanical-hero__photo, .botanical-hero__photo img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.botanical-hero__photo img { display: block; object-fit: cover; }
 .botanical-hero__copy {
+  position: absolute;
+  z-index: 1;
   display: grid;
   justify-items: center;
-  gap: var(--space-4);
+  align-content: center;
   text-align: center;
   animation: botanical-copy-in 700ms var(--ease-out) both;
 }
@@ -19,36 +16,42 @@
 .botanical-hero__copy .eyebrow { margin: 0; }
 .botanical-hero h1 { margin: 0; font-weight: 400; line-height: 1.05; text-wrap: balance; }
 .botanical-hero__lead { margin: 0; color: var(--text-muted); text-wrap: pretty; }
-.botanical-hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-2); }
+.botanical-hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
 .botanical-hero__cta { min-width: 11rem; }
 
-/* Wide screens: the photo fills the hero at its own proportions (at most one screen tall, trimming only
-   floor and ceiling), and the text column sits exactly over the bare wall. */
-@media (min-width: 901px) {
-  /* Full width always; as tall as the photo's proportions allow, but never taller than the screen. */
-  .botanical-hero { width: 100%; height: min(calc(100vw * 768 / 1376), calc(100svh - var(--header-height))); min-height: 460px; }
-  .botanical-hero__photo, .botanical-hero__photo img { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .botanical-hero__photo img { object-fit: cover; object-position: 50% 62%; }
+/* Wide screens: the landscape photo, full width, as tall as its proportions allow but never taller than
+   the screen (only floor and ceiling are trimmed). Text over the bare wall, 35.5%-70.5% of the width. */
+@media (min-width: 601px) {
+  .botanical-hero { height: min(calc(100vw * 768 / 1376), calc(100svh - var(--header-height))); min-height: 420px; }
+  .botanical-hero__photo img { object-position: 50% 62%; }
   .botanical-hero__copy {
-    position: absolute;
     inset-block: 0;
-    left: var(--wall-start);
-    right: calc(100% - var(--wall-end));
-    z-index: 1;
-    align-content: center;
-    padding: var(--space-6) clamp(.5rem, 1.5vw, 1.5rem) var(--space-7);
-    gap: clamp(.6rem, 1.2vw, 1rem);
+    left: 35.5%;
+    right: 29.5%;
+    padding: var(--space-5) clamp(.25rem, 1.5vw, 1.5rem) var(--space-6);
+    gap: clamp(.5rem, 1.2vw, 1rem);
   }
-  .botanical-hero h1 { max-width: 12ch; font-size: clamp(2rem, 3.5vw, 4.25rem); }
-  .botanical-hero__lead { max-width: 34ch; font-size: clamp(.95rem, 1.15vw, 1.15rem); }
+  .botanical-hero__copy .eyebrow { font-size: clamp(.6rem, 1.05vw, .8rem); white-space: nowrap; }
+  .botanical-hero h1 { max-width: 12ch; font-size: clamp(1.6rem, 3.5vw, 4.25rem); }
+  .botanical-hero__lead { max-width: 34ch; font-size: clamp(.85rem, 1.15vw, 1.15rem); }
+  .botanical-hero__actions { margin-top: var(--space-1); }
 }
 
-/* Narrow screens: headline first on the wall colour, then the whole photo. */
-@media (max-width: 900px) {
-  .botanical-hero { display: flex; flex-direction: column-reverse; }
-  .botanical-hero__copy { padding: var(--space-6) var(--gutter) var(--space-5); }
-  .botanical-hero h1 { max-width: 13ch; font-size: var(--step-4); }
-  .botanical-hero__lead { max-width: 40ch; font-size: var(--step-1); }
+/* Phones: the tall photo at its own proportions (896 x 1200). The text sits on the empty upper wall:
+   from the top down to 58% of the height, above the tallest leaves at about 61%. */
+@media (max-width: 600px) {
+  .botanical-hero { aspect-ratio: 896 / 1200; }
+  .botanical-hero__photo img { object-position: 50% 100%; }
+  .botanical-hero__copy {
+    inset: 0 7% 42% 7%;
+    padding-top: 2%;
+    gap: clamp(.45rem, 2.4vw, .75rem);
+  }
+  .botanical-hero__copy .eyebrow { font-size: clamp(.62rem, 2.8vw, .75rem); }
+  .botanical-hero h1 { max-width: 14ch; font-size: clamp(1.6rem, 8.2vw, 2.6rem); }
+  .botanical-hero__lead { max-width: 30ch; font-size: clamp(.82rem, 3.7vw, 1rem); line-height: 1.45; }
+  .botanical-hero__actions { margin-top: .15rem; }
+  .botanical-hero__cta { min-width: 9.5rem; min-height: 44px; padding-block: .55rem; }
 }
 
 @keyframes botanical-copy-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
