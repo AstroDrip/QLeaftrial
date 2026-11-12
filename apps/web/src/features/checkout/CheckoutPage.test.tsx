@@ -40,23 +40,16 @@ describe("CheckoutPage", () => {
     expect(summary).toHaveTextContent("Total20 QAR");
   });
 
-  it("encourages a bigger basket for free delivery but still lets a small order through", async () => {
+  it("says delivery is free whatever the basket size, as checkout charges it", async () => {
     useCartStore.setState({ items: [plant(20)] });
     renderCheckout();
 
-    expect(await screen.findByText("Add 130 QAR more to get free delivery")).toBeInTheDocument();
-    expect(screen.getByText("Free delivery on orders of 150 QAR or more")).toBeInTheDocument();
+    expect(await screen.findByTestId("delivery-note")).toHaveTextContent(/free delivery to Doha, Al Rayyan, Al Wakrah and Al Khor/i);
+    expect(screen.queryByText(/more to get free delivery|150 QAR/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Place order" })).toBeEnabled();
   });
 
-  it("tells the customer when they have unlocked free delivery", async () => {
-    useCartStore.setState({ items: [plant(75, 2)] });
-    renderCheckout();
-
-    expect(await screen.findByText("You\u2019ve unlocked free delivery!")).toBeInTheDocument();
-  });
-
-  it("places an order below the free-delivery amount without sending any delivery charge", async () => {
+  it("places a small order without sending any delivery charge", async () => {
     useCartStore.setState({ items: [plant(20)] });
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

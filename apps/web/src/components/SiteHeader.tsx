@@ -6,7 +6,6 @@ import { BagIcon } from "./icons";
 import { LeafMenuIcon } from "./LeafMenuIcon";
 import { useSiteLanguage, useStoreSettings } from "../app/providers";
 import { useCartStore } from "../features/cart/cart-store";
-import { useFreeDeliveryController } from "../features/cart/free-delivery-store";
 import { prefetchRoute } from "../app/route-modules";
 
 // The inline links only fit on wide screens; below this the centred menu takes over.
@@ -34,7 +33,6 @@ export function SiteHeader() {
   const { content, isArabic } = useSiteLanguage();
   const settings = useStoreSettings();
   const orderingEnabled = settings.data?.orderingEnabled ?? true;
-  useFreeDeliveryController();
   const { pathname } = useLocation();
   const cartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const menuMode = useMediaQuery(`(max-width: ${MENU_MAX}px)`);

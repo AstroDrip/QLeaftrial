@@ -5,7 +5,7 @@ import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
 import { errorFromResponse } from "../../lib/api-error";
 import { rememberOrderSummary, type OrderSummary } from "./order-summary";
-import { FreeDeliveryProgress } from "../cart/FreeDeliveryProgress";
+import { DeliveryNote } from "../cart/DeliveryNote";
 import { friendlyError } from "../../lib/friendly-error";
 
 type PlacedOrderResponse = {
@@ -111,7 +111,7 @@ export function CheckoutPage() {
 
       <p className="page-shell__lead">{content.checkout.guestNotice}</p>
 
-      <FreeDeliveryProgress subtotalQar={cartSubtotal(items)} />
+      <DeliveryNote />
 
       {error ? <p role="alert">{error}</p> : null}
       <form className="checkout-form" onSubmit={handleSubmit}>

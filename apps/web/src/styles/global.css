@@ -379,3 +379,7 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 /* Page root anchors the docked floating cart; the extra padding keeps it off the last row of products. */
 .page-root { position: relative; }
 body.has-floating-cart .main-content { padding-bottom: 150px; }
+
+/* Delivery is free; the note says so, with the areas checkout offers. */
+.delivery-note { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .5rem; margin: 0 0 var(--space-5); padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); color: var(--text-muted); font-size: .9rem; }
+.delivery-note strong { color: var(--moss); font-weight: 700; }

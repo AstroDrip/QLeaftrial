@@ -3,7 +3,6 @@ import { Outlet } from "react-router-dom";
 import { useSiteLanguage } from "../app/providers";
 import { prefetchLikelyRoutes } from "../app/route-modules";
 import { FloatingCartBar } from "../features/cart/FloatingCartBar";
-import { FreeDeliveryFlyer } from "../features/cart/FreeDeliveryFlyer";
 import { Footer } from "./Footer";
 import { SkipLink } from "./SkipLink";
 import { SiteHeader } from "./SiteHeader";
@@ -22,7 +21,6 @@ export function Layout({ children }: { children?: ReactNode }) {
         {children ?? <Outlet />}
       </main>
       <FloatingCartBar footer={footer} />
-      <FreeDeliveryFlyer />
       <Footer ref={footer} />
     </div>
   );

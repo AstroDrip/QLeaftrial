@@ -3,8 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { BagIcon } from "../../components/icons";
 import { cartSubtotal, useCartStore } from "./cart-store";
-import { FreeDeliveryProgress } from "./FreeDeliveryProgress";
-import { FREE_DELIVERY_THRESHOLD_QAR } from "./free-delivery-store";
 
 const HIDDEN_ON = /^\/(cart|checkout|order\/|invoice\/)/;
 
@@ -56,13 +54,11 @@ export function FloatingCartBar({ footer }: { footer: RefObject<HTMLElement | nu
   const { className, footerHeight } = floatingCartStyle(placement);
   const label = (isArabic
     ? `فتح السلة، ${count} منتجات، المجموع ${total} ر.ق`
-    : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`)
-    + (total >= FREE_DELIVERY_THRESHOLD_QAR ? (isArabic ? "، توصيل مجاني" : ", free delivery unlocked") : "");
+    : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`);
 
   return (
     <div className={className} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined}>
-      <FreeDeliveryProgress subtotalQar={total} compact />
-      <Link to="/cart" className="floating-cart__button" aria-label={label} data-testid="floating-cart" data-fd-target="floating">
+      <Link to="/cart" className="floating-cart__button" aria-label={label} data-testid="floating-cart">
         <BagIcon />
         <span className="floating-cart__total" aria-hidden="true">{total} QAR</span>
       </Link>

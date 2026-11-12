@@ -30,12 +30,11 @@ describe("FloatingCartBar", () => {
   it("names the action, item count and total for assistive technology", () => {
     useCartStore.setState({ items: [item] });
     renderAt("/shop");
-    // 240 QAR is over the free-delivery goal, which the name says too.
-    const button = screen.getByRole("link", { name: "Open cart, 2 items, total 240 QAR, free delivery unlocked" });
+    const button = screen.getByRole("link", { name: "Open cart, 2 items, total 240 QAR" });
     expect(button).toHaveAttribute("href", "/cart");
   });
 
-  it("does not claim free delivery below the goal", () => {
+  it("names a single item in the singular", () => {
     useCartStore.setState({ items: [{ ...item, priceQar: 50, quantity: 1 }] });
     renderAt("/shop");
     expect(screen.getByRole("link", { name: "Open cart, 1 item, total 50 QAR" })).toBeInTheDocument();
