@@ -71,16 +71,28 @@ GOOGLE_PRIVATE_KEY=<private_key from the JSON key, pasted as-is>
 
 Use Supavisor transaction mode on port `6543` for serverless `DATABASE_URL`; with Prisma 6, append `pgbouncer=true&connection_limit=1`. Percent-encode reserved password characters. Use the direct endpoint or Supavisor session mode on port `5432` for administrative `DIRECT_URL`.
 
-From a trusted shell, set `DATABASE_URL`, `DIRECT_URL`, `QLEAVES_DATABASE_PROVIDER=postgresql`, and a strong temporary `QLEAVES_ADMIN_SEED_PASSWORD`, then deliberately run:
+The running app talks to PostgreSQL through `pg` and Prisma's `PrismaPg` adapter with a pool of one connection per function instance (`DB_POOL_MAX`, capped at 5, raises it). `pg` sends unnamed statements, which the transaction pooler supports. Keep the Vercel function region (`fra1` in `vercel.json`) next to the Supabase project's region; check the region under Supabase → Project Settings → General and change `regions` only if they differ.
+
+### Schema changes: versioned migrations
+
+Production schema changes are versioned migrations in `apps/api/prisma/postgresql/migrations`, applied with `prisma migrate deploy`. `db push` is no longer used. `0_init` is the schema that production already had (created earlier with `db push`); later folders are additive changes.
+
+One time only, a database created with `db push` is told that `0_init` is already applied. From a trusted shell with `DATABASE_URL`, `DIRECT_URL` and `QLEAVES_DATABASE_PROVIDER=postgresql` set:
 
 ```bash
-npm run supabase:generate
-npm run supabase:validate
-npm run supabase:deploy
-npm run supabase:seed
+npm run supabase:check      # read-only: prints what differs from the schema; expect only the idempotency key
+npm run supabase:baseline   # records 0_init as applied (writes only Prisma's _prisma_migrations table)
+npm run supabase:deploy     # applies the pending migrations (1_order_idempotency_key: a nullable column and an index)
+npm run supabase:status     # should report the database schema is up to date
 ```
 
-`supabase:deploy` never accepts data loss automatically. Review every schema warning. Seeding is separate from Vercel builds; remove `QLEAVES_ADMIN_SEED_PASSWORD` immediately afterward and do not configure it as an application runtime variable.
+If `supabase:check` reports anything other than the idempotency key, stop and review it before baselining. After the baseline, every later schema change is just `npm run supabase:deploy`. `docs/deployment/operator-checklist.md` has the same steps for PowerShell.
+
+Seeding is separate and never part of a deploy: `npm run supabase:seed` needs a strong temporary `QLEAVES_ADMIN_SEED_PASSWORD` (and `ALLOW_PRODUCTION_SEED=true` when `NODE_ENV=production`); it never overwrites existing products, stock or photos. Remove the seed password immediately afterward and do not configure it as an application runtime variable.
+
+### Public catalogue snapshot
+
+`npm run vercel-build` writes `apps/web/public/catalogue/catalogue.json` from the published products (read-only) before building the storefront. It is the last-resort copy behind the CDN-cached `/api/v1/catalogue`. If the database cannot be reached during the build, the snapshot is skipped and the build carries on. The file is git-ignored; never commit it.
 
 ## Deployment checks
 
@@ -90,10 +102,12 @@ After deployment, request these in order:
 https://YOUR_DEPLOYMENT/api/v1/health
 https://YOUR_DEPLOYMENT/api/v1/ready
 https://YOUR_DEPLOYMENT/api/v1/products?page=1
+https://YOUR_DEPLOYMENT/api/v1/catalogue
+https://YOUR_DEPLOYMENT/api/v1/reviews
 https://YOUR_DEPLOYMENT/sitemap.xml
 ```
 
-`health` verifies function routing, `ready` verifies schema reachability, `products` verifies the public query, and `sitemap.xml` verifies dynamic SEO routing. Preserve the `x-request-id` response header when investigating an error; use it to find the matching structured Vercel log without searching for customer data.
+`health` verifies function routing, `ready` verifies schema reachability, `products` and `catalogue` verify the public queries (both should carry `s-maxage=60, stale-while-revalidate`), `reviews` verifies the Review table, and `sitemap.xml` verifies dynamic SEO routing. A database outage answers `503 DATABASE_UNAVAILABLE` with a request ID rather than a generic 500. Preserve the `x-request-id` response header when investigating an error; use it to find the matching structured Vercel log without searching for customer data.
 
 If an API URL returns the React document, confirm the Root Directory and dashboard overrides. If `health` succeeds but `ready` fails, use the request ID to inspect connection/schema errors and run schema commands only against the explicitly intended database.
 

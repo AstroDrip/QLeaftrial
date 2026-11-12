@@ -15,3 +15,6 @@ test-results/
 
 # Public catalogue snapshot: written at build time from the database, never committed.
 apps/web/public/catalogue/
+
+# Local run logs
+*.log
