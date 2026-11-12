@@ -1,6 +1,7 @@
 import type { SiteLanguage } from "../../content/locales";
 import type { CatalogueMedia, CatalogueProduct } from "./catalogue-types";
 import type { ProductListParams, ProductListResponse, ProductMedia, ProductSummary } from "./product-types";
+import { searchProducts } from "./search";
 
 // Answers a product-list query from the saved catalogue the same way the API would (same filters, search
 // fields, sort orders and page size), so switching from saved to live data never reshuffles the page.
@@ -43,17 +44,15 @@ export function catalogueProductToSummary(product: CatalogueProduct, language: S
   };
 }
 
+// With a search, products in best-match order (the API's ranking); without one, all of them.
+function searchCatalogue(products: CatalogueProduct[], query: string | undefined): CatalogueProduct[] {
+  if (!query?.trim()) return products;
+  const byId = new Map(products.map((product) => [product.id, product]));
+  return searchProducts(products, query).flatMap((hit) => byId.get(hit.id) ?? []);
+}
+
 export function filterCatalogue(products: CatalogueProduct[], params: ProductListParams): CatalogueProduct[] {
-  const query = params.q?.trim().toLocaleLowerCase();
-  return products.filter((product) => {
-    if (query) {
-      // The API searches English and Arabic names and descriptions, and the slug.
-      const haystack = [product.name, product.description, product.nameAr, product.descriptionAr, product.slug, product.scientificName, product.category, product.categoryAr]
-        .filter((value): value is string => typeof value === "string")
-        .join(" ")
-        .toLocaleLowerCase();
-      if (!haystack.includes(query)) return false;
-    }
+  return searchCatalogue(products, params.q).filter((product) => {
     if (params.category && product.category !== params.category) return false;
     if (params.light && product.light !== params.light) return false;
     if (params.inStock && !product.inStock) return false;
@@ -65,6 +64,8 @@ export function filterCatalogue(products: CatalogueProduct[], params: ProductLis
 }
 
 export function sortCatalogue(products: CatalogueProduct[], sort: ProductListParams["sort"]): CatalogueProduct[] {
+  // Best match: filterCatalogue already returns search results in ranked order.
+  if (sort === "relevance") return products;
   return [...products].sort((a, b) => {
     if (sort === "price-asc") return a.priceQar - b.priceQar || a.slug.localeCompare(b.slug);
     if (sort === "price-desc") return b.priceQar - a.priceQar || a.slug.localeCompare(b.slug);
@@ -75,7 +76,8 @@ export function sortCatalogue(products: CatalogueProduct[], sort: ProductListPar
 }
 
 export function catalogueListResponse(products: CatalogueProduct[], params: ProductListParams): ProductListResponse {
-  const sorted = sortCatalogue(filterCatalogue(products, params), params.sort);
+  const sort = params.sort ?? (params.q?.trim() ? "relevance" : "newest");
+  const sorted = sortCatalogue(filterCatalogue(products, params), sort);
   const totalItems = sorted.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const page = Math.min(Math.max(params.page ?? 1, 1), totalPages);

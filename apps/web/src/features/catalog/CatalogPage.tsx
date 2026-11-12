@@ -14,6 +14,7 @@ import "./catalog.css";
 import { friendlyError } from "../../lib/friendly-error";
 
 const SORT_OPTIONS = [
+  { value: "relevance", label: "sortRelevance" },
   { value: "newest", label: "sortNewest" },
   { value: "featured", label: "sortFeatured" },
   { value: "name-asc", label: "sortNameAsc" },
@@ -53,10 +54,13 @@ export function CatalogPage() {
   useEffect(() => { setSearchValue(searchParams.get("q") ?? ""); }, [searchParams]);
 
   const requestedSort = searchParams.get("sort");
+  const searching = Boolean(searchParams.get("q")?.trim());
+  // Searching: best match first unless another order is chosen. Browsing: newest first.
+  const defaultSort: ProductListParams["sort"] = searching ? "relevance" : "newest";
   const sort: ProductListParams["sort"] =
-    SORT_OPTIONS.some((option) => option.value === requestedSort) && (orderingEnabled || !requestedSort?.startsWith("price"))
+    SORT_OPTIONS.some((option) => option.value === requestedSort) && (orderingEnabled || !requestedSort?.startsWith("price")) && (searching || requestedSort !== "relevance")
       ? requestedSort as ProductListParams["sort"]
-      : "newest";
+      : defaultSort;
   const priceRange = PRICE_RANGES.find((range) => range.value === searchParams.get("price"));
   const category = searchParams.get("category") || undefined;
   const light = searchParams.get("light") || undefined;
@@ -217,8 +221,8 @@ export function CatalogPage() {
           ) : null}
           <label>
             <span>{t.sortBy}</span>
-            <select value={sort} onChange={(event) => update({ sort: event.target.value === "newest" ? undefined : event.target.value })} data-testid="sort-select">
-              {SORT_OPTIONS.filter((option) => orderingEnabled || !option.value.startsWith("price")).map((option) => (
+            <select value={sort} onChange={(event) => update({ sort: event.target.value === defaultSort ? undefined : event.target.value })} data-testid="sort-select">
+              {SORT_OPTIONS.filter((option) => (orderingEnabled || !option.value.startsWith("price")) && (searching || option.value !== "relevance")).map((option) => (
                 <option key={option.value} value={option.value}>{t[option.label]}</option>
               ))}
             </select>

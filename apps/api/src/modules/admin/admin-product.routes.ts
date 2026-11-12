@@ -5,11 +5,17 @@ import { createAdminProductSchema, productUploadMetadataSchema, replaceProductIm
 import { createAdminProduct, deleteAdminProduct, listAdminProducts, replaceAdminProductImages, updateAdminProduct } from "./admin-product.service.js";
 import { authorizeProductUpload } from "./product-upload.service.js";
 import { consumeRateLimit } from "../../lib/rate-limit.js";
+import { invalidateProductSearchIndex } from "../products/product-search-index.js";
 
 export const adminProductRouter = Router();
 
 adminProductRouter.use("/admin/products", requireAdmin);
 adminProductRouter.use("/admin/product-uploads", requireAdmin);
+// Any change to a product refreshes the search index on this server (other servers refresh within a minute).
+adminProductRouter.use("/admin/products", (request, _response, next) => {
+  if (request.method !== "GET") invalidateProductSearchIndex();
+  next();
+});
 
 adminProductRouter.post("/admin/product-uploads", async (request, response) => {
   const parsed = productUploadMetadataSchema.safeParse(request.body);

@@ -90,6 +90,8 @@ model Product {
   // Admin-only: an identification or detail the shop still has to confirm before publishing.
   needsReview Boolean        @default(false)
   reviewNote  String?
+  // Extra words customers may search with (other spellings, local names), comma or line separated.
+  searchAliases String?
   media       ProductMedia[]
   inventory   Inventory?
   orderItems  OrderItem[]

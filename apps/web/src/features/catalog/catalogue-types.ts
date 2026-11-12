@@ -30,6 +30,7 @@ export interface CatalogueProduct {
   compareAtPriceQar?: number | null;
   featured?: boolean;
   scientificName?: string | null;
+  searchAliases?: string | null;
   careLevel?: string | null;
   placement?: string | null;
   image: CatalogueMedia | null;

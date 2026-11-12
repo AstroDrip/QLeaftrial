@@ -33,6 +33,8 @@ export interface PublicCatalogueProduct {
   compareAtPriceQar: number | null;
   featured: boolean;
   scientificName: string | null;
+  // Extra search words set in admin, so the storefront can search its saved copy the way the API does.
+  searchAliases: string | null;
   careLevel: string | null;
   placement: string | null;
   watering: string | null;
@@ -75,6 +77,7 @@ const publicProductSelection = {
   compareAtPriceQar: true,
   featured: true,
   scientificName: true,
+  searchAliases: true,
   careLevel: true,
   placement: true,
   watering: true,
@@ -105,6 +108,7 @@ function mapProduct(record: {
   compareAtPriceQar: number | null;
   featured: boolean;
   scientificName: string | null;
+  searchAliases: string | null;
   careLevel: string | null;
   placement: string | null;
   watering: string | null;
@@ -144,6 +148,7 @@ function mapProduct(record: {
     compareAtPriceQar: record.compareAtPriceQar && record.compareAtPriceQar > record.priceQar ? record.compareAtPriceQar : null,
     featured: record.featured,
     scientificName: record.scientificName,
+    searchAliases: record.searchAliases?.trim() || null,
     careLevel: record.careLevel,
     placement: record.placement,
     watering: record.watering,

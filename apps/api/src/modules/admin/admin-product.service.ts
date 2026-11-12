@@ -27,6 +27,7 @@ const adminProductSelection = {
   placement: true,
   needsReview: true,
   reviewNote: true,
+  searchAliases: true,
   media: {
     select: { url: true, altText: true },
     orderBy: { sortOrder: "asc" },
@@ -58,6 +59,7 @@ type AdminProductRecord = {
   placement: string | null;
   needsReview: boolean;
   reviewNote: string | null;
+  searchAliases: string | null;
   media: Array<{ url: string; altText: string }>;
   inventory: { quantity: number } | null;
 };
@@ -87,6 +89,7 @@ export type AdminProduct = {
   placement: string | null;
   needsReview: boolean;
   reviewNote: string | null;
+  searchAliases: string | null;
 };
 
 type AdminProductRepository = {
@@ -121,6 +124,7 @@ type AdminProductCreateRepository = {
       placement?: string | null;
       needsReview?: boolean;
       reviewNote?: string | null;
+      searchAliases?: string | null;
       inventory: { create: { quantity: number } };
       media: { create: Array<{
         url: string;
@@ -156,6 +160,7 @@ type ProductUpdateData = {
   placement?: string | null;
   needsReview?: boolean;
   reviewNote?: string | null;
+  searchAliases?: string | null;
 };
 
 type TransactionClient = {
@@ -228,6 +233,7 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
     placement: product.placement,
     needsReview: product.needsReview,
     reviewNote: product.reviewNote,
+    searchAliases: product.searchAliases,
   };
 }
 
@@ -357,7 +363,7 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         costPrice: input.costPrice,
         published: true,
         ...Object.fromEntries(
-          (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "careLevel", "placement", "needsReview", "reviewNote"] as const)
+          (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "careLevel", "placement", "needsReview", "reviewNote", "searchAliases"] as const)
             .filter((key) => input[key] !== undefined)
             .map((key) => [key, input[key]]),
         ),

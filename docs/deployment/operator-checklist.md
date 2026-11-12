@@ -74,3 +74,21 @@ Then:
 Look up the region in Supabase → Project Settings → General. The site's server runs in Mumbai (`bom1`), next to the Mumbai Supabase project (moved from Frankfurt on 12 November 2026).
 If Supabase is somewhere else (for example Mumbai or Singapore), say so: moving the server next to the
 database makes every page faster.
+
+## 4. Before pushing the multilingual search (November 2026)
+
+Search reads one new column, `searchAliases` (extra search words set in admin). Add it to the Mumbai
+database **before** the code goes live: the new code asks for that column, so without it the shop's product
+pages and search would fail. It is additive (one empty, nullable column); no existing data changes.
+
+```powershell
+cd C:\Users\HP\Desktop\qleaves
+$env:QLEAVES_DATABASE_PROVIDER = "postgresql"
+$env:DATABASE_URL = Read-Host "Mumbai pooled connection string (port 6543)"
+$env:DIRECT_URL = Read-Host "Mumbai direct connection string (port 5432)"
+npm run supabase:deploy
+npm run supabase:status
+Remove-Item Env:DATABASE_URL, Env:DIRECT_URL, Env:QLEAVES_DATABASE_PROVIDER
+```
+
+`deploy` should apply `3_search_aliases`; `status` should end with "Database schema is up to date".

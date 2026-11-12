@@ -77,14 +77,14 @@ function ProductPhoto({ product }: { product: AdminProduct }) {
 type DetailsDraft = {
   name: string; category: string; light: string; description: string; costPrice: string; watering: string;
   // English card only: shared details that are not translated.
-  scientificName: string; compareAt: string; careLevel: string; placement: string; reviewNote: string;
+  scientificName: string; compareAt: string; careLevel: string; placement: string; reviewNote: string; searchAliases: string;
   featured: boolean; needsReview: boolean;
 };
 
 function draftFor(product: AdminProduct, language: SiteLanguage): DetailsDraft {
   const shared = {
     costPrice: String(product.costPrice ?? ""), scientificName: product.scientificName ?? "", compareAt: product.compareAtPriceQar ? String(product.compareAtPriceQar) : "",
-    careLevel: product.careLevel ?? "", placement: product.placement ?? "", reviewNote: product.reviewNote ?? "",
+    careLevel: product.careLevel ?? "", placement: product.placement ?? "", reviewNote: product.reviewNote ?? "", searchAliases: product.searchAliases ?? "",
     featured: Boolean(product.featured), needsReview: Boolean(product.needsReview),
   };
   return language === "ar"
@@ -100,11 +100,11 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
     ? { title: language === "ar" ? "تعديل التفاصيل العربية" : "تعديل التفاصيل الإنجليزية", name: "الاسم", category: "الفئة", light: "الإضاءة (اتركها فارغة للإكسسوارات)", description: "الوصف", cost: "التكلفة (ر.ق)", save: "حفظ التفاصيل", saving: "جارٍ الحفظ…", saved: "تم حفظ التفاصيل", invalidCost: "يجب أن تكون التكلفة رقمًا صحيحًا غير سالب", nothing: "لا توجد تغييرات", failed: "تعذر حفظ التفاصيل",
         watering: "الري", scientific: "الاسم العلمي", compareAt: "السعر قبل التخفيض (ر.ق، اختياري)", invalidCompare: "يجب أن يكون السعر قبل التخفيض رقمًا صحيحًا موجبًا", care: "مستوى العناية", placement: "المكان", none: "غير محدد",
         careLevels: { easy: "سهل", moderate: "متوسط", demanding: "يحتاج عناية" }, placements: { indoor: "داخلي", outdoor: "خارجي", "indoor-outdoor": "داخلي وخارجي" },
-        featured: "منتج مميز (يظهر في الصفحة الرئيسية)", needsReview: "يحتاج إلى مراجعة قبل النشر", reviewNote: "ملاحظة المراجعة (للإدارة فقط)" }
+        featured: "منتج مميز (يظهر في الصفحة الرئيسية)", needsReview: "يحتاج إلى مراجعة قبل النشر", reviewNote: "ملاحظة المراجعة (للإدارة فقط)", aliases: "كلمات بحث إضافية (أسماء أخرى أو تهجئات، تفصل بينها فواصل)" }
     : { title: language === "ar" ? "Edit Arabic details" : "Edit details", name: "Name", category: "Category", light: "Light (leave empty for accessories)", description: "Description", cost: "Cost (QAR)", save: "Save details", saving: "Saving…", saved: "Details saved", invalidCost: "Cost must be a non-negative whole number", nothing: "No changes to save", failed: "Could not save details",
         watering: "Watering", scientific: "Botanical name", compareAt: "Original price before a reduction (QAR, optional)", invalidCompare: "The original price must be a positive whole number", care: "Care level", placement: "Placement", none: "Not set",
         careLevels: { easy: "Easy", moderate: "Moderate", demanding: "Needs attention" }, placements: { indoor: "Indoor", outdoor: "Outdoor", "indoor-outdoor": "Indoor or outdoor" },
-        featured: "Featured on the home page", needsReview: "Needs checking before publishing", reviewNote: "Review note (admin only)" };
+        featured: "Featured on the home page", needsReview: "Needs checking before publishing", reviewNote: "Review note (admin only)", aliases: "Extra search words (other names or spellings, separated by commas)" };
   const [draft, setDraft] = useState(() => draftFor(product, language));
   const [message, setMessage] = useState("");
   const [open, setOpen] = useState(false);
@@ -133,6 +133,7 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
       ...(differs(optional(draft.careLevel), product.careLevel) ? { careLevel: optional(draft.careLevel) as AdminProductPatch["careLevel"] } : {}),
       ...(differs(optional(draft.placement), product.placement) ? { placement: optional(draft.placement) as AdminProductPatch["placement"] } : {}),
       ...(differs(optional(draft.reviewNote), product.reviewNote) ? { reviewNote: optional(draft.reviewNote) } : {}),
+      ...(differs(optional(draft.searchAliases), product.searchAliases) ? { searchAliases: optional(draft.searchAliases) } : {}),
       ...(draft.featured !== Boolean(product.featured) ? { featured: draft.featured } : {}),
       ...(draft.needsReview !== Boolean(product.needsReview) ? { needsReview: draft.needsReview } : {}),
       ...(draft.name.trim() !== product.name ? { name: draft.name.trim() } : {}),
@@ -201,6 +202,7 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
               <label className="admin-product-details-form__check"><input type="checkbox" checked={draft.featured} onChange={(event) => setDraft((current) => ({ ...current, featured: event.target.checked }))} />{t.featured}</label>
               <label className="admin-product-details-form__check"><input type="checkbox" checked={draft.needsReview} onChange={(event) => setDraft((current) => ({ ...current, needsReview: event.target.checked }))} />{t.needsReview}</label>
               <label className="admin-product-details-form__full">{t.reviewNote}<input maxLength={500} aria-label={`${product.name} review note`} {...field("reviewNote")} /></label>
+              <label className="admin-product-details-form__full">{t.aliases}<input maxLength={1000} dir="auto" aria-label={`${product.name} search words`} {...field("searchAliases")} /></label>
             </>
           )}
           <div className="admin-product-details-form__actions">

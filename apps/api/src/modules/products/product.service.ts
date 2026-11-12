@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import type { ProductDetail, ProductQuery, ProductSummary } from "./product.schemas.js";
+import { searchPublishedProducts } from "./product-search-index.js";
 
 const PAGE_SIZE = 24;
 
@@ -60,8 +61,6 @@ type PublicProductRecord = {
   inventory: { quantity: number } | null;
 };
 
-type TextContains = { contains: string; mode?: "insensitive" };
-
 type PublicProductWhere = {
   published: boolean;
   category?: string;
@@ -69,7 +68,7 @@ type PublicProductWhere = {
   priceQar?: { gte?: number; lte?: number };
   inventory?: { is: { quantity: { gt: number } } };
   featured?: boolean;
-  OR?: Array<Partial<Record<"name" | "description" | "nameAr" | "descriptionAr" | "slug" | "scientificName" | "category" | "categoryAr", TextContains>>>;
+  id?: { in: string[] };
 };
 
 type ProductRepository = {
@@ -93,6 +92,11 @@ type ProductRepository = {
   count(args: { where: PublicProductWhere }): Promise<number>;
 };
 
+type ProductIdRepository = {
+  findMany(args: { where: PublicProductWhere; select: { id: true } }): Promise<Array<{ id: string }>>;
+};
+const productIdRepository = prisma.product as unknown as ProductIdRepository;
+
 // SQLite and PostgreSQL clients share this generated Product delegate shape,
 // but TypeScript cannot call generic methods through their runtime union.
 const productRepository = prisma.product as unknown as ProductRepository;
@@ -105,14 +109,6 @@ type ProductFilterRepository = {
 };
 
 const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
-
-// PostgreSQL matches case-sensitively by default; SQLite's LIKE already ignores
-// ASCII case and its Prisma client rejects the `mode` argument.
-function textContains(value: string): TextContains {
-  return process.env.QLEAVES_DATABASE_PROVIDER === "postgresql"
-    ? { contains: value, mode: "insensitive" }
-    : { contains: value };
-}
 
 function toSummary(
   product: PublicProductRecord,
@@ -175,26 +171,45 @@ export async function listProducts(query: ProductQuery): Promise<{
       : {}),
     ...(query.inStock ? { inventory: { is: { quantity: { gt: 0 } } } } : {}),
     ...(query.featured ? { featured: true } : {}),
-    ...(query.q
-      ? {
-          // Common and botanical names, descriptions and category names, in both languages.
-          OR: (["name", "description", "nameAr", "descriptionAr", "slug", "scientificName", "category", "categoryAr"] as const).map((field) => ({
-            [field]: textContains(query.q!),
-          })),
-        }
-      : {}),
   };
 
+  // Search: names, aliases, botanical names, categories and descriptions in both languages, ranked by how well
+  // they match (see lib/product-search.ts). The other filters still apply on top.
+  const hits = query.q ? await searchPublishedProducts(query.q) : null;
+  if (hits) {
+    if (hits.length === 0) return { items: [], page: query.page, pageSize: PAGE_SIZE, totalItems: 0, totalPages: 0 };
+    where.id = { in: hits.map((hit) => hit.id) };
+  }
+  // With a search, results come best match first unless the customer chose another order.
+  const sort = query.sort ?? (hits ? "relevance" : "newest");
+
+  if (hits && sort === "relevance") {
+    const allowed = new Set((await productIdRepository.findMany({ where, select: { id: true } })).map((row) => row.id));
+    const ranked = hits.filter((hit) => allowed.has(hit.id)).map((hit) => hit.id);
+    const pageIds = ranked.slice((query.page - 1) * PAGE_SIZE, query.page * PAGE_SIZE);
+    const records = pageIds.length
+      ? await productRepository.findMany({ where: { published: true, id: { in: pageIds } }, select: publicProductSelection, orderBy: [{ slug: "asc" }], skip: 0, take: PAGE_SIZE })
+      : [];
+    const byId = new Map(records.map((record) => [record.id, record]));
+    return {
+      items: pageIds.flatMap((id) => byId.get(id) ?? []).map((product) => toSummary(product, query.lang)),
+      page: query.page,
+      pageSize: PAGE_SIZE,
+      totalItems: ranked.length,
+      totalPages: Math.ceil(ranked.length / PAGE_SIZE),
+    };
+  }
+
   const orderBy: Parameters<ProductRepository["findMany"]>[0]["orderBy"] =
-    query.sort === "price-asc"
+    sort === "price-asc"
     ? [{ priceQar: "asc" }, { slug: "asc" }]
-    : query.sort === "price-desc"
+    : sort === "price-desc"
       ? [{ priceQar: "desc" }, { slug: "asc" }]
-      : query.sort === "newest"
-        ? [{ createdAt: "desc" }, { slug: "asc" }]
-        : query.sort === "featured"
+      : sort === "featured"
         ? [{ featured: "desc" }, { createdAt: "desc" }, { slug: "asc" }]
-        : [{ name: "asc" }, { slug: "asc" }];
+        : sort === "name-asc"
+          ? [{ name: "asc" }, { slug: "asc" }]
+          : [{ createdAt: "desc" }, { slug: "asc" }];
 
   const [products, totalItems] = await Promise.all([
     productRepository.findMany({

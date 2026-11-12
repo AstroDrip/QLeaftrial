@@ -60,6 +60,6 @@ export interface ProductListParams {
   inStock?: "1";
   featured?: "1";
   page?: number;
-  sort?: "name-asc" | "price-asc" | "price-desc" | "newest" | "featured";
+  sort?: "relevance" | "name-asc" | "price-asc" | "price-desc" | "newest" | "featured";
   lang?: "en" | "ar";
 }

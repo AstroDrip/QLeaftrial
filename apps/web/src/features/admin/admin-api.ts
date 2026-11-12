@@ -27,6 +27,7 @@ export interface AdminProduct {
   placement?: "indoor" | "outdoor" | "indoor-outdoor" | null;
   needsReview?: boolean;
   reviewNote?: string | null;
+  searchAliases?: string | null;
 }
 
 export interface CreateAdminProductFields {
@@ -68,6 +69,7 @@ export type AdminProductPatch = Partial<{
   placement: "indoor" | "outdoor" | "indoor-outdoor" | null;
   needsReview: boolean;
   reviewNote: string | null;
+  searchAliases?: string | null;
 }>;
 
 export interface StagedProductImage {

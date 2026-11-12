@@ -16,6 +16,8 @@ const productDetails = {
   placement: z.enum(["indoor", "outdoor", "indoor-outdoor"]).nullable().optional(),
   needsReview: z.boolean().optional(),
   reviewNote: z.string().trim().max(500).nullable().optional(),
+  // Extra search words (other spellings, local or Arabic names), separated by commas or new lines.
+  searchAliases: z.string().trim().max(1000).nullable().optional(),
 };
 
 export const updateAdminProductSchema = z
