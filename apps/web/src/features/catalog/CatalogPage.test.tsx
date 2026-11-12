@@ -209,7 +209,7 @@ describe("CatalogPage", () => {
     expect(screen.queryByText("180 QAR")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /add house plant to cart/i })).not.toBeInTheDocument();
     const sortValues = [...screen.getByTestId("sort-select").querySelectorAll("option")].map((option) => option.value);
-    expect(sortValues).toEqual(["newest", "name-asc"]);
+    expect(sortValues).toEqual(["newest", "featured", "name-asc"]);
     expect(screen.queryByTestId("price-filter")).not.toBeInTheDocument();
   });
 

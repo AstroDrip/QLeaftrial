@@ -11,6 +11,7 @@ import { Seo } from "../../components/Seo";
 import { ProductImage } from "../../components/ProductImage";
 import "./product-detail.css";
 import { friendlyError } from "../../lib/friendly-error";
+import { ProductGallery, ProductPrice, careLabels } from "./product-presentation";
 
 export function ProductPage() {
   const { content, language, isArabic } = useSiteLanguage();
@@ -74,6 +75,8 @@ export function ProductPage() {
   }
 
   const primaryImage = product.media[0] ?? product.image;
+  const care = careLabels(isArabic);
+  const watering = isArabic ? product.wateringAr?.trim() || product.watering : product.watering;
   const localized = localizeProduct(product, isArabic);
   return (
     <article className="product-detail container" data-testid="product-page">
@@ -106,17 +109,21 @@ export function ProductPage() {
       </nav>
       <div className="product-detail__main">
       <div className="product-detail__media">
-      <ProductImage
-        media={product.media.length > 0 ? product.media : primaryImage}
-        alt={isArabic ? localized.name : primaryImage?.altText || localized.name}
-        preferredPurpose="detail"
-        className="product-detail__image"
-        data-testid="product-image"
-        loading="eager"
-        decoding="async"
-        sizes="(max-width: 900px) 100vw, 50vw"
-        fetchPriority="high"
-      />
+      {product.media.length > 0 ? (
+        <ProductGallery media={product.media} alt={isArabic ? localized.name : primaryImage?.altText || localized.name} isArabic={isArabic} />
+      ) : (
+        <ProductImage
+          media={primaryImage}
+          alt={isArabic ? localized.name : primaryImage?.altText || localized.name}
+          preferredPurpose="detail"
+          className="product-detail__image"
+          data-testid="product-image"
+          loading="eager"
+          decoding="async"
+          sizes="(max-width: 900px) 100vw, 50vw"
+          fetchPriority="high"
+        />
+      )}
       </div>
 
       <div className="product-detail__meta">
@@ -126,7 +133,7 @@ export function ProductPage() {
         </h1>
         {orderingEnabled ? (
           <p className="product-detail__price" data-testid="product-price">
-            {product.priceQar} QAR
+            <ProductPrice priceQar={product.priceQar} compareAtPriceQar={product.compareAtPriceQar} isArabic={isArabic} />
           </p>
         ) : null}
         {orderingEnabled ? (
@@ -145,9 +152,29 @@ export function ProductPage() {
           <li>
             <span>{content.product.category}:</span> {localized.category}
           </li>
+          {product.scientificName ? (
+            <li>
+              <span>{care.titles.botanical}:</span> <i lang="la">{product.scientificName}</i>
+            </li>
+          ) : null}
           {localized.light ? (
             <li>
               <span>{content.product.lightNeeds}:</span> {localized.light}
+            </li>
+          ) : null}
+          {watering ? (
+            <li>
+              <span>{care.titles.watering}:</span> {watering}
+            </li>
+          ) : null}
+          {product.careLevel && care.careLevel[product.careLevel] ? (
+            <li>
+              <span>{care.titles.care}:</span> {care.careLevel[product.careLevel]}
+            </li>
+          ) : null}
+          {product.placement && care.placement[product.placement] ? (
+            <li>
+              <span>{care.titles.placement}:</span> {care.placement[product.placement]}
             </li>
           ) : null}
         </ul>

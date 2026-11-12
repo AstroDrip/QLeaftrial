@@ -7,6 +7,7 @@ import { AddToCartButton } from "../cart/AddToCartButton";
 import { localizeProduct } from "./localize-product";
 import { productApi } from "./product-api";
 import type { ProductSummary } from "./product-types";
+import { ProductPrice } from "./product-presentation";
 
 export function ProductCard({
   product,
@@ -44,6 +45,9 @@ export function ProductCard({
           sizes="(max-width: 520px) 50vw, (max-width: 1024px) 33vw, 280px"
         />
         {orderingEnabled && !product.inStock ? <span className="product-card__badge">{content.product.outOfStock}</span> : null}
+        {orderingEnabled && product.inStock && product.compareAtPriceQar && product.compareAtPriceQar > product.priceQar ? (
+          <span className="product-card__badge product-card__badge--offer">{isArabic ? "عرض" : "Offer"}</span>
+        ) : null}
       </div>
       <Heading className="product-card__name" title={localized.name}>
         <Link to={`/plants/${product.slug}`} className="product-card__link" data-testid={`view-${product.slug}`}>
@@ -54,7 +58,7 @@ export function ProductCard({
       <div className="product-card__footer">
         <div className="product-card__meta">
           <span className="product-card__category">{localized.category}</span>
-          {orderingEnabled ? <span className="product-card__price">{product.priceQar} QAR</span> : null}
+          {orderingEnabled ? <ProductPrice className="product-card__price" priceQar={product.priceQar} compareAtPriceQar={product.compareAtPriceQar} isArabic={isArabic} /> : null}
         </div>
         {orderingEnabled ? <AddToCartButton product={product} className="product-card__cart" /> : null}
       </div>

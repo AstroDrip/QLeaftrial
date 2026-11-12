@@ -22,6 +22,13 @@ export interface ProductSummary {
   light: string | null;
   lightAr?: string | null;
   priceQar: number;
+  /** A genuine earlier price; only present when it is higher than priceQar. */
+  compareAtPriceQar?: number | null;
+  featured?: boolean;
+  scientificName?: string | null;
+  careLevel?: "easy" | "moderate" | "demanding" | string | null;
+  placement?: "indoor" | "outdoor" | "indoor-outdoor" | string | null;
+  createdAt?: string;
   stock: number;
   inStock: boolean;
   image: ProductMedia | null;
@@ -31,6 +38,8 @@ export interface ProductSummary {
 export interface ProductDetail extends ProductSummary {
   description: string;
   descriptionAr?: string | null;
+  watering?: string | null;
+  wateringAr?: string | null;
   media: ProductMedia[];
 }
 
@@ -49,7 +58,8 @@ export interface ProductListParams {
   minPrice?: number;
   maxPrice?: number;
   inStock?: "1";
+  featured?: "1";
   page?: number;
-  sort?: "name-asc" | "price-asc" | "price-desc" | "newest";
+  sort?: "name-asc" | "price-asc" | "price-desc" | "newest" | "featured";
   lang?: "en" | "ar";
 }

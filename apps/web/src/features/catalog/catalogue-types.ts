@@ -27,6 +27,11 @@ export interface CatalogueProduct {
   inStock: boolean;
   /** ISO date; used to order "newest" the same way the API does. Absent in older snapshots. */
   createdAt?: string;
+  compareAtPriceQar?: number | null;
+  featured?: boolean;
+  scientificName?: string | null;
+  careLevel?: string | null;
+  placement?: string | null;
   image: CatalogueMedia | null;
   media: CatalogueMedia[];
 }

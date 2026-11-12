@@ -15,6 +15,7 @@ import { friendlyError } from "../../lib/friendly-error";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "sortNewest" },
+  { value: "featured", label: "sortFeatured" },
   { value: "name-asc", label: "sortNameAsc" },
   { value: "price-asc", label: "sortPriceAsc" },
   { value: "price-desc", label: "sortPriceDesc" },

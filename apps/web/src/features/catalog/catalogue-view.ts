@@ -30,6 +30,12 @@ export function catalogueProductToSummary(product: CatalogueProduct, language: S
     light: arabic && product.lightAr?.trim() ? product.lightAr : product.light,
     lightAr: product.lightAr,
     priceQar: product.priceQar,
+    compareAtPriceQar: product.compareAtPriceQar ?? null,
+    featured: product.featured ?? false,
+    scientificName: product.scientificName ?? null,
+    careLevel: product.careLevel ?? null,
+    placement: product.placement ?? null,
+    createdAt: product.createdAt,
     stock: product.stock,
     inStock: product.inStock,
     image: mediaToSummary(product.image),
@@ -42,7 +48,7 @@ export function filterCatalogue(products: CatalogueProduct[], params: ProductLis
   return products.filter((product) => {
     if (query) {
       // The API searches English and Arabic names and descriptions, and the slug.
-      const haystack = [product.name, product.description, product.nameAr, product.descriptionAr, product.slug]
+      const haystack = [product.name, product.description, product.nameAr, product.descriptionAr, product.slug, product.scientificName, product.category, product.categoryAr]
         .filter((value): value is string => typeof value === "string")
         .join(" ")
         .toLocaleLowerCase();
@@ -51,6 +57,7 @@ export function filterCatalogue(products: CatalogueProduct[], params: ProductLis
     if (params.category && product.category !== params.category) return false;
     if (params.light && product.light !== params.light) return false;
     if (params.inStock && !product.inStock) return false;
+    if (params.featured && !product.featured) return false;
     if (params.minPrice !== undefined && product.priceQar < params.minPrice) return false;
     if (params.maxPrice !== undefined && product.priceQar > params.maxPrice) return false;
     return true;
@@ -62,6 +69,7 @@ export function sortCatalogue(products: CatalogueProduct[], sort: ProductListPar
     if (sort === "price-asc") return a.priceQar - b.priceQar || a.slug.localeCompare(b.slug);
     if (sort === "price-desc") return b.priceQar - a.priceQar || a.slug.localeCompare(b.slug);
     if (sort === "newest") return (b.createdAt ?? "").localeCompare(a.createdAt ?? "") || a.slug.localeCompare(b.slug);
+    if (sort === "featured") return Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || (b.createdAt ?? "").localeCompare(a.createdAt ?? "") || a.slug.localeCompare(b.slug);
     return a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug);
   });
 }
