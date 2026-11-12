@@ -5,6 +5,19 @@ const optionalArabicText = (minimum: number, maximum: number) =>
 
 const englishText = (minimum: number, maximum: number) => z.string().trim().min(minimum).max(maximum);
 
+// Care details, merchandising and the admin-only review flag. null clears a value.
+const productDetails = {
+  compareAtPriceQar: z.number().int().positive().nullable().optional(),
+  featured: z.boolean().optional(),
+  scientificName: englishText(2, 120).nullable().optional(),
+  watering: englishText(2, 200).nullable().optional(),
+  wateringAr: z.string().trim().min(2).max(200).nullable().optional(),
+  careLevel: z.enum(["easy", "moderate", "demanding"]).nullable().optional(),
+  placement: z.enum(["indoor", "outdoor", "indoor-outdoor"]).nullable().optional(),
+  needsReview: z.boolean().optional(),
+  reviewNote: z.string().trim().max(500).nullable().optional(),
+};
+
 export const updateAdminProductSchema = z
   .object({
     priceQar: z.number().int().nonnegative().optional(),
@@ -20,6 +33,7 @@ export const updateAdminProductSchema = z
     descriptionAr: optionalArabicText(10, 2000),
     categoryAr: optionalArabicText(2, 80),
     lightAr: optionalArabicText(2, 80),
+    ...productDetails,
   })
   .strict()
   .refine((value) => Object.values(value).some((field) => field !== undefined), "At least one product field is required");
@@ -82,6 +96,7 @@ export const createAdminProductSchema = z.object({
   imageDataUrl: imageDataUrl.optional(),
   stagedImages: z.array(stagedProductImageSchema).length(2).optional(),
   imageAltText: z.string().trim().min(2).max(200),
+  ...productDetails,
 }).strict().superRefine(requireOneImageSource);
 
 export const replaceProductImagesSchema = z.object({

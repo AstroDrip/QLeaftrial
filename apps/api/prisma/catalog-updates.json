@@ -1,0 +1,266 @@
+{
+  "photoUpdates": {
+    "aloe-vera": {
+      "expectedCurrent": [
+        "/media/plants/aloe-vera-640.webp",
+        "/media/plants/aloe-vera-1280.webp"
+      ],
+      "media": [
+        {
+          "url": "/media/plants/aloe-vera-v2-640.webp",
+          "purpose": "catalog",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "url": "/media/plants/aloe-vera-v2-1024.webp",
+          "purpose": "detail",
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "url": "/media/plants/aloe-vera-v2-2-640.webp",
+          "purpose": "catalog",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "url": "/media/plants/aloe-vera-v2-2-1024.webp",
+          "purpose": "detail",
+          "width": 1024,
+          "height": 1024
+        }
+      ]
+    },
+    "chamaedorea-elegans": {
+      "expectedCurrent": [
+        "/media/plants/chamaedorea-elegans-640.webp",
+        "/media/plants/chamaedorea-elegans-1280.webp"
+      ],
+      "media": [
+        {
+          "url": "/media/plants/chamaedorea-elegans-v2-640.webp",
+          "purpose": "catalog",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "url": "/media/plants/chamaedorea-elegans-v2-1024.webp",
+          "purpose": "detail",
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "url": "/media/plants/chamaedorea-elegans-v2-2-640.webp",
+          "purpose": "catalog",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "url": "/media/plants/chamaedorea-elegans-v2-2-1024.webp",
+          "purpose": "detail",
+          "width": 1024,
+          "height": 1024
+        }
+      ]
+    },
+    "spider-plant": {
+      "expectedCurrent": [
+        "/media/plants/spider-plant-640.webp",
+        "/media/plants/spider-plant-1280.webp"
+      ],
+      "media": [
+        {
+          "url": "/media/plants/spider-plant-v2-640.webp",
+          "purpose": "catalog",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "url": "/media/plants/spider-plant-v2-1024.webp",
+          "purpose": "detail",
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "url": "/media/plants/spider-plant-v2-2-640.webp",
+          "purpose": "catalog",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "url": "/media/plants/spider-plant-v2-2-1024.webp",
+          "purpose": "detail",
+          "width": 1024,
+          "height": 1024
+        }
+      ]
+    },
+    "boston-fern": {
+      "expectedCurrent": [
+        "/media/plants/boston-fern-640.webp",
+        "/media/plants/boston-fern-1280.webp"
+      ],
+      "media": [
+        {
+          "url": "/media/plants/boston-fern-v2-640.webp",
+          "purpose": "catalog",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "url": "/media/plants/boston-fern-v2-1024.webp",
+          "purpose": "detail",
+          "width": 1024,
+          "height": 1024
+        }
+      ]
+    }
+  },
+  "draftRenames": {
+    "hybrid-bougainvillea-1": {
+      "slug": "bougainvillea-magenta",
+      "name": "Bougainvillea Magenta",
+      "nameAr": "جهنمية ماجنتا",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in magenta bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات بلون الماجنتا، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    },
+    "hybrid-bougainvillea-2": {
+      "slug": "bougainvillea-pink-cream",
+      "name": "Bougainvillea Pink and Cream",
+      "nameAr": "جهنمية وردية وكريمية",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in pink and cream bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات وردية وكريمية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    },
+    "hybrid-bougainvillea-3": {
+      "slug": "bougainvillea-orange",
+      "name": "Bougainvillea Orange",
+      "nameAr": "جهنمية برتقالية",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in orange bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات برتقالية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    },
+    "hybrid-bougainvillea-4": {
+      "slug": "bougainvillea-apricot",
+      "name": "Bougainvillea Apricot",
+      "nameAr": "جهنمية مشمشية",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in apricot and pink bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات مشمشية ووردية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    },
+    "hybrid-bougainvillea-5": {
+      "slug": "bougainvillea-purple",
+      "name": "Bougainvillea Purple",
+      "nameAr": "جهنمية بنفسجية",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in purple bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات بنفسجية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    },
+    "hybrid-bougainvillea-6": {
+      "slug": "bougainvillea-white",
+      "name": "Bougainvillea White",
+      "nameAr": "جهنمية بيضاء",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in white bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات بيضاء، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    },
+    "hybrid-bougainvillea-7": {
+      "slug": "bougainvillea-orange-tall",
+      "name": "Bougainvillea Orange (Tall)",
+      "nameAr": "جهنمية برتقالية (طويلة)",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in orange bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات برتقالية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    },
+    "hybrid-bougainvillea-8": {
+      "slug": "bougainvillea-red",
+      "name": "Bougainvillea Red",
+      "nameAr": "جهنمية حمراء",
+      "category": "Outdoor Plants",
+      "categoryAr": "نباتات خارجية",
+      "scientificName": "Bougainvillea sp.",
+      "light": "Full sun",
+      "lightAr": "شمس كاملة",
+      "watering": "Water deeply, then let the top layer dry before watering again",
+      "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+      "careLevel": "easy",
+      "placement": "outdoor",
+      "description": "A bougainvillea covered in red bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+      "descriptionAr": "جهنمية مغطاة بقنابات حمراء، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+      "needsReview": true,
+      "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+    }
+  }
+}

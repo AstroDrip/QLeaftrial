@@ -322,16 +322,16 @@
     "altText": "Boston Fern",
     "media": [
       {
-        "url": "/media/plants/boston-fern-640.webp",
+        "url": "/media/plants/boston-fern-v2-640.webp",
         "purpose": "catalog",
         "width": 640,
         "height": 640
       },
       {
-        "url": "/media/plants/boston-fern-1280.webp",
+        "url": "/media/plants/boston-fern-v2-1024.webp",
         "purpose": "detail",
-        "width": 1080,
-        "height": 1080
+        "width": 1024,
+        "height": 1024
       }
     ]
   },
@@ -350,16 +350,28 @@
     "altText": "Chamaedorea Elegans",
     "media": [
       {
-        "url": "/media/plants/chamaedorea-elegans-640.webp",
+        "url": "/media/plants/chamaedorea-elegans-v2-640.webp",
         "purpose": "catalog",
         "width": 640,
         "height": 640
       },
       {
-        "url": "/media/plants/chamaedorea-elegans-1280.webp",
+        "url": "/media/plants/chamaedorea-elegans-v2-1024.webp",
         "purpose": "detail",
-        "width": 1280,
-        "height": 1280
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/chamaedorea-elegans-v2-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/chamaedorea-elegans-v2-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
       }
     ]
   },
@@ -434,16 +446,28 @@
     "altText": "Spider Plant",
     "media": [
       {
-        "url": "/media/plants/spider-plant-640.webp",
+        "url": "/media/plants/spider-plant-v2-640.webp",
         "purpose": "catalog",
         "width": 640,
         "height": 640
       },
       {
-        "url": "/media/plants/spider-plant-1280.webp",
+        "url": "/media/plants/spider-plant-v2-1024.webp",
         "purpose": "detail",
-        "width": 1280,
-        "height": 1280
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/spider-plant-v2-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/spider-plant-v2-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
       }
     ]
   },
@@ -630,16 +654,28 @@
     "altText": "Aloe Vera",
     "media": [
       {
-        "url": "/media/plants/aloe-vera-640.webp",
+        "url": "/media/plants/aloe-vera-v2-640.webp",
         "purpose": "catalog",
         "width": 640,
         "height": 640
       },
       {
-        "url": "/media/plants/aloe-vera-1280.webp",
+        "url": "/media/plants/aloe-vera-v2-1024.webp",
         "purpose": "detail",
-        "width": 1280,
-        "height": 1280
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/aloe-vera-v2-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aloe-vera-v2-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
       }
     ]
   },
@@ -756,19 +792,19 @@
     ]
   },
   {
-    "slug": "hybrid-bougainvillea-1",
+    "slug": "bougainvillea-magenta",
     "sku": "HB-DRAFT-1",
-    "name": "Hybrid Bougainvillea 1",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea Magenta",
+    "nameAr": "جهنمية ماجنتا",
+    "description": "A bougainvillea covered in magenta bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Close view of hybrid bougainvillea with magenta blooms",
+    "altText": "Bougainvillea Magenta",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-1-640.webp",
@@ -782,22 +818,30 @@
         "width": 1200,
         "height": 1600
       }
-    ]
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات بلون الماجنتا، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
   },
   {
-    "slug": "hybrid-bougainvillea-2",
+    "slug": "bougainvillea-pink-cream",
     "sku": "HB-DRAFT-2",
-    "name": "Hybrid Bougainvillea 2",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea Pink and Cream",
+    "nameAr": "جهنمية وردية وكريمية",
+    "description": "A bougainvillea covered in pink and cream bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Hybrid bougainvillea with pink and cream blooms",
+    "altText": "Bougainvillea Pink and Cream",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-2-640.webp",
@@ -811,22 +855,30 @@
         "width": 1200,
         "height": 1600
       }
-    ]
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات وردية وكريمية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
   },
   {
-    "slug": "hybrid-bougainvillea-3",
+    "slug": "bougainvillea-orange",
     "sku": "HB-DRAFT-3",
-    "name": "Hybrid Bougainvillea 3",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea Orange",
+    "nameAr": "جهنمية برتقالية",
+    "description": "A bougainvillea covered in orange bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Hybrid bougainvillea with orange blooms in a black pot",
+    "altText": "Bougainvillea Orange",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-3-640.webp",
@@ -840,22 +892,30 @@
         "width": 1200,
         "height": 1600
       }
-    ]
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات برتقالية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
   },
   {
-    "slug": "hybrid-bougainvillea-4",
+    "slug": "bougainvillea-apricot",
     "sku": "HB-DRAFT-4",
-    "name": "Hybrid Bougainvillea 4",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea Apricot",
+    "nameAr": "جهنمية مشمشية",
+    "description": "A bougainvillea covered in apricot and pink bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Hybrid bougainvillea with apricot and pink blooms in a terracotta pot",
+    "altText": "Bougainvillea Apricot",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-4-640.webp",
@@ -869,22 +929,30 @@
         "width": 1200,
         "height": 1600
       }
-    ]
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات مشمشية ووردية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
   },
   {
-    "slug": "hybrid-bougainvillea-5",
+    "slug": "bougainvillea-purple",
     "sku": "HB-DRAFT-5",
-    "name": "Hybrid Bougainvillea 5",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea Purple",
+    "nameAr": "جهنمية بنفسجية",
+    "description": "A bougainvillea covered in purple bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Hybrid bougainvillea with purple blooms in a black pot",
+    "altText": "Bougainvillea Purple",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-5-640.webp",
@@ -898,22 +966,30 @@
         "width": 1284,
         "height": 1557
       }
-    ]
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات بنفسجية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
   },
   {
-    "slug": "hybrid-bougainvillea-6",
+    "slug": "bougainvillea-white",
     "sku": "HB-DRAFT-6",
-    "name": "Hybrid Bougainvillea 6",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea White",
+    "nameAr": "جهنمية بيضاء",
+    "description": "A bougainvillea covered in white bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Hybrid bougainvillea with white blooms in a black pot",
+    "altText": "Bougainvillea White",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-6-640.webp",
@@ -927,22 +1003,30 @@
         "width": 1284,
         "height": 1505
       }
-    ]
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات بيضاء، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
   },
   {
-    "slug": "hybrid-bougainvillea-7",
+    "slug": "bougainvillea-orange-tall",
     "sku": "HB-DRAFT-7",
-    "name": "Hybrid Bougainvillea 7",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea Orange (Tall)",
+    "nameAr": "جهنمية برتقالية (طويلة)",
+    "description": "A bougainvillea covered in orange bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Tall hybrid bougainvillea with orange blooms in a black pot",
+    "altText": "Bougainvillea Orange (Tall)",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-7-640.webp",
@@ -956,22 +1040,30 @@
         "width": 1246,
         "height": 1600
       }
-    ]
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات برتقالية، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
   },
   {
-    "slug": "hybrid-bougainvillea-8",
+    "slug": "bougainvillea-red",
     "sku": "HB-DRAFT-8",
-    "name": "Hybrid Bougainvillea 8",
-    "nameAr": null,
-    "description": "Draft listing: the name, price, stock and description are still to be filled in from the admin dashboard.",
-    "category": "Hybrid Bougainvillea",
-    "categoryAr": null,
-    "light": null,
-    "lightAr": null,
+    "name": "Bougainvillea Red",
+    "nameAr": "جهنمية حمراء",
+    "description": "A bougainvillea covered in red bracts, one of the few flowering plants that truly enjoys a Qatari summer. Give it full sun, water deeply and let the soil dry a little in between; it flowers best when it is not overwatered or overfed.",
+    "category": "Outdoor Plants",
+    "categoryAr": "نباتات خارجية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
     "priceQar": 0,
     "published": false,
     "stock": 0,
-    "altText": "Hybrid bougainvillea with red blooms in a black pot",
+    "altText": "Bougainvillea Red",
     "media": [
       {
         "url": "/media/plants/hybrid-bougainvillea-8-640.webp",
@@ -984,6 +1076,3426 @@
         "purpose": "detail",
         "width": 1236,
         "height": 1600
+      }
+    ],
+    "scientificName": "Bougainvillea sp.",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "outdoor",
+    "descriptionAr": "جهنمية مغطاة بقنابات حمراء، من النباتات المزهرة القليلة التي تستمتع حقًا بصيف قطر. امنحها الشمس الكاملة واسقِها بعمق مع ترك التربة تجف قليلًا بين الريّات؛ تزهر أفضل حين لا يُبالغ في ريّها أو تسميدها.",
+    "needsReview": true,
+    "reviewNote": "Colour taken from the photo; variety name, size and price to be confirmed."
+  },
+  {
+    "slug": "money-tree-braided",
+    "sku": "QL-001",
+    "name": "Money Tree (Braided)",
+    "nameAr": "شجرة المال (بجذع مضفور)",
+    "description": "Five-fingered leaves on a braided trunk give the money tree a tidy, sculptural shape that suits a living-room corner or an office entrance. It likes a bright spot away from the hot afternoon sun and a good drink once the top of the soil has dried.",
+    "descriptionAr": "أوراق خماسية الأصابع فوق جذع مضفور تمنح شجرة المال شكلًا أنيقًا يناسب زاوية غرفة المعيشة أو مدخل المكتب. تفضّل مكانًا ساطعًا بعيدًا عن شمس الظهيرة الحارة، وريًّا جيدًا بعد أن تجف الطبقة العليا من التربة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Pachira aquatica",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Money Tree (Braided) (Pachira aquatica)",
+    "media": [
+      {
+        "url": "/media/plants/money-tree-braided-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/money-tree-braided-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "agave",
+    "sku": "QL-002",
+    "name": "Agave",
+    "nameAr": "أغافي",
+    "description": "A compact rosette of stiff, pointed leaves with a crisp, architectural look. Agaves love sun and need very little water, so a sunny window or a shaded terrace suits it well; keep the sharp tips away from where children play.",
+    "descriptionAr": "وردة متماسكة من أوراق صلبة مدببة بمظهر معماري أنيق. يحب الأغافي الشمس ويحتاج إلى القليل من الماء، لذا تناسبه نافذة مشمسة أو شرفة مظللة جزئيًا، مع إبعاد أطرافه الحادة عن أماكن لعب الأطفال.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "scientificName": "Agave sp.",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor-outdoor",
+    "needsReview": true,
+    "reviewNote": "Species not confirmed from the photo.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Agave (Agave sp.)",
+    "media": [
+      {
+        "url": "/media/plants/agave-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/agave-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-speckled",
+    "sku": "QL-003",
+    "name": "Aglaonema (Speckled Leaf)",
+    "nameAr": "أجلونيما (أوراق منقطة)",
+    "description": "Long green leaves lightly flecked with silver on tall, upright stems. Like most aglaonemas it copes with lower light and the dry air of air-conditioned rooms, which makes it an easy choice for a first plant.",
+    "descriptionAr": "أوراق خضراء طويلة منقطة بلمسات فضية فوق سيقان قائمة. وكمعظم نباتات الأجلونيما يتحمل الإضاءة المنخفضة وهواء الغرف المكيفة الجاف، ما يجعله خيارًا سهلًا لمن يقتني نبتته الأولى.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema (Speckled Leaf) (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-speckled-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-speckled-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-silver-bay",
+    "sku": "QL-004",
+    "name": "Aglaonema Silver Bay",
+    "nameAr": "أجلونيما سيلفر باي",
+    "description": "Broad, silvery-green leaves with darker edges that brighten a dim corner. Silver Bay grows into a full, rounded plant and forgives the odd missed watering.",
+    "descriptionAr": "أوراق عريضة بلون أخضر فضي وحواف أغمق تضفي إشراقًا على الزوايا الخافتة. ينمو سيلفر باي بشكل ممتلئ ومستدير ويتسامح مع نسيان الري أحيانًا.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema 'Silver Bay'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema Silver Bay (Aglaonema 'Silver Bay')",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-silver-bay-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-silver-bay-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/aglaonema-silver-bay-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-silver-bay-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-siam-aurora",
+    "sku": "QL-005",
+    "name": "Aglaonema Siam Aurora",
+    "nameAr": "أجلونيما سيام أورورا",
+    "description": "Green leaves edged and veined in pinkish red, held on rosy stems. The colour stays strongest in bright, indirect light; it is otherwise as undemanding as any aglaonema.",
+    "descriptionAr": "أوراق خضراء بحواف وعروق وردية حمراء فوق سيقان وردية اللون. يبقى اللون أكثر وضوحًا في الإضاءة الساطعة غير المباشرة، وفي غير ذلك هو سهل العناية كسائر نباتات الأجلونيما.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Aglaonema 'Siam Aurora'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Possibly the same plant as the existing 'Aglaonema Red' listing; check before publishing both.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema Siam Aurora (Aglaonema 'Siam Aurora')",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-siam-aurora-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-siam-aurora-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-narrow-leaf",
+    "sku": "QL-006",
+    "name": "Aglaonema (Narrow Leaf)",
+    "nameAr": "أجلونيما (أوراق ضيقة)",
+    "description": "Slim, arching leaves with a pale centre line form a loose, graceful clump. A low-fuss plant for shelves and side tables away from direct sun.",
+    "descriptionAr": "أوراق نحيلة مقوسة يتوسطها خط فاتح تشكّل كتلة رشيقة غير متراصة. نبتة قليلة المتطلبات للأرفف والطاولات الجانبية بعيدًا عن الشمس المباشرة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema (Narrow Leaf) (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-narrow-leaf-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-narrow-leaf-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-maria",
+    "sku": "QL-007",
+    "name": "Aglaonema Maria",
+    "nameAr": "أجلونيما ماريا",
+    "description": "Dark green leaves banded with soft silver, on a sturdy, bushy plant. One of the most tolerant aglaonemas for darker rooms and offices.",
+    "descriptionAr": "أوراق خضراء داكنة مخططة بلون فضي ناعم على نبتة كثيفة متينة. من أكثر أنواع الأجلونيما تحملًا للغرف والمكاتب الأقل إضاءة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema 'Maria'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety likely 'Maria'; please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema Maria (Aglaonema 'Maria')",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-maria-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-maria-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/aglaonema-maria-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-maria-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-red-vein",
+    "sku": "QL-008",
+    "name": "Aglaonema (Red Vein)",
+    "nameAr": "أجلونيما (عروق حمراء)",
+    "description": "Pointed leaves striped with red along every vein, rising from a neat clump. Give it bright, filtered light to keep the red clear.",
+    "descriptionAr": "أوراق مدببة تخطّها خطوط حمراء على طول عروقها، تنمو من كتلة مرتبة. امنحها ضوءًا ساطعًا مفلترًا ليبقى اللون الأحمر واضحًا.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema (Red Vein) (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-red-vein-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-red-vein-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-snow-white",
+    "sku": "QL-009",
+    "name": "Aglaonema Snow White",
+    "nameAr": "أجلونيما سنو وايت",
+    "description": "Creamy white leaves finely dotted with green, so pale they almost glow. The lighter the leaf, the more light it wants, so keep it near a bright window without direct sun.",
+    "descriptionAr": "أوراق بيضاء كريمية منقطة بالأخضر، فاتحة لدرجة تكاد تتوهج. كلما كانت الورقة أفتح احتاجت إلى ضوء أكثر، لذا ضعها قرب نافذة ساطعة دون شمس مباشرة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Aglaonema 'Snow White'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema Snow White (Aglaonema 'Snow White')",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-snow-white-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-snow-white-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-silver-blotch",
+    "sku": "QL-010",
+    "name": "Aglaonema (Silver Blotch)",
+    "nameAr": "أجلونيما (بقع فضية)",
+    "description": "Wide green leaves splashed with grey-green patches, on a compact plant. Happy in most indoor light and quick to recover if it dries out once.",
+    "descriptionAr": "أوراق خضراء عريضة تتناثر عليها بقع رمادية خضراء على نبتة متماسكة. ينسجم مع معظم أنواع الإضاءة الداخلية ويتعافى بسرعة إذا جف مرة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema (Silver Blotch) (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-silver-blotch-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-silver-blotch-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-stripes",
+    "sku": "QL-011",
+    "name": "Aglaonema Stripes",
+    "nameAr": "أجلونيما سترايبس",
+    "description": "Each leaf carries feathered cream stripes from the midrib outwards, on pale stems. A striking but easy plant for a table or a low stand.",
+    "descriptionAr": "تحمل كل ورقة خطوطًا كريمية ريشية تمتد من العرق الأوسط نحو الأطراف فوق سيقان فاتحة. نبتة لافتة وسهلة لطاولة أو حامل منخفض.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema 'Stripes'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema Stripes (Aglaonema 'Stripes')",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-stripes-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-stripes-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-glossy-green",
+    "sku": "QL-012",
+    "name": "Aglaonema (Glossy Green)",
+    "nameAr": "أجلونيما (أخضر لامع)",
+    "description": "Glossy, lance-shaped leaves with only a faint silver sheen; a calm, green plant that tolerates shadier rooms.",
+    "descriptionAr": "أوراق رمحية لامعة بلمعة فضية خفيفة؛ نبتة خضراء هادئة تتحمل الغرف الأقل إضاءة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Identification uncertain (could also be a peace lily without flowers); please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema (Glossy Green) (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-glossy-green-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-glossy-green-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-silver-narrow",
+    "sku": "QL-013",
+    "name": "Aglaonema (Silver Narrow Leaf)",
+    "nameAr": "أجلونيما (أوراق فضية ضيقة)",
+    "description": "Narrow, silver-marbled leaves spread into a wide, airy plant. Tolerant of air conditioning and lower light.",
+    "descriptionAr": "أوراق ضيقة بعروق فضية رخامية تنتشر في نبتة واسعة خفيفة. تتحمل التكييف والإضاءة المنخفضة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema (Silver Narrow Leaf) (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-silver-narrow-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-silver-narrow-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-green-stripe",
+    "sku": "QL-014",
+    "name": "Aglaonema (Light Centre)",
+    "nameAr": "أجلونيما (وسط فاتح)",
+    "description": "Long green leaves with a lighter, feathered centre on upright stems; tidy and easy to place.",
+    "descriptionAr": "أوراق خضراء طويلة بوسط فاتح ريشي فوق سيقان قائمة؛ مرتبة وسهلة الوضع في أي مكان.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema (Light Centre) (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-green-stripe-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-green-stripe-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "aglaonema-pink",
+    "sku": "QL-015",
+    "name": "Aglaonema Pink",
+    "nameAr": "أجلونيما وردية",
+    "description": "Soft pink leaves edged with green bring warm colour to a room without the fuss of a flowering plant. Bright, filtered light keeps the pink at its best.",
+    "descriptionAr": "أوراق وردية ناعمة بحواف خضراء تضفي لونًا دافئًا على الغرفة دون عناء النباتات المزهرة. الضوء الساطع المفلتر يحافظ على أجمل درجات الوردي.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Aglaonema sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Exact variety (e.g. 'Lady Valentine') not confirmed.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Aglaonema Pink (Aglaonema sp.)",
+    "media": [
+      {
+        "url": "/media/plants/aglaonema-pink-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/aglaonema-pink-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "alocasia-polly",
+    "sku": "QL-016",
+    "name": "Alocasia Polly",
+    "nameAr": "ألوكاسيا بولي",
+    "description": "Arrow-shaped, almost black-green leaves with bold white veins: a real statement plant. Alocasias want bright light, steady moisture and humidity, and may drop a leaf when they settle in.",
+    "descriptionAr": "أوراق على شكل رأس السهم بلون أخضر يكاد يكون أسود وعروق بيضاء بارزة: نبتة لافتة بحق. تحتاج الألوكاسيا إلى ضوء ساطع ورطوبة منتظمة في التربة والهواء، وقد تُسقط ورقة أثناء تأقلمها.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Alocasia × amazonica 'Polly'",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "demanding",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Alocasia Polly (Alocasia × amazonica 'Polly')",
+    "media": [
+      {
+        "url": "/media/plants/alocasia-polly-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/alocasia-polly-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "alocasia-young",
+    "sku": "QL-017",
+    "name": "Alocasia (Young Plant)",
+    "nameAr": "ألوكاسيا (نبتة صغيرة)",
+    "description": "A young elephant-ear plant with fresh green, arrow-shaped leaves on tall stalks. It will grow taller with bright light and evenly moist soil.",
+    "descriptionAr": "نبتة أذن الفيل الصغيرة بأوراق خضراء نضرة على شكل السهم فوق سيقان طويلة. تزداد طولًا مع الضوء الساطع والتربة الرطبة باعتدال.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Alocasia sp.",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Species unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Alocasia (Young Plant) (Alocasia sp.)",
+    "media": [
+      {
+        "url": "/media/plants/alocasia-young-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/alocasia-young-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "philodendron-xanadu",
+    "sku": "QL-018",
+    "name": "Philodendron Xanadu",
+    "nameAr": "فيلوديندرون زانادو",
+    "description": "Deeply lobed leaves form a dense, spreading mound. Xanadu stays compact for a philodendron and handles indoor conditions well.",
+    "descriptionAr": "أوراق مفصصة بعمق تشكّل كتلة كثيفة منتشرة. يبقى زانادو متماسكًا مقارنةً بأنواع الفيلوديندرون الأخرى ويتأقلم جيدًا مع الأجواء الداخلية.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Thaumatophyllum 'Xanadu'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Philodendron Xanadu (Thaumatophyllum 'Xanadu')",
+    "media": [
+      {
+        "url": "/media/plants/philodendron-xanadu-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/philodendron-xanadu-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "philodendron-selloum",
+    "sku": "QL-019",
+    "name": "Philodendron Selloum",
+    "nameAr": "فيلوديندرون سيلوم",
+    "description": "Large, ruffled leaves on long stems give a lush, tropical look. It grows wide over time, so give it room near a bright window.",
+    "descriptionAr": "أوراق كبيرة متموجة فوق سيقان طويلة تمنح مظهرًا استوائيًا كثيفًا. يتسع مع الوقت، لذا امنحه مساحة قرب نافذة ساطعة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Thaumatophyllum bipinnatifidum",
+    "watering": "Water deeply, then let the top layer dry before watering again",
+    "wateringAr": "اسقِ بعمق ثم انتظر حتى تجف الطبقة العليا قبل الري التالي",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Philodendron Selloum (Thaumatophyllum bipinnatifidum)",
+    "media": [
+      {
+        "url": "/media/plants/philodendron-selloum-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/philodendron-selloum-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "anthurium-pink",
+    "sku": "QL-020",
+    "name": "Anthurium Pink",
+    "nameAr": "أنثوريوم وردي",
+    "description": "Glossy heart-shaped leaves and long-lasting pale pink blooms; a thoughtful gift that keeps flowering in bright, indirect light.",
+    "descriptionAr": "أوراق لامعة على شكل قلب وأزهار وردية فاتحة تدوم طويلًا؛ هدية لطيفة تواصل الإزهار في الإضاءة الساطعة غير المباشرة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Anthurium andraeanum",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Anthurium Pink (Anthurium andraeanum)",
+    "media": [
+      {
+        "url": "/media/plants/anthurium-pink-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/anthurium-pink-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "alocasia-red-secret",
+    "sku": "QL-021",
+    "name": "Alocasia Red Secret",
+    "nameAr": "ألوكاسيا ريد سيكريت",
+    "description": "Metallic, copper-red leaves that shimmer in the light, for collectors who enjoy a plant with character. Keep it warm, bright and evenly moist.",
+    "descriptionAr": "أوراق معدنية بلون نحاسي أحمر تتلألأ في الضوء، لعشاق النباتات المميزة. احرص على الدفء والضوء الساطع والرطوبة المتوازنة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Alocasia cuprea 'Red Secret'",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "demanding",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Alocasia Red Secret (Alocasia cuprea 'Red Secret')",
+    "media": [
+      {
+        "url": "/media/plants/alocasia-red-secret-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/alocasia-red-secret-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "birds-nest-fern-crispy-wave",
+    "sku": "QL-022",
+    "name": "Bird's Nest Fern Crispy Wave",
+    "nameAr": "سرخس عش الطائر كريسبي ويف",
+    "description": "Bright green, wavy fronds that twist as they grow. A fern that tolerates indoor air better than most; water around the edge of the pot, not into the centre.",
+    "descriptionAr": "سعف أخضر زاهٍ متموج يلتف أثناء نموه. سرخس يتحمل الهواء الداخلي أكثر من غيره؛ اسقِه حول حافة الأصيص لا في وسطه.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Asplenium nidus 'Crispy Wave'",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Bird's Nest Fern Crispy Wave (Asplenium nidus 'Crispy Wave')",
+    "media": [
+      {
+        "url": "/media/plants/birds-nest-fern-crispy-wave-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/birds-nest-fern-crispy-wave-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "birds-nest-fern",
+    "sku": "QL-023",
+    "name": "Bird's Nest Fern",
+    "nameAr": "سرخس عش الطائر",
+    "description": "A fresh rosette of glossy, rippled fronds that rises from a central 'nest'. Ideal for bathrooms and kitchens with gentle light.",
+    "descriptionAr": "وردة نضرة من سعف لامع متموج ينمو من 'عش' في المنتصف. مثالية للحمامات والمطابخ ذات الإضاءة الهادئة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Asplenium nidus",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Bird's Nest Fern (Asplenium nidus)",
+    "media": [
+      {
+        "url": "/media/plants/birds-nest-fern-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/birds-nest-fern-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/birds-nest-fern-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/birds-nest-fern-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "ponytail-palm",
+    "sku": "QL-024",
+    "name": "Ponytail Palm",
+    "nameAr": "نخلة ذيل الحصان",
+    "description": "Swollen trunks topped with cascading, grass-like leaves. It stores water in its base, so it is one of the easiest plants to keep: lots of light, very little water.",
+    "descriptionAr": "جذوع منتفخة تعلوها أوراق رفيعة متدلية تشبه العشب. تخزن الماء في قاعدتها، فهي من أسهل النباتات عناية: ضوء كثير وماء قليل جدًا.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "scientificName": "Beaucarnea recurvata",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor-outdoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Ponytail Palm (Beaucarnea recurvata)",
+    "media": [
+      {
+        "url": "/media/plants/ponytail-palm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/ponytail-palm-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "begonia-red-leaf",
+    "sku": "QL-025",
+    "name": "Red-Leaf Foliage Plant",
+    "nameAr": "نبتة الأوراق الحمراء",
+    "description": "Pointed, ruffled leaves in vivid pink-red make this a bold splash of colour. Bright, indirect light keeps the colour strong.",
+    "descriptionAr": "أوراق مدببة متموجة بلون وردي أحمر زاهٍ تمنح لمسة لونية جريئة. الضوء الساطع غير المباشر يحافظ على قوة اللون.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": null,
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Plant not identified with confidence (possibly a begonia); please confirm before naming.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Red-Leaf Foliage Plant",
+    "media": [
+      {
+        "url": "/media/plants/begonia-red-leaf-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/begonia-red-leaf-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-freddie",
+    "sku": "QL-026",
+    "name": "Calathea Freddie",
+    "nameAr": "كالاثيا فريدي",
+    "description": "Light green leaves brushed with darker stripes, standing upright on slim stems. Calatheas fold their leaves at night and prefer filtered light and soft, room-temperature water.",
+    "descriptionAr": "أوراق خضراء فاتحة بخطوط داكنة فوق سيقان نحيلة قائمة. تطوي الكالاثيا أوراقها ليلًا وتفضّل الضوء المفلتر والماء الفاتر غير العسر.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia concinna 'Freddie'",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Freddie (Goeppertia concinna 'Freddie')",
+    "media": [
+      {
+        "url": "/media/plants/calathea-freddie-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-freddie-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-white-star",
+    "sku": "QL-027",
+    "name": "Calathea (White Stripe)",
+    "nameAr": "كالاثيا (خطوط بيضاء)",
+    "description": "Tall leaves painted with white and pink feathering above purple undersides. Give it filtered light and keep the soil evenly moist.",
+    "descriptionAr": "أوراق طويلة مزينة بخطوط بيضاء ووردية ريشية مع ظهر أرجواني. امنحها ضوءًا مفلترًا وحافظ على رطوبة التربة باعتدال.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia sp.",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown (possibly 'White Star'); please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea (White Stripe) (Goeppertia sp.)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-white-star-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-white-star-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-broad-leaf",
+    "sku": "QL-028",
+    "name": "Calathea (Broad Leaf)",
+    "nameAr": "كالاثيا (أوراق عريضة)",
+    "description": "Large, rounded green leaves with fine silver banding on a full, leafy plant. Likes filtered light and steady moisture.",
+    "descriptionAr": "أوراق خضراء كبيرة مستديرة بخطوط فضية رفيعة على نبتة كثيفة. تحب الضوء المفلتر والرطوبة المنتظمة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia sp.",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea (Broad Leaf) (Goeppertia sp.)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-broad-leaf-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-broad-leaf-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-yellow-pattern",
+    "sku": "QL-029",
+    "name": "Calathea (Yellow Pattern)",
+    "nameAr": "كالاثيا (نقوش صفراء)",
+    "description": "Lime and yellow leaves with a darker, feather-like pattern; cheerful colour for a shaded shelf.",
+    "descriptionAr": "أوراق بلون الليمون والأصفر بنقوش داكنة تشبه الريش؛ لون مبهج لرف مظلل.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia sp.",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea (Yellow Pattern) (Goeppertia sp.)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-yellow-pattern-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-yellow-pattern-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-rosy",
+    "sku": "QL-030",
+    "name": "Calathea Rosy",
+    "nameAr": "كالاثيا روزي",
+    "description": "Round leaves washed in rose pink with deep burgundy undersides. A soft, romantic plant that does best in filtered light and humid air.",
+    "descriptionAr": "أوراق مستديرة بلون وردي ناعم وظهر عنابي داكن. نبتة رقيقة تزدهر في الضوء المفلتر والهواء الرطب.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia roseopicta 'Rosy'",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Rosy (Goeppertia roseopicta 'Rosy')",
+    "media": [
+      {
+        "url": "/media/plants/calathea-rosy-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-rosy-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-dottie",
+    "sku": "QL-031",
+    "name": "Calathea Dottie",
+    "nameAr": "كالاثيا دوتي",
+    "description": "Near-black leaves outlined in bright pink: dramatic and compact. Keep it out of direct sun and away from cold air-conditioning vents.",
+    "descriptionAr": "أوراق تكاد تكون سوداء محاطة بخطوط وردية زاهية: مظهر درامي في حجم صغير. أبعدها عن الشمس المباشرة وعن تيارات التكييف الباردة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia roseopicta 'Dottie'",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Dottie (Goeppertia roseopicta 'Dottie')",
+    "media": [
+      {
+        "url": "/media/plants/calathea-dottie-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-dottie-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-medallion",
+    "sku": "QL-032",
+    "name": "Calathea Medallion",
+    "nameAr": "كالاثيا ميدالْيون",
+    "description": "Rounded leaves patterned like a medallion in greens and silver, with purple beneath. Filtered light and even moisture keep the leaves flat and unmarked.",
+    "descriptionAr": "أوراق مستديرة بنقوش تشبه الميدالية بدرجات الأخضر والفضي مع ظهر أرجواني. الضوء المفلتر والرطوبة المتوازنة يحافظان على الأوراق مستوية وسليمة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia veitchiana 'Medallion'",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Medallion (Goeppertia veitchiana 'Medallion')",
+    "media": [
+      {
+        "url": "/media/plants/calathea-medallion-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-medallion-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-orbifolia",
+    "sku": "QL-033",
+    "name": "Calathea Orbifolia",
+    "nameAr": "كالاثيا أوربيفوليا",
+    "description": "Wide, round leaves striped in pale silver-green; one of the most elegant calatheas. It rewards steady care: filtered light, humidity and soil that never dries out completely.",
+    "descriptionAr": "أوراق عريضة مستديرة بخطوط فضية خضراء فاتحة؛ من أكثر أنواع الكالاثيا أناقة. تكافئ العناية المنتظمة: ضوء مفلتر ورطوبة وتربة لا تجف تمامًا أبدًا.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia orbifolia",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "demanding",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Orbifolia (Goeppertia orbifolia)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-orbifolia-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-orbifolia-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-rufibarba",
+    "sku": "QL-034",
+    "name": "Calathea Rufibarba",
+    "nameAr": "كالاثيا روفيبربا",
+    "description": "Long, wavy-edged leaves with velvety purple undersides; soft to the touch and full of movement. Prefers filtered light and evenly moist soil.",
+    "descriptionAr": "أوراق طويلة بحواف متموجة وظهر أرجواني مخملي؛ ناعمة الملمس ومليئة بالحركة. تفضّل الضوء المفلتر والتربة الرطبة باعتدال.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia rufibarba",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Rufibarba (Goeppertia rufibarba)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-rufibarba-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-rufibarba-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/calathea-rufibarba-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-rufibarba-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-ornata",
+    "sku": "QL-035",
+    "name": "Calathea Ornata",
+    "nameAr": "كالاثيا أورناتا",
+    "description": "Dark leaves finely pinstriped in pink, as if drawn by hand. Best for a humid room with soft light; use filtered or rested tap water.",
+    "descriptionAr": "أوراق داكنة تزينها خطوط وردية رفيعة كأنها مرسومة باليد. الأنسب لها غرفة رطبة بإضاءة هادئة، مع ماء مفلتر أو ماء صنبور مترَك لبعض الوقت.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia ornata",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "demanding",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Ornata (Goeppertia ornata)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-ornata-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-ornata-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-zebrina",
+    "sku": "QL-036",
+    "name": "Calathea Zebrina",
+    "nameAr": "كالاثيا زيبرينا",
+    "description": "Velvety leaves with bold zebra stripes in two greens. A lush, upright calathea for a bright room without direct sun.",
+    "descriptionAr": "أوراق مخملية بخطوط حمار وحشي بدرجتين من الأخضر. كالاثيا قائمة وكثيفة لغرفة ساطعة دون شمس مباشرة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia zebrina",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea Zebrina (Goeppertia zebrina)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-zebrina-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-zebrina-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "string-of-hearts",
+    "sku": "QL-037",
+    "name": "String of Hearts",
+    "nameAr": "سلسلة القلوب",
+    "description": "Tiny silver-marbled hearts on long, trailing strands; lovely spilling from a shelf or a hanging pot. A semi-succulent, so let the soil dry between waterings.",
+    "descriptionAr": "قلوب صغيرة بعروق فضية على خيوط طويلة متدلية؛ رائعة وهي تنساب من رف أو أصيص معلق. نبتة شبه عصارية، لذا اترك التربة تجف بين الريّات.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Ceropegia woodii",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "String of Hearts (Ceropegia woodii)",
+    "media": [
+      {
+        "url": "/media/plants/string-of-hearts-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/string-of-hearts-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "fan-leaf-palm",
+    "sku": "QL-038",
+    "name": "Fan-Leaf Plant",
+    "nameAr": "نبتة الأوراق المروحية",
+    "description": "Pleated, fan-shaped leaves on slender stems create a fresh tropical silhouette. Keep it in bright, filtered light.",
+    "descriptionAr": "أوراق مروحية مطوية فوق سيقان نحيلة تمنح هيئة استوائية منعشة. ضعها في ضوء ساطع مفلتر.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": null,
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Plant not identified with confidence (Licuala or Carludovica?); please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Fan-Leaf Plant",
+    "media": [
+      {
+        "url": "/media/plants/fan-leaf-palm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/fan-leaf-palm-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "spider-plant-bonnie",
+    "sku": "QL-039",
+    "name": "Spider Plant Bonnie",
+    "nameAr": "نبتة العنكبوت بوني",
+    "description": "The curly-leaved spider plant: bright green ribbons that twist and spill over the pot. Tough, fast-growing and happy almost anywhere indoors.",
+    "descriptionAr": "نبتة العنكبوت ذات الأوراق المجعدة: أشرطة خضراء زاهية تلتف وتنساب فوق الأصيص. قوية وسريعة النمو وتسعد في أي مكان داخل المنزل تقريبًا.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Chlorophytum comosum 'Bonnie'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Spider Plant Bonnie (Chlorophytum comosum 'Bonnie')",
+    "media": [
+      {
+        "url": "/media/plants/spider-plant-bonnie-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/spider-plant-bonnie-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "spider-plant-ocean",
+    "sku": "QL-040",
+    "name": "Spider Plant Ocean",
+    "nameAr": "نبتة العنكبوت أوشن",
+    "description": "A compact spider plant with short green leaves edged in cream; neat enough for a desk.",
+    "descriptionAr": "نبتة عنكبوت متماسكة بأوراق خضراء قصيرة ذات حواف كريمية؛ مرتبة بما يكفي لسطح المكتب.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Chlorophytum comosum 'Ocean'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Spider Plant Ocean (Chlorophytum comosum 'Ocean')",
+    "media": [
+      {
+        "url": "/media/plants/spider-plant-ocean-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/spider-plant-ocean-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "fire-flash",
+    "sku": "QL-041",
+    "name": "Fire Flash",
+    "nameAr": "فاير فلاش",
+    "description": "Glossy green leaves on bright orange stems that glow against a plain wall. Easy-going and happy in medium light.",
+    "descriptionAr": "أوراق خضراء لامعة فوق سيقان برتقالية زاهية تتوهج أمام الجدار الهادئ. سهلة العناية وتسعد بالإضاءة المتوسطة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Chlorophytum orchidastrum 'Green Orange'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Fire Flash (Chlorophytum orchidastrum 'Green Orange')",
+    "media": [
+      {
+        "url": "/media/plants/fire-flash-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/fire-flash-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "spider-plant-bonnie-variegated",
+    "sku": "QL-042",
+    "name": "Spider Plant Bonnie Variegated",
+    "nameAr": "نبتة العنكبوت بوني المرقطة",
+    "description": "Curly, cream-striped leaves that tumble over the pot rim in loose spirals. Forgiving and quick to produce baby plantlets.",
+    "descriptionAr": "أوراق مجعدة مخططة بالكريمي تنساب فوق حافة الأصيص في لفات حلزونية. متسامحة وسريعة في إنتاج نبتات صغيرة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Chlorophytum comosum 'Bonnie' (variegated)",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Spider Plant Bonnie Variegated (Chlorophytum comosum 'Bonnie' (variegated))",
+    "media": [
+      {
+        "url": "/media/plants/spider-plant-bonnie-variegated-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/spider-plant-bonnie-variegated-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "bamboo-palm",
+    "sku": "QL-043",
+    "name": "Bamboo Palm",
+    "nameAr": "نخلة الخيزران",
+    "description": "A dense, upright palm with broad, arching fronds that softens a bare corner. Copes well with indoor light.",
+    "descriptionAr": "نخلة قائمة كثيفة بسعف عريض مقوس تلطف الزوايا الفارغة. تتأقلم جيدًا مع الإضاءة الداخلية.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Chamaedorea sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Species not confirmed; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Bamboo Palm (Chamaedorea sp.)",
+    "media": [
+      {
+        "url": "/media/plants/bamboo-palm-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/bamboo-palm-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "grape-ivy",
+    "sku": "QL-044",
+    "name": "Grape Ivy",
+    "nameAr": "لبلاب العنب",
+    "description": "Glossy, lobed leaves on trailing stems; lovely in a hanging pot or along a shelf. Undemanding and tolerant of medium light.",
+    "descriptionAr": "أوراق لامعة مفصصة على سيقان متدلية؛ جميلة في أصيص معلق أو على امتداد رف. قليلة المتطلبات وتتحمل الإضاءة المتوسطة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Cissus rhombifolia 'Ellen Danica'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Grape Ivy (Cissus rhombifolia 'Ellen Danica')",
+    "media": [
+      {
+        "url": "/media/plants/grape-ivy-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/grape-ivy-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/grape-ivy-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/grape-ivy-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "croton-narrow-red",
+    "sku": "QL-045",
+    "name": "Croton (Narrow Red Leaf)",
+    "nameAr": "كروتون (أوراق حمراء ضيقة)",
+    "description": "Upright stems of narrow leaves in burgundy, red and gold. Crotons need plenty of bright light to keep their colour; avoid moving them around once settled.",
+    "descriptionAr": "سيقان قائمة بأوراق ضيقة بألوان العنابي والأحمر والذهبي. يحتاج الكروتون إلى الكثير من الضوء الساطع ليحافظ على ألوانه، ويُفضّل ألا يُنقل بعد أن يستقر.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Codiaeum variegatum",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Croton variety not confirmed.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Croton (Narrow Red Leaf) (Codiaeum variegatum)",
+    "media": [
+      {
+        "url": "/media/plants/croton-narrow-red-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/croton-narrow-red-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "croton-petra",
+    "sku": "QL-046",
+    "name": "Croton Petra",
+    "nameAr": "كروتون بترا",
+    "description": "Broad leaves veined in yellow, orange and red, like autumn in a pot. Bright light keeps the colours vivid.",
+    "descriptionAr": "أوراق عريضة بعروق صفراء وبرتقالية وحمراء كأنها خريف في أصيص. الضوء الساطع يحافظ على حيوية ألوانها.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Codiaeum variegatum 'Petra'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Croton Petra (Codiaeum variegatum 'Petra')",
+    "media": [
+      {
+        "url": "/media/plants/croton-petra-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/croton-petra-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "coffee-plant",
+    "sku": "QL-047",
+    "name": "Coffee Plant",
+    "nameAr": "نبتة القهوة",
+    "description": "Glossy, rippled leaves on a bushy little tree; the same plant that gives us coffee beans. Bright, indirect light and evenly moist soil suit it best indoors.",
+    "descriptionAr": "أوراق لامعة متموجة على شجيرة صغيرة كثيفة؛ إنها النبتة نفسها التي تعطينا حبوب القهوة. تناسبها داخل المنزل الإضاءة الساطعة غير المباشرة والتربة الرطبة باعتدال.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Coffea arabica",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Coffee Plant (Coffea arabica)",
+    "media": [
+      {
+        "url": "/media/plants/coffee-plant-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/coffee-plant-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-upright-green",
+    "sku": "QL-048",
+    "name": "Dracaena (Upright Green)",
+    "nameAr": "دراسينا (خضراء قائمة)",
+    "description": "Clusters of slender, dark green leaves on upright stems; a calm, low-maintenance plant for offices.",
+    "descriptionAr": "مجموعات من الأوراق الخضراء الداكنة النحيلة فوق سيقان قائمة؛ نبتة هادئة قليلة المتطلبات للمكاتب.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena sp.",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena (Upright Green) (Dracaena sp.)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-upright-green-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-upright-green-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "croton-mammy",
+    "sku": "QL-049",
+    "name": "Croton Mammy",
+    "nameAr": "كروتون مامي",
+    "description": "Twisted leaves in deep red, pink and green give this croton a lively, curly look. It needs bright light for the best colour.",
+    "descriptionAr": "أوراق ملتوية بالأحمر الداكن والوردي والأخضر تمنح هذا الكروتون مظهرًا حيويًا مجعدًا. يحتاج إلى ضوء ساطع لأفضل الألوان.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Codiaeum variegatum 'Mammy'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Croton Mammy (Codiaeum variegatum 'Mammy')",
+    "media": [
+      {
+        "url": "/media/plants/croton-mammy-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/croton-mammy-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "pencil-cactus",
+    "sku": "QL-050",
+    "name": "Pencil Plant",
+    "nameAr": "نبتة الأقلام",
+    "description": "Slender, upright grey-green stems with a sculptural, modern feel. A sun-loving succulent that needs very little water.",
+    "descriptionAr": "سيقان رمادية خضراء نحيلة قائمة بإحساس عصري نحتي. نبتة عصارية محبة للشمس تحتاج إلى القليل جدًا من الماء.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "scientificName": null,
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor-outdoor",
+    "needsReview": true,
+    "reviewNote": "Not identified with confidence (possibly a Euphorbia, whose sap can irritate skin); please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Pencil Plant",
+    "media": [
+      {
+        "url": "/media/plants/pencil-cactus-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/pencil-cactus-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "jade-plant",
+    "sku": "QL-051",
+    "name": "Jade Plant",
+    "nameAr": "نبتة اليشم",
+    "description": "Thick, glossy leaves with red-tinged edges on a sturdy, tree-like plant. Give it as much light as you can and water only when the soil is dry.",
+    "descriptionAr": "أوراق سميكة لامعة بحواف مائلة للحمرة على نبتة متينة تشبه الشجرة. امنحها أكبر قدر ممكن من الضوء ولا تسقها إلا عندما تجف التربة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "scientificName": "Crassula ovata",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor-outdoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Jade Plant (Crassula ovata)",
+    "media": [
+      {
+        "url": "/media/plants/jade-plant-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/jade-plant-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "jade-gollum",
+    "sku": "QL-052",
+    "name": "Jade Gollum",
+    "nameAr": "يشم جولوم",
+    "description": "A jade with tube-shaped leaves that end in tiny suction-cup tips; quirky and almost indestructible in a sunny spot.",
+    "descriptionAr": "يشم بأوراق أنبوبية تنتهي بأطراف صغيرة تشبه الممصات؛ غريبة الشكل وتكاد لا تُقهر في مكان مشمس.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Full sun",
+    "lightAr": "شمس كاملة",
+    "scientificName": "Crassula ovata 'Gollum'",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor-outdoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Jade Gollum (Crassula ovata 'Gollum')",
+    "media": [
+      {
+        "url": "/media/plants/jade-gollum-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/jade-gollum-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/jade-gollum-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/jade-gollum-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "cordyline-red",
+    "sku": "QL-053",
+    "name": "Cordyline Red",
+    "nameAr": "كورديلين حمراء",
+    "description": "Deep burgundy, sword-like leaves that add rich colour and height. Bright light keeps the red deep.",
+    "descriptionAr": "أوراق عنابية داكنة تشبه السيوف تضيف لونًا غنيًا وارتفاعًا. الضوء الساطع يحافظ على عمق اللون الأحمر.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Cordyline fruticosa",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety not confirmed.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Cordyline Red (Cordyline fruticosa)",
+    "media": [
+      {
+        "url": "/media/plants/cordyline-red-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/cordyline-red-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "calathea-network",
+    "sku": "QL-054",
+    "name": "Calathea (Silver Green)",
+    "nameAr": "كالاثيا (أخضر فضي)",
+    "description": "Grey-green leaves traced with darker veins above purple undersides; a quiet, textured calathea.",
+    "descriptionAr": "أوراق رمادية خضراء تتخللها عروق داكنة مع ظهر أرجواني؛ كالاثيا هادئة غنية بالملمس.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Goeppertia sp.",
+    "watering": "Keep the soil lightly moist, never waterlogged",
+    "wateringAr": "حافظ على رطوبة خفيفة في التربة دون أن تتشبع بالماء",
+    "careLevel": "moderate",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown (possibly the same as the existing 'Calathea Makoyana'); please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Calathea (Silver Green) (Goeppertia sp.)",
+    "media": [
+      {
+        "url": "/media/plants/calathea-network-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/calathea-network-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "clusia",
+    "sku": "QL-055",
+    "name": "Clusia",
+    "nameAr": "كلوزيا",
+    "description": "Thick, rounded leaves on a branching shrub; tough, slow-growing and forgiving if watering is irregular.",
+    "descriptionAr": "أوراق سميكة مستديرة على شجيرة متفرعة؛ قوية بطيئة النمو ومتسامحة مع الري غير المنتظم.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Clusia rosea",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Identification uncertain; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Clusia (Clusia rosea)",
+    "media": [
+      {
+        "url": "/media/plants/clusia-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/clusia-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dieffenbachia-tropic",
+    "sku": "QL-056",
+    "name": "Dieffenbachia (Bushy)",
+    "nameAr": "ديفنباخيا (كثيفة)",
+    "description": "A full, leafy dieffenbachia splashed with cream and lime. Easy indoors; like all dumb canes its sap irritates, so keep it away from pets and small children.",
+    "descriptionAr": "ديفنباخيا ممتلئة كثيفة الأوراق تتناثر عليها ألوان الكريمي والليموني. سهلة داخل المنزل؛ وككل أنواعها تهيّج عصارتُها، لذا أبعدها عن الحيوانات الأليفة والأطفال.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Dieffenbachia seguine",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety not confirmed.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dieffenbachia (Bushy) (Dieffenbachia seguine)",
+    "media": [
+      {
+        "url": "/media/plants/dieffenbachia-tropic-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dieffenbachia-tropic-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dieffenbachia-upright",
+    "sku": "QL-057",
+    "name": "Dieffenbachia (Upright)",
+    "nameAr": "ديفنباخيا (قائمة)",
+    "description": "Tall leaves marbled in pale green on an upright stem. Easy to grow; keep away from pets as the sap irritates.",
+    "descriptionAr": "أوراق طويلة بعروق رخامية خضراء فاتحة على ساق قائمة. سهلة النمو؛ أبعدها عن الحيوانات الأليفة لأن عصارتها مهيّجة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Dieffenbachia seguine",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety not confirmed.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dieffenbachia (Upright) (Dieffenbachia seguine)",
+    "media": [
+      {
+        "url": "/media/plants/dieffenbachia-upright-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dieffenbachia-upright-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dieffenbachia",
+    "sku": "QL-058",
+    "name": "Dieffenbachia",
+    "nameAr": "ديفنباخيا",
+    "description": "The classic dumb cane: large, oval leaves with a creamy centre on a sturdy stem. A generous, easy houseplant; its sap irritates, so keep it out of reach of pets.",
+    "descriptionAr": "نبتة الديفنباخيا الكلاسيكية: أوراق بيضاوية كبيرة بوسط كريمي على ساق متينة. نبتة منزلية سخية وسهلة؛ عصارتها مهيّجة، لذا أبعدها عن متناول الحيوانات الأليفة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Dieffenbachia seguine",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dieffenbachia (Dieffenbachia seguine)",
+    "media": [
+      {
+        "url": "/media/plants/dieffenbachia-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dieffenbachia-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dieffenbachia-pale",
+    "sku": "QL-059",
+    "name": "Dieffenbachia (Pale Leaf)",
+    "nameAr": "ديفنباخيا (أوراق فاتحة)",
+    "description": "Soft, pale green leaves almost washed in cream; brightens a room with medium light. Keep away from pets.",
+    "descriptionAr": "أوراق خضراء فاتحة ناعمة تكاد تكون كريمية؛ تضيء الغرف ذات الإضاءة المتوسطة. أبعدها عن الحيوانات الأليفة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Dieffenbachia seguine",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety not confirmed.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dieffenbachia (Pale Leaf) (Dieffenbachia seguine)",
+    "media": [
+      {
+        "url": "/media/plants/dieffenbachia-pale-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dieffenbachia-pale-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-riki",
+    "sku": "QL-060",
+    "name": "Dracaena Riki",
+    "nameAr": "دراسينا ريكي",
+    "description": "Slim, yellow-edged leaves in tufts along a tall cane. A dependable office plant that tolerates lower light.",
+    "descriptionAr": "أوراق نحيلة بحواف صفراء في خصلات على امتداد ساق طويلة. نبتة مكتبية يُعتمد عليها وتتحمل الإضاءة المنخفضة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Riki'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety likely 'Riki'; please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Riki (Dracaena fragrans 'Riki')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-riki-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-riki-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/dracaena-riki-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-riki-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-compacta-tiered",
+    "sku": "QL-061",
+    "name": "Dracaena Compacta (Tiered)",
+    "nameAr": "دراسينا كومباكتا (طبقات)",
+    "description": "Tight rosettes of glossy dark leaves stacked at different heights on canes, like a little topiary. Slow-growing and very tolerant of indoor conditions.",
+    "descriptionAr": "وردات متراصة من أوراق داكنة لامعة متدرجة على سيقان بارتفاعات مختلفة كأنها منحوتة صغيرة. بطيئة النمو وتتحمل الأجواء الداخلية جيدًا.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Compacta'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Compacta (Tiered) (Dracaena fragrans 'Compacta')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-compacta-tiered-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-compacta-tiered-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/dracaena-compacta-tiered-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-compacta-tiered-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-warneckii",
+    "sku": "QL-062",
+    "name": "Dracaena Warneckii",
+    "nameAr": "دراسينا وارنيكي",
+    "description": "Narrow leaves striped in green, grey and white form a fountain-like plant. Very forgiving in lower light.",
+    "descriptionAr": "أوراق ضيقة مخططة بالأخضر والرمادي والأبيض تشكّل نبتة تشبه النافورة. متسامحة جدًا مع الإضاءة المنخفضة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Warneckii'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Warneckii (Dracaena fragrans 'Warneckii')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-warneckii-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-warneckii-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-golden",
+    "sku": "QL-063",
+    "name": "Dracaena (Golden Stripe)",
+    "nameAr": "دراسينا (خطوط ذهبية)",
+    "description": "Dense tufts of green leaves edged in gold climb a single cane; a bright, upright accent plant.",
+    "descriptionAr": "خصلات كثيفة من أوراق خضراء بحواف ذهبية تتسلق ساقًا واحدة؛ لمسة قائمة مشرقة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena (Golden Stripe) (Dracaena fragrans)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-golden-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-golden-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "corn-plant",
+    "sku": "QL-064",
+    "name": "Corn Plant",
+    "nameAr": "نبتة الذرة",
+    "description": "Arching leaves with a golden stripe down the middle, the classic corn plant. Slow, steady and tolerant of dimmer rooms.",
+    "descriptionAr": "أوراق مقوسة يتوسطها خط ذهبي، نبتة الذرة الكلاسيكية. بطيئة ثابتة النمو وتتحمل الغرف الأقل إضاءة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Massangeana'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Corn Plant (Dracaena fragrans 'Massangeana')",
+    "media": [
+      {
+        "url": "/media/plants/corn-plant-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/corn-plant-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/corn-plant-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/corn-plant-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/corn-plant-3-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/corn-plant-3-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-fragrans-multi",
+    "sku": "QL-065",
+    "name": "Dracaena Fragrans (Multi-Cane)",
+    "nameAr": "دراسينا فراجرانس (متعددة السيقان)",
+    "description": "Several canes topped with striped, glossy leaves give height and fullness in one pot.",
+    "descriptionAr": "عدة سيقان تعلوها أوراق لامعة مخططة تمنح ارتفاعًا وامتلاءً في أصيص واحد.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Fragrans (Multi-Cane) (Dracaena fragrans)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-fragrans-multi-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-fragrans-multi-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-lemon-lime-cane",
+    "sku": "QL-066",
+    "name": "Dracaena Lemon Lime (Two Canes)",
+    "nameAr": "دراسينا ليمون لايم (ساقان)",
+    "description": "Two canes topped with lime-and-cream striped leaves; fresh colour for a hallway or office.",
+    "descriptionAr": "ساقان تعلوهما أوراق مخططة بالليموني والكريمي؛ لون منعش لممر أو مكتب.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Lemon Lime'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety likely 'Lemon Lime'; please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Lemon Lime (Two Canes) (Dracaena fragrans 'Lemon Lime')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-lemon-lime-cane-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-lemon-lime-cane-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-compacta",
+    "sku": "QL-067",
+    "name": "Dracaena Compacta",
+    "nameAr": "دراسينا كومباكتا",
+    "description": "A bushy column of short, glossy dark green leaves; one of the toughest plants for low light.",
+    "descriptionAr": "عمود كثيف من أوراق خضراء داكنة قصيرة لامعة؛ من أقوى النباتات تحملًا للإضاءة المنخفضة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Compacta'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Compacta (Dracaena fragrans 'Compacta')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-compacta-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-compacta-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/dracaena-compacta-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-compacta-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-janet-craig",
+    "sku": "QL-068",
+    "name": "Dracaena Janet Craig",
+    "nameAr": "دراسينا جانيت كريج",
+    "description": "A rosette of broad, glossy deep green leaves; simple, elegant and very tolerant of shade.",
+    "descriptionAr": "وردة من أوراق خضراء داكنة عريضة لامعة؛ بسيطة أنيقة وتتحمل الظل جيدًا.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Janet Craig'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Janet Craig (Dracaena fragrans 'Janet Craig')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-janet-craig-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-janet-craig-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-curly",
+    "sku": "QL-069",
+    "name": "Dracaena (Curly Leaf)",
+    "nameAr": "دراسينا (أوراق مجعدة)",
+    "description": "Full, wavy leaves with yellow edges on a sturdy cane; lush and easy-going.",
+    "descriptionAr": "أوراق ممتلئة متموجة بحواف صفراء على ساق متينة؛ كثيفة وسهلة العناية.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena (Curly Leaf) (Dracaena fragrans)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-curly-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-curly-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-striped-cane",
+    "sku": "QL-070",
+    "name": "Dracaena (Striped, Single Cane)",
+    "nameAr": "دراسينا (مخططة، ساق واحدة)",
+    "description": "Long, cream-striped leaves arranged in tiers up a single cane; tall and graceful.",
+    "descriptionAr": "أوراق طويلة مخططة بالكريمي متدرجة على ساق واحدة؛ طويلة ورشيقة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena (Striped, Single Cane) (Dracaena fragrans)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-striped-cane-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-striped-cane-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-lemon-lime",
+    "sku": "QL-071",
+    "name": "Dracaena Lemon Lime",
+    "nameAr": "دراسينا ليمون لايم",
+    "description": "A wide, low rosette of leaves striped in lime, cream and green; bright colour for a table or a low stand.",
+    "descriptionAr": "وردة منخفضة عريضة من أوراق مخططة بالليموني والكريمي والأخضر؛ لون مشرق لطاولة أو حامل منخفض.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Lemon Lime'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Lemon Lime (Dracaena fragrans 'Lemon Lime')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-lemon-lime-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-lemon-lime-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "corn-plant-canes",
+    "sku": "QL-072",
+    "name": "Corn Plant (On Canes)",
+    "nameAr": "نبتة الذرة (على سيقان)",
+    "description": "The striped corn plant grown on stacked canes for a taller, tree-like shape. Slow and tolerant of lower light.",
+    "descriptionAr": "نبتة الذرة المخططة منماة على سيقان متدرجة لتكون أطول وأشبه بالشجرة. بطيئة النمو وتتحمل الإضاءة المنخفضة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Massangeana'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Corn Plant (On Canes) (Dracaena fragrans 'Massangeana')",
+    "media": [
+      {
+        "url": "/media/plants/corn-plant-canes-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/corn-plant-canes-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-lemon-lime-canes",
+    "sku": "QL-073",
+    "name": "Dracaena Lemon Lime (Multi-Cane)",
+    "nameAr": "دراسينا ليمون لايم (متعددة السيقان)",
+    "description": "Several canes of arching, lime-edged leaves make a full, bright floor plant.",
+    "descriptionAr": "عدة سيقان بأوراق مقوسة ذات حواف ليمونية تشكّل نبتة أرضية ممتلئة ومشرقة.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans 'Lemon Lime'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety likely 'Lemon Lime'; please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Lemon Lime (Multi-Cane) (Dracaena fragrans 'Lemon Lime')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-lemon-lime-canes-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-lemon-lime-canes-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-two-tier",
+    "sku": "QL-074",
+    "name": "Dracaena (Two Tier)",
+    "nameAr": "دراسينا (طبقتان)",
+    "description": "Two tiers of green, arching leaves on canes of different heights; a tidy, architectural floor plant.",
+    "descriptionAr": "طبقتان من أوراق خضراء مقوسة على سيقان بارتفاعات مختلفة؛ نبتة أرضية مرتبة ذات طابع معماري.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena (Two Tier) (Dracaena fragrans)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-two-tier-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-two-tier-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/dracaena-two-tier-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-two-tier-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-yellow-stripe-tier",
+    "sku": "QL-075",
+    "name": "Dracaena (Yellow Stripe, Two Tier)",
+    "nameAr": "دراسينا (خطوط صفراء، طبقتان)",
+    "description": "Yellow-striped leaves in two tiers on slender canes; cheerful and low-maintenance.",
+    "descriptionAr": "أوراق مخططة بالأصفر في طبقتين على سيقان نحيلة؛ مبهجة وقليلة المتطلبات.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Low to bright indirect",
+    "lightAr": "إضاءة منخفضة إلى ساطعة غير مباشرة",
+    "scientificName": "Dracaena fragrans",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety unknown; please confirm the name.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena (Yellow Stripe, Two Tier) (Dracaena fragrans)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-yellow-stripe-tier-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-yellow-stripe-tier-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-marginata-bicolor",
+    "sku": "QL-076",
+    "name": "Dracaena Marginata Bicolor",
+    "nameAr": "دراسينا مارجيناتا بايكلر",
+    "description": "Fine, spiky leaves edged in red on several slim trunks: light and airy. Allow the soil to dry out between waterings.",
+    "descriptionAr": "أوراق رفيعة شوكية بحواف حمراء على عدة جذوع نحيلة: خفيفة ومنعشة. اترك التربة تجف بين الريّات.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Dracaena marginata 'Bicolor'",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Marginata Bicolor (Dracaena marginata 'Bicolor')",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-marginata-bicolor-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-marginata-bicolor-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "dracaena-marginata",
+    "sku": "QL-077",
+    "name": "Dracaena Marginata",
+    "nameAr": "دراسينا مارجيناتا",
+    "description": "Tufts of narrow leaves on bare, branching stems give a modern, palm-like silhouette. Easy-going; let the soil dry between waterings.",
+    "descriptionAr": "خصلات من أوراق ضيقة فوق سيقان متفرعة عارية تمنح هيئة عصرية تشبه النخيل. سهلة العناية؛ اترك التربة تجف بين الريّات.",
+    "category": "Indoor Plants",
+    "categoryAr": "نباتات داخلية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Dracaena marginata",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Dracaena Marginata (Dracaena marginata)",
+    "media": [
+      {
+        "url": "/media/plants/dracaena-marginata-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-marginata-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "url": "/media/plants/dracaena-marginata-2-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/dracaena-marginata-2-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "philodendron-congo-rojo",
+    "sku": "QL-078",
+    "name": "Philodendron Congo Rojo",
+    "nameAr": "فيلوديندرون كونجو روخو",
+    "description": "Large leaves that unfurl red and darken to bronze-green; a warm, glossy philodendron that grows without much fuss.",
+    "descriptionAr": "أوراق كبيرة تتفتح باللون الأحمر ثم تتحول إلى أخضر برونزي؛ فيلوديندرون لامع دافئ ينمو دون عناء كبير.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Philodendron 'Congo Rojo'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Philodendron Congo Rojo (Philodendron 'Congo Rojo')",
+    "media": [
+      {
+        "url": "/media/plants/philodendron-congo-rojo-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/philodendron-congo-rojo-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "philodendron-prince-of-orange",
+    "sku": "QL-079",
+    "name": "Philodendron Prince of Orange",
+    "nameAr": "فيلوديندرون أمير البرتقال",
+    "description": "New leaves open bright orange and mellow to green, so the plant always shows several colours at once.",
+    "descriptionAr": "تتفتح الأوراق الجديدة بلون برتقالي زاهٍ ثم تتحول تدريجيًا إلى الأخضر، فتظهر النبتة بعدة ألوان في آن واحد.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Philodendron 'Prince of Orange'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Philodendron Prince of Orange (Philodendron 'Prince of Orange')",
+    "media": [
+      {
+        "url": "/media/plants/philodendron-prince-of-orange-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/philodendron-prince-of-orange-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "philodendron-birkin",
+    "sku": "QL-080",
+    "name": "Philodendron Birkin",
+    "nameAr": "فيلوديندرون بيركن",
+    "description": "Dark green leaves finely pinstriped in cream; every new leaf is a little different. Compact and easy for a desk or shelf.",
+    "descriptionAr": "أوراق خضراء داكنة بخطوط كريمية رفيعة؛ كل ورقة جديدة مختلفة قليلًا. نبتة متماسكة وسهلة لسطح مكتب أو رف.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Philodendron 'Birkin'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Philodendron Birkin (Philodendron 'Birkin')",
+    "media": [
+      {
+        "url": "/media/plants/philodendron-birkin-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/philodendron-birkin-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "peperomia-small-leaf",
+    "sku": "QL-081",
+    "name": "Peperomia (Small Leaf)",
+    "nameAr": "بيبيروميا (أوراق صغيرة)",
+    "description": "A soft mound of tiny, round leaves that spills over the pot; easy and compact.",
+    "descriptionAr": "كتلة ناعمة من أوراق صغيرة مستديرة تنساب فوق الأصيص؛ سهلة ومتماسكة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Peperomia sp.",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Species not confirmed (could also be a Pilea); please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Peperomia (Small Leaf) (Peperomia sp.)",
+    "media": [
+      {
+        "url": "/media/plants/peperomia-small-leaf-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peperomia-small-leaf-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "peperomia-pepperspot",
+    "sku": "QL-082",
+    "name": "Peperomia Pepperspot",
+    "nameAr": "بيبيروميا بيبرسبوت",
+    "description": "Little coin-like leaves on wiry red stems that trail or climb; charming in a small hanging pot.",
+    "descriptionAr": "أوراق صغيرة تشبه العملات على سيقان حمراء رفيعة تتدلى أو تتسلق؛ ساحرة في أصيص معلق صغير.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Peperomia 'Pepperspot'",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety not confirmed; please confirm.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Peperomia Pepperspot (Peperomia 'Pepperspot')",
+    "media": [
+      {
+        "url": "/media/plants/peperomia-pepperspot-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peperomia-pepperspot-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "peperomia-obtusifolia-variegata",
+    "sku": "QL-083",
+    "name": "Peperomia Obtusifolia Variegata",
+    "nameAr": "بيبيروميا أوبتوسيفوليا مرقطة",
+    "description": "Thick, rounded leaves marbled in cream and green; a sturdy little plant that stores water in its leaves.",
+    "descriptionAr": "أوراق سميكة مستديرة بعروق كريمية وخضراء؛ نبتة صغيرة متينة تخزن الماء في أوراقها.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Peperomia obtusifolia 'Variegata'",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Peperomia Obtusifolia Variegata (Peperomia obtusifolia 'Variegata')",
+    "media": [
+      {
+        "url": "/media/plants/peperomia-obtusifolia-variegata-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peperomia-obtusifolia-variegata-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "philodendron-green-congo",
+    "sku": "QL-084",
+    "name": "Philodendron Green Congo",
+    "nameAr": "فيلوديندرون كونجو الأخضر",
+    "description": "Long, glossy green leaves on a compact, self-heading plant; clean and fresh on a table.",
+    "descriptionAr": "أوراق خضراء طويلة لامعة على نبتة متماسكة لا تتسلق؛ مظهر نظيف ومنعش على الطاولة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Philodendron 'Imperial Green'",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": true,
+    "reviewNote": "Variety not confirmed.",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Philodendron Green Congo (Philodendron 'Imperial Green')",
+    "media": [
+      {
+        "url": "/media/plants/philodendron-green-congo-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/philodendron-green-congo-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "peperomia-happy-bean",
+    "sku": "QL-085",
+    "name": "Peperomia Happy Bean",
+    "nameAr": "بيبيروميا هابي بين",
+    "description": "Bright green, bean-shaped leaves in playful clusters; a semi-succulent that likes light and dislikes wet feet.",
+    "descriptionAr": "أوراق خضراء زاهية على شكل حبوب الفاصولياء في مجموعات مرحة؛ نبتة شبه عصارية تحب الضوء ولا تحب التربة المشبعة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Bright indirect",
+    "lightAr": "إضاءة ساطعة غير مباشرة",
+    "scientificName": "Peperomia ferreyrae",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Peperomia Happy Bean (Peperomia ferreyrae)",
+    "media": [
+      {
+        "url": "/media/plants/peperomia-happy-bean-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peperomia-happy-bean-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "peperomia-rosso",
+    "sku": "QL-086",
+    "name": "Peperomia Rosso",
+    "nameAr": "بيبيروميا روسو",
+    "description": "Ridged, dark green leaves with red undersides in a tight, star-like rosette; small and easy.",
+    "descriptionAr": "أوراق خضراء داكنة مضلعة بظهر أحمر في وردة متماسكة تشبه النجمة؛ صغيرة وسهلة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Peperomia caperata 'Rosso'",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Peperomia Rosso (Peperomia caperata 'Rosso')",
+    "media": [
+      {
+        "url": "/media/plants/peperomia-rosso-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peperomia-rosso-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "peperomia-watermelon",
+    "sku": "QL-087",
+    "name": "Peperomia Watermelon",
+    "nameAr": "بيبيروميا البطيخ",
+    "description": "Round leaves striped silver and green like a watermelon rind, on red stems; compact and charming.",
+    "descriptionAr": "أوراق مستديرة مخططة بالفضي والأخضر كقشرة البطيخ فوق سيقان حمراء؛ متماسكة وساحرة.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Peperomia argyreia",
+    "watering": "Water when the top few centimetres of soil are dry",
+    "wateringAr": "اسقِ عندما تجف الطبقة العليا من التربة بعمق بضعة سنتيمترات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Peperomia Watermelon (Peperomia argyreia)",
+    "media": [
+      {
+        "url": "/media/plants/peperomia-watermelon-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peperomia-watermelon-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
+      }
+    ]
+  },
+  {
+    "slug": "peperomia-obtusifolia",
+    "sku": "QL-088",
+    "name": "Peperomia Obtusifolia",
+    "nameAr": "بيبيروميا أوبتوسيفوليا",
+    "description": "Glossy, spoon-shaped green leaves on a neat, bushy plant; one of the easiest small plants to keep.",
+    "descriptionAr": "أوراق خضراء لامعة على شكل الملعقة على نبتة كثيفة مرتبة؛ من أسهل النباتات الصغيرة عناية.",
+    "category": "Table Top Plants",
+    "categoryAr": "نباتات مكتبية",
+    "light": "Medium indirect",
+    "lightAr": "إضاءة متوسطة غير مباشرة",
+    "scientificName": "Peperomia obtusifolia",
+    "watering": "Water sparingly and let the soil dry out completely between waterings",
+    "wateringAr": "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات",
+    "careLevel": "easy",
+    "placement": "indoor",
+    "needsReview": false,
+    "reviewNote": null,
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Peperomia Obtusifolia (Peperomia obtusifolia)",
+    "media": [
+      {
+        "url": "/media/plants/peperomia-obtusifolia-640.webp",
+        "purpose": "catalog",
+        "width": 640,
+        "height": 640
+      },
+      {
+        "url": "/media/plants/peperomia-obtusifolia-1024.webp",
+        "purpose": "detail",
+        "width": 1024,
+        "height": 1024
       }
     ]
   }

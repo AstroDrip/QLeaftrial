@@ -13,8 +13,9 @@ export const productQuerySchema = z.object({
   minPrice: z.coerce.number().int().nonnegative().optional(),
   maxPrice: z.coerce.number().int().nonnegative().optional(),
   inStock: z.enum(["1"]).optional(),
+  featured: z.enum(["1"]).optional(),
   page: z.coerce.number().int().positive().default(1),
-  sort: z.enum(["name-asc", "price-asc", "price-desc", "newest"]).default("newest"),
+  sort: z.enum(["name-asc", "price-asc", "price-desc", "newest", "featured"]).default("newest"),
 });
 
 export type ProductQuery = z.infer<typeof productQuerySchema>;
@@ -37,6 +38,13 @@ export type ProductSummary = {
   light: string | null;
   lightAr: string | null;
   priceQar: number;
+  // The genuine earlier price, present only when it is higher than priceQar.
+  compareAtPriceQar: number | null;
+  featured: boolean;
+  scientificName: string | null;
+  careLevel: string | null;
+  placement: string | null;
+  createdAt: string;
   stock: number;
   inStock: boolean;
   image: ProductMedia | null;
@@ -46,4 +54,6 @@ export type ProductSummary = {
 export type ProductDetail = ProductSummary & {
   description: string;
   descriptionAr: string | null;
+  watering: string | null;
+  wateringAr: string | null;
 };

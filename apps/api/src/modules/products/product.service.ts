@@ -15,6 +15,14 @@ const publicProductSelection = {
   light: true,
   lightAr: true,
   priceQar: true,
+  compareAtPriceQar: true,
+  featured: true,
+  scientificName: true,
+  watering: true,
+  wateringAr: true,
+  careLevel: true,
+  placement: true,
+  createdAt: true,
   media: {
     select: { url: true, altText: true, width: true, height: true, purpose: true },
     orderBy: { sortOrder: "asc" as const },
@@ -34,6 +42,14 @@ type PublicProductRecord = {
   light: string | null;
   lightAr: string | null;
   priceQar: number;
+  compareAtPriceQar: number | null;
+  featured: boolean;
+  scientificName: string | null;
+  watering: string | null;
+  wateringAr: string | null;
+  careLevel: string | null;
+  placement: string | null;
+  createdAt: Date;
   media: Array<{
     url: string;
     altText: string;
@@ -52,7 +68,8 @@ type PublicProductWhere = {
   light?: string;
   priceQar?: { gte?: number; lte?: number };
   inventory?: { is: { quantity: { gt: number } } };
-  OR?: Array<Partial<Record<"name" | "description" | "nameAr" | "descriptionAr" | "slug", TextContains>>>;
+  featured?: boolean;
+  OR?: Array<Partial<Record<"name" | "description" | "nameAr" | "descriptionAr" | "slug" | "scientificName" | "category" | "categoryAr", TextContains>>>;
 };
 
 type ProductRepository = {
@@ -64,6 +81,7 @@ type ProductRepository = {
       | { priceQar: "asc" | "desc" }
       | { slug: "asc" }
       | { createdAt: "desc" }
+      | { featured: "desc" }
     >;
     skip: number;
     take: number;
@@ -114,6 +132,12 @@ function toSummary(
     light: isArabic && product.lightAr?.trim() ? product.lightAr : product.light,
     lightAr: product.lightAr,
     priceQar: product.priceQar,
+    compareAtPriceQar: product.compareAtPriceQar && product.compareAtPriceQar > product.priceQar ? product.compareAtPriceQar : null,
+    featured: product.featured,
+    scientificName: product.scientificName,
+    careLevel: product.careLevel,
+    placement: product.placement,
+    createdAt: product.createdAt.toISOString(),
     stock,
     inStock: stock > 0,
     image: image ?? null,
@@ -129,6 +153,8 @@ function toDetail(
     ...toSummary(product, language),
     description: language === "ar" && product.descriptionAr?.trim() ? product.descriptionAr : product.description,
     descriptionAr: product.descriptionAr,
+    watering: language === "ar" && product.wateringAr?.trim() ? product.wateringAr : product.watering,
+    wateringAr: product.wateringAr,
     media: product.media,
   };
 }
@@ -148,9 +174,11 @@ export async function listProducts(query: ProductQuery): Promise<{
       ? { priceQar: { ...(query.minPrice !== undefined ? { gte: query.minPrice } : {}), ...(query.maxPrice !== undefined ? { lte: query.maxPrice } : {}) } }
       : {}),
     ...(query.inStock ? { inventory: { is: { quantity: { gt: 0 } } } } : {}),
+    ...(query.featured ? { featured: true } : {}),
     ...(query.q
       ? {
-          OR: (["name", "description", "nameAr", "descriptionAr", "slug"] as const).map((field) => ({
+          // Common and botanical names, descriptions and category names, in both languages.
+          OR: (["name", "description", "nameAr", "descriptionAr", "slug", "scientificName", "category", "categoryAr"] as const).map((field) => ({
             [field]: textContains(query.q!),
           })),
         }
@@ -164,6 +192,8 @@ export async function listProducts(query: ProductQuery): Promise<{
       ? [{ priceQar: "desc" }, { slug: "asc" }]
       : query.sort === "newest"
         ? [{ createdAt: "desc" }, { slug: "asc" }]
+        : query.sort === "featured"
+        ? [{ featured: "desc" }, { createdAt: "desc" }, { slug: "asc" }]
         : [{ name: "asc" }, { slug: "asc" }];
 
   const [products, totalItems] = await Promise.all([

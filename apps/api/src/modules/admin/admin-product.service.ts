@@ -18,6 +18,15 @@ const adminProductSelection = {
   priceQar: true,
   costPrice: true,
   published: true,
+  compareAtPriceQar: true,
+  featured: true,
+  scientificName: true,
+  watering: true,
+  wateringAr: true,
+  careLevel: true,
+  placement: true,
+  needsReview: true,
+  reviewNote: true,
   media: {
     select: { url: true, altText: true },
     orderBy: { sortOrder: "asc" },
@@ -40,6 +49,15 @@ type AdminProductRecord = {
   priceQar: number;
   costPrice: number;
   published: boolean;
+  compareAtPriceQar: number | null;
+  featured: boolean;
+  scientificName: string | null;
+  watering: string | null;
+  wateringAr: string | null;
+  careLevel: string | null;
+  placement: string | null;
+  needsReview: boolean;
+  reviewNote: string | null;
   media: Array<{ url: string; altText: string }>;
   inventory: { quantity: number } | null;
 };
@@ -60,6 +78,15 @@ export type AdminProduct = {
   stock: number;
   image: { url: string; altText: string } | null;
   published: boolean;
+  compareAtPriceQar: number | null;
+  featured: boolean;
+  scientificName: string | null;
+  watering: string | null;
+  wateringAr: string | null;
+  careLevel: string | null;
+  placement: string | null;
+  needsReview: boolean;
+  reviewNote: string | null;
 };
 
 type AdminProductRepository = {
@@ -85,6 +112,15 @@ type AdminProductCreateRepository = {
       priceQar: number;
       costPrice: number;
       published: boolean;
+      compareAtPriceQar?: number | null;
+      featured?: boolean;
+      scientificName?: string | null;
+      watering?: string | null;
+      wateringAr?: string | null;
+      careLevel?: string | null;
+      placement?: string | null;
+      needsReview?: boolean;
+      reviewNote?: string | null;
       inventory: { create: { quantity: number } };
       media: { create: Array<{
         url: string;
@@ -111,6 +147,15 @@ type ProductUpdateData = {
   descriptionAr?: string;
   categoryAr?: string;
   lightAr?: string;
+  compareAtPriceQar?: number | null;
+  featured?: boolean;
+  scientificName?: string | null;
+  watering?: string | null;
+  wateringAr?: string | null;
+  careLevel?: string | null;
+  placement?: string | null;
+  needsReview?: boolean;
+  reviewNote?: string | null;
 };
 
 type TransactionClient = {
@@ -174,7 +219,26 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
     stock: product.inventory?.quantity ?? 0,
     image: product.media[0] ?? null,
     published: product.published,
+    compareAtPriceQar: product.compareAtPriceQar,
+    featured: product.featured,
+    scientificName: product.scientificName,
+    watering: product.watering,
+    wateringAr: product.wateringAr,
+    careLevel: product.careLevel,
+    placement: product.placement,
+    needsReview: product.needsReview,
+    reviewNote: product.reviewNote,
   };
+}
+
+// A listing customers can buy must have a real price; a "was" price only makes sense above the current one.
+function assertSellable(state: { published: boolean; priceQar: number; compareAtPriceQar: number | null | undefined }): void {
+  if (state.published && state.priceQar <= 0) {
+    throw new ApiError(400, "PRICE_REQUIRED", "Set a price above 0 QAR before publishing this product");
+  }
+  if (state.compareAtPriceQar != null && state.compareAtPriceQar <= state.priceQar) {
+    throw new ApiError(400, "INVALID_COMPARE_AT_PRICE", "The original price must be higher than the current price");
+  }
 }
 
 export async function listAdminProducts(): Promise<AdminProduct[]> {
@@ -202,6 +266,12 @@ export async function updateAdminProduct(
     const productFields = Object.fromEntries(
       Object.entries(requested).filter(([, value]) => value !== undefined),
     ) as ProductUpdateData;
+    assertSellable({
+      published: productFields.published ?? existing.published,
+      priceQar: productFields.priceQar ?? existing.priceQar,
+      compareAtPriceQar: productFields.compareAtPriceQar !== undefined ? productFields.compareAtPriceQar : existing.compareAtPriceQar,
+    });
+
     const product = Object.keys(productFields).length === 0
       ? existing
       : await transaction.product.update({
@@ -255,6 +325,7 @@ function mediaRows(
 }
 
 export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
+  assertSellable({ published: true, priceQar: input.priceQar, compareAtPriceQar: input.compareAtPriceQar });
   const usesPostgreSql = process.env.QLEAVES_DATABASE_PROVIDER === "postgresql";
   if (usesPostgreSql && input.imageDataUrl) {
     throw new ApiError(400, "VALIDATION_ERROR", "Production product creation requires staged image variants");
@@ -285,6 +356,11 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         priceQar: input.priceQar,
         costPrice: input.costPrice,
         published: true,
+        ...Object.fromEntries(
+          (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "careLevel", "placement", "needsReview", "reviewNote"] as const)
+            .filter((key) => input[key] !== undefined)
+            .map((key) => [key, input[key]]),
+        ),
         inventory: { create: { quantity: input.stock } },
         media: {
           create: mediaRows(finalizedImages, legacyImage, input.imageAltText),

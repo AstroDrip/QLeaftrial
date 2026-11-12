@@ -74,8 +74,22 @@ model Product {
   light       String?
   lightAr     String?
   priceQar    Int
+  // The price before a genuine reduction; shown struck through only when it is higher than priceQar.
+  compareAtPriceQar Int?
   costPrice   Int
   published   Boolean        @default(false)
+  // Chosen in admin for the home page's Featured section.
+  featured    Boolean        @default(false)
+  scientificName String?
+  watering    String?
+  wateringAr  String?
+  // "easy" | "moderate" | "demanding"
+  careLevel   String?
+  // "indoor" | "outdoor" | "indoor-outdoor"
+  placement   String?
+  // Admin-only: an identification or detail the shop still has to confirm before publishing.
+  needsReview Boolean        @default(false)
+  reviewNote  String?
   media       ProductMedia[]
   inventory   Inventory?
   orderItems  OrderItem[]
@@ -86,6 +100,7 @@ model Product {
   @@index([published, category])
   @@index([published, priceQar])
   @@index([published, name])
+  @@index([published, featured])
 }
 
 model ProductMedia {

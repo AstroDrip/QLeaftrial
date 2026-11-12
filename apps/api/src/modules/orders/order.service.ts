@@ -191,7 +191,8 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
     // Prices, names and SKUs come from the database at this moment, never from the request; the order
     // items keep them as a snapshot so later price or name changes never rewrite an old order.
     const products = await tx.product.findMany({
-      where: { id: { in: [...quantities.keys()] }, published: true },
+      // A published product without a real price can never be bought.
+      where: { id: { in: [...quantities.keys()] }, published: true, priceQar: { gt: 0 } },
       select: { id: true, name: true, sku: true, priceQar: true },
     });
     if (products.length !== quantities.size) {

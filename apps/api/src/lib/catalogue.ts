@@ -30,6 +30,13 @@ export interface PublicCatalogueProduct {
   light: string | null;
   lightAr: string | null;
   priceQar: number;
+  compareAtPriceQar: number | null;
+  featured: boolean;
+  scientificName: string | null;
+  careLevel: string | null;
+  placement: string | null;
+  watering: string | null;
+  wateringAr: string | null;
   stock: number;
   inStock: boolean;
   createdAt: string;
@@ -65,6 +72,13 @@ const publicProductSelection = {
   light: true,
   lightAr: true,
   priceQar: true,
+  compareAtPriceQar: true,
+  featured: true,
+  scientificName: true,
+  careLevel: true,
+  placement: true,
+  watering: true,
+  wateringAr: true,
   createdAt: true,
   updatedAt: true,
   media: {
@@ -88,6 +102,13 @@ function mapProduct(record: {
   light: string | null;
   lightAr: string | null;
   priceQar: number;
+  compareAtPriceQar: number | null;
+  featured: boolean;
+  scientificName: string | null;
+  careLevel: string | null;
+  placement: string | null;
+  watering: string | null;
+  wateringAr: string | null;
   createdAt: Date;
   media: Array<{
     url: string;
@@ -120,6 +141,13 @@ function mapProduct(record: {
     light: record.light,
     lightAr: record.lightAr,
     priceQar: record.priceQar,
+    compareAtPriceQar: record.compareAtPriceQar && record.compareAtPriceQar > record.priceQar ? record.compareAtPriceQar : null,
+    featured: record.featured,
+    scientificName: record.scientificName,
+    careLevel: record.careLevel,
+    placement: record.placement,
+    watering: record.watering,
+    wateringAr: record.wateringAr,
     stock,
     inStock: stock > 0,
     createdAt: record.createdAt.toISOString(),
