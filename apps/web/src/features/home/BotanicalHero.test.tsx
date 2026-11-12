@@ -54,19 +54,20 @@ describe("BotanicalHero", () => {
     expect(animate).not.toHaveBeenCalled();
   });
 
-  it("plays the entry once and follows a mouse pointer, nearer plants further than farther ones", async () => {
+  it("follows a mouse pointer, nearer plants further than farther ones, and never hides the photos", async () => {
     const { container } = setup({ reduced: false, fine: true });
     await settle();
-    expect(animate).toHaveBeenCalledTimes(1);
+    expect(animate).not.toHaveBeenCalled();
 
     window.dispatchEvent(pointer("mouse"));
     await act(async () => { await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))); });
 
-    const moves = animate.mock.calls.slice(1) as unknown as Array<[HTMLElement, { x: number }]>;
+    const moves = animate.mock.calls as unknown as Array<[HTMLElement, { x: number }]>;
     expect(moves.length).toBe(container.querySelectorAll(".botanical-hero__plant").length);
     const reach = (depth: string) => Math.abs(moves.find(([plant]) => plant.dataset.depth === depth)![1].x);
     expect(reach("front")).toBeGreaterThan(reach("mid"));
     expect(reach("mid")).toBeGreaterThan(reach("rear"));
+    expect((animate.mock.calls as unknown as Array<[HTMLElement, object]>).every(([, params]) => !("opacity" in params))).toBe(true);
   });
 
   it("does not follow touches", async () => {
@@ -74,6 +75,6 @@ describe("BotanicalHero", () => {
     await settle();
     window.dispatchEvent(pointer("touch"));
     await settle();
-    expect(animate).toHaveBeenCalledTimes(1);
+    expect(animate).not.toHaveBeenCalled();
   });
 });

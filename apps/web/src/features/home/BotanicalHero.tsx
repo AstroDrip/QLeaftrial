@@ -11,9 +11,10 @@ import "./botanical-hero.css";
 // The plant groups are grid cells of their own beside (or, on narrow screens, below) the text, so they
 // never cover the headline or the button.
 //
-// Motion (Anime.js, loaded after the page is idle): the plants rise into place once, then shift a few
-// pixels with the pointer, nearer plants more than farther ones, for a gentle sense of depth. Nothing runs
-// continuously, nothing moves on touch screens, and nothing moves at all for reduced motion.
+// Motion (Anime.js, loaded after the page is idle): the plants shift a few pixels with the mouse, nearer
+// plants more than farther ones, for a gentle sense of depth. There is no entry animation: the photos are
+// already on screen by the time the library arrives, and hiding them to replay an entrance looked like a
+// flicker. Nothing runs continuously, nothing moves on touch screens or for reduced motion.
 
 type Copy = { eyebrow: string; title: string; lead: string; cta: string };
 type Depth = "rear" | "mid" | "front";
@@ -65,16 +66,15 @@ export function BotanicalHero({ copy }: { copy: Copy }) {
     if (!root || typeof window === "undefined") return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const finePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)").matches ?? false;
+    if (!finePointer) return;
     let disposed = false;
     let cleanup: () => void = () => undefined;
     const schedule = window.requestIdleCallback ?? ((callback: () => void) => window.setTimeout(callback, 200));
     const cancel = window.cancelIdleCallback ?? window.clearTimeout;
     const handle = schedule(() => {
-      void import("animejs").then(({ animate, stagger }) => {
+      void import("animejs").then(({ animate }) => {
         if (disposed) return;
         const plants = Array.from(root.querySelectorAll<HTMLElement>(".botanical-hero__plant"));
-        // Entry: the plants settle into place once, back to front.
-        const entry = animate(plants, { opacity: [0, 1], y: [14, 0], duration: 900, delay: stagger(70), ease: "outCubic" });
         let frame = 0;
         let target = { x: 0, y: 0 };
         const move = () => {
@@ -92,12 +92,11 @@ export function BotanicalHero({ copy }: { copy: Copy }) {
           target = { x: clamp((event.clientX / window.innerWidth - 0.5) * -2), y: clamp(((event.clientY - box.top) / box.height - 0.5) * -2) };
           if (!frame) frame = requestAnimationFrame(move);
         };
-        if (finePointer) window.addEventListener("pointermove", onPointer, { passive: true });
+        window.addEventListener("pointermove", onPointer, { passive: true });
         cleanup = () => {
           window.removeEventListener("pointermove", onPointer);
           cancelAnimationFrame(frame);
-          entry.revert();
-          for (const plant of plants) { plant.style.transform = ""; plant.style.opacity = ""; }
+          for (const plant of plants) plant.style.transform = "";
         };
       }).catch(() => undefined);
     });
