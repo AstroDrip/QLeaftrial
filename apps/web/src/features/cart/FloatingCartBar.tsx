@@ -43,28 +43,37 @@ export function FloatingCartBar({ footer }: { footer: RefObject<HTMLElement | nu
   const settings = useStoreSettings();
   const items = useCartStore((state) => state.items);
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
-  const visible = count > 0 && (settings.data?.orderingEnabled ?? true) && !HIDDEN_ON.test(pathname);
+  // An empty cart is an idle state, not a reason to hide the cart: the bar shrinks to the cart button with a
+  // small empty track above it, and opens out again as soon as something is added.
+  const visible = (settings.data?.orderingEnabled ?? true) && !HIDDEN_ON.test(pathname);
+  const idle = count === 0;
   const placement = useFooterPlacement(footer, visible);
 
   useEffect(() => {
     document.body.classList.toggle("has-floating-cart", visible);
-    return () => document.body.classList.remove("has-floating-cart");
-  }, [visible]);
+    document.body.classList.toggle("has-floating-cart--idle", visible && idle);
+    return () => document.body.classList.remove("has-floating-cart", "has-floating-cart--idle");
+  }, [visible, idle]);
 
   if (!visible) return null;
   const total = cartSubtotal(items);
   const { className, footerHeight } = floatingCartStyle(placement);
-  const label = (isArabic
-    ? `فتح السلة، ${count} منتجات، المجموع ${total} ر.ق`
-    : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`)
-    + (total >= FREE_DELIVERY_THRESHOLD_QAR ? (isArabic ? "، توصيل مجاني" : ", free delivery unlocked") : "");
+  const label = idle
+    ? (isArabic ? "فتح السلة، السلة فارغة" : "Open cart, your cart is empty")
+    : (isArabic
+      ? `فتح السلة، ${count} منتجات، المجموع ${total} ر.ق`
+      : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`)
+      + (total >= FREE_DELIVERY_THRESHOLD_QAR ? (isArabic ? "، توصيل مجاني" : ", free delivery unlocked") : "");
 
   return (
-    <div className={className} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined}>
-      <FreeDeliveryProgress subtotalQar={total} compact />
+    <div className={`${className}${idle ? " floating-cart--idle" : ""}`} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined} data-state={idle ? "idle" : "active"}>
+      <FreeDeliveryProgress subtotalQar={total} compact idle={idle} />
       <Link to="/cart" className="floating-cart__button" aria-label={label} data-testid="floating-cart" data-fd-target="floating">
-        <BagIcon />
-        <span className="floating-cart__total" aria-hidden="true">{total} QAR</span>
+        <span className="floating-cart__icon">
+          <BagIcon />
+          {idle ? null : <span className="floating-cart__badge" aria-hidden="true">{count > 99 ? "99+" : count}</span>}
+        </span>
+        <span className="floating-cart__total" aria-hidden="true"><span>{total} QAR</span></span>
       </Link>
     </div>
   );

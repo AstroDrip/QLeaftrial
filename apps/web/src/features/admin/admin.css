@@ -380,3 +380,17 @@
 .admin-products-views__count { opacity: .7; font-variant-numeric: tabular-nums; }
 .admin-product-details-form__check { display: flex !important; flex-direction: row !important; align-items: center; gap: var(--space-2); }
 .admin-product-details-form__check input { width: auto; min-height: 0; }
+
+/* Delivery charge to confirm and Google Sheet status, under an order. Label, field and button each have their own
+   box in a wrapping row, so nothing overlaps at any width. */
+.admin-order-extras { display: grid; gap: var(--a-2); }
+.admin-order-delivery { display: grid; gap: var(--a-2); padding: var(--a-2) var(--a-3); border-inline-start: 2px solid #e0a83a; border-radius: 0 var(--admin-radius) var(--admin-radius) 0; background: rgba(224, 168, 58, .1); }
+.admin-order-delivery__note { margin: 0; color: var(--admin-text); font-size: .8rem; font-weight: 600; }
+.admin-order-delivery__row { display: flex; flex-wrap: wrap; align-items: end; gap: var(--a-2); }
+.admin-order-delivery__row label { display: grid; gap: 4px; min-width: 0; color: var(--admin-muted); font-size: .75rem; }
+.admin-order-delivery__row input { width: 9rem; max-width: 100%; }
+.admin-order-delivery__done, .admin-order-sheet--ok { margin: 0; color: var(--admin-muted); font-size: .78rem; }
+.admin-order-sheet { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--a-2); color: var(--admin-text); font-size: .8rem; }
+.admin-order-extras__button { min-height: 36px; padding: 0 var(--a-3); border: 1px solid currentColor; border-radius: var(--admin-radius); background: transparent; color: var(--admin-text); font: inherit; font-weight: 600; cursor: pointer; }
+.admin-order-extras__button:disabled { opacity: .6; cursor: progress; }
+.admin-order-extras__error { margin: 0; color: var(--admin-danger); font-size: .78rem; }

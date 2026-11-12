@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-export type RailItem = { key: string; to: string; image: string; name: string; count: string };
+export type RailItem = { key: string; to: string; image: string; srcSet?: string; name: string; count: string };
 
 // A gentle invitation to keep browsing, not a ticker: every few seconds the row glides on by exactly one
 // card with an eased start and a soft landing, then rests. It stops the moment anyone touches it, hovers it,
@@ -246,7 +246,7 @@ export function CategoryRail({
             return (
               <li key={`${copy}-${item.key}`} aria-hidden={real ? undefined : true}>
                 <Link to={item.to} onMouseEnter={onIntent} tabIndex={real ? undefined : -1}>
-                  <img src={item.image} alt="" width={640} height={640} loading="lazy" decoding="async" draggable={false} />
+                  <img src={item.image} srcSet={item.srcSet} sizes={item.srcSet ? "(max-width: 600px) 70vw, 280px" : undefined} alt="" width={640} height={640} loading="lazy" decoding="async" draggable={false} />
                   <span className="home-categories__name">{item.name}</span>
                   <span className="home-categories__count">{item.count}</span>
                 </Link>

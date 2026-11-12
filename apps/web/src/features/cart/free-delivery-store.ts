@@ -2,8 +2,11 @@ import { useEffect, useRef } from "react";
 import { create } from "zustand";
 import { cartSubtotal, useCartStore } from "./cart-store";
 
-// Orders of this size or more are delivered free. Smaller orders can still be placed.
-export const FREE_DELIVERY_THRESHOLD_QAR = 150;
+import { FREE_DELIVERY_THRESHOLD_QAR } from "./delivery-rules";
+
+// Orders of this size or more are delivered free; smaller ones can still be placed and the team confirms the
+// delivery charge (see delivery-rules.ts).
+export { FREE_DELIVERY_THRESHOLD_QAR };
 
 // progress  - below the goal, the banner fills as the basket grows
 // celebrate - the goal was just reached: the light arrives and the finished line fills (about three quarters of a second)

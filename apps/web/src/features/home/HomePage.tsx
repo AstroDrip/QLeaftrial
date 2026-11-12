@@ -14,15 +14,13 @@ import { catalogueListResponse, catalogueProductToSummary, sortCatalogue } from 
 import { friendlyError } from "../../lib/friendly-error";
 import type { ProductSummary } from "../catalog/product-types";
 import type { CatalogueProduct } from "../catalog/catalogue-types";
+import { categoryName, findShopCategory, orderedCategoryCounts } from "../catalog/shop-categories";
 
-// Category tiles use the client's own photographs.
-const CATEGORY_IMAGES: Record<string, string> = {
-  "Indoor Plants": "/media/plants/money-tree-braided-640.webp",
-  "Table Top Plants": "/media/plants/peperomia-watermelon-640.webp",
-  "Gift Plants": "/media/plants/anthurium-pink-640.webp",
-  "Outdoor Plants": "/media/plants/hybrid-bougainvillea-3-640.webp",
-  "Garden Accessories": "/media/plants/leca-640.webp",
-};
+// Each category's photograph is set in lib/shop-categories.ts; unlisted categories fall back to a leaf drawing.
+function categoryImage(category: string): { image: string; srcSet?: string } {
+  const found = findShopCategory(category);
+  return found ? { image: `${found.image}-640.webp`, srcSet: `${found.image}-640.webp 640w, ${found.image}-960.webp 960w` } : { image: "/images/hero/leaf-1.svg" };
+}
 
 const SHELF_SIZE = 8;
 
@@ -64,11 +62,12 @@ export function HomePage() {
   const newArrivals = (products.data?.items ?? savedFeatured ?? []);
   const showingSaved = !products.data && Boolean(savedFeatured?.length);
   const savedCategories = catalogue.data ? categoryCounts(catalogue.data.products) : [];
-  const categories: Array<[string, number]> = filters.data?.categoryCounts
-    ? Object.entries(filters.data.categoryCounts).sort(([a], [b]) => a.localeCompare(b))
-    : savedCategories.map((entry) => [entry.category, entry.count]);
+  // Every category in the shop's order (lib/shop-categories.ts), empty ones included, once real counts are known.
+  const counts: Record<string, number> | null = filters.data?.categoryCounts
+    ?? (catalogue.data ? Object.fromEntries(savedCategories.map((entry) => [entry.category, entry.count])) : null);
+  const categories: Array<[string, number]> = counts ? orderedCategoryCounts(counts).map((entry) => [entry.category, entry.count]) : [];
   const categoryLabel = (category: string) =>
-    filters.data?.categoryLabels?.[category] || savedCategories.find((entry) => entry.category === category)?.categoryAr || category;
+    categoryName(category, isArabic ? "ar" : "en", filters.data?.categoryLabels?.[category] || savedCategories.find((entry) => entry.category === category)?.categoryAr);
 
   // Featured, offers and the discovery shelves come from the published catalogue (all products, newest
   // first). Each product appears on one shelf only: a shelf skips anything an earlier shelf already shows.
@@ -91,7 +90,7 @@ export function HomePage() {
 
   return (
     <article className="home" data-testid="home-page">
-      <Seo title="QLeaves" description={isArabic ? "نباتات داخلية وخارجية مختارة بعناية مع التوصيل داخل قطر." : "Hand-picked indoor and outdoor plants, delivered across Qatar."} path="/" structuredData={qleavesStructuredData} />
+      <Seo title="QLeaves" description={isArabic ? "QLeaves متجر إلكتروني للنباتات في قطر: نباتات داخلية وخارجية مختارة بعناية مع التوصيل داخل قطر." : "QLeaves is an online plant store in Qatar: hand-picked indoor and outdoor plants, delivered across Qatar."} path="/" structuredData={qleavesStructuredData} />
 
       {/* The hero holds still while Shop by Category slides up over it (the sheet's soft blurred edge passes over
           the photo); once the categories have passed, the hero is released and the shelves follow as normal. */}
@@ -105,9 +104,9 @@ export function HomePage() {
             items={categories.map(([category, count]) => ({
               key: category,
               to: `/shop?category=${encodeURIComponent(category)}`,
-              image: CATEGORY_IMAGES[category] ?? "/images/hero/leaf-1.svg",
-              name: isArabic ? categoryLabel(category) : category,
-              count: t.productCount(count),
+              ...categoryImage(category),
+              name: categoryLabel(category),
+              count: count ? t.productCount(count) : (isArabic ? "قريبًا" : "Coming soon"),
             }))}
             headingId="home-categories"
             title={t.categoriesTitle}

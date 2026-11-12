@@ -21,6 +21,11 @@ export const updateOrderStatusSchema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED", "pending", "accepted", "declined", "completed"]),
 }).strict();
 
+// The delivery charge agreed with the customer, in whole QAR like every other price (0 allowed).
+export const confirmDeliveryFeeSchema = z.object({
+  deliveryFeeQar: z.number().int().nonnegative().max(1000),
+}).strict();
+
 export const updatePaymentStatusSchema = z.object({
   paymentStatus: z.enum(["PENDING", "PAID", "FAILED"]),
 }).strict();

@@ -4,6 +4,7 @@ import { OrderStatusTabs, type StatusTab } from "./OrderStatusTabs";
 import { describeDraftChanges, whatsappText } from "./order-messages";
 import { useSiteLanguage } from "../../app/providers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { OrderDeliveryAndSheet } from "./OrderDeliveryAndSheet";
 import {
   adminApi,
   type AdminOrder,
@@ -155,7 +156,7 @@ function OrderCard({
           </p>
         </div>
         <div className="admin-order-card__total">
-          <strong>{order.subtotalQar + order.deliveryFeeQar} QAR</strong>
+          <strong>{order.subtotalQar + order.deliveryFeeQar} QAR{order.deliveryChargePending ? (isArabic ? " + التوصيل" : " + delivery") : ""}</strong>
           <span>{paymentMethodLabel(order.paymentMethod)}</span>
         </div>
       </div>
@@ -170,6 +171,7 @@ function OrderCard({
       </ul>
 
       <p className="admin-order-address">{order.addressLine1}, {order.area}</p>
+      <OrderDeliveryAndSheet order={order} isArabic={isArabic} />
       {order.deliveryNotes ? (
         <p className="admin-order-note"><strong>Customer note:</strong> {order.deliveryNotes}</p>
       ) : null}

@@ -8,13 +8,13 @@ export const siteLocaleLabels = {
 export const localeContent = {
   en: {
     brand: "QLeaves",
-    tagline: "Indoor plants, thoughtfully selected in Qatar",
+    tagline: "Your online plant store in Qatar",
     nav: { home: "Home", shop: "Shop", about: "About us", cart: "Cart", admin: "Admin", menu: "Menu", openMenu: "Open menu", closeMenu: "Close menu", language: "Language" },
     home: {
       heroTitle: "For the love of art and plants.",
       heroSubtitle: "Hand-picked indoor and outdoor plants, pots and care essentials, delivered across Qatar.",
       shopCta: "Shop plants",
-      basedIn: "Plants delivered across Qatar",
+      basedIn: "Online plant store in Qatar",
       promisesLabel: "Why shop with QLeaves",
       promises: [
         ["Delivered across Qatar", "Doha, Al Rayyan, Al Wakrah and Al Khor. Free delivery on orders of 150 QAR or more."],
@@ -177,7 +177,7 @@ export const localeContent = {
         eyebrow: "About QLeaves",
         title: "About us",
         description: "Learn about QLeaves and find our business registration, licensing, customer support, and policy information.",
-        introduction: "QLeaves is a Qatar-based indoor plant store. We choose greenery to bring warmth, texture, and life into the spaces people call home.",
+        introduction: "QLeaves is a Qatar-based online indoor plant store. We choose greenery to bring warmth, texture, and life into the spaces people call home.",
         businessDetails: "Business identity and licensing",
         commercialRegistration: "Commercial Registration (CR) number",
         ecommerceLicense: "E-commerce license number",
@@ -255,13 +255,13 @@ export const localeContent = {
   },
   ar: {
     brand: "QLeaves",
-    tagline: "نباتات داخلية مختارة بعناية في قطر",
+    tagline: "متجرك الإلكتروني للنباتات في قطر",
     nav: { home: "الرئيسية", shop: "المتجر", about: "من نحن", cart: "السلة", admin: "الإدارة", menu: "القائمة", openMenu: "فتح القائمة", closeMenu: "إغلاق القائمة", language: "اللغة" },
     home: {
       heroTitle: "من أجل حب الفن والنباتات.",
       heroSubtitle: "نباتات داخلية وخارجية مختارة بعناية، مع الأصص ومستلزمات العناية، وتوصيل إلى جميع أنحاء قطر.",
       shopCta: "تسوق النباتات",
-      basedIn: "توصيل النباتات في جميع أنحاء قطر",
+      basedIn: "متجر نباتات إلكتروني في قطر",
       promisesLabel: "لماذا تتسوق من QLeaves",
       promises: [
         ["توصيل في جميع أنحاء قطر", "الدوحة والريان والوكرة والخور. توصيل مجاني للطلبات من 150 ر.ق فأكثر."],
@@ -424,7 +424,7 @@ export const localeContent = {
         eyebrow: "عن QLeaves",
         title: "من نحن",
         description: "تعرف على QLeaves ومعلومات التسجيل والترخيص ودعم العملاء والسياسات.",
-        introduction: "QLeaves متجر نباتات داخلية في قطر. نختار نباتات تضيف الدفء والملمس والحياة إلى المساحات التي يسميها الناس منزلًا.",
+        introduction: "QLeaves متجر إلكتروني للنباتات الداخلية في قطر. نختار نباتات تضيف الدفء والملمس والحياة إلى المساحات التي يسميها الناس منزلًا.",
         businessDetails: "بيانات النشاط والترخيص",
         commercialRegistration: "رقم السجل التجاري",
         ecommerceLicense: "رقم ترخيص التجارة الإلكترونية",

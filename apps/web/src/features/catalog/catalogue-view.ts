@@ -2,6 +2,7 @@ import type { SiteLanguage } from "../../content/locales";
 import type { CatalogueMedia, CatalogueProduct } from "./catalogue-types";
 import type { ProductListParams, ProductListResponse, ProductMedia, ProductSummary } from "./product-types";
 import { searchProducts } from "./search";
+import { canonicalCategory } from "./shop-categories";
 
 // Answers a product-list query from the saved catalogue the same way the API would (same filters, search
 // fields, sort orders and page size), so switching from saved to live data never reshuffles the page.
@@ -53,7 +54,7 @@ function searchCatalogue(products: CatalogueProduct[], query: string | undefined
 
 export function filterCatalogue(products: CatalogueProduct[], params: ProductListParams): CatalogueProduct[] {
   return searchCatalogue(products, params.q).filter((product) => {
-    if (params.category && product.category !== params.category) return false;
+    if (params.category && product.category !== canonicalCategory(params.category)) return false;
     if (params.light && product.light !== params.light) return false;
     if (params.inStock && !product.inStock) return false;
     if (params.featured && !product.featured) return false;

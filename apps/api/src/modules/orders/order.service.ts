@@ -5,6 +5,7 @@ import { getStoreSettings } from "../admin/store-settings.service.js";
 import type { AcceptEditedOrderInput, CreateOrderInput } from "./order.schemas.js";
 import type { PrismaClient as SqlitePrismaClient } from "../../../generated/sqlite/index.js";
 import type { OrderChange } from "./order-changes.js";
+import { deliveryChargeToConfirm } from "../../lib/delivery.js";
 
 // Both generated clients expose the same application models; this removes the
 // provider union from query method overloads without weakening query typing.
@@ -232,9 +233,11 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
         deliveryNotes: input.deliveryNotes,
         paymentMethod: input.paymentMethod,
         subtotalQar,
-        // Delivery is free today: the shop has never charged a fee at checkout. A fee would be added here,
-        // from the store settings, never from the request.
+        // No delivery fee is priced online. At or above the free-delivery threshold delivery is free; below it the
+        // team confirms the charge with the customer, so the order is flagged and the fee stays unset (0) until an
+        // admin enters it. Decided here from the server's own subtotal, never from the request.
         deliveryFeeQar: 0,
+        deliveryChargePending: deliveryChargeToConfirm(subtotalQar),
         items: { create: items },
       },
       include: { items: true },
@@ -401,9 +404,27 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
 
     return tx.order.update({
       where: { id },
-      data: { status: "CONFIRMED", subtotalQar, editSummary: changes.length ? JSON.stringify(changes) : null },
+      data: {
+        status: "CONFIRMED",
+        subtotalQar,
+        editSummary: changes.length ? JSON.stringify(changes) : null,
+        // An edit can move the subtotal across the threshold; a charge an admin already confirmed is kept.
+        ...(order.deliveryFeeConfirmedAt ? {} : { deliveryChargePending: deliveryChargeToConfirm(subtotalQar) }),
+      },
       include: { items: true },
     });
+  });
+}
+
+// The admin enters the delivery charge agreed with the customer (0 is allowed). It is added to the invoice total.
+export async function confirmDeliveryFee(id: string, deliveryFeeQar: number) {
+  const order = await db.order.findUnique({ where: { id }, select: { status: true } });
+  if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
+  if (order.status === "CANCELLED") throw new ApiError(409, "ORDER_CLOSED", "A declined order cannot be changed");
+  return db.order.update({
+    where: { id },
+    data: { deliveryFeeQar, deliveryChargePending: false, deliveryFeeConfirmedAt: new Date() },
+    include: { items: true },
   });
 }
 

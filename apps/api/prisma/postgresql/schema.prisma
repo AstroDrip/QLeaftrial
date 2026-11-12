@@ -149,6 +149,13 @@ model Order {
   status          OrderStatus   @default(PENDING)
   subtotalQar     Int
   deliveryFeeQar  Int           @default(0)
+  // Below the free-delivery threshold the team confirms the delivery charge with the customer. True until an
+  // admin enters it (deliveryFeeQar, possibly 0); deliveryFeeConfirmedAt records when.
+  deliveryChargePending  Boolean   @default(false)
+  deliveryFeeConfirmedAt DateTime?
+  // Google Sheets mirror: when this order's row was last written, or why the last attempt failed (a code only).
+  sheetSyncedAt  DateTime?
+  sheetSyncError String?
   items           OrderItem[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

@@ -75,7 +75,8 @@ describe("CatalogPage", () => {
     await userEvent.click(screen.getByTestId("language-toggle"));
 
     expect(await screen.findByRole("heading", { name: "نبات منزلي" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "نباتات داخلية" })).toBeInTheDocument();
+    // The mock's "Indoor" shares its Arabic name with the shop's own "Indoor Plants", which is always listed.
+    expect(screen.getAllByRole("button", { name: "نباتات داخلية" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "أضف نبات منزلي إلى السلة" })).toBeInTheDocument();
   });
 

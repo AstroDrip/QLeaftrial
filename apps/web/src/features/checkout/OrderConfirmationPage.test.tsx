@@ -34,10 +34,19 @@ describe("OrderConfirmationPage", () => {
     expect(screen.getByText("Peace Lily × 2")).toBeInTheDocument();
     expect(screen.getByText("290 QAR")).toBeInTheDocument();
     expect(screen.getByText("Golden Pothos")).toBeInTheDocument();
-    // The subtotal and the total are the same: delivery is not charged.
+    // 150 QAR or more: delivery is free, so the subtotal and the total are the same.
     expect(screen.getAllByText("370 QAR")).toHaveLength(2);
-    expect(screen.queryByText(/delivery/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId("delivery-line")).toHaveTextContent("DeliveryFree");
+    expect(screen.queryByTestId("delivery-charge-notice")).not.toBeInTheDocument();
     expect(screen.queryByText(/Monstera/)).not.toBeInTheDocument();
+  });
+
+  it("says the team will confirm the delivery charge for an order below 150 QAR", () => {
+    const small = { ...summary, orderNumber: "QL-20261113-SMALL1", items: [{ name: "Golden Pothos", nameAr: null, quantity: 1, unitPriceQar: 80 }], subtotalQar: 80, deliveryChargePending: true };
+    renderAt(`/order/${small.orderNumber}`, { order: small });
+    expect(screen.getByTestId("delivery-line")).toHaveTextContent("DeliveryTo be confirmed");
+    expect(screen.getByText("Total before delivery")).toBeInTheDocument();
+    expect(screen.getByTestId("delivery-charge-notice")).toHaveTextContent("Our team will contact you to confirm the delivery charge");
   });
 
   it("recovers the summary after a refresh", () => {

@@ -64,7 +64,7 @@ export function ShopMenu({ label, categories }: { label: string; categories: Sho
                 <li key={category.category}>
                   <Link to={category.to} onClick={() => setOpen(false)} onMouseEnter={() => prefetchRoute("/shop")}>
                     <span>{category.label}</span>
-                    <span className="shop-menu__count">{category.count}</span>
+                    <span className="shop-menu__count">{category.count || (isArabic ? "قريبًا" : "Soon")}</span>
                   </Link>
                 </li>
               ))}

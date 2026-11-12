@@ -7,7 +7,7 @@ import {
   createOrderSchema,
   deleteOrdersSchema,
   updateOrderStatusSchema,
-  updatePaymentStatusSchema,
+  updatePaymentStatusSchema, confirmDeliveryFeeSchema,
 } from "./order.schemas.js";
 import {
   acceptEditedOrder,
@@ -18,7 +18,7 @@ import {
   listOrders,
   salesReport,
   updateOrderStatus,
-  updatePaymentStatus,
+  updatePaymentStatus, confirmDeliveryFee,
 } from "./order.service.js";
 import { publicOrderRateLimit } from "./order-rate-limit.js";
 import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
@@ -81,6 +81,14 @@ orderRouter.post("/admin/orders/:id/accept-edited", async (req, res) => {
   const parsed = acceptEditedOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid edited order");
   const order = await acceptEditedOrder(req.params.id, parsed.data);
+  await mirrorOrderToSheet(order);
+  res.json(toAdminOrder(order));
+});
+
+orderRouter.patch("/admin/orders/:id/delivery-fee", async (req, res) => {
+  const parsed = confirmDeliveryFeeSchema.safeParse(req.body);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Enter the delivery charge in whole QAR");
+  const order = await confirmDeliveryFee(req.params.id, parsed.data.deliveryFeeQar);
   await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
 });

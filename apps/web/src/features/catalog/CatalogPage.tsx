@@ -12,6 +12,7 @@ import { ProductCard } from "./ProductCard";
 import { Seo } from "../../components/Seo";
 import "./catalog.css";
 import { friendlyError } from "../../lib/friendly-error";
+import { canonicalCategory, categoryName, orderedCategoryCounts } from "./shop-categories";
 
 const SORT_OPTIONS = [
   { value: "relevance", label: "sortRelevance" },
@@ -62,7 +63,9 @@ export function CatalogPage() {
       ? requestedSort as ProductListParams["sort"]
       : defaultSort;
   const priceRange = PRICE_RANGES.find((range) => range.value === searchParams.get("price"));
-  const category = searchParams.get("category") || undefined;
+  // A link may use an older or display name ("Tabletop Plants"); it means the stored category.
+  const requestedCategory = searchParams.get("category");
+  const category = requestedCategory ? canonicalCategory(requestedCategory) : undefined;
   const light = searchParams.get("light") || undefined;
   const inStock = searchParams.get("inStock") === "1";
   const page = Number(searchParams.get("page") ?? 1) || 1;
@@ -113,13 +116,16 @@ export function CatalogPage() {
     [catalogue.data],
   );
   const counts = filters?.categoryCounts ?? savedCounts;
-  const categories = filters?.categoryCounts || !filters ? Object.keys(counts).sort() : filters.categories;
+  // Every category in the shop's order (lib/shop-categories.ts), including ones with no products yet.
+  // (An older API without counts only sends names; those are listed too.)
+  const listed = Object.keys(counts).length ? counts : Object.fromEntries((filters?.categories ?? []).map((name) => [name, 0]));
+  const categories = orderedCategoryCounts(listed).map((entry) => entry.category);
   const categoryLabels = filters?.categoryLabels ?? savedLabels;
   // When the live list fails, the saved catalogue is shown with a note instead of an error page.
   const showingSaved = isError && Boolean(saved);
   const shown = showingSaved ? saved : result;
   const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
-  const label = (value: string, labels?: Record<string, string>) => (isArabic ? labels?.[value] || value : value);
+  const label = (value: string, labels?: Record<string, string>) => categoryName(value, isArabic ? "ar" : "en", labels?.[value]);
   const totalPages = shown?.totalPages ?? 0;
 
   function update(changes: Record<string, string | undefined>, keepPage = false) {

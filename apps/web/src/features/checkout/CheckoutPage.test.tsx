@@ -30,14 +30,31 @@ describe("CheckoutPage", () => {
     useCartStore.setState({ items: [] });
   });
 
-  it("shows the delivery areas and a total with no delivery charge", async () => {
+  it("below 150 QAR, says the team will confirm the delivery charge and invents no price", async () => {
     useCartStore.setState({ items: [plant(20)] });
     renderCheckout();
 
     expect(await screen.findByRole("option", { name: "Al Khor" })).toBeInTheDocument();
-    expect(screen.queryByText(/delivery charge/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId("delivery-charge-notice")).toHaveTextContent("For orders below QAR 150, our team will contact you to confirm the delivery charge.");
     const summary = screen.getByRole("heading", { name: "Order summary" }).parentElement!;
-    expect(summary).toHaveTextContent("Total20 QAR");
+    expect(summary).toHaveTextContent("DeliveryTo be confirmed");
+    expect(summary).toHaveTextContent("Total before delivery20 QAR");
+    expect(summary).not.toHaveTextContent(/Free/);
+  });
+
+  it("at 149 QAR still shows the notice; at exactly 150 QAR delivery is free and there is no notice", async () => {
+    useCartStore.setState({ items: [plant(149)] });
+    renderCheckout();
+    expect(await screen.findByTestId("delivery-charge-notice")).toBeInTheDocument();
+    cleanup();
+
+    useCartStore.setState({ items: [plant(75, 2)] });
+    renderCheckout();
+    await screen.findByRole("option", { name: "Al Khor" });
+    expect(screen.queryByTestId("delivery-charge-notice")).not.toBeInTheDocument();
+    const summary = screen.getByRole("heading", { name: "Order summary" }).parentElement!;
+    expect(summary).toHaveTextContent("DeliveryFree");
+    expect(summary).toHaveTextContent("Total150 QAR");
   });
 
   it("encourages a bigger basket for free delivery but still lets a small order through", async () => {

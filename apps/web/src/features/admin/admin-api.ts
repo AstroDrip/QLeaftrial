@@ -113,6 +113,11 @@ export interface AdminOrder {
   paymentMethod: "COD" | "PAYMENT_LINK";
   subtotalQar: number;
   deliveryFeeQar: number;
+  /** Below the free-delivery threshold: the charge is still to be agreed with the customer. */
+  deliveryChargePending?: boolean;
+  deliveryFeeConfirmedAt?: string | null;
+  sheetSyncedAt?: string | null;
+  sheetSyncError?: string | null;
   status: string;
   paymentStatus: string;
   createdAt: string;
@@ -306,6 +311,13 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify({ items }),
     }),
+  confirmDeliveryFee: (id: string, deliveryFeeQar: number) =>
+    request<AdminOrder>(`/admin/orders/${id}/delivery-fee`, {
+      method: "PATCH",
+      body: JSON.stringify({ deliveryFeeQar }),
+    }),
+  syncOrderToSheet: (id: string): Promise<{ written: boolean; qualifies: boolean }> =>
+    request(`/admin/sheets/sync/${id}`, { method: "POST" }),
   updatePaymentStatus: (id: string, paymentStatus: string) =>
     request<AdminOrder>(`/admin/orders/${id}/payment`, {
       method: "PATCH",

@@ -43,6 +43,7 @@ invoiceRouter.get("/invoices/:orderNumber", async (request, response) => {
     status: order.status,
     subtotalQar: order.subtotalQar,
     deliveryFeeQar: order.deliveryFeeQar,
+    deliveryChargePending: order.deliveryChargePending,
     items: order.items.map((item) => ({
       id: item.id,
       productName: item.productName,

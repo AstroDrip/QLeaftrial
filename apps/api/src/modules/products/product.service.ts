@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import type { ProductDetail, ProductQuery, ProductSummary } from "./product.schemas.js";
 import { searchPublishedProducts } from "./product-search-index.js";
+import { canonicalCategory, categoryName, compareCategories } from "../../lib/shop-categories.js";
 
 const PAGE_SIZE = 24;
 
@@ -164,7 +165,8 @@ export async function listProducts(query: ProductQuery): Promise<{
 }> {
   const where: PublicProductWhere = {
     published: true,
-    ...(query.category ? { category: query.category } : {}),
+    // Older names and the display name ("Tabletop Plants") lead to the stored category.
+    ...(query.category ? { category: canonicalCategory(query.category) } : {}),
     ...(query.light ? { light: query.light } : {}),
     ...(query.minPrice !== undefined || query.maxPrice !== undefined
       ? { priceQar: { ...(query.minPrice !== undefined ? { gte: query.minPrice } : {}), ...(query.maxPrice !== undefined ? { lte: query.maxPrice } : {}) } }
@@ -247,9 +249,11 @@ export async function listProductFilters(language: ProductQuery["lang"] = "en"):
   for (const product of products) categoryCounts[product.category] = (categoryCounts[product.category] ?? 0) + 1;
 
   return {
-    categories: [...new Set(products.map((product) => label(product.category, product.categoryAr)))].sort(),
+    // In the shop's own order (lib/shop-categories.ts), named as customers see them.
+    categories: [...new Set(products.map((product) => product.category))].sort(compareCategories).map((category) => categoryName(category, language, products.find((product) => product.category === category)?.categoryAr)),
     lights: [...new Set(products.flatMap((product) => product.light ? [label(product.light, product.lightAr)] : []))].sort(),
-    categoryLabels: Object.fromEntries(products.flatMap((product) => product.categoryAr ? [[product.category, product.categoryAr]] : [])),
+    // Arabic names, keyed by stored category (the storefront maps English names itself).
+    categoryLabels: Object.fromEntries([...new Set(products.map((product) => product.category))].map((category) => [category, categoryName(category, "ar", products.find((product) => product.category === category)?.categoryAr)])),
     lightLabels: Object.fromEntries(products.flatMap((product) => product.light && product.lightAr ? [[product.light, product.lightAr]] : [])),
     categoryCounts,
   };

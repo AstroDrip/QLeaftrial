@@ -92,3 +92,30 @@ Remove-Item Env:DATABASE_URL, Env:DIRECT_URL, Env:QLEAVES_DATABASE_PROVIDER
 ```
 
 `deploy` should apply `3_search_aliases`; `status` should end with "Database schema is up to date".
+
+## 5. Before pushing the delivery-charge and sheet-status release (November 2026)
+
+Orders now record whether their delivery charge is still to be confirmed (orders below 150 QAR), and whether
+their row reached the Google Sheet. That needs migration `4_delivery_confirmation_sheet_sync` on the Mumbai
+database **before** the code goes live. It only adds columns (with defaults or empty), so no order changes.
+Run the same commands as section 4; `deploy` should apply `4_delivery_confirmation_sheet_sync`.
+
+## 6. Turning on the Google Sheets invoice sync
+
+The code is ready; it stays off until these four Vercel variables exist (Production scope only, so preview
+deployments never write to the real sheet):
+
+| Variable | What it is |
+| --- | --- |
+| `GOOGLE_SHEETS_ID` | The long id in the sheet's address, between `/d/` and `/edit` |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | `client_email` from the service account's JSON key |
+| `GOOGLE_PRIVATE_KEY` | `private_key` from the same JSON key, pasted as-is |
+| `GOOGLE_SHEETS_TAB` | Optional, defaults to `Orders` (the tab and header row are created automatically) |
+
+1. In Google Cloud (any project you own): enable the **Google Sheets API**, create a **service account**, and
+   create a **JSON key** for it.
+2. Create the spreadsheet and **share it with the service account's email as Editor**.
+3. Add the variables in Vercel → Settings → Environment Variables (Production), then redeploy.
+4. In admin → Orders, press **Sync all**. Only completed and paid orders are written, one row per order number
+   (a retry updates that row, never adds a second). An order whose row failed shows "This order is not in the
+   Google Sheet yet" with a **Retry** button. Never put the JSON key in chat, email or Git.

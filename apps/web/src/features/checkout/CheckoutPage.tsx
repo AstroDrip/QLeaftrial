@@ -5,12 +5,15 @@ import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
 import { errorFromResponse } from "../../lib/api-error";
 import { rememberOrderSummary, type OrderSummary } from "./order-summary";
+import { DeliveryLines } from "./DeliveryLines";
+import { deliveryChargeToConfirm } from "../cart/delivery-rules";
 import { FreeDeliveryProgress } from "../cart/FreeDeliveryProgress";
 import { friendlyError } from "../../lib/friendly-error";
 
 type PlacedOrderResponse = {
   orderNumber: string;
   subtotalQar: number;
+  deliveryChargePending?: boolean;
   items: Array<{ productId: string; productName: string; quantity: number; unitPriceQar: number }>;
 };
 
@@ -89,6 +92,7 @@ export function CheckoutPage() {
           unitPriceQar: item.unitPriceQar,
         })),
         subtotalQar: body.subtotalQar,
+        deliveryChargePending: body.deliveryChargePending === true,
       };
       rememberOrderSummary(summary);
       attempt.current = null;
@@ -212,10 +216,7 @@ export function CheckoutPage() {
               <strong>{cartSubtotal(items)} QAR</strong>
             </li>
           </ul>
-          <div className="checkout-summary__total">
-            <span>{content.checkout.total}</span>
-            <strong>{cartSubtotal(items)} QAR</strong>
-          </div>
+          <DeliveryLines subtotalQar={cartSubtotal(items)} pending={deliveryChargeToConfirm(cartSubtotal(items))} />
         </div>
 
         <button type="submit" className="primary-button" disabled={items.length === 0 || submitting} aria-busy={submitting || undefined}>

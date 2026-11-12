@@ -4,7 +4,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
 import { getAccessToken, normalizePrivateKey, resetGoogleTokenCache, signServiceAccountJwt } from "../src/modules/sheets/google-auth";
-import { mirrorOrderToSheet, orderToRow, resetSheetPreparation, SHEET_HEADER, sheetsConfig, syncAllOrders, syncOrder, type SheetOrder } from "../src/modules/sheets/order-sheet";
+import { deliveryChargeLabel, mirrorOrderToSheet, orderToRow, resetSheetPreparation, SHEET_HEADER, sheetsConfig, syncAllOrders, syncOrder, type SheetOrder } from "../src/modules/sheets/order-sheet";
 import { loggedInAgent, resetDatabase, seededProduct, validOrder } from "./helpers";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
@@ -37,7 +37,7 @@ function fakeGoogle(options: { sheetsStatus?: number; tokenStatus?: number } = {
       for (const entry of (body as { data: Array<{ range: string; values: Cell[][] }> }).data) state.rows[Number(/!A(\d+):/.exec(entry.range)![1]) - 1] = entry.values[0];
       return respond(200, {});
     }
-    if (method === "GET" && cells === "A1:O1") return respond(200, state.rows[0] ? { values: [state.rows[0]] } : {});
+    if (method === "GET" && /^A1:[A-Z]1$/.test(cells)) return respond(200, state.rows[0] ? { values: [state.rows[0]] } : {});
     if (method === "GET" && cells === "A:A") return respond(200, state.rows.length ? { values: state.rows.map((row) => [row[0]]) } : {});
     if (method === "PUT") { state.rows[Number(/!A(\d+):/.exec(path)![1]) - 1] = (body as { values: Cell[][] }).values[0]; return respond(200, {}); }
     if (method === "POST" && path.includes(":append")) { state.rows.push(...(body as { values: Cell[][] }).values); return respond(200, {}); }
@@ -106,7 +106,32 @@ describe("Google Sheets order sync", () => {
     it("builds a tidy row in Qatar time with the total and invoice number, and without the email", () => {
       const row = orderToRow(sheetOrder(), new Date("2026-10-28T10:05:00Z"));
       expect(row).toHaveLength(SHEET_HEADER.length);
-      expect(row).toEqual(["QL-20261028-AAA111", "INV-QL-20261028-AAA111", "2026-10-28 01:30", "Aisha Al-Mansoori", "+974 5555 1234", "Doha", "Villa 12, Street 30", "Areca Palm × 2; Orchid × 1", 245, 245, "Cash on delivery", "Paid", "Completed", "", "2026-10-28 13:05"]);
+      expect(row).toEqual(["QL-20261028-AAA111", "INV-QL-20261028-AAA111", "2026-10-28 01:30", "Aisha Al-Mansoori", "+974 5555 1234", "Doha", "Villa 12, Street 30", "Areca Palm × 2; Orchid × 1", 245, 245, "Cash on delivery", "Paid", "Completed", "", "2026-10-28 13:05", 0, "Free"]);
+    });
+  });
+
+  describe("delivery charge columns", () => {
+    it("records the delivery charge and whether it is final", () => {
+      expect(deliveryChargeLabel({ subtotalQar: 120, deliveryChargePending: true })).toBe("To confirm");
+      expect(deliveryChargeLabel({ subtotalQar: 120, deliveryChargePending: false, deliveryFeeConfirmedAt: "2026-11-13T08:00:00Z" })).toBe("Confirmed");
+      expect(deliveryChargeLabel({ subtotalQar: 150 })).toBe("Free");
+      expect(deliveryChargeLabel({ subtotalQar: 90 })).toBe("Not recorded");
+      const row = orderToRow(sheetOrder({ subtotalQar: 120, deliveryFeeQar: 15, deliveryChargePending: false, deliveryFeeConfirmedAt: "2026-11-13T08:00:00Z" }));
+      expect(row[8]).toBe(120);
+      expect(row[9]).toBe(135);
+      expect(row.slice(15)).toEqual([15, "Confirmed"]);
+    });
+
+    it("upgrades a sheet that still has the older, shorter header without touching its rows", async () => {
+      configureSheets();
+      const { state, fetchMock } = fakeGoogle();
+      state.tabs.push("Orders");
+      state.rows.push(SHEET_HEADER.slice(0, 15), ["QL-OLD-1", "INV-QL-OLD-1"]);
+      vi.stubGlobal("fetch", fetchMock);
+      await syncOrder(sheetOrder(), sheetsConfig()!);
+      expect(state.rows[0]).toEqual(SHEET_HEADER);
+      expect(state.rows[1]).toEqual(["QL-OLD-1", "INV-QL-OLD-1"]);
+      expect(state.rows).toHaveLength(3);
     });
   });
 
@@ -296,6 +321,73 @@ describe("Google Sheets in the API", () => {
     const synced = await agent.post("/api/v1/admin/sheets/sync");
     expect(synced.body).toEqual({ synced: 2 });
     expect(state.rows).toHaveLength(3);
+  });
+
+  async function completedPaidOrder() {
+    const created = await placeOrder();
+    await prisma.order.update({ where: { id: created.body.id }, data: { status: "DELIVERED", paymentStatus: "PAID" } });
+    return created.body as { id: string; orderNumber: string };
+  }
+
+  it("records on each order when its row was written, and why it was not", async () => {
+    configureSheets();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const order = await completedPaidOrder();
+    const agent = await loggedInAgent();
+
+    // Google refuses the service account: the order keeps its state and is marked as not synced.
+    vi.stubGlobal("fetch", fakeGoogle({ tokenStatus: 401 }).fetchMock);
+    const refused = await agent.post(`/api/v1/admin/sheets/sync/${order.id}`);
+    expect(refused.status).toBe(502);
+    expect(refused.body.error.code).toBe("SHEETS_AUTH_FAILED");
+    expect(await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).toMatchObject({ status: "DELIVERED", sheetSyncedAt: null, sheetSyncError: "GOOGLE_AUTH_FAILED" });
+
+    // Retrying once Google works writes one row and clears the error; retrying again does not add a second row.
+    resetGoogleTokenCache();
+    const { state, fetchMock } = fakeGoogle();
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await agent.post(`/api/v1/admin/sheets/sync/${order.id}`).expect(200)).body).toEqual({ written: true, qualifies: true });
+    await agent.post(`/api/v1/admin/sheets/sync/${order.id}`).expect(200);
+    expect(state.rows.filter((row) => row[0] === order.orderNumber)).toHaveLength(1);
+    const synced = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
+    expect(synced.sheetSyncError).toBeNull();
+    expect(synced.sheetSyncedAt).toBeInstanceOf(Date);
+    const listed = await agent.get("/api/v1/admin/orders");
+    expect(listed.body.items[0]).toMatchObject({ sheetSyncError: null, sheetSyncedAt: expect.any(String) });
+  });
+
+  it("treats a timeout like any other failure: the order is kept and can be retried", async () => {
+    configureSheets();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const created = await placeOrder();
+    const agent = await loggedInAgent();
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "CONFIRMED" }).expect(200);
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new DOMException("The operation timed out.", "TimeoutError"); }));
+    await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);
+    expect(await prisma.order.findUniqueOrThrow({ where: { id: created.body.id } })).toMatchObject({ status: "DELIVERED", sheetSyncError: "SHEETS_SYNC_FAILED" });
+  });
+
+  it("does not mark orders that do not belong in the sheet, and refuses unknown orders", async () => {
+    configureSheets();
+    const { state, fetchMock } = fakeGoogle();
+    vi.stubGlobal("fetch", fetchMock);
+    const created = await placeOrder();
+    const agent = await loggedInAgent();
+    expect((await agent.post(`/api/v1/admin/sheets/sync/${created.body.id}`).expect(200)).body).toEqual({ written: false, qualifies: false });
+    expect(state.rows).toHaveLength(0);
+    expect(await prisma.order.findUniqueOrThrow({ where: { id: created.body.id } })).toMatchObject({ sheetSyncedAt: null, sheetSyncError: null });
+    expect((await agent.post("/api/v1/admin/sheets/sync/no-such-order")).status).toBe(404);
+    expect((await request(createApp()).post(`/api/v1/admin/sheets/sync/${created.body.id}`)).status).toBe(401);
+  });
+
+  it("marks every order written by Sync all", async () => {
+    configureSheets();
+    vi.stubGlobal("fetch", fakeGoogle().fetchMock);
+    const order = await completedPaidOrder();
+    const agent = await loggedInAgent();
+    expect((await agent.post("/api/v1/admin/sheets/sync").expect(200)).body).toEqual({ synced: 1 });
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).sheetSyncedAt).toBeInstanceOf(Date);
   });
 
   it("answers a failed sync with a generic error that carries no Google details", async () => {

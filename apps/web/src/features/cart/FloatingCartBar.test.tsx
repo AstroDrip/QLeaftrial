@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -22,9 +22,25 @@ describe("FloatingCartBar", () => {
   beforeEach(() => useCartStore.setState({ items: [] }));
   afterEach(cleanup);
 
-  it("stays hidden while the cart is empty", () => {
+  it("stays on screen in a compact idle state while the cart is empty, track included", () => {
     renderAt("/shop");
-    expect(screen.queryByTestId("floating-cart")).not.toBeInTheDocument();
+    const button = screen.getByTestId("floating-cart");
+    expect(button).toHaveAccessibleName("Open cart, your cart is empty");
+    expect(button.closest(".floating-cart")).toHaveAttribute("data-state", "idle");
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+    expect(screen.getByTestId("free-delivery")).toHaveClass("free-delivery--idle");
+  });
+
+  it("opens out when a product is added and folds back to idle when the last one is removed", async () => {
+    renderAt("/shop");
+    act(() => useCartStore.setState({ items: [item] }));
+    const button = screen.getByTestId("floating-cart");
+    expect(button.closest(".floating-cart")).toHaveAttribute("data-state", "active");
+    expect(screen.getByTestId("free-delivery")).not.toHaveClass("free-delivery--idle");
+    expect(button.querySelector(".floating-cart__badge")).toHaveTextContent("2");
+    act(() => useCartStore.setState({ items: [] }));
+    expect(screen.getByTestId("floating-cart").closest(".floating-cart")).toHaveAttribute("data-state", "idle");
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
   });
 
   it("names the action, item count and total for assistive technology", () => {

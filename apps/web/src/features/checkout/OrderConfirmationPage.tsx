@@ -2,6 +2,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { recallOrderSummary } from "./order-summary";
+import { DeliveryLines } from "./DeliveryLines";
 
 export function OrderConfirmationPage() {
   const { content, isArabic } = useSiteLanguage();
@@ -42,10 +43,7 @@ export function OrderConfirmationPage() {
               <strong>{summary.subtotalQar} QAR</strong>
             </li>
           </ul>
-          <div className="checkout-summary__total">
-            <span>{content.checkout.total}</span>
-            <strong>{summary.subtotalQar} QAR</strong>
-          </div>
+          <DeliveryLines subtotalQar={summary.subtotalQar} pending={summary.deliveryChargePending ?? false} placed />
         </div>
       ) : (
         <p className="page-shell__lead">

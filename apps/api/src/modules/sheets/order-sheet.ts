@@ -1,4 +1,6 @@
 import { getAccessToken, normalizePrivateKey, SheetsError, type ServiceAccount } from "./google-auth.js";
+import { prisma } from "../../lib/prisma.js";
+import { FREE_DELIVERY_THRESHOLD_QAR } from "../../lib/delivery.js";
 
 const API = "https://sheets.googleapis.com/v4/spreadsheets";
 const REQUEST_TIMEOUT_MS = 8_000;
@@ -9,10 +11,13 @@ const DEFAULT_TAB = "Orders";
 export const SHEET_HEADER = [
   "Order no.", "Invoice no.", "Date (Qatar)", "Customer", "Phone", "Area", "Address", "Items",
   "Subtotal (QAR)", "Total (QAR)", "Payment method", "Payment status", "Order status", "Delivery notes", "Updated (Qatar)",
+  // Added November 2026, at the end so rows written before keep their columns.
+  "Delivery (QAR)", "Delivery charge",
 ];
-const LAST_COLUMN = "O";
+const LAST_COLUMN = "Q";
 
 export type SheetOrder = {
+  id?: string;
   orderNumber: string;
   createdAt: Date | string;
   customerName: string;
@@ -25,8 +30,17 @@ export type SheetOrder = {
   status: string;
   subtotalQar: number;
   deliveryFeeQar: number;
+  deliveryChargePending?: boolean;
+  deliveryFeeConfirmedAt?: Date | string | null;
   items: Array<{ productName: string; quantity: number }>;
 };
+
+// Whether the delivery charge in the row is final. Orders from before the rule simply say "Not recorded".
+export function deliveryChargeLabel(order: Pick<SheetOrder, "subtotalQar" | "deliveryChargePending" | "deliveryFeeConfirmedAt">): string {
+  if (order.deliveryChargePending) return "To confirm";
+  if (order.deliveryFeeConfirmedAt) return "Confirmed";
+  return order.subtotalQar >= FREE_DELIVERY_THRESHOLD_QAR ? "Free" : "Not recorded";
+}
 
 // The sheet is the books for finished sales: an order is written once it is completed and paid.
 export function qualifiesForSheet(order: Pick<SheetOrder, "status" | "paymentStatus">): boolean {
@@ -77,6 +91,8 @@ export function orderToRow(order: SheetOrder, now: Date = new Date()): Array<str
     STATUS_LABELS[order.status] ?? order.status,
     order.deliveryNotes ?? "",
     qatarDateTime(now),
+    order.deliveryFeeQar,
+    deliveryChargeLabel(order),
   ];
 }
 
@@ -108,7 +124,8 @@ async function ensureSheet(config: SheetsConfig): Promise<void> {
         await call(config, ":batchUpdate", { method: "POST", body: { requests: [{ addSheet: { properties: { title: config.tab } } }] } });
       }
       const first = await call<{ values?: string[][] }>(config, `/values/${range(config, `A1:${LAST_COLUMN}1`)}`);
-      if (first.values?.[0]?.[0] !== SHEET_HEADER[0]) {
+      // Also rewrites an older, shorter header so the new columns get their titles.
+      if ((first.values?.[0] ?? []).join("|") !== SHEET_HEADER.join("|")) {
         await call(config, `/values/${range(config, `A1:${LAST_COLUMN}1`)}?valueInputOption=RAW`, { method: "PUT", body: { values: [SHEET_HEADER] } });
       }
     })();
@@ -123,19 +140,36 @@ async function orderNumberColumn(config: SheetsConfig): Promise<string[]> {
   return (column.values ?? []).map((row) => row[0] ?? "");
 }
 
-export async function syncOrder(order: SheetOrder, config: SheetsConfig): Promise<void> {
+// Writes or updates one order's row and says whether the sheet was written. The order number (column A) is the
+// row's key, so a retry updates the same row instead of adding a second one.
+export async function syncOrder(order: SheetOrder, config: SheetsConfig): Promise<boolean> {
   const qualifies = qualifiesForSheet(order);
   // A completed order that has since been marked unpaid is only corrected if it is already in the sheet.
-  if (!qualifies && order.status !== "DELIVERED") return;
+  if (!qualifies && order.status !== "DELIVERED") return false;
   await ensureSheet(config);
   const index = (await orderNumberColumn(config)).indexOf(order.orderNumber);
-  if (index < 0 && !qualifies) return;
+  if (index < 0 && !qualifies) return false;
   const row = orderToRow(order);
   if (index >= 0) {
     const line = index + 1;
     await call(config, `/values/${range(config, `A${line}:${LAST_COLUMN}${line}`)}?valueInputOption=RAW`, { method: "PUT", body: { values: [row] } });
   } else {
     await call(config, `/values/${range(config, `A:${LAST_COLUMN}`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { method: "POST", body: { values: [row] } });
+  }
+  return true;
+}
+
+// Remembers on the order whether its row is in the sheet, so admin can see failures and retry them. Best effort:
+// recording never turns a sync result into an error.
+export async function recordSheetSync(orderIds: string[], outcome: { ok: true } | { ok: false; code: string }): Promise<void> {
+  if (orderIds.length === 0) return;
+  try {
+    await (prisma.order as unknown as { updateMany(args: unknown): Promise<unknown> }).updateMany({
+      where: { id: { in: orderIds } },
+      data: outcome.ok ? { sheetSyncedAt: new Date(), sheetSyncError: null } : { sheetSyncError: outcome.code },
+    });
+  } catch {
+    // The order may have been deleted meanwhile; nothing to record.
   }
 }
 
@@ -153,6 +187,8 @@ export async function syncAllOrders(orders: SheetOrder[], config: SheetsConfig):
   }
   if (updates.length) await call(config, "/values:batchUpdate", { method: "POST", body: { valueInputOption: "RAW", data: updates } });
   if (additions.length) await call(config, `/values/${range(config, `A:${LAST_COLUMN}`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { method: "POST", body: { values: additions } });
+  const written = orders.filter((order) => existing.includes(order.orderNumber) || qualifiesForSheet(order)).flatMap((order) => (order.id ? [order.id] : []));
+  await recordSheetSync(written, { ok: true });
   return updates.length + additions.length;
 }
 
@@ -168,9 +204,15 @@ export async function mirrorOrderToSheet(order: SheetOrder): Promise<void> {
   const config = sheetsConfig();
   if (!config) return;
   try {
-    await withTimeout(syncOrder(order, config), MIRROR_BUDGET_MS);
+    const written = await withTimeout(syncOrder(order, config), MIRROR_BUDGET_MS);
+    if (written && order.id) await recordSheetSync([order.id], { ok: true });
   } catch (error) {
-    console.error(JSON.stringify({ level: "error", event: "sheet-sync-failed", reason: error instanceof SheetsError ? error.message : error instanceof Error ? error.name : "unknown" }));
+    const reason = error instanceof SheetsError ? error.message : error instanceof Error ? error.name : "unknown";
+    console.error(JSON.stringify({ level: "error", event: "sheet-sync-failed", reason }));
+    // Only orders that belong in the sheet are marked as failed (the others were never meant to be written).
+    if (order.id && (qualifiesForSheet(order) || order.status === "DELIVERED")) {
+      await recordSheetSync([order.id], { ok: false, code: error instanceof SheetsError ? error.code : "SHEETS_SYNC_FAILED" });
+    }
   }
 }
 

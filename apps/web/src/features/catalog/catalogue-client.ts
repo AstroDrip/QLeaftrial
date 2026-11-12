@@ -1,3 +1,4 @@
+import { compareCategories } from "./shop-categories";
 /**
  * The public catalogue, available before (and without) the live product API.
  *
@@ -126,5 +127,5 @@ export function categoryCounts(products: CatalogueProduct[]): Array<{ category: 
   }
   return [...counts.entries()]
     .map(([category, entry]) => ({ category, ...entry }))
-    .sort((a, b) => a.category.localeCompare(b.category));
+    .sort((a, b) => compareCategories(a.category, b.category));
 }

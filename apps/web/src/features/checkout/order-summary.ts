@@ -5,6 +5,8 @@ export type OrderSummary = {
   orderNumber: string;
   items: Array<{ name: string; nameAr: string | null; quantity: number; unitPriceQar: number }>;
   subtotalQar: number;
+  /** The team will confirm the delivery charge (order below the free-delivery threshold). */
+  deliveryChargePending?: boolean;
 };
 
 const STORAGE_KEY = "qleaves-last-order";

@@ -171,7 +171,7 @@ export function SiteHeader() {
                   <li key={category.category}>
                     <Link to={category.to} className="site-menu__sublink" onClick={() => closeMenu()}>
                       <span>{category.label}</span>
-                      <span className="site-menu__subcount">{category.count}</span>
+                      <span className="site-menu__subcount">{category.count || (isArabic ? "قريبًا" : "Soon")}</span>
                     </Link>
                   </li>
                 ))}
