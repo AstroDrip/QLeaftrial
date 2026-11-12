@@ -212,6 +212,10 @@ html[lang="ar"] .site-menu__language { letter-spacing: 0; }
   pointer-events: none;
 }
 .floating-cart--docked { position: absolute; bottom: calc(var(--footer-height, 0px) + 20px); }
+/* While the menu is open the header's own cart button rides down under the panel, so the floating bar steps
+   away: on short screens (a phone on its side) the two would otherwise meet. */
+.floating-cart { transition: opacity 200ms var(--ease-out), transform 260ms var(--ease-out), visibility 0s; }
+body:has(.site-header--menu-open) .floating-cart { opacity: 0; visibility: hidden; transform: translateY(16px); transition: opacity 160ms var(--ease-out), transform 200ms var(--ease-out), visibility 0s linear 200ms; }
 .floating-cart__button {
   position: relative;
   display: inline-flex;
@@ -332,10 +336,10 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
   .site-header__nav { display: none; }
-  /* Logo left, menu button exactly centred, search and cart right: equal outer columns keep the button centred. */
-  .site-header__inner { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--space-3); }
+  /* Leaf menu, then the logo, at the start; search and cart at the end. Each control has its own column. */
+  .site-header__inner { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: var(--space-2); }
   .site-header__brand { justify-self: start; }
-  .site-header .site-header__menu { display: inline-grid; }
+  .site-header .site-header__menu { display: inline-grid; justify-self: start; margin-inline-start: calc(var(--space-2) * -1); }
   .site-header__actions { justify-self: end; margin-inline-start: 0; }
   .site-menu { display: block; }
   .cart-layout, .checkout-form { grid-template-columns: 1fr; }

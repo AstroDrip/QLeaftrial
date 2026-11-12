@@ -117,17 +117,8 @@ export function SiteHeader() {
       style={cartShift ? ({ "--cart-dx": `${cartShift.x}px`, "--cart-dy": `${cartShift.y}px` } as CSSProperties) : undefined}
     >
       <div className="container site-header__inner">
-        <Link to="/" className="site-header__brand" aria-label="QLeaves home" lang="en" dir="ltr">
-          {/* The brand kit's own artwork, never retyped: the full logo, reversed for the dark header. */}
-          <span className="site-header__logo" role="img" aria-label={content.brand}>
-            <img className="site-header__logo-full" src="/brand/qleaves-logo-white.png" alt="" aria-hidden="true" width={140} height={49} />
-          </span>
-        </Link>
-        <nav aria-label={content.aria.primaryNavigation} className="site-header__nav" data-testid="primary-nav">
-          {navLinks.map(({ to, label }) => (
-            <NavLink key={to} to={to} className="nav-link" onMouseEnter={() => prefetchRoute(to)} onFocus={() => prefetchRoute(to)}>{label}</NavLink>
-          ))}
-        </nav>
+        {/* On phones and tablets the leaf menu comes first, then the logo (it is hidden on wide screens, where
+            the inline links take over), so keyboard order matches what is on screen. */}
         <button
           ref={menuButton}
           type="button"
@@ -139,6 +130,17 @@ export function SiteHeader() {
         >
           <LeafMenuIcon open={open} />
         </button>
+        <Link to="/" className="site-header__brand" aria-label="QLeaves home" lang="en" dir="ltr">
+          {/* The brand kit's own artwork, never retyped: the full logo, reversed for the dark header. */}
+          <span className="site-header__logo" role="img" aria-label={content.brand}>
+            <img className="site-header__logo-full" src="/brand/qleaves-logo-white.png" alt="" aria-hidden="true" width={140} height={49} />
+          </span>
+        </Link>
+        <nav aria-label={content.aria.primaryNavigation} className="site-header__nav" data-testid="primary-nav">
+          {navLinks.map(({ to, label }) => (
+            <NavLink key={to} to={to} className="nav-link" onMouseEnter={() => prefetchRoute(to)} onFocus={() => prefetchRoute(to)}>{label}</NavLink>
+          ))}
+        </nav>
         <div className="site-header__actions">
           <HeaderSearch />
           {!compact ? <LanguageToggle /> : null}
