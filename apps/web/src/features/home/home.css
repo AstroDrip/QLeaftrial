@@ -37,3 +37,9 @@
   .home { gap: var(--space-7); }
   .home-promises ul { grid-template-columns: 1fr; }
 }
+
+/* About us on the home page: the shop's own introduction, unchanged, with a link to the full page. */
+.home-about { display: grid; justify-items: start; gap: var(--space-3); max-width: 48rem; padding-block: var(--space-6); }
+.home-about h2 { font-size: var(--step-3); }
+.home-about__text { margin: 0; color: var(--text-muted); font-size: var(--step-1); text-wrap: pretty; }
+.home-promises ul { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }

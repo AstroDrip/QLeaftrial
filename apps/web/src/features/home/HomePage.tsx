@@ -10,16 +10,39 @@ import { CategoryRail } from "./CategoryRail";
 import { BotanicalHero } from "./BotanicalHero";
 import { ReviewStories } from "../reviews/ReviewStories";
 import { categoryCounts, useCatalogue } from "../catalog/catalogue-client";
-import { catalogueListResponse } from "../catalog/catalogue-view";
+import { catalogueListResponse, catalogueProductToSummary, sortCatalogue } from "../catalog/catalogue-view";
 import { friendlyError } from "../../lib/friendly-error";
+import type { ProductSummary } from "../catalog/product-types";
+import type { CatalogueProduct } from "../catalog/catalogue-types";
 
+// Category tiles use the client's own photographs.
 const CATEGORY_IMAGES: Record<string, string> = {
-  "Indoor Plants": "/media/plants/monstera-deliciosa-big-size-120-cm-640.webp",
-  "Table Top Plants": "/media/plants/pothos-njoy-640.webp",
-  "Gift Plants": "/media/plants/anthurium-red-55-cm-640.webp",
-  "Outdoor Plants": "/media/plants/bougainvillea-pink-640.webp",
+  "Indoor Plants": "/media/plants/money-tree-braided-640.webp",
+  "Table Top Plants": "/media/plants/peperomia-watermelon-640.webp",
+  "Gift Plants": "/media/plants/anthurium-pink-640.webp",
+  "Outdoor Plants": "/media/plants/hybrid-bougainvillea-3-640.webp",
   "Garden Accessories": "/media/plants/leca-640.webp",
 };
+
+const SHELF_SIZE = 8;
+
+type Shelf = { id: string; title: string; link: string; items: ProductSummary[] };
+
+// A row of real products with a heading and a link to the matching shop view. Empty shelves are not drawn.
+function ProductShelf({ shelf, orderingEnabled, viewAll }: { shelf: Shelf; orderingEnabled: boolean; viewAll: string }) {
+  if (shelf.items.length === 0) return null;
+  return (
+    <section className="home-section container" aria-labelledby={`home-${shelf.id}`} data-testid={`shelf-${shelf.id}`}>
+      <div className="section-head">
+        <h2 id={`home-${shelf.id}`}>{shelf.title}</h2>
+        <Link to={shelf.link}>{viewAll}</Link>
+      </div>
+      <ul className="product-grid">
+        {shelf.items.map((product) => <ProductCard key={product.id} product={product} orderingEnabled={orderingEnabled} headingLevel={3} />)}
+      </ul>
+    </section>
+  );
+}
 
 export function HomePage() {
   const { content, language, isArabic } = useSiteLanguage();
@@ -38,7 +61,7 @@ export function HomePage() {
     staleTime: 60_000,
   });
   const filters = useQuery({ queryKey: ["catalog-filters"], queryFn: () => productApi.filters(), staleTime: 300_000 });
-  const featured = (products.data?.items ?? savedFeatured ?? []).slice(0, 8);
+  const newArrivals = (products.data?.items ?? savedFeatured ?? []);
   const showingSaved = !products.data && Boolean(savedFeatured?.length);
   const savedCategories = catalogue.data ? categoryCounts(catalogue.data.products) : [];
   const categories: Array<[string, number]> = filters.data?.categoryCounts
@@ -46,6 +69,25 @@ export function HomePage() {
     : savedCategories.map((entry) => [entry.category, entry.count]);
   const categoryLabel = (category: string) =>
     filters.data?.categoryLabels?.[category] || savedCategories.find((entry) => entry.category === category)?.categoryAr || category;
+
+  // Featured, offers and the discovery shelves come from the published catalogue (all products, newest
+  // first). Each product appears on one shelf only: a shelf skips anything an earlier shelf already shows.
+  const entries = catalogue.data ? sortCatalogue(catalogue.data.products, "newest") : [];
+  const pick = (test: (product: CatalogueProduct) => boolean) =>
+    entries.filter(test).map((product) => catalogueProductToSummary(product, language));
+  const shown = new Set<string>();
+  const take = (items: ProductSummary[], limit = SHELF_SIZE) => {
+    const picked = items.filter((item) => !shown.has(item.id)).slice(0, limit);
+    picked.forEach((item) => shown.add(item.id));
+    return picked;
+  };
+  const featuredShelf: Shelf = { id: "featured", title: isArabic ? "منتجات مميزة" : "Featured plants", link: "/shop?sort=featured", items: take(pick((product) => Boolean(product.featured))) };
+  const newShelf: Shelf = { id: "new", title: t.featuredTitle, link: "/shop", items: take(newArrivals) };
+  const offersShelf: Shelf = { id: "offers", title: isArabic ? "عروض" : "Offers", link: "/shop", items: orderingEnabled ? take(pick((product) => Boolean(product.compareAtPriceQar && product.compareAtPriceQar > product.priceQar))) : [] };
+  const easyShelf: Shelf = { id: "easy", title: isArabic ? "نباتات سهلة العناية" : "Easy-care plants", link: "/shop", items: take(pick((product) => product.careLevel === "easy" && product.inStock), 4) };
+  const lowLightShelf: Shelf = { id: "low-light", title: isArabic ? "مناسبة للإضاءة المنخفضة" : "Happy in lower light", link: "/shop?light=" + encodeURIComponent("Low to bright indirect"), items: take(pick((product) => product.light === "Low to bright indirect" && product.inStock), 4) };
+  // Discovery shelves only make sense with a few products in them.
+  const discovery = [easyShelf, lowLightShelf].map((shelf) => (shelf.items.length >= 2 ? shelf : { ...shelf, items: [] }));
 
   return (
     <article className="home" data-testid="home-page">
@@ -73,33 +115,47 @@ export function HomePage() {
         </section>
       ) : null}
 
-      <section className="home-section container" aria-labelledby="home-featured">
-        <div className="section-head">
-          <h2 id="home-featured">{t.featuredTitle}</h2>
-          <Link to="/shop">{t.viewAll}</Link>
-        </div>
-        {products.isError && !showingSaved ? (
-          <p className="home__notice" role="alert">
-            {friendlyError(products.error, language)}
-          </p>
-        ) : products.isPending && !showingSaved ? (
+      <ProductShelf shelf={featuredShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />
+
+      {/* New arrivals keep their own loading and error states: they are the shelf that must never be empty. */}
+      {products.isError && !showingSaved ? (
+        <section className="home-section container" aria-labelledby="home-new">
+          <div className="section-head"><h2 id="home-new">{t.featuredTitle}</h2><Link to="/shop">{t.viewAll}</Link></div>
+          <p className="home__notice" role="alert">{friendlyError(products.error, language)}</p>
+        </section>
+      ) : products.isPending && !showingSaved ? (
+        <section className="home-section container" aria-labelledby="home-new">
+          <div className="section-head"><h2 id="home-new">{t.featuredTitle}</h2><Link to="/shop">{t.viewAll}</Link></div>
           <p role="status">{content.catalog.loading}</p>
-        ) : (
-          <ul className="product-grid">
-            {featured.map((product) => <ProductCard key={product.id} product={product} orderingEnabled={orderingEnabled} headingLevel={3} />)}
-          </ul>
-        )}
-      </section>
+        </section>
+      ) : (
+        <ProductShelf shelf={newShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />
+      )}
+
+      <ProductShelf shelf={offersShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />
+      {discovery.map((shelf) => <ProductShelf key={shelf.id} shelf={shelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />)}
 
       <section className="home-promises container" aria-label={t.promisesLabel}>
         <ul>
           {t.promises.map(([title, body]) => (
             <li key={title}><strong>{title}</strong><span>{body}</span></li>
           ))}
+          <li>
+            <strong>{isArabic ? "ادفع بالطريقة التي تناسبك" : "Pay the way that suits you"}</strong>
+            <span>{isArabic ? "الدفع عند الاستلام أو عبر رابط دفع نرسله لك." : "Cash on delivery, or a payment link we send you."}</span>
+          </li>
         </ul>
       </section>
 
       <ReviewStories />
+
+      {/* The shop's own About us wording, unchanged; the full page has the business details. */}
+      <section className="home-about container" aria-labelledby="home-about">
+        <p className="eyebrow">{content.legal.about.eyebrow}</p>
+        <h2 id="home-about">{content.legal.about.title}</h2>
+        <p className="home-about__text">{content.legal.about.introduction}</p>
+        <Link to="/about" className="button button--secondary">{isArabic ? "اعرف المزيد عنا" : "More about QLeaves"}</Link>
+      </section>
     </article>
   );
 }
