@@ -15,7 +15,9 @@ import { catalogueListResponse, catalogueProductToSummary, sortCatalogue } from 
 import { friendlyError } from "../../lib/friendly-error";
 import type { ProductSummary } from "../catalog/product-types";
 import type { CatalogueProduct } from "../catalog/catalogue-types";
-import { categoryName, findShopCategory, orderedCategoryCounts } from "../catalog/shop-categories";
+import { canonicalCategory, categoryName, findShopCategory, orderedCategoryCounts } from "../catalog/shop-categories";
+
+const NOT_IN_NEW_ARRIVALS = new Set(["Garden Accessories"]);
 
 // Each category's photograph is set in lib/shop-categories.ts; unlisted categories fall back to a leaf drawing.
 function categoryImage(category: string): { image: string; srcSet?: string } {
@@ -91,7 +93,8 @@ export function HomePage() {
     staleTime: 60_000,
   });
   const filters = useQuery({ queryKey: ["catalog-filters"], queryFn: () => productApi.filters(), staleTime: 300_000 });
-  const newArrivals = (products.data?.items ?? savedFeatured ?? []);
+  // New Arrivals is for plants: garden accessories (soil, fertiliser, tools) stay in their own category.
+  const newArrivals = (products.data?.items ?? savedFeatured ?? []).filter((item) => !NOT_IN_NEW_ARRIVALS.has(canonicalCategory(item.category)));
   const showingSaved = !products.data && Boolean(savedFeatured?.length);
   const savedCategories = catalogue.data ? categoryCounts(catalogue.data.products) : [];
   // Every category in the shop's order (lib/shop-categories.ts), empty ones included, once real counts are known.
@@ -138,7 +141,8 @@ export function HomePage() {
               to: `/shop?category=${encodeURIComponent(category)}`,
               ...categoryImage(category),
               name: categoryLabel(category),
-              count: count ? t.productCount(count) : (isArabic ? "قريبًا" : "Coming soon"),
+              // No product counts on the tiles; only an empty category says it is coming.
+              count: count ? undefined : (isArabic ? "قريبًا" : "Coming soon"),
             }))}
             headingId="home-categories"
             title={t.categoriesTitle}

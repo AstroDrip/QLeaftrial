@@ -55,12 +55,12 @@ describe("HomePage", () => {
     );
   }
 
-  it("shows the brand promise, categories with counts and live new arrivals", async () => {
+  it("shows the brand promise, categories (without counts) and live new arrivals", async () => {
     renderHome();
 
     expect(screen.getByRole("heading", { level: 1, name: /for the love of art and plants/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /shop plants/i })).toHaveAttribute("href", "/shop");
-    expect(await screen.findByRole("link", { name: /indoor plants\s*8 products/i })).toHaveAttribute("href", "/shop?category=Indoor%20Plants");
+    expect(await screen.findByRole("link", { name: /^indoor plants$/i })).toHaveAttribute("href", "/shop?category=Indoor%20Plants");
     expect(await screen.findByText("215 QAR")).toBeInTheDocument();
     expect(productApi.list).toHaveBeenCalledWith(expect.objectContaining({ sort: "newest" }));
   });

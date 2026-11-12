@@ -48,6 +48,29 @@ describe("home page shelves", () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
+  it("shows category tiles without product counts, and marks an empty category as coming soon", async () => {
+    renderHome([plant("p1"), plant("p2", { category: "Outdoor Plants" })]);
+    const indoor = await screen.findByRole("link", { name: /Indoor Plants/ });
+    expect(indoor).not.toHaveTextContent(/product/);
+    const counts = [...document.querySelectorAll(".home-categories li:not([aria-hidden]) .home-categories__count")].map((node) => node.textContent);
+    expect(counts.every((text) => text === "Coming soon")).toBe(true);
+    expect(counts.length).toBeGreaterThan(0);
+  });
+
+  it("keeps garden accessories out of New Arrivals, in either language", async () => {
+    vi.mocked(productApi.list).mockResolvedValue({
+      items: [
+        { id: "a1", slug: "fertiliser", name: "Fertiliser", nameAr: null, category: "Garden Accessories", categoryAr: "مستلزمات الحديقة", light: null, lightAr: null, priceQar: 30, compareAtPriceQar: null, featured: false, scientificName: null, careLevel: null, placement: null, createdAt: "2026-11-20T00:00:00.000Z", stock: 5, inStock: true, image: null, media: [] },
+        { id: "a2", slug: "soil", name: "Soil", nameAr: null, category: "مستلزمات الحديقة", categoryAr: "مستلزمات الحديقة", light: null, lightAr: null, priceQar: 20, compareAtPriceQar: null, featured: false, scientificName: null, careLevel: null, placement: null, createdAt: "2026-11-19T00:00:00.000Z", stock: 5, inStock: true, image: null, media: [] },
+        { id: "p9", slug: "p9", name: "Plant p9", nameAr: null, category: "Indoor Plants", categoryAr: null, light: null, lightAr: null, priceQar: 50, compareAtPriceQar: null, featured: false, scientificName: null, careLevel: null, placement: null, createdAt: "2026-11-18T00:00:00.000Z", stock: 5, inStock: true, image: null, media: [] },
+      ],
+      page: 1, pageSize: 24, totalItems: 3, totalPages: 1,
+    });
+    renderHome([plant("p9")]);
+    expect(await screen.findByTestId("shelf-new")).toBeInTheDocument();
+    expect(names("new")).toEqual(["Plant p9"]);
+  });
+
   it("draws no Featured or Offers shelf when no product qualifies, instead of inventing one", async () => {
     renderHome([plant("p1"), plant("p2", { compareAtPriceQar: 50 })]);
 

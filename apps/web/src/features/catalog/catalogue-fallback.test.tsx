@@ -98,8 +98,10 @@ describe("the saved catalogue", () => {
 
     expect(await screen.findByRole("heading", { name: "Pothos" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Monstera" })).toBeInTheDocument();
+    // Category tiles show no counts; the saved catalogue still leads to the right category.
     const indoor = screen.getAllByRole("link", { name: /Indoor Plants/ })[0];
-    expect(indoor).toHaveTextContent(/2 products/);
+    expect(indoor).toHaveAttribute("href", "/shop?category=Indoor%20Plants");
+    expect(indoor).not.toHaveTextContent(/product/);
     expect(screen.queryByText(/briefly unavailable/i)).not.toBeInTheDocument();
   });
 
