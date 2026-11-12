@@ -4498,5 +4498,42 @@
         "height": 1024
       }
     ]
+  },
+  {
+    "slug": "spring-pro-florist-fertiliser",
+    "sku": "QL-A01",
+    "name": "Spring Pro Florist Fertiliser for Flowering Plants",
+    "nameAr": "سماد سبرينج برو فلوريست للنباتات المزهرة",
+    "description": "A liquid plant food made for flowering plants, from the Dutch brand Spring. It is mixed into the watering can during the growing season to keep bougainvillea, anthuriums, hibiscus and other bloomers flowering. Follow the dose printed on the bottle; more is not better.",
+    "descriptionAr": "سماد سائل مخصص للنباتات المزهرة من العلامة الهولندية سبرينج. يُخلط مع ماء الري خلال موسم النمو ليساعد الجهنمية والأنثوريوم والكركديه وغيرها من النباتات المزهرة على الاستمرار في الإزهار. اتبع الجرعة المطبوعة على العبوة؛ فالزيادة لا تعني نتيجة أفضل.",
+    "category": "Garden Accessories",
+    "categoryAr": "مستلزمات الحديقة",
+    "light": null,
+    "lightAr": null,
+    "scientificName": null,
+    "watering": null,
+    "wateringAr": null,
+    "careLevel": null,
+    "placement": null,
+    "needsReview": true,
+    "reviewNote": "Bottle size, price and stock to be confirmed; image supplied by the client from a web link (554 px, small).",
+    "priceQar": 0,
+    "published": false,
+    "stock": 0,
+    "altText": "Spring Pro Florist liquid fertiliser for flowering plants",
+    "media": [
+      {
+        "url": "/media/plants/spring-pro-florist-fertiliser-640.webp",
+        "purpose": "catalog",
+        "width": 554,
+        "height": 554
+      },
+      {
+        "url": "/media/plants/spring-pro-florist-fertiliser-1024.webp",
+        "purpose": "detail",
+        "width": 554,
+        "height": 554
+      }
+    ]
   }
 ]

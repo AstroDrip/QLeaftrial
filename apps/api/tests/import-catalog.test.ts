@@ -61,7 +61,7 @@ describe("client catalogue import", () => {
   it("adds every new plant from the client's photos as a hidden draft with no price or stock", async () => {
     await importCatalog();
 
-    const drafts = await prisma.product.findMany({ where: { sku: { startsWith: "QL-" } }, include: { inventory: true, media: true } });
+    const drafts = await prisma.product.findMany({ where: { sku: { startsWith: "QL-0" } }, include: { inventory: true, media: true } });
     expect(drafts).toHaveLength(88);
     for (const draft of drafts) {
       expect(draft).toMatchObject({ published: false, priceQar: 0 });

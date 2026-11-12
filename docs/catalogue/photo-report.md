@@ -84,3 +84,7 @@ None.
 ## Duplicates
 
 No two files are identical (SHA-1). Photos showing the same plant from another angle or at another size are grouped into one listing's gallery (see the manifest's `role: gallery`).
+
+## Garden Accessories
+
+- `spring-pro-florist-fertiliser` (draft, no price): Spring Pro Florist liquid fertiliser for flowering plants, identified from the client's image link (gstatic thumbnail, 554 x 554 px, SHA-1 190955c45a1fa264c85a3bdd99426b24f9a64062). Bottle size, price and stock to confirm; a larger photo would look better on the product page.
