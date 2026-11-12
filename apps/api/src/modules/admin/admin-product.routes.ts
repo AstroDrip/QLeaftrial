@@ -5,29 +5,11 @@ import { createAdminProductSchema, productUploadMetadataSchema, replaceProductIm
 import { createAdminProduct, deleteAdminProduct, listAdminProducts, replaceAdminProductImages, updateAdminProduct } from "./admin-product.service.js";
 import { authorizeProductUpload } from "./product-upload.service.js";
 import { consumeRateLimit } from "../../lib/rate-limit.js";
-import { regeneratePublicCatalogue } from "../../lib/catalogue.js";
 
 export const adminProductRouter = Router();
 
 adminProductRouter.use("/admin/products", requireAdmin);
 adminProductRouter.use("/admin/product-uploads", requireAdmin);
-adminProductRouter.use("/admin/catalogue", requireAdmin);
-
-adminProductRouter.post("/admin/catalogue/regenerate", async (_request, response) => {
-  try {
-    const { publishedUrl, version } = await regeneratePublicCatalogue();
-    response.json({ ok: true, version, publishedUrl });
-  } catch (error) {
-    console.error(JSON.stringify({
-      level: "error",
-      endpoint: "/api/v1/admin/catalogue/regenerate",
-      error: error instanceof Error ? error.message : String(error),
-    }));
-    response.status(500).json({
-      error: { code: "CATALOGUE_REGENERATION_FAILED", message: "Could not regenerate the public catalogue" },
-    });
-  }
-});
 
 adminProductRouter.post("/admin/product-uploads", async (request, response) => {
   const parsed = productUploadMetadataSchema.safeParse(request.body);

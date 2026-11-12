@@ -8,15 +8,18 @@
     "test": "cross-env QLEAVES_DATABASE_PROVIDER=sqlite vitest run",
     "prisma:generate": "npm run prisma:generate:local && npm run prisma:generate:production",
     "prisma:generate:local": "node scripts/prisma.mjs generate --schema prisma/schema.prisma",
-    "prisma:generate:production": "node scripts/prisma.mjs generate --schema prisma/schema.postgresql.prisma",
+    "prisma:generate:production": "node scripts/prisma.mjs generate --schema prisma/postgresql/schema.prisma",
     "prisma:migrate": "node scripts/prisma.mjs migrate dev --name init",
-    "prisma:deploy:production": "node scripts/prisma.mjs db push --schema prisma/schema.postgresql.prisma",
-    "prisma:validate:production": "node scripts/prisma.mjs validate --schema prisma/schema.postgresql.prisma",
+    "prisma:deploy:production": "node scripts/prisma.mjs migrate deploy --schema prisma/postgresql/schema.prisma",
+    "prisma:status:production": "node scripts/prisma.mjs migrate status --schema prisma/postgresql/schema.prisma",
+    "prisma:check:production": "node scripts/check-production-schema.mjs",
+    "prisma:baseline:production": "node scripts/prisma.mjs migrate resolve --applied 0_init --schema prisma/postgresql/schema.prisma",
+    "prisma:validate:production": "node scripts/prisma.mjs validate --schema prisma/postgresql/schema.prisma",
     "prisma:seed": "node --experimental-strip-types prisma/seed.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "catalog:import": "node --experimental-strip-types prisma/import-catalog.ts",
-    "catalog:generate": "node --experimental-strip-types scripts/generate-catalogue.ts"
+    "catalog:generate": "tsx scripts/generate-catalogue.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.16.2",

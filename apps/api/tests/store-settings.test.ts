@@ -16,7 +16,8 @@ describe("storefront ordering settings", () => {
       commercialRegistration: null,
     }));
     expect(publicSettings.body).not.toHaveProperty("deliveryFeeQar");
-    expect(publicSettings.headers["cache-control"]).toBe("no-store");
+    expect(publicSettings.headers["cache-control"]).toBe("public, max-age=0, must-revalidate");
+    expect(publicSettings.headers["vercel-cdn-cache-control"]).toContain("stale-while-revalidate");
 
     const anonymousUpdate = await request(createApp())
       .put("/api/v1/admin/storefront-settings")

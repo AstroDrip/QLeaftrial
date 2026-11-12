@@ -25,11 +25,12 @@ export function createApp(): Express {
   });
   app.get("/api/v1/ready", async (_request, response) => {
     response.setHeader("Cache-Control", "no-store");
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const checkPromise = productRepository.count();
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Database readiness timeout")), 5000),
-      );
+      const timeoutPromise = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Database readiness timeout")), 5000);
+      });
       await Promise.race([checkPromise, timeoutPromise]);
       response.json({ status: "ready", database: "connected" });
     } catch (error) {
@@ -53,6 +54,8 @@ export function createApp(): Express {
           ...(requestId ? { requestId } : {}),
         },
       });
+    } finally {
+      clearTimeout(timer);
     }
   });
   app.use("/api/v1", apiRouter);

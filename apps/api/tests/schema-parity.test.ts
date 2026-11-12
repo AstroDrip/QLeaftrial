@@ -19,7 +19,7 @@ describe("Prisma schema parity", () => {
   it("keeps SQLite and PostgreSQL model and enum declarations equivalent", async () => {
     const [sqlite, postgresql] = await Promise.all([
       readFile(new URL("../prisma/schema.prisma", import.meta.url), "utf8"),
-      readFile(new URL("../prisma/schema.postgresql.prisma", import.meta.url), "utf8"),
+      readFile(new URL("../prisma/postgresql/schema.prisma", import.meta.url), "utf8"),
     ]);
 
     expect(schemaDeclarations(postgresql)).toEqual(schemaDeclarations(sqlite));

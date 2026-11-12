@@ -12,3 +12,6 @@ playwright-report/
 test-results/
 
 .vercel/
+
+# Public catalogue snapshot: written at build time from the database, never committed.
+apps/web/public/catalogue/

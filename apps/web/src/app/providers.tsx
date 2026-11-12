@@ -59,7 +59,10 @@ export function useStoreSettings() {
   return useQuery({
     queryKey: ["storefront-settings"],
     queryFn: async (): Promise<StoreSettings> => {
-      const response = await fetch("/api/v1/storefront/settings");
+      // Customers read the CDN-cached copy; inside admin the shop owner reads the live record, so a change
+      // they just saved never appears to revert after a reload.
+      const inAdmin = typeof window !== "undefined" && /^\/admin(\/(?!login)|$)/.test(window.location.pathname);
+      const response = await fetch(inAdmin ? "/api/v1/admin/storefront-settings" : "/api/v1/storefront/settings");
       if (!response.ok) throw new Error(`Could not load storefront settings (${response.status})`);
       return response.json() as Promise<StoreSettings>;
     },

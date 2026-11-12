@@ -21,7 +21,6 @@ import {
   updatePaymentStatus,
 } from "./order.service.js";
 import { publicOrderRateLimit } from "./order-rate-limit.js";
-import { getStoreSettings } from "../admin/store-settings.service.js";
 import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
 import { toAdminOrder } from "./order-view.js";
 
@@ -39,15 +38,21 @@ function qatarDateBoundary(value: unknown): Date | undefined {
   return parsed;
 }
 
+const IDEMPOTENCY_KEY = /^[A-Za-z0-9_-]{16,80}$/;
+
 orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
-  if (!(await getStoreSettings()).orderingEnabled) {
-    throw new ApiError(503, "ORDERING_DISABLED", "Ordering is currently unavailable");
+  const header = req.get("Idempotency-Key");
+  if (header !== undefined && !IDEMPOTENCY_KEY.test(header)) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Invalid idempotency key");
   }
   const parsed = createOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order details");
-  const order = await createOrder(parsed.data);
-  await mirrorOrderToSheet(order);
-  res.status(201).json(order);
+  const { order, replayed } = await createOrder(parsed.data, header);
+  // The order is saved before anything else happens; a slow or failing sheet sync never fails it.
+  if (!replayed) await mirrorOrderToSheet(order);
+  res.setHeader("Cache-Control", "no-store");
+  if (replayed) res.setHeader("Idempotent-Replayed", "true");
+  res.status(replayed ? 200 : 201).json(order);
 });
 
 orderRouter.use("/admin/orders", requireAdmin);

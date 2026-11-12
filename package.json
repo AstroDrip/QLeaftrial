@@ -14,9 +14,12 @@
     "typecheck:vercel": "tsc --noEmit --target ES2024 --module NodeNext --moduleResolution NodeNext --strict --esModuleInterop --skipLibCheck --types node api/index.ts",
     "build": "npm run build --workspaces",
     "verify:vercel-config": "node scripts/verify-vercel-config.mjs",
-    "vercel-build": "npm run verify:vercel-config && node scripts/verify-vercel-env.mjs && npm run prisma:generate -w @qleaves/api && npm run typecheck && npm run build",
+    "vercel-build": "npm run verify:vercel-config && node scripts/verify-vercel-env.mjs && npm run prisma:generate -w @qleaves/api && npm run typecheck && npm run catalog:generate -w @qleaves/api && npm run build",
     "supabase:generate": "npm run prisma:generate:production -w @qleaves/api",
     "supabase:validate": "npm run prisma:validate:production -w @qleaves/api",
+    "supabase:check": "npm run prisma:check:production -w @qleaves/api",
+    "supabase:baseline": "npm run prisma:baseline:production -w @qleaves/api",
+    "supabase:status": "npm run prisma:status:production -w @qleaves/api",
     "supabase:deploy": "npm run prisma:deploy:production -w @qleaves/api",
     "supabase:seed": "npm run prisma:seed -w @qleaves/api",
     "supabase:catalog": "npm run catalog:import -w @qleaves/api"

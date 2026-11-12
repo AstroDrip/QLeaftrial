@@ -20,12 +20,13 @@ const prismaCli = require.resolve("prisma/build/index.js");
 const prismaArguments = process.argv.slice(2);
 const productionSchema = prismaArguments.some(
   (argument, index) =>
-    argument === "--schema" && prismaArguments[index + 1]?.endsWith("schema.postgresql.prisma"),
+    argument === "--schema" && /postgresql[\\/]schema\.prisma$/.test(prismaArguments[index + 1] ?? ""),
 );
 
 if (
   productionSchema &&
-  (prismaArguments[0] === "generate" || prismaArguments[0] === "validate")
+  (prismaArguments[0] === "generate" || prismaArguments[0] === "validate" ||
+    (prismaArguments[0] === "migrate" && prismaArguments[1] === "diff"))
 ) {
   environment.DATABASE_URL ??=
     "postgresql://qleaves:qleaves@localhost:6543/qleaves?pgbouncer=true&connection_limit=1";

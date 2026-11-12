@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import { getStoreSettings } from "../admin/store-settings.service.js";
@@ -84,10 +85,36 @@ function qatarDayRange(date = new Date()): { start: Date; end: Date } {
   return { start, end: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
 }
 
+const ORDER_SUFFIX_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// QL-YYYYMMDD-XXXXXX with a random suffix (36^6, about 2 billion per day). Two orders in the same millisecond
+// no longer share a number; the unique index still guards it and createOrder retries on the rare clash.
 function orderNumber() {
   const { year, month, day } = qatarDateParts(new Date());
-  return `QL-${year}${month}${day}-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+  let suffix = "";
+  for (let index = 0; index < 6; index += 1) suffix += ORDER_SUFFIX_ALPHABET[randomInt(ORDER_SUFFIX_ALPHABET.length)];
+  return `QL-${year}${month}${day}-${suffix}`;
 }
+
+function uniqueViolationOn(error: unknown, field: string): boolean {
+  if (!error || typeof error !== "object" || (error as { code?: unknown }).code !== "P2002") return false;
+  const target = (error as { meta?: { target?: unknown } }).meta?.target;
+  const fields = Array.isArray(target) ? target.map(String) : typeof target === "string" ? [target] : [];
+  // Some drivers only report the index name, so match that too.
+  return fields.some((name) => name === field || name.includes(field)) ||
+    String((error as { message?: unknown }).message ?? "").includes(field);
+}
+
+// Until the idempotency column has been added to a database (see docs/deployment/operator-checklist.md),
+// an order is still accepted without the key rather than checkout breaking.
+function missingIdempotencyColumn(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const { code, message } = error as { code?: unknown; message?: unknown };
+  const detail = String(message ?? "") + JSON.stringify((error as { meta?: unknown }).meta ?? {});
+  return (code === "P2022" || /column/i.test(detail)) && /idempotencyKey/.test(detail);
+}
+
+const ORDER_NUMBER_ATTEMPTS = 3;
 
 async function releaseReservedItems(
   tx: any,
@@ -106,17 +133,63 @@ async function releaseReservedItems(
   }
 }
 
-export async function createOrder(input: CreateOrderInput) {
+export type CreatedOrder = Awaited<ReturnType<typeof insertOrder>>;
+
+// Places an order exactly once. With an idempotency key, a retry (double tap, a timeout after the order was
+// saved, a reload) gets the order that already exists, and two simultaneous requests with the same key
+// cannot both create one: the unique index lets one win and the other returns the winner's order.
+export async function createOrder(
+  input: CreateOrderInput,
+  idempotencyKey?: string,
+): Promise<{ order: CreatedOrder; replayed: boolean }> {
+  let key = idempotencyKey;
+  if (key) {
+    const existing = await findOrderByIdempotencyKey(key);
+    if (existing) return { order: existing, replayed: true };
+  }
+
   const settings = await getStoreSettings();
   if (!settings.orderingEnabled) {
     throw new ApiError(503, "ORDERING_DISABLED", "Ordering is currently unavailable");
   }
-  return db.$transaction(async (tx: any) => {
+
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return { order: await insertOrder(input, key), replayed: false };
+    } catch (error) {
+      if (key && uniqueViolationOn(error, "idempotencyKey")) {
+        const existing = await findOrderByIdempotencyKey(key);
+        if (existing) return { order: existing, replayed: true };
+      }
+      if (key && missingIdempotencyColumn(error)) {
+        console.warn(JSON.stringify({ level: "warn", event: "order-idempotency-unavailable", reason: "column missing; run the pending migration" }));
+        key = undefined;
+        continue;
+      }
+      if (uniqueViolationOn(error, "orderNumber") && attempt < ORDER_NUMBER_ATTEMPTS) continue;
+      throw error;
+    }
+  }
+}
+
+async function findOrderByIdempotencyKey(idempotencyKey: string) {
+  try {
+    return await db.order.findUnique({ where: { idempotencyKey }, include: { items: true } });
+  } catch (error) {
+    if (missingIdempotencyColumn(error)) return null;
+    throw error;
+  }
+}
+
+async function insertOrder(input: CreateOrderInput, idempotencyKey: string | undefined) {
+  return db.$transaction(async (tx) => {
     const quantities = new Map<string, number>();
     for (const item of input.items) {
       quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity);
     }
 
+    // Prices, names and SKUs come from the database at this moment, never from the request; the order
+    // items keep them as a snapshot so later price or name changes never rewrite an old order.
     const products = await tx.product.findMany({
       where: { id: { in: [...quantities.keys()] }, published: true },
       select: { id: true, name: true, sku: true, priceQar: true },
@@ -149,6 +222,7 @@ export async function createOrder(input: CreateOrderInput) {
     return tx.order.create({
       data: {
         orderNumber: orderNumber(),
+        ...(idempotencyKey ? { idempotencyKey } : {}),
         customerName: input.customerName,
         phone: input.phone,
         email: input.email,
@@ -157,6 +231,8 @@ export async function createOrder(input: CreateOrderInput) {
         deliveryNotes: input.deliveryNotes,
         paymentMethod: input.paymentMethod,
         subtotalQar,
+        // Delivery is free today: the shop has never charged a fee at checkout. A fee would be added here,
+        // from the store settings, never from the request.
         deliveryFeeQar: 0,
         items: { create: items },
       },

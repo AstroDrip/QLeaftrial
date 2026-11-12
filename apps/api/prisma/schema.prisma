@@ -115,6 +115,9 @@ model Inventory {
 model Order {
   id              String        @id @default(cuid())
   orderNumber     String        @unique
+  // Sent by the storefront with each checkout attempt: a retry with the same key returns the order
+  // already created instead of creating a second one.
+  idempotencyKey  String?       @unique
   customerName    String
   phone           String
   email           String

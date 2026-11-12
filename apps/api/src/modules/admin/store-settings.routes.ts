@@ -3,10 +3,19 @@ import { z } from "zod";
 import { requireAdmin } from "../auth/auth.middleware.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import { getStoreSettings, updateStoreSettings } from "./store-settings.service.js";
+import { applyEdgeOnlyCacheHeaders } from "../../middleware/cache-headers.js";
 
 export const storeSettingsRouter = Router();
 
+// Every page reads these (business details, whether ordering is on). The CDN keeps a copy for a minute and
+// keeps serving the last good one while it refreshes, so a cold function or a database blip never empties
+// the About page. Checkout re-checks "ordering enabled" on the server, so a stale copy is harmless.
 storeSettingsRouter.get("/storefront/settings", async (_request, response) => {
+  applyEdgeOnlyCacheHeaders(response);
+  response.json(await getStoreSettings());
+});
+
+storeSettingsRouter.get("/admin/storefront-settings", requireAdmin, async (_request, response) => {
   response.setHeader("Cache-Control", "no-store");
   response.json(await getStoreSettings());
 });

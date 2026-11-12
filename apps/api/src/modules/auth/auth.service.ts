@@ -17,11 +17,15 @@ type SessionRecord = {
 };
 
 type AdminRepository = {
-  findFirst(args: {
+  findMany(args: {
     orderBy: { createdAt: "asc" };
     select: { id: true; name: true; passwordHash: true };
-  }): Promise<AdminRecord | null>;
+    take: number;
+  }): Promise<AdminRecord[]>;
 };
+
+// The shop has a handful of admin accounts at most; a password-only login checks each of them.
+const MAX_ADMIN_ACCOUNTS = 10;
 
 type SessionRepository = {
   create(args: {
@@ -53,12 +57,20 @@ export async function authenticatePassword(password: string): Promise<{
   token: string;
   admin: { name: string };
 } | null> {
-  const admin = await adminRepository.findFirst({
+  // Every admin account is checked, not only the oldest: with two accounts (for example one re-seeded with a
+  // new password) the newer password must work too. Database errors propagate and become a 503, never
+  // an "Invalid credentials" answer.
+  const admins = await adminRepository.findMany({
     orderBy: { createdAt: "asc" },
     select: { id: true, name: true, passwordHash: true },
+    take: MAX_ADMIN_ACCOUNTS,
   });
 
-  if (!admin || !(await argon2.verify(admin.passwordHash, password))) {
+  let admin: AdminRecord | null = null;
+  for (const candidate of admins) {
+    if (await argon2.verify(candidate.passwordHash, password)) { admin = candidate; break; }
+  }
+  if (!admin) {
     return null;
   }
 

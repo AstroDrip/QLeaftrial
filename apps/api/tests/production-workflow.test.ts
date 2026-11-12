@@ -98,9 +98,10 @@ describe("production Prisma workflow", () => {
     const validated = await runProductionPrisma("prisma:validate:production");
     const deployment = await runProductionPrisma("prisma:deploy:production", ["--", "--help"]);
 
-    expect(generated.stdout).toContain("schema.postgresql.prisma");
+    expect(generated.stdout).toMatch(/postgresql[\\/]schema\.prisma/);
     expect(validated.stdout).toContain("is valid");
-    expect(deployment.stdout).toContain("prisma db push");
+    // Production schema changes go through reviewed, versioned migrations, never `db push`.
+    expect(deployment.stdout).toContain("migrate deploy");
   }, 30_000);
 
   it("requires a PostgreSQL URL before selecting the production client", async () => {

@@ -307,6 +307,6 @@ describe("Google Sheets in the API", () => {
     const response = await agent.post("/api/v1/admin/sheets/sync");
 
     expect(response.status).toBe(502);
-    expect(response.body.error).toEqual({ code: "SHEETS_SYNC_FAILED", message: "Could not update the Google Sheet" });
+    expect(response.body.error).toEqual({ code: "SHEETS_SYNC_FAILED", message: "Could not update the Google Sheet", requestId: expect.any(String) });
   });
 });

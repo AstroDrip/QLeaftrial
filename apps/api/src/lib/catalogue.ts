@@ -1,12 +1,13 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "./prisma.js";
-import {
-  objectPathUrl,
-  productImageStorageConfig,
-  publicObjectUrl,
-  storageHeaders,
-} from "../modules/admin/product-image-storage.js";
+
+// The public catalogue: every published product with only customer-safe fields. It is served two ways:
+//  - GET /api/v1/catalogue, which Vercel's CDN caches for a minute and keeps serving while it refreshes
+//    (so the storefront keeps its products through a cold start or a short database outage), and
+//  - a snapshot written at build time to the web app's public folder, the last fallback if the API has
+//    never answered. The snapshot is a build output and is never committed.
+// Nothing here authorises a purchase: checkout re-reads prices, publication and stock on the server.
 
 export interface PublicCatalogueMedia {
   url: string;
@@ -123,40 +124,33 @@ function mapProduct(record: {
   };
 }
 
-// Returns the newest update across published products, their photos, and stock
-// so every meaningful catalogue change produces a new version string.
+// The newest change across published products, their photos and stock, so every meaningful catalogue
+// change produces a new version string. Three single-row aggregates, not a scan of every row.
 async function latestCatalogueUpdate(): Promise<Date> {
   const [products, media, inventory] = await Promise.all([
-    prisma.product.findMany({
-      where: { published: true },
-      select: { updatedAt: true },
-    }),
-    prisma.productMedia.findMany({ select: { updatedAt: true } }),
-    prisma.inventory.findMany({ select: { updatedAt: true } }),
+    prisma.product.aggregate({ where: { published: true }, _max: { updatedAt: true } }),
+    prisma.productMedia.aggregate({ where: { product: { published: true } }, _max: { updatedAt: true } }),
+    prisma.inventory.aggregate({ where: { product: { published: true } }, _max: { updatedAt: true } }),
   ]);
-
-  const dates = [
-    ...products.map((product) => product.updatedAt),
-    ...media.map((medium) => medium.updatedAt),
-    ...inventory.map((item) => item.updatedAt),
-  ];
-
-  if (dates.length === 0) return new Date();
-  return new Date(Math.max(...dates.map((date) => date.getTime())));
+  const times = [products._max.updatedAt, media._max.updatedAt, inventory._max.updatedAt]
+    .filter((value): value is Date => value instanceof Date)
+    .map((value) => value.getTime());
+  return times.length ? new Date(Math.max(...times)) : new Date(0);
 }
 
 export async function buildPublicCatalogue(): Promise<PublicCatalogue> {
   const generatedAt = new Date();
-  const version = (await latestCatalogueUpdate()).toISOString();
-
-  const products = await prisma.product.findMany({
-    where: { published: true },
-    select: publicProductSelection,
-    orderBy: { name: "asc" },
-  });
+  const [latest, products] = await Promise.all([
+    latestCatalogueUpdate(),
+    prisma.product.findMany({
+      where: { published: true },
+      select: publicProductSelection,
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return {
-    version,
+    version: latest.toISOString(),
     generatedAt: generatedAt.toISOString(),
     productCount: products.length,
     products: products.map(mapProduct),
@@ -165,109 +159,15 @@ export async function buildPublicCatalogue(): Promise<PublicCatalogue> {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// apps/api/src/lib -> repository root
-const repositoryRoot = resolve(__dirname, "../../../");
-const catalogueDir = resolve(repositoryRoot, "web/public/catalogue");
-const catalogueStoragePath = "catalogue/catalogue.json";
+// apps/api/src/lib -> apps/web/public/catalogue (a git-ignored build output)
+const catalogueDir = resolve(__dirname, "../../../web/public/catalogue");
 
-function catalogueFilePath(): string {
-  return resolve(catalogueDir, "catalogue.json");
-}
-
-async function publishToSupabase(catalogue: PublicCatalogue): Promise<string> {
-  const config = productImageStorageConfig();
-  const body = JSON.stringify(catalogue);
-
-  // Upload to a temporary path first. Supabase Storage makes an object visible
-  // only after the PUT completes, so the previously published catalogue remains
-  // available until the new one is fully written. Customers never receive a
-  // half-written catalogue.
-  const tmpPath = `catalogue/tmp/${catalogue.version}.json`;
-  const tmpResponse = await fetch(
-    objectPathUrl(config.baseUrl, config.bucket, tmpPath),
-    {
-      method: "PUT",
-      headers: {
-        ...storageHeaders(config.apiKey, config.legacyBearer),
-        "Content-Type": "application/json",
-        "x-upsert": "false",
-      },
-      body,
-    },
-  );
-  if (!tmpResponse.ok) {
-    throw new Error(`Catalogue upload failed (${tmpResponse.status})`);
-  }
-
-  const publicUrl = publicObjectUrl(
-    config.baseUrl,
-    config.bucket,
-    catalogueStoragePath,
-  );
-  const copyResponse = await fetch(
-    objectPathUrl(config.baseUrl, config.bucket, catalogueStoragePath),
-    {
-      method: "PUT",
-      headers: {
-        ...storageHeaders(config.apiKey, config.legacyBearer),
-        "Content-Type": "application/json",
-        "x-upsert": "false",
-      },
-      body,
-    },
-  );
-  if (!copyResponse.ok) {
-    throw new Error(`Catalogue publish failed (${copyResponse.status})`);
-  }
-
-  return publicUrl;
-}
-
-// Publishes a freshly built catalogue to a public, read-only location.
-//
-// Development (SQLite / local filesystem): writes
-// apps/web/public/catalogue/catalogue.json so the next storefront load serves
-// it immediately.
-//
-// Production (PostgreSQL / Vercel): the filesystem is read-only, so the
-// snapshot is uploaded to the configured Supabase product-image bucket under a
-// public path. The previous snapshot remains published until the new one
-// completes.
-export async function publishCatalogue(
-  catalogue: PublicCatalogue,
-): Promise<{ publishedUrl: string; version: string }> {
-  const usesPostgreSql =
-    process.env.QLEAVES_DATABASE_PROVIDER === "postgresql";
-
-  if (usesPostgreSql) {
-    const publishedUrl = await publishToSupabase(catalogue);
-    return { publishedUrl, version: catalogue.version };
-  }
-
-  const filePath = await writeCatalogueFile(catalogue);
-  return { publishedUrl: `file://${filePath}`, version: catalogue.version };
-}
-
-// Rebuilds the public catalogue and publishes it. Call this after every
-// successful admin product mutation (create / update / replace images / delete)
-// so the public catalogue stays in sync with the shop.
-export async function regeneratePublicCatalogue(): Promise<{
-  publishedUrl: string;
-  version: string;
-}> {
-  const catalogue = await buildPublicCatalogue();
-  return publishCatalogue(catalogue);
-}
-
-export async function writeCatalogueFile(
-  catalogue: PublicCatalogue,
-): Promise<string> {
-  const fs = await import("node:fs");
-  const { mkdirSync, renameSync, writeFileSync } = fs;
-  const outputPath = catalogueFilePath();
-  mkdirSync(catalogueDir, { recursive: true });
+export async function writeCatalogueFile(catalogue: PublicCatalogue, directory = catalogueDir): Promise<string> {
+  const { mkdirSync, renameSync, writeFileSync } = await import("node:fs");
+  mkdirSync(directory, { recursive: true });
+  const outputPath = resolve(directory, "catalogue.json");
   const tmpPath = `${outputPath}.tmp`;
-  writeFileSync(tmpPath, JSON.stringify(catalogue, null, 2) + "\n", "utf8");
+  writeFileSync(tmpPath, `${JSON.stringify(catalogue)}\n`, "utf8");
   renameSync(tmpPath, outputPath);
   return outputPath;
 }
