@@ -147,3 +147,11 @@
 /* The line in flight: positioned and sized every frame by FreeDeliveryFlyer. */
 .free-delivery-flyer { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 2px rgba(var(--fd-glow-rgb), 1)) drop-shadow(0 0 6px rgba(var(--fd-glow-rgb), .8)) drop-shadow(0 0 14px rgba(var(--fd-glow-rgb), .5)); }
 .free-delivery-flyer path { stroke: var(--fd-glow); }
+
+/* In the cart's order summary: the same moss card (the glow needs a dark ground), sized to the summary column
+   so it lines up with the totals and the checkout button instead of running the width of the page. */
+.free-delivery--summary { gap: 8px; padding: 12px 14px; }
+.free-delivery--summary .free-delivery__message { justify-content: flex-start; text-align: start; font-size: .85rem; }
+.free-delivery--summary .free-delivery__note { text-align: start; }
+.free-delivery__figures { unicode-bidi: isolate; color: var(--fd-text); font-variant-numeric: tabular-nums; font-weight: 600; }
+.free-delivery-wrap--summary.is-flying { margin-block-end: calc(var(--space-4) * -1); }

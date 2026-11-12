@@ -32,7 +32,7 @@ const CLOSE_IN_MARGIN_PX = 10;
 // head, a seed at the start and a leaf pinned at the goal. When the goal is met the message holds for a
 // moment, the text fades, the card closes in around the line and the line flies to the cart icon to
 // become a ring around it (see FreeDeliveryFlyer). "compact" is the slimmer card above the floating cart.
-export function FreeDeliveryProgress({ subtotalQar, compact = false }: { subtotalQar: number; compact?: boolean }) {
+export function FreeDeliveryProgress({ subtotalQar, compact = false, placement = "page" }: { subtotalQar: number; compact?: boolean; placement?: "page" | "summary" }) {
   const { language } = useSiteLanguage();
   const t = copy[language];
   const phase = useFreeDeliveryStore((state) => state.phase);
@@ -70,19 +70,22 @@ export function FreeDeliveryProgress({ subtotalQar, compact = false }: { subtota
     inset("--fd-left", line.left - outer.left - CLOSE_IN_MARGIN_PX);
   }, [phase]);
 
-  if (unlocked && phase === "done") return null;
+  // In the cart summary the reached state stays put (lit line, "You've unlocked free delivery!"): it sits beside
+  // the total it describes, so it never flies away. Elsewhere the line celebrates, flies to the cart and is gone.
+  const settles = placement === "summary";
+  if (unlocked && phase === "done" && !settles) return null;
 
   // A basket that has just reached the goal reads as "celebrate" even before the controller catches up.
-  const stage = unlocked ? (phase === "progress" ? "celebrate" : phase) : "progress";
+  const stage = unlocked ? (settles || phase === "progress" ? "celebrate" : phase) : "progress";
   const collapsing = stage === "collapse" || stage === "fly";
   const flying = stage === "fly";
   const shown = unlocked ? 100 : percent;
 
   return (
-    <div className={`free-delivery-wrap${compact ? " free-delivery-wrap--compact" : ""}${flying ? " is-flying" : ""}`}>
+    <div className={`free-delivery-wrap${compact ? " free-delivery-wrap--compact" : ""}${placement === "summary" ? " free-delivery-wrap--summary" : ""}${flying ? " is-flying" : ""}`}>
       <div
         ref={card}
-        className={`free-delivery${compact ? " free-delivery--compact" : ""}${stage !== "progress" ? " is-unlocked" : ""}${collapsing ? " is-collapsing" : ""}${flying ? " is-flying" : ""}`}
+        className={`free-delivery${compact ? " free-delivery--compact" : ""}${placement === "summary" ? " free-delivery--summary" : ""}${stage !== "progress" ? " is-unlocked" : ""}${collapsing ? " is-collapsing" : ""}${flying ? " is-flying" : ""}`}
         data-testid="free-delivery"
         data-phase={stage}
       >
@@ -116,7 +119,16 @@ export function FreeDeliveryProgress({ subtotalQar, compact = false }: { subtota
           </div>
           <LeafIcon className="free-delivery__anchor free-delivery__anchor--goal" />
         </div>
-        {compact ? null : <p className="free-delivery__note">{t.note}</p>}
+        {compact ? null : (
+          <p className="free-delivery__note">
+            {placement === "summary" ? (
+              <span aria-hidden="true">
+                <span className="free-delivery__figures" dir="ltr">{Math.min(subtotalQar, FREE_DELIVERY_THRESHOLD_QAR)} / {FREE_DELIVERY_THRESHOLD_QAR} QAR</span>{" · "}
+              </span>
+            ) : null}
+            {t.note}
+          </p>
+        )}
       </div>
     </div>
   );

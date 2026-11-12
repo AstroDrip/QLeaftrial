@@ -93,10 +93,14 @@ export function HomePage() {
     <article className="home" data-testid="home-page">
       <Seo title="QLeaves" description={isArabic ? "نباتات داخلية وخارجية مختارة بعناية مع التوصيل داخل قطر." : "Hand-picked indoor and outdoor plants, delivered across Qatar."} path="/" structuredData={qleavesStructuredData} />
 
+      {/* The hero holds still while Shop by Category slides up over it (the sheet's soft blurred edge passes over
+          the photo); once the categories have passed, the hero is released and the shelves follow as normal. */}
+      <div className="home-stage">
       <BotanicalHero copy={{ eyebrow: t.basedIn, title: t.heroTitle, lead: t.heroSubtitle, cta: t.shopCta }} />
 
       {categories.length ? (
-        <section className="home-section container" aria-labelledby="home-categories">
+        <section className="home-section container home-stage__sheet" aria-labelledby="home-categories">
+          <div className="home-stage__blur" aria-hidden="true"><span /><span /><span /></div>
           <CategoryRail
             items={categories.map(([category, count]) => ({
               key: category,
@@ -114,6 +118,7 @@ export function HomePage() {
           />
         </section>
       ) : null}
+      </div>
 
       <ProductShelf shelf={featuredShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />
 

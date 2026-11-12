@@ -29,7 +29,9 @@ button { cursor: pointer; }
 .skip-link { position: fixed; top: -60px; inset-inline-start: 12px; z-index: 1000; padding: 8px 14px; border-radius: var(--radius-sm); background: var(--ink); color: var(--paper); }
 .skip-link:focus { top: 12px; }
 .container { width: 100%; max-width: var(--page-max); margin-inline: auto; padding-inline: var(--gutter); }
-.main-content { min-height: 60vh; }
+/* clip, not hidden: it stops a sliding page (the cart sheet) from widening the page, without making a scroll container
+   (so the sticky hero inside still sticks). */
+.main-content { min-height: 60vh; overflow-x: clip; }
 
 .eyebrow { margin: 0; color: var(--rust); font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 html[lang="ar"] .eyebrow { letter-spacing: 0; }
@@ -230,12 +232,10 @@ body:has(.site-header--menu-open) .floating-cart { opacity: 0; visibility: hidde
   box-shadow: var(--shadow-md);
   font-weight: 600;
   pointer-events: auto;
-  animation: floating-cart-in 240ms var(--ease-out);
 }
 .floating-cart__button:hover { background: var(--moss-deep); }
 .floating-cart__button svg { width: 20px; height: 20px; }
 .floating-cart__total { color: var(--paper); font-variant-numeric: tabular-nums; }
-@keyframes floating-cart-in { from { opacity: 0; transform: translateY(12px); } }
 
 /* ---------- Page shell & shared sections ---------- */
 .page-shell { display: grid; gap: var(--space-6); width: 100%; max-width: var(--page-max); margin-inline: auto; padding: var(--space-7) var(--gutter) var(--space-8); }
@@ -409,3 +409,44 @@ body.has-floating-cart .main-content { padding-bottom: 150px; }
 .site-menu__sublink:hover { background: rgba(246, 241, 214, .08); color: var(--on-dark); }
 .site-menu__subcount { font-size: .8rem; font-variant-numeric: tabular-nums; opacity: .8; }
 .site-menu { max-height: calc(100dvh - var(--header-height) - 88px); overflow-y: auto; overscroll-behavior: contain; }
+
+/* ---------- Cart sheet: the cart page slides in from the far edge and back out on close ---------- */
+.cart-page__header { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.cart-page__header > div { display: grid; gap: .6rem; min-width: 0; }
+/* The heading takes focus when the cart opens (so screen readers start there); it is not a control, so no ring. */
+.cart-page__header h1:focus, .cart-page__header h1:focus-visible { outline: none; }
+.cart-page__close {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.cart-page__close:hover { background: var(--surface-2, var(--paper)); border-color: var(--ink); }
+.cart-page__close:focus-visible { outline: 2px solid var(--moss); outline-offset: 3px; }
+.cart-page__close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.cart-page--sheet { --cart-slide: clamp(48px, 14vw, 180px); animation: cart-sheet-in 340ms cubic-bezier(.22, .7, .25, 1) both; }
+[dir="rtl"] .cart-page--sheet { --cart-slide: calc(clamp(48px, 14vw, 180px) * -1); }
+.cart-page--sheet.is-leaving { animation: cart-sheet-out 300ms cubic-bezier(.55, 0, .75, .3) both; pointer-events: none; }
+@keyframes cart-sheet-in { from { opacity: 0; transform: translateX(var(--cart-slide)); } }
+@keyframes cart-sheet-out { to { opacity: 0; transform: translateX(var(--cart-slide)); } }
+
+/* ---------- Floating cart: the delivery line arrives first, then the cart button rises in under it ---------- */
+.floating-cart .free-delivery-wrap--compact { animation: floating-cart-line-in 260ms var(--ease-out) both; }
+.floating-cart__button { animation: floating-cart-in 280ms var(--ease-out) 220ms backwards; }
+@keyframes floating-cart-line-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes floating-cart-in { from { opacity: 0; transform: translateY(24px); } }
+@media (prefers-reduced-motion: reduce) {
+  .cart-page--sheet, .cart-page--sheet.is-leaving, .floating-cart .free-delivery-wrap--compact, .floating-cart__button { animation: none; }
+}
+
+/* ---------- Uppercase labels: navigation and section headings only (never product text or About Us) ----------
+   Arabic has no letter case, so it is left untouched and never letter-spaced (spacing breaks joined letters). */
+.section-head h2, .product-detail__related > h2, .stories__intro h2 { text-transform: uppercase; letter-spacing: .03em; }
+.shop-menu__panel a > span:first-child, .shop-menu__all a, .site-menu__sublink > span:first-child { text-transform: uppercase; letter-spacing: .08em; font-size: .82rem; font-weight: 600; }
+html[lang="ar"] :is(.section-head h2, .product-detail__related > h2, .stories__intro h2, .shop-menu__panel a > span:first-child, .site-menu__sublink > span:first-child) { letter-spacing: 0; }

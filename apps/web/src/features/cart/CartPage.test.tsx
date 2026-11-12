@@ -1,6 +1,6 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { CartPage } from "./CartPage";
 import { useCartStore } from "./cart-store";
@@ -86,5 +86,53 @@ describe("CartPage", () => {
 
     await userEvent.type(field, "abc");
     expect(field).toHaveValue("12");
+  });
+
+  function cartAfter(entries: string[]) {
+    return render(
+      <MemoryRouter initialEntries={entries} initialIndex={entries.length - 1}>
+        <Routes>
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/shop" element={<p>Shop page</p>} />
+          <Route path="/plants/aloe" element={<p>Aloe page</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+  }
+
+  it("slides in as a sheet and puts focus on its heading", () => {
+    cartAfter(["/shop", "/cart"]);
+    expect(screen.getByTestId("cart-page")).toHaveClass("cart-page--sheet");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveFocus();
+  });
+
+  it("closes with the close button back to the page the customer came from", async () => {
+    cartAfter(["/plants/aloe", "/cart"]);
+    await userEvent.click(screen.getByRole("button", { name: "Close cart" }));
+    expect(screen.getByTestId("cart-page")).toHaveClass("is-leaving");
+    await waitFor(() => expect(screen.getByText("Aloe page")).toBeInTheDocument());
+  });
+
+  it("closes with Escape, and goes to the shop when the cart was opened directly", async () => {
+    cartAfter(["/cart"]);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.getByText("Shop page")).toBeInTheDocument());
+  });
+
+  it("leaves Escape to a field that has focus", async () => {
+    cartAfter(["/shop", "/cart"]);
+    const field = document.createElement("input");
+    document.body.append(field);
+    field.focus();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByTestId("cart-page")).not.toHaveClass("is-leaving");
+    field.remove();
+  });
+
+  it("shows the free-delivery progress with the totals, against the shop's own threshold", () => {
+    render(<MemoryRouter><CartPage /></MemoryRouter>);
+    const summary = screen.getByRole("heading", { name: /summary/i }).closest("aside")!;
+    expect(summary.querySelector(".free-delivery--summary")).not.toBeNull();
+    expect(summary).toHaveTextContent("150 / 150 QAR");
   });
 });
