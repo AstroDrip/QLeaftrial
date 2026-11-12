@@ -32,6 +32,7 @@ export interface PublicCatalogueProduct {
   priceQar: number;
   stock: number;
   inStock: boolean;
+  createdAt: string;
   image: PublicCatalogueMedia | null;
   media: PublicCatalogueMedia[];
 }
@@ -64,6 +65,7 @@ const publicProductSelection = {
   light: true,
   lightAr: true,
   priceQar: true,
+  createdAt: true,
   updatedAt: true,
   media: {
     select: publicMediaSelection,
@@ -86,6 +88,7 @@ function mapProduct(record: {
   light: string | null;
   lightAr: string | null;
   priceQar: number;
+  createdAt: Date;
   media: Array<{
     url: string;
     altText: string;
@@ -119,6 +122,7 @@ function mapProduct(record: {
     priceQar: record.priceQar,
     stock,
     inStock: stock > 0,
+    createdAt: record.createdAt.toISOString(),
     image: media[0] ?? null,
     media,
   };

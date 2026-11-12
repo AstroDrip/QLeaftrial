@@ -25,6 +25,8 @@ export interface CatalogueProduct {
   priceQar: number;
   stock: number;
   inStock: boolean;
+  /** ISO date; used to order "newest" the same way the API does. Absent in older snapshots. */
+  createdAt?: string;
   image: CatalogueMedia | null;
   media: CatalogueMedia[];
 }

@@ -1,19 +1,17 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import type { SiteLanguage } from "../../content/locales";
 import { productApi } from "./product-api";
-import type { ProductListParams, ProductListResponse, ProductMedia, ProductSummary } from "./product-types";
-import { loadCatalogue } from "./catalogue-client";
-import type { CatalogueMedia, CatalogueProduct, CatalogueSnapshot } from "./catalogue-types";
+import type { ProductListParams } from "./product-types";
+import { categoryCounts, useCatalogue } from "./catalogue-client";
+import { catalogueListResponse } from "./catalogue-view";
 import { localizeProduct } from "./localize-product";
 import { ProductCard } from "./ProductCard";
 import { Seo } from "../../components/Seo";
 import "./catalog.css";
 import { friendlyError } from "../../lib/friendly-error";
-
-const PAGE_SIZE = 24;
 
 const SORT_OPTIONS = [
   { value: "newest", label: "sortNewest" },
@@ -40,71 +38,6 @@ function pageWindow(current: number, total: number): Array<number | "gap"> {
   const pages = new Set([1, total, current - 1, current, current + 1].filter((page) => page >= 1 && page <= total));
   const sorted = [...pages].sort((a, b) => a - b);
   return sorted.flatMap((page, index) => (index > 0 && page - sorted[index - 1] > 1 ? ["gap" as const, page] : [page]));
-}
-
-function catalogueProductToSummary(product: CatalogueProduct, language: SiteLanguage): ProductSummary {
-  const localizedName = language === "ar" && product.nameAr?.trim() ? product.nameAr : product.name;
-  const localizedCategory = language === "ar" && product.categoryAr?.trim() ? product.categoryAr : product.category;
-  const localizedLight = language === "ar" && product.lightAr?.trim() ? product.lightAr : product.light;
-
-  const mediaToSummary = (medium: CatalogueMedia | null): ProductMedia | null => {
-    if (!medium) return null;
-    return {
-      url: medium.url,
-      altText: medium.altText,
-      width: medium.width,
-      height: medium.height,
-      purpose: (medium.purpose === "catalog" || medium.purpose === "detail") ? medium.purpose : undefined,
-    };
-  };
-
-  return {
-    id: product.id,
-    slug: product.slug,
-    name: localizedName,
-    nameAr: product.nameAr,
-    category: localizedCategory,
-    categoryAr: product.categoryAr,
-    light: localizedLight,
-    lightAr: product.lightAr,
-    priceQar: product.priceQar,
-    stock: product.stock,
-    inStock: product.inStock,
-    image: mediaToSummary(product.image),
-    media: product.media.map(mediaToSummary).filter((value): value is ProductMedia => Boolean(value)),
-  };
-}
-
-function filterSnapshotProducts(products: CatalogueProduct[], params: ProductListParams): CatalogueProduct[] {
-  return products.filter((product) => {
-    if (params.q) {
-      const query = params.q.toLowerCase();
-      const haystack = [
-        product.name,
-        product.description,
-        product.slug,
-        product.category,
-      ]
-        .filter((value): value is string => typeof value === "string")
-        .join(" ")
-        .toLowerCase();
-      if (!haystack.includes(query)) return false;
-    }
-    if (params.category && product.category !== params.category) return false;
-    if (params.light && product.light !== params.light) return false;
-    if (params.inStock && !product.inStock) return false;
-    if (params.minPrice !== undefined && product.priceQar < params.minPrice) return false;
-    if (params.maxPrice !== undefined && product.priceQar > params.maxPrice) return false;
-    return true;
-  });
-}
-
-function sortSnapshotProducts(products: CatalogueProduct[], sort: ProductListParams["sort"]): CatalogueProduct[] {
-  return [...products].sort((a, b) => {
-    if (sort === "price-asc") return a.priceQar - b.priceQar || a.slug.localeCompare(b.slug);
-    if (sort === "price-desc") return b.priceQar - a.priceQar || a.slug.localeCompare(b.slug);
-    return a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug);
-  });
 }
 
 export function CatalogPage() {
@@ -141,39 +74,15 @@ export function CatalogPage() {
     lang: language,
   };
 
-  // Static-first: load the public catalogue snapshot so the page can render
-  // immediately without waiting for the backend. When the snapshot is
-  // unavailable (e.g. first visit before it is cached), staticSnapshot stays
-  // null and the normal react-query loading state is shown instead.
-  const [staticSnapshot, setStaticSnapshot] = useState<CatalogueSnapshot | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void loadCatalogue({ apiFallback: undefined }).then((result) => {
-      if (!cancelled && result.source === "static") {
-        setStaticSnapshot(result.snapshot ?? null);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const placeholderData = useMemo(() => {
-    if (!staticSnapshot) return undefined;
-    const filtered = filterSnapshotProducts(staticSnapshot.products, params);
-    const sorted = sortSnapshotProducts(filtered, sort);
-    const totalItems = sorted.length;
-    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-    const currentPage = Math.min(Math.max(page, 1), totalPages);
-    const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-    return {
-      items: paged.map((product) => catalogueProductToSummary(product, language)),
-      page: currentPage,
-      pageSize: PAGE_SIZE,
-      totalItems,
-      totalPages,
-    } as ProductListResponse;
-  }, [staticSnapshot, sort, language]);
+  // Static-first: the saved catalogue answers this exact query at once (same filters, sort and page as
+  // the API) while the live list loads, and stands in for it if the live list fails.
+  const catalogue = useCatalogue();
+  const paramsKey = JSON.stringify(params);
+  const saved = useMemo(
+    () => (catalogue.data ? catalogueListResponse(catalogue.data.products, params) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- params is rebuilt every render; paramsKey is its value
+    [catalogue.data, paramsKey],
+  );
 
   const { data: filters, isPending: filtersPending } = useQuery({
     queryKey: ["catalog-filters"],
@@ -184,15 +93,29 @@ export function CatalogPage() {
   const { data: result, isPending, isError, error, isPlaceholderData, refetch } = useQuery({
     queryKey: ["products", params],
     queryFn: () => productApi.list(params),
-    placeholderData: () => placeholderData,
+    placeholderData: (previous, previousQuery) =>
+      saved ?? (previousQuery && queryLanguage(previousQuery.queryKey) === language ? previous : undefined),
     staleTime: 60_000,
   });
 
-  const counts = filters?.categoryCounts ?? {};
-  const categories = filters?.categoryCounts ? Object.keys(counts).sort() : filters?.categories ?? [];
+  // Without the live filter list the categories still come from the saved catalogue, with real counts.
+  const savedCounts = useMemo(
+    () => (catalogue.data ? Object.fromEntries(categoryCounts(catalogue.data.products).map((entry) => [entry.category, entry.count])) : {}),
+    [catalogue.data],
+  );
+  const savedLabels = useMemo(
+    () => (catalogue.data ? Object.fromEntries(categoryCounts(catalogue.data.products).filter((entry) => entry.categoryAr).map((entry) => [entry.category, entry.categoryAr!])) : {}),
+    [catalogue.data],
+  );
+  const counts = filters?.categoryCounts ?? savedCounts;
+  const categories = filters?.categoryCounts || !filters ? Object.keys(counts).sort() : filters.categories;
+  const categoryLabels = filters?.categoryLabels ?? savedLabels;
+  // When the live list fails, the saved catalogue is shown with a note instead of an error page.
+  const showingSaved = isError && Boolean(saved);
+  const shown = showingSaved ? saved : result;
   const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const label = (value: string, labels?: Record<string, string>) => (isArabic ? labels?.[value] || value : value);
-  const totalPages = result?.totalPages ?? 0;
+  const totalPages = shown?.totalPages ?? 0;
 
   function update(changes: Record<string, string | undefined>, keepPage = false) {
     setSearchParams((previous) => {
@@ -222,7 +145,7 @@ export function CatalogPage() {
     params.inStock ? { key: "inStock", text: t.inStockOnly } : null,
   ].filter((filter): filter is { key: string; text: string } => Boolean(filter));
 
-  const heading = category ? label(category, filters?.categoryLabels) : t.title;
+  const heading = category ? label(category, categoryLabels) : t.title;
 
   return (
     <section className="catalog container" data-testid="catalog-page">
@@ -237,7 +160,7 @@ export function CatalogPage() {
         {/* Phones: one clear control that opens the category list instead of a hidden sideways scroll. */}
         <button type="button" className="catalog__category-toggle" aria-expanded={categoriesOpen} aria-controls="catalog-categories" onClick={() => setCategoriesOpen((open) => !open)}>
           <span className="catalog__category-toggle-label">{t.filterCategory}</span>
-          <strong>{category ? label(category, filters?.categoryLabels) : t.filterAllCategories}</strong>
+          <strong>{category ? label(category, categoryLabels) : t.filterAllCategories}</strong>
           <span className="catalog__count">{category ? counts[category] ?? "" : totalCount || ""}</span>
           <span className="catalog__chevron" aria-hidden="true" />
         </button>
@@ -250,8 +173,8 @@ export function CatalogPage() {
           </li>
           {categories.map((value) => (
             <li key={value}>
-              <button type="button" aria-pressed={category === value} disabled={filtersPending} onClick={() => { update({ category: value }); setCategoriesOpen(false); }}>
-                <span>{label(value, filters?.categoryLabels)}</span>
+              <button type="button" aria-pressed={category === value} disabled={filtersPending && !catalogue.data} onClick={() => { update({ category: value }); setCategoriesOpen(false); }}>
+                <span>{label(value, categoryLabels)}</span>
                 {counts[value] ? <span className="catalog__count">{counts[value]}</span> : null}
               </button>
             </li>
@@ -306,7 +229,7 @@ export function CatalogPage() {
         </div>
 
         <div className="catalog__status">
-          <p aria-live="polite">{result ? t.resultCount(result.totalItems) : ""}</p>
+          <p aria-live="polite">{shown ? t.resultCount(shown.totalItems) : ""}</p>
           {activeFilters.length ? (
             <ul className="catalog__chips">
               {activeFilters.map((filter) => (
@@ -321,7 +244,14 @@ export function CatalogPage() {
           ) : null}
         </div>
 
-        {isError ? (
+        {showingSaved ? (
+          <div className="catalog__saved" data-testid="catalog-saved" role="status">
+            <p>{isArabic ? "نعرض آخر نسخة محفوظة من المتجر. تُؤكَّد الأسعار والتوفر عند إتمام الطلب." : "Showing the latest saved catalogue. Prices and availability are confirmed at checkout."}</p>
+            <button type="button" className="button button--secondary" onClick={() => refetch()} data-testid="catalog-retry">{content.errors.retry}</button>
+          </div>
+        ) : null}
+
+        {isError && !showingSaved ? (
           <div className="catalog__error" data-testid="catalog-error">
             <p role="alert">
               {friendlyError(error, language)}
@@ -335,31 +265,31 @@ export function CatalogPage() {
               {content.errors.retry}
             </button>
           </div>
-        ) : isPending ? (
+        ) : isPending && !shown ? (
           <p data-testid="catalog-loading" role="status">{isArabic ? "جارٍ تحميل النباتات…" : "Loading plants…"}</p>
-        ) : !result || result.items.length === 0 ? (
+        ) : !shown || shown.items.length === 0 ? (
           <div className="catalog__empty" data-testid="catalog-empty">
             <p>{t.noResults}</p>
             <button type="button" className="button button--secondary" onClick={() => setSearchParams({})}>{t.showAll}</button>
           </div>
         ) : (
           <ul className="product-grid" data-testid="product-grid" aria-label={heading} aria-busy={isPlaceholderData}>
-            {result.items.map((product, index) => (
+            {shown.items.map((product, index) => (
               <ProductCard key={product.id} product={product} orderingEnabled={orderingEnabled} eager={index < 4} />
             ))}
           </ul>
         )}
 
-        {result && totalPages > 1 ? (
+        {shown && totalPages > 1 ? (
           <nav className="catalog__pagination" aria-label={content.aria.pagination} data-testid="pagination">
-            <button type="button" className="button button--secondary" onClick={() => goTo(result.page - 1)} disabled={result.page <= 1} data-testid="prev-page">{content.common.previous}</button>
+            <button type="button" className="button button--secondary" onClick={() => goTo(shown.page - 1)} disabled={shown.page <= 1} data-testid="prev-page">{content.common.previous}</button>
             <ol>
-              {pageWindow(result.page, totalPages).map((page, index) => page === "gap"
+              {pageWindow(shown.page, totalPages).map((page, index) => page === "gap"
                 ? <li key={`gap-${index}`} aria-hidden="true">…</li>
-                : <li key={page}><button type="button" aria-current={page === result.page ? "page" : undefined} onClick={() => goTo(page)}>{page}</button></li>)}
+                : <li key={page}><button type="button" aria-current={page === shown.page ? "page" : undefined} onClick={() => goTo(page)}>{page}</button></li>)}
             </ol>
-            <span className="sr-only" data-testid="page-indicator">{t.page(result.page, totalPages)}</span>
-            <button type="button" className="button button--secondary" onClick={() => goTo(result.page + 1)} disabled={result.page >= totalPages} data-testid="next-page">{content.common.next}</button>
+            <span className="sr-only" data-testid="page-indicator">{t.page(shown.page, totalPages)}</span>
+            <button type="button" className="button button--secondary" onClick={() => goTo(shown.page + 1)} disabled={shown.page >= totalPages} data-testid="next-page">{content.common.next}</button>
           </nav>
         ) : null}
       </div>

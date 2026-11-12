@@ -1,74 +1,56 @@
 /**
- * Public catalogue snapshot loading with stale-while-revalidate behaviour.
+ * The public catalogue, available before (and without) the live product API.
  *
- * The storefront renders from a cached snapshot immediately (shell first, no
- * backend wait), then refreshes from the static catalogue URL in the
- * background. A failed refresh keeps the last known-good snapshot and marks it
- * stale instead of replacing usable products with an error screen.
+ * Order of sources, best first:
+ *  1. GET /api/v1/catalogue: CDN-cached for a minute and served stale for up to a day while it refreshes,
+ *     so it usually answers from the edge even when the function is cold or the database is briefly down.
+ *  2. /catalogue/catalogue.json: the snapshot written at build time, the last resort.
+ * The last good copy is also kept in this browser, so a returning visitor sees products at once.
+ *
+ * This is for showing products only. Checkout always re-reads prices, publication and stock on the server.
  */
+import { useQuery } from "@tanstack/react-query";
 import type { CatalogueProduct, CatalogueSnapshot } from "./catalogue-types";
 
+export const CATALOGUE_API_URL = "/api/v1/catalogue";
 export const STATIC_CATALOGUE_URL = "/catalogue/catalogue.json";
-export const CATALOGUE_STORAGE_KEY = "qleaves-catalogue-v1";
+export const CATALOGUE_STORAGE_KEY = "qleaves-catalogue-v2";
+export const CATALOGUE_QUERY_KEY = ["catalogue"] as const;
+const FETCH_TIMEOUT_MS = 12_000;
+// A saved copy older than this is not shown at all: better a short loading state than week-old prices.
+const MAX_CACHED_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-// How long a cached snapshot is considered fresh before a background refresh.
-export const CATALOGUE_REFRESH_TTL_MS = 5 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 15_000;
+export type CatalogueSource = "live" | "snapshot";
 
-export interface CachedCatalogue {
-  version: string;
-  products: CatalogueProduct[];
-  fetchedAt: number;
+export interface LoadedCatalogue extends CatalogueSnapshot {
+  source: CatalogueSource;
 }
 
-export interface CatalogueState {
-  products: CatalogueProduct[];
-  version: string;
-  /** True when the last fetch failed or the copy is older than the refresh TTL. */
-  stale: boolean;
-  /** True while a background refresh is in flight. */
-  isRefreshing: boolean;
-  /** True when the most recent refresh replaced the shown products. */
-  updated: boolean;
-  error: string | null;
+interface CachedCatalogue {
+  snapshot: CatalogueSnapshot;
+  savedAt: number;
 }
 
-function abortControllerWithTimeout(
-  externalSignal: AbortSignal | undefined,
-): { signal: AbortSignal; abort: () => void } {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  const abort = () => {
-    clearTimeout(timeout);
-    controller.abort();
-  };
-
-  if (externalSignal) {
-    if (externalSignal.aborted) {
-      abort();
-    } else {
-      externalSignal.addEventListener("abort", abort, { once: true });
-    }
-  }
-
-  return { signal: controller.signal, abort };
+function isSnapshot(body: unknown): body is CatalogueSnapshot {
+  if (!body || typeof body !== "object") return false;
+  const snapshot = body as Partial<CatalogueSnapshot>;
+  return typeof snapshot.version === "string" && Boolean(snapshot.version) && Array.isArray(snapshot.products) &&
+    snapshot.products.every((product: Partial<CatalogueProduct>) =>
+      Boolean(product) && typeof product.id === "string" && Boolean(product.id) &&
+      typeof product.slug === "string" && Boolean(product.slug) &&
+      typeof product.name === "string" && Boolean(product.name) &&
+      typeof product.priceQar === "number");
 }
 
-export function readCachedCatalogue(): CachedCatalogue | null {
+export function readCachedCatalogue(now = Date.now()): { snapshot: CatalogueSnapshot; savedAt: number } | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(CATALOGUE_STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as CachedCatalogue;
-    if (
-      !parsed ||
-      typeof parsed.version !== "string" ||
-      !parsed.version ||
-      !Array.isArray(parsed.products)
-    ) {
-      return null;
-    }
-    return parsed;
+    const cached = JSON.parse(raw) as Partial<CachedCatalogue>;
+    if (!cached || typeof cached.savedAt !== "number" || !isSnapshot(cached.snapshot)) return null;
+    if (now - cached.savedAt > MAX_CACHED_AGE_MS) return null;
+    return { snapshot: cached.snapshot, savedAt: cached.savedAt };
   } catch {
     return null;
   }
@@ -77,144 +59,72 @@ export function readCachedCatalogue(): CachedCatalogue | null {
 export function writeCachedCatalogue(snapshot: CatalogueSnapshot): void {
   if (typeof window === "undefined") return;
   try {
-    const cached: CachedCatalogue = {
-      version: snapshot.version,
-      products: snapshot.products,
-      fetchedAt: Date.now(),
-    };
-    window.localStorage.setItem(
-      CATALOGUE_STORAGE_KEY,
-      JSON.stringify(cached),
-    );
+    const cached: CachedCatalogue = { snapshot, savedAt: Date.now() };
+    window.localStorage.setItem(CATALOGUE_STORAGE_KEY, JSON.stringify(cached));
+    // The previous format is no longer read.
+    window.localStorage.removeItem("qleaves-catalogue-v1");
   } catch {
-    // localStorage unavailable or full: continue without caching.
+    // Storage full or blocked: the in-memory copy still works for this visit.
   }
 }
 
-export function isCatalogueStale(cached: CachedCatalogue | null): boolean {
-  if (!cached) return true;
-  return Date.now() - cached.fetchedAt > CATALOGUE_REFRESH_TTL_MS;
-}
-
-function validateCatalogue(body: unknown): CatalogueSnapshot {
-  if (!body || typeof body !== "object") {
-    throw new Error("Invalid catalogue format");
-  }
-  const snapshot = body as Partial<CatalogueSnapshot>;
-  if (typeof snapshot.version !== "string" || !snapshot.version) {
-    throw new Error("Catalogue missing version");
-  }
-  if (!Array.isArray(snapshot.products)) {
-    throw new Error("Catalogue missing products");
-  }
-  for (const product of snapshot.products) {
-    if (
-      !product ||
-      typeof product.id !== "string" ||
-      !product.id ||
-      typeof product.slug !== "string" ||
-      !product.slug ||
-      typeof product.name !== "string" ||
-      !product.name ||
-      typeof product.priceQar !== "number"
-    ) {
-      throw new Error("Catalogue contains an invalid product");
-    }
-  }
-  return snapshot as CatalogueSnapshot;
-}
-
-export async function fetchCatalogueSnapshot(
-  signal?: AbortSignal,
-): Promise<CatalogueSnapshot> {
-  const { signal: fetchSignal, abort } = abortControllerWithTimeout(signal);
+async function fetchJson(url: string, signal?: AbortSignal): Promise<unknown> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const abort = () => controller.abort();
+  signal?.addEventListener("abort", abort, { once: true });
   try {
-    const response = await fetch(STATIC_CATALOGUE_URL, {
-      signal: fetchSignal,
-      headers: { Accept: "application/json" },
-      cache: "no-cache",
-    });
-    if (!response.ok) {
-      throw new Error(`Catalogue request failed (${response.status})`);
-    }
-    const body = await response.json();
-    return validateCatalogue(body);
+    const response = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error(`Catalogue request failed (${response.status})`);
+    return await response.json();
   } finally {
-    abort();
+    clearTimeout(timeout);
+    signal?.removeEventListener("abort", abort);
   }
 }
 
-/**
- * Load the best available catalogue immediately.
- *
- * Prefers a previously cached snapshot, then the static catalogue. Falls back
- * to the caller-provided `apiFallback` only when neither is available, so the
- * storefront never blocks on the backend to show previously published products.
- */
-export async function loadCatalogue({
-  signal,
-  apiFallback,
-}: {
-  signal?: AbortSignal;
-  apiFallback?: () => Promise<CatalogueProduct[]>;
-}): Promise<{
-  snapshot: CatalogueSnapshot | null;
-  products: CatalogueProduct[];
-  source: "cache" | "static" | "api" | "none";
-  stale: boolean;
-}> {
-  const cached = readCachedCatalogue();
-
-  // Step 2: previously cached catalogue renders immediately.
-  if (cached) {
-    return {
-      snapshot: null,
-      products: cached.products,
-      source: "cache",
-      stale: isCatalogueStale(cached),
-    };
-  }
-
-  // Step 1 / 3: fetch the static catalogue (immediate shell, background refresh).
+export async function fetchCatalogue(signal?: AbortSignal): Promise<LoadedCatalogue> {
   try {
-    const snapshot = await fetchCatalogueSnapshot(signal);
-    writeCachedCatalogue(snapshot);
-    return { snapshot, products: snapshot.products, source: "static", stale: false };
-  } catch {
-    // A cached copy survives a failed refresh so browsing never goes blank.
-    const cached = readCachedCatalogue();
-    if (cached) {
-      return {
-        snapshot: null,
-        products: cached.products,
-        source: "cache",
-        stale: true,
-      };
+    const live = await fetchJson(CATALOGUE_API_URL, signal);
+    if (isSnapshot(live)) {
+      writeCachedCatalogue(live);
+      return { ...live, source: "live" };
     }
-    if (apiFallback) {
-      try {
-        const products = await apiFallback();
-        return {
-          snapshot: null,
-          products,
-          source: "api",
-          stale: false,
-        };
-      } catch {
-        // fall through to "none"
-      }
-    }
-    return { snapshot: null, products: [], source: "none", stale: true };
+  } catch (error) {
+    if (signal?.aborted) throw error;
   }
+  const fallback = await fetchJson(STATIC_CATALOGUE_URL, signal);
+  if (!isSnapshot(fallback)) throw new Error("The saved catalogue is not readable");
+  // A build snapshot never replaces a newer copy this browser already has.
+  const cached = readCachedCatalogue();
+  if (cached && cached.snapshot.version > fallback.version) return { ...cached.snapshot, source: "snapshot" };
+  return { ...fallback, source: "snapshot" };
 }
 
-export async function refreshCatalogue(): Promise<{
-  snapshot: CatalogueSnapshot;
-  changed: boolean;
-}> {
-  const snapshot = await fetchCatalogueSnapshot();
-  const cached = readCachedCatalogue();
-  const changed = !cached || cached.version !== snapshot.version;
-  writeCachedCatalogue(snapshot);
-  return { snapshot, changed };
+/** The catalogue for display: the browser's saved copy at once, then refreshed in the background. */
+export function useCatalogue() {
+  return useQuery({
+    queryKey: CATALOGUE_QUERY_KEY,
+    queryFn: ({ signal }) => fetchCatalogue(signal),
+    initialData: () => {
+      const cached = readCachedCatalogue();
+      return cached ? { ...cached.snapshot, source: "snapshot" as const } : undefined;
+    },
+    initialDataUpdatedAt: () => readCachedCatalogue()?.savedAt,
+    staleTime: 60_000,
+    retry: 1,
+  });
+}
+
+export function categoryCounts(products: CatalogueProduct[]): Array<{ category: string; categoryAr: string | null; count: number }> {
+  const counts = new Map<string, { categoryAr: string | null; count: number }>();
+  for (const product of products) {
+    const entry = counts.get(product.category) ?? { categoryAr: product.categoryAr, count: 0 };
+    entry.count += 1;
+    entry.categoryAr ??= product.categoryAr;
+    counts.set(product.category, entry);
+  }
+  return [...counts.entries()]
+    .map(([category, entry]) => ({ category, ...entry }))
+    .sort((a, b) => a.category.localeCompare(b.category));
 }

@@ -10,6 +10,8 @@ import { HeroCarousel } from "./HeroCarousel";
 import { CategoryRail } from "./CategoryRail";
 import { HeroParticles } from "./HeroParticles";
 import { ReviewStories } from "../reviews/ReviewStories";
+import { categoryCounts, useCatalogue } from "../catalog/catalogue-client";
+import { catalogueListResponse } from "../catalog/catalogue-view";
 import { friendlyError } from "../../lib/friendly-error";
 
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -25,14 +27,26 @@ export function HomePage() {
   const settings = useStoreSettings();
   const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const t = content.home;
+  // The saved catalogue fills the page at once and stands in if the live API is down; the live lists
+  // replace it as soon as they arrive. Counts are always real counts of published products.
+  const catalogue = useCatalogue();
+  const savedFeatured = catalogue.data
+    ? catalogueListResponse(catalogue.data.products, { page: 1, sort: "newest", lang: language }).items
+    : undefined;
   const products = useQuery({
     queryKey: ["products", "home", language],
     queryFn: () => productApi.list({ page: 1, sort: "newest", lang: language }),
     staleTime: 60_000,
   });
   const filters = useQuery({ queryKey: ["catalog-filters"], queryFn: () => productApi.filters(), staleTime: 300_000 });
-  const featured = products.data?.items.slice(0, 8) ?? [];
-  const categories = Object.entries(filters.data?.categoryCounts ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  const featured = (products.data?.items ?? savedFeatured ?? []).slice(0, 8);
+  const showingSaved = !products.data && Boolean(savedFeatured?.length);
+  const savedCategories = catalogue.data ? categoryCounts(catalogue.data.products) : [];
+  const categories: Array<[string, number]> = filters.data?.categoryCounts
+    ? Object.entries(filters.data.categoryCounts).sort(([a], [b]) => a.localeCompare(b))
+    : savedCategories.map((entry) => [entry.category, entry.count]);
+  const categoryLabel = (category: string) =>
+    filters.data?.categoryLabels?.[category] || savedCategories.find((entry) => entry.category === category)?.categoryAr || category;
 
   return (
     <article className="home" data-testid="home-page">
@@ -66,7 +80,7 @@ export function HomePage() {
               key: category,
               to: `/shop?category=${encodeURIComponent(category)}`,
               image: CATEGORY_IMAGES[category] ?? "/images/hero/leaf-1.svg",
-              name: isArabic ? filters.data?.categoryLabels?.[category] || category : category,
+              name: isArabic ? categoryLabel(category) : category,
               count: t.productCount(count),
             }))}
             headingId="home-categories"
@@ -84,11 +98,11 @@ export function HomePage() {
           <h2 id="home-featured">{t.featuredTitle}</h2>
           <Link to="/shop">{t.viewAll}</Link>
         </div>
-        {products.isError ? (
+        {products.isError && !showingSaved ? (
           <p className="home__notice" role="alert">
             {friendlyError(products.error, language)}
           </p>
-        ) : products.isPending ? (
+        ) : products.isPending && !showingSaved ? (
           <p role="status">{content.catalog.loading}</p>
         ) : (
           <ul className="product-grid">
