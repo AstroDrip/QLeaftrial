@@ -27,12 +27,12 @@ sheetsRouter.post("/admin/sheets/sync/:orderId", async (request, response) => {
   response.setHeader("Cache-Control", "no-store");
   try {
     const written = await syncOrder(order, config);
-    if (written) await recordSheetSync([orderId], { ok: true });
+    if (written) await recordSheetSync([orderId], null);
     response.json({ written, qualifies: qualifiesForSheet(order) });
   } catch (error) {
     const code = error instanceof SheetsError ? error.code : "SHEETS_SYNC_FAILED";
     console.error(JSON.stringify({ level: "error", event: "sheet-sync-one-failed", reason: error instanceof SheetsError ? error.message : "unknown" }));
-    await recordSheetSync([orderId], { ok: false, code });
+    await recordSheetSync([orderId], code);
     throw new ApiError(502, code === "GOOGLE_AUTH_FAILED" ? "SHEETS_AUTH_FAILED" : "SHEETS_SYNC_FAILED", "Could not update the Google Sheet");
   }
 });

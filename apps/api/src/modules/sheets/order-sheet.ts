@@ -161,12 +161,13 @@ export async function syncOrder(order: SheetOrder, config: SheetsConfig): Promis
 
 // Remembers on the order whether its row is in the sheet, so admin can see failures and retry them. Best effort:
 // recording never turns a sync result into an error.
-export async function recordSheetSync(orderIds: string[], outcome: { ok: true } | { ok: false; code: string }): Promise<void> {
+// errorCode: null when the row was written, otherwise the failure code (never Google's own message).
+export async function recordSheetSync(orderIds: string[], errorCode: string | null): Promise<void> {
   if (orderIds.length === 0) return;
   try {
     await (prisma.order as unknown as { updateMany(args: unknown): Promise<unknown> }).updateMany({
       where: { id: { in: orderIds } },
-      data: outcome.ok ? { sheetSyncedAt: new Date(), sheetSyncError: null } : { sheetSyncError: outcome.code },
+      data: errorCode === null ? { sheetSyncedAt: new Date(), sheetSyncError: null } : { sheetSyncError: errorCode },
     });
   } catch {
     // The order may have been deleted meanwhile; nothing to record.
@@ -188,7 +189,7 @@ export async function syncAllOrders(orders: SheetOrder[], config: SheetsConfig):
   if (updates.length) await call(config, "/values:batchUpdate", { method: "POST", body: { valueInputOption: "RAW", data: updates } });
   if (additions.length) await call(config, `/values/${range(config, `A:${LAST_COLUMN}`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { method: "POST", body: { values: additions } });
   const written = orders.filter((order) => existing.includes(order.orderNumber) || qualifiesForSheet(order)).flatMap((order) => (order.id ? [order.id] : []));
-  await recordSheetSync(written, { ok: true });
+  await recordSheetSync(written, null);
   return updates.length + additions.length;
 }
 
@@ -205,13 +206,13 @@ export async function mirrorOrderToSheet(order: SheetOrder): Promise<void> {
   if (!config) return;
   try {
     const written = await withTimeout(syncOrder(order, config), MIRROR_BUDGET_MS);
-    if (written && order.id) await recordSheetSync([order.id], { ok: true });
+    if (written && order.id) await recordSheetSync([order.id], null);
   } catch (error) {
     const reason = error instanceof SheetsError ? error.message : error instanceof Error ? error.name : "unknown";
     console.error(JSON.stringify({ level: "error", event: "sheet-sync-failed", reason }));
     // Only orders that belong in the sheet are marked as failed (the others were never meant to be written).
     if (order.id && (qualifiesForSheet(order) || order.status === "DELIVERED")) {
-      await recordSheetSync([order.id], { ok: false, code: error instanceof SheetsError ? error.code : "SHEETS_SYNC_FAILED" });
+      await recordSheetSync([order.id], error instanceof SheetsError ? error.code : "SHEETS_SYNC_FAILED");
     }
   }
 }
