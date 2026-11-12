@@ -389,3 +389,27 @@ body.has-floating-cart .main-content { padding-bottom: 150px; }
 .product-price__was { color: var(--text-soft); font-size: .8em; font-weight: 500; }
 .product-price__off { color: var(--rust); font-size: .75em; font-weight: 700; }
 .product-card__badge--offer { background: var(--rust); color: #fff; }
+
+/* ---------- Shop categories in the header ----------
+   Desktop: Shop stays a link; the chevron beside it opens the categories in a panel below. */
+.shop-menu { position: relative; display: inline-flex; align-items: center; gap: 2px; }
+.shop-menu__toggle { display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: var(--radius-full); background: transparent; color: var(--on-dark-muted); cursor: pointer; }
+.shop-menu__toggle:hover, .shop-menu__toggle[aria-expanded="true"] { background: rgba(246, 241, 214, .1); color: var(--on-dark); }
+.shop-menu__toggle svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform 200ms var(--ease-out); }
+.shop-menu__toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.shop-menu__panel { position: absolute; top: calc(100% + 18px); inset-inline-start: -14px; z-index: 60; min-width: 16rem; max-width: min(22rem, calc(100vw - 2 * var(--gutter))); padding: var(--space-2); border: 1px solid rgba(246, 241, 214, .14); border-radius: var(--radius-lg); background: var(--moss-deep); box-shadow: 0 18px 36px -18px rgba(0, 0, 0, .6); }
+.shop-menu__panel[hidden] { display: none; }
+.shop-menu__panel ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.shop-menu__panel a { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 40px; padding: 0 var(--space-3); border-radius: var(--radius-md); color: var(--on-dark); font-size: .9rem; }
+.shop-menu__panel a:hover, .shop-menu__panel a:focus-visible { background: rgba(246, 241, 214, .08); }
+.shop-menu__count { color: var(--on-dark-muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.shop-menu__all { margin-top: 2px; padding-top: 2px; border-top: 1px solid rgba(246, 241, 214, .12); }
+.shop-menu__all a { color: var(--gold); font-weight: 600; }
+
+/* Phones and tablets: the categories sit under Shop in the menu. A long menu scrolls inside itself so the
+   cart that rides beneath it always stays on screen. */
+.site-menu ul.site-menu__sub { gap: 0; margin: 0 0 var(--space-1); padding-inline-start: var(--space-4); }
+.site-menu__sublink { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-md); color: var(--on-dark-muted); font-size: .9rem; }
+.site-menu__sublink:hover { background: rgba(246, 241, 214, .08); color: var(--on-dark); }
+.site-menu__subcount { font-size: .8rem; font-variant-numeric: tabular-nums; opacity: .8; }
+.site-menu { max-height: calc(100dvh - var(--header-height) - 88px); overflow-y: auto; overscroll-behavior: contain; }

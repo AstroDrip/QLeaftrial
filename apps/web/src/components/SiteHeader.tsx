@@ -7,6 +7,8 @@ import { LeafMenuIcon } from "./LeafMenuIcon";
 import { useSiteLanguage, useStoreSettings } from "../app/providers";
 import { useCartStore } from "../features/cart/cart-store";
 import { prefetchRoute } from "../app/route-modules";
+import { ShopMenu } from "./ShopMenu";
+import { useShopCategories } from "../features/catalog/use-shop-categories";
 
 // The inline links only fit on wide screens; below this the centred menu takes over.
 const MENU_MAX = 960;
@@ -45,10 +47,7 @@ export function SiteHeader() {
   const [cartShift, setCartShift] = useState<{ x: number; y: number } | null>(null);
 
   const t = content.nav;
-  const navLinks = [
-    { to: "/shop", label: t.shop },
-    { to: "/about", label: t.about },
-  ];
+  const categories = useShopCategories();
   const cartLabel = isArabic ? `السلة، ${cartCount} منتجات` : `Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`;
   const open = menuOpen && menuMode;
 
@@ -135,9 +134,8 @@ export function SiteHeader() {
           </span>
         </Link>
         <nav aria-label={content.aria.primaryNavigation} className="site-header__nav" data-testid="primary-nav">
-          {navLinks.map(({ to, label }) => (
-            <NavLink key={to} to={to} className="nav-link" onMouseEnter={() => prefetchRoute(to)} onFocus={() => prefetchRoute(to)}>{label}</NavLink>
-          ))}
+          <ShopMenu label={t.shop} categories={categories} />
+          <NavLink to="/about" className="nav-link" onMouseEnter={() => prefetchRoute("/about")} onFocus={() => prefetchRoute("/about")}>{t.about}</NavLink>
         </nav>
         <div className="site-header__actions">
           <HeaderSearch />
@@ -163,7 +161,21 @@ export function SiteHeader() {
       >
         <ul>
           <li><NavLink to="/" end className="site-menu__link" onMouseEnter={() => prefetchRoute("/")}>{t.home}</NavLink></li>
-          <li><NavLink to="/shop" className="site-menu__link" onMouseEnter={() => prefetchRoute("/shop")}>{t.shop}</NavLink></li>
+          <li>
+            <NavLink to="/shop" end className="site-menu__link" onMouseEnter={() => prefetchRoute("/shop")}>{t.shop}</NavLink>
+            {categories.length ? (
+              <ul className="site-menu__sub" aria-label={isArabic ? "فئات المتجر" : "Shop categories"}>
+                {categories.map((category) => (
+                  <li key={category.category}>
+                    <Link to={category.to} className="site-menu__sublink" onClick={() => closeMenu()}>
+                      <span>{category.label}</span>
+                      <span className="site-menu__subcount">{category.count}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </li>
           <li><NavLink to="/about" className="site-menu__link" onMouseEnter={() => prefetchRoute("/about")}>{t.about}</NavLink></li>
         </ul>
         {compact ? (
