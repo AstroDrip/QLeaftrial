@@ -57,7 +57,7 @@ export function validOrder(overrides: Partial<ValidOrder> = {}): ValidOrder {
     phone: "+974 5555 1234",
     email: "aisha@example.com",
     addressLine1: "12 Palm Street",
-    area: "The Pearl",
+    area: "Doha",
     paymentMethod: "COD",
     deliveryFeeQar: 0,
     items: [],

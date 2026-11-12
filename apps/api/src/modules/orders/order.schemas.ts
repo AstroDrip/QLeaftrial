@@ -1,11 +1,14 @@
 import { z } from "zod";
 
+// The areas checkout offers, as the storefront sends them (English or Arabic label).
+export const DELIVERY_AREAS = ["Doha", "Al Rayyan", "Al Wakrah", "Al Khor", "الدوحة", "الريان", "الوكرة", "الخور"] as const;
+
 export const createOrderSchema = z.object({
   customerName: z.string().trim().min(2).max(120),
   phone: z.string().trim().min(5).max(40),
   email: z.string().email().max(200),
   addressLine1: z.string().trim().min(3).max(240),
-  area: z.string().trim().min(2).max(100),
+  area: z.string().trim().refine((value) => (DELIVERY_AREAS as readonly string[]).includes(value), "We deliver to Doha, Al Rayyan, Al Wakrah and Al Khor"),
   deliveryNotes: z.string().trim().max(500).optional(),
   paymentMethod: z.enum(["COD", "PAYMENT_LINK"]),
   // Delivery is no longer priced. Older cached storefront pages may still send this; it is ignored.
