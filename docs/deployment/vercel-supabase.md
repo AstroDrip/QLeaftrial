@@ -71,7 +71,7 @@ GOOGLE_PRIVATE_KEY=<private_key from the JSON key, pasted as-is>
 
 Use Supavisor transaction mode on port `6543` for serverless `DATABASE_URL`; with Prisma 6, append `pgbouncer=true&connection_limit=1`. Percent-encode reserved password characters. Use the direct endpoint or Supavisor session mode on port `5432` for administrative `DIRECT_URL`.
 
-The running app talks to PostgreSQL through `pg` and Prisma's `PrismaPg` adapter with a pool of one connection per function instance (`DB_POOL_MAX`, capped at 5, raises it). `pg` sends unnamed statements, which the transaction pooler supports. Keep the Vercel function region (`fra1` in `vercel.json`) next to the Supabase project's region; check the region under Supabase → Project Settings → General and change `regions` only if they differ.
+The running app talks to PostgreSQL through `pg` and Prisma's `PrismaPg` adapter with a pool of one connection per function instance (`DB_POOL_MAX`, capped at 5, raises it). `pg` sends unnamed statements, which the transaction pooler supports. Keep the Vercel function region (`bom1` in `vercel.json`, matching the Mumbai project ap-south-1) next to the Supabase project's region; check the region under Supabase → Project Settings → General and change `regions` only if they differ.
 
 ### Schema changes: versioned migrations
 

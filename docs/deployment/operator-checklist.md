@@ -71,6 +71,6 @@ Then:
 
 ## 3. Region check (once)
 
-Look up the region in Supabase → Project Settings → General. The site's server runs in Frankfurt (`fra1`).
+Look up the region in Supabase → Project Settings → General. The site's server runs in Mumbai (`bom1`), next to the Mumbai Supabase project (moved from Frankfurt on 12 November 2026).
 If Supabase is somewhere else (for example Mumbai or Singapore), say so: moving the server next to the
 database makes every page faster.
