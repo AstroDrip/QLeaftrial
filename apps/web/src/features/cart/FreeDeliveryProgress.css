@@ -156,7 +156,7 @@
 .free-delivery__figures { unicode-bidi: isolate; color: var(--fd-text); font-variant-numeric: tabular-nums; font-weight: 600; }
 .free-delivery-wrap--summary.is-flying { margin-block-end: calc(var(--space-4) * -1); }
 
-/* Idle (empty cart) compact state: the card shrinks to the width of the cart button below it and keeps only its
+/* Mini banner (after a while of browsing): the card shrinks to the width of the cart button below it and keeps only its
    track, so the two read as one small component. Text and anchors fold away; the track never disappears. */
 .free-delivery--compact {
   --fc-ease: cubic-bezier(.22, .7, .25, 1);
@@ -166,9 +166,9 @@
 .free-delivery--compact .free-delivery__message { max-height: 2.8em; transition: max-height 380ms var(--fc-ease), opacity 220ms ease 120ms; }
 .free-delivery--compact .free-delivery__rail { transition: gap 380ms var(--fc-ease); }
 .free-delivery--compact .free-delivery__anchor { transition: width 380ms var(--fc-ease), opacity 200ms ease, color 200ms var(--ease-out), transform 200ms var(--ease-out); }
-.free-delivery--compact.free-delivery--idle { width: 52px; gap: 0; padding: 7px 10px; }
-.free-delivery--compact.free-delivery--idle::before { border-radius: var(--radius-full); }
-.free-delivery--compact.free-delivery--idle .free-delivery__message { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 300ms var(--fc-ease), opacity 120ms ease; }
-.free-delivery--compact.free-delivery--idle .free-delivery__rail { gap: 0; }
-.free-delivery--compact.free-delivery--idle .free-delivery__anchor { width: 0; opacity: 0; }
-.free-delivery--compact.free-delivery--idle .free-delivery__glow { opacity: 0; }
+.free-delivery--compact.free-delivery--mini { width: 52px; gap: 0; padding: 7px 10px; }
+.free-delivery--compact.free-delivery--mini::before { border-radius: var(--radius-full); }
+.free-delivery--compact.free-delivery--mini .free-delivery__message { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 300ms var(--fc-ease), opacity 120ms ease; }
+.free-delivery--compact.free-delivery--mini .free-delivery__rail { gap: 0; }
+.free-delivery--compact.free-delivery--mini .free-delivery__anchor { width: 0; opacity: 0; }
+.free-delivery--compact.free-delivery--mini .free-delivery__glow { opacity: 0; }

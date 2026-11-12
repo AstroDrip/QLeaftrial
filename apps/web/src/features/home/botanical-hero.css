@@ -20,14 +20,15 @@
 .botanical-hero__cta { min-width: 11rem; }
 
 /* Wide screens: the landscape photo, full width, as tall as its proportions allow but never taller than
-   the screen (only floor and ceiling are trimmed). Text over the bare wall, 35.5%-70.5% of the width. */
+   the screen (only floor and ceiling are trimmed). Text centred on the page, in the 34.6%-65.4% band of bare
+   wall between the plants (the band is symmetric, so it stays clear when narrow screens crop the sides). */
 @media (min-width: 601px) {
   .botanical-hero { height: min(calc(100vw * 768 / 1376), calc(100svh - var(--header-height))); min-height: 420px; }
   .botanical-hero__photo img { object-position: 50% 62%; }
   .botanical-hero__copy {
     inset-block: 0;
-    left: 35.5%;
-    right: 29.5%;
+    left: 34.6%;
+    right: 34.6%;
     padding: var(--space-5) clamp(.25rem, 1.5vw, 1.5rem) var(--space-6);
     gap: clamp(.5rem, 1.2vw, 1rem);
   }

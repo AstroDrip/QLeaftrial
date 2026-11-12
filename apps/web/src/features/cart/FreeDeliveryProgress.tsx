@@ -32,7 +32,7 @@ const CLOSE_IN_MARGIN_PX = 10;
 // head, a seed at the start and a leaf pinned at the goal. When the goal is met the message holds for a
 // moment, the text fades, the card closes in around the line and the line flies to the cart icon to
 // become a ring around it (see FreeDeliveryFlyer). "compact" is the slimmer card above the floating cart.
-export function FreeDeliveryProgress({ subtotalQar, compact = false, idle = false, placement = "page" }: { subtotalQar: number; compact?: boolean; idle?: boolean; placement?: "page" | "summary" }) {
+export function FreeDeliveryProgress({ subtotalQar, compact = false, mini = false, placement = "page" }: { subtotalQar: number; compact?: boolean; mini?: boolean; placement?: "page" | "summary" }) {
   const { language } = useSiteLanguage();
   const t = copy[language];
   const phase = useFreeDeliveryStore((state) => state.phase);
@@ -85,7 +85,7 @@ export function FreeDeliveryProgress({ subtotalQar, compact = false, idle = fals
     <div className={`free-delivery-wrap${compact ? " free-delivery-wrap--compact" : ""}${placement === "summary" ? " free-delivery-wrap--summary" : ""}${flying ? " is-flying" : ""}`}>
       <div
         ref={card}
-        className={`free-delivery${compact ? " free-delivery--compact" : ""}${idle ? " free-delivery--idle" : ""}${placement === "summary" ? " free-delivery--summary" : ""}${stage !== "progress" ? " is-unlocked" : ""}${collapsing ? " is-collapsing" : ""}${flying ? " is-flying" : ""}`}
+        className={`free-delivery${compact ? " free-delivery--compact" : ""}${mini ? " free-delivery--mini" : ""}${placement === "summary" ? " free-delivery--summary" : ""}${stage !== "progress" ? " is-unlocked" : ""}${collapsing ? " is-collapsing" : ""}${flying ? " is-flying" : ""}`}
         data-testid="free-delivery"
         data-phase={stage}
       >

@@ -1,9 +1,9 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createRef } from "react";
-import { FloatingCartBar, floatingCartStyle } from "./FloatingCartBar";
+import { FloatingCartBar, floatingCartStyle, MINI_AFTER_MS } from "./FloatingCartBar";
 import { useCartStore } from "./cart-store";
 
 const item = { id: "p1", slug: "orchid", name: "Orchid", priceQar: 120, stock: 5, image: null, quantity: 2 };
@@ -22,25 +22,46 @@ describe("FloatingCartBar", () => {
   beforeEach(() => useCartStore.setState({ items: [] }));
   afterEach(cleanup);
 
-  it("stays on screen in a compact idle state while the cart is empty, track included", () => {
+  it("stays hidden while the cart is empty", () => {
     renderAt("/shop");
-    const button = screen.getByTestId("floating-cart");
-    expect(button).toHaveAccessibleName("Open cart, your cart is empty");
-    expect(button.closest(".floating-cart")).toHaveAttribute("data-state", "idle");
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
-    expect(screen.getByTestId("free-delivery")).toHaveClass("free-delivery--idle");
+    expect(screen.queryByTestId("floating-cart")).not.toBeInTheDocument();
   });
 
-  it("opens out when a product is added and folds back to idle when the last one is removed", async () => {
-    renderAt("/shop");
-    act(() => useCartStore.setState({ items: [item] }));
-    const button = screen.getByTestId("floating-cart");
-    expect(button.closest(".floating-cart")).toHaveAttribute("data-state", "active");
-    expect(screen.getByTestId("free-delivery")).not.toHaveClass("free-delivery--idle");
-    expect(button.querySelector(".floating-cart__badge")).toHaveTextContent("2");
-    act(() => useCartStore.setState({ items: [] }));
-    expect(screen.getByTestId("floating-cart").closest(".floating-cart")).toHaveAttribute("data-state", "idle");
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+  it("shows the full banner after an add, folds into the mini banner after a while of browsing, and opens again on the next change", () => {
+    vi.useFakeTimers();
+    try {
+      renderAt("/shop");
+      act(() => useCartStore.setState({ items: [item] }));
+      const bar = () => screen.getByTestId("floating-cart").closest(".floating-cart")!;
+      expect(bar()).toHaveAttribute("data-state", "full");
+      expect(screen.getByTestId("free-delivery")).not.toHaveClass("free-delivery--mini");
+      expect(screen.getByTestId("floating-cart").querySelector(".floating-cart__badge")).toHaveTextContent("2");
+
+      act(() => { vi.advanceTimersByTime(MINI_AFTER_MS - 100); });
+      expect(bar()).toHaveAttribute("data-state", "full");
+      act(() => { vi.advanceTimersByTime(200); });
+      expect(bar()).toHaveAttribute("data-state", "mini");
+      // The mini banner keeps its track and the count.
+      expect(screen.getByRole("progressbar")).toBeInTheDocument();
+      expect(screen.getByTestId("free-delivery")).toHaveClass("free-delivery--mini");
+      expect(screen.getByTestId("floating-cart").querySelector(".floating-cart__badge")).toHaveTextContent("2");
+
+      // Hovering opens it while the pointer is there.
+      fireEvent.pointerEnter(bar());
+      expect(bar()).toHaveAttribute("data-state", "full");
+      fireEvent.pointerLeave(bar());
+      expect(bar()).toHaveAttribute("data-state", "mini");
+
+      // Adding another item opens the full banner again.
+      act(() => useCartStore.setState({ items: [{ ...item, quantity: 3 }] }));
+      expect(bar()).toHaveAttribute("data-state", "full");
+
+      // Removing the last item hides it completely.
+      act(() => useCartStore.setState({ items: [] }));
+      expect(screen.queryByTestId("floating-cart")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("names the action, item count and total for assistive technology", () => {

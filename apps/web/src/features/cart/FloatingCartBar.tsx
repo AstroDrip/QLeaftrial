@@ -1,4 +1,5 @@
 import { useEffect, useState, type RefObject } from "react";
+import { useFreeDeliveryStore } from "./free-delivery-store";
 import { Link, useLocation } from "react-router-dom";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
 import { BagIcon } from "../../components/icons";
@@ -37,41 +38,63 @@ function useFooterPlacement(footer: RefObject<HTMLElement | null>, active: boole
   return placement;
 }
 
+// How long the customer can browse without changing the cart before the banner folds into its mini form.
+export const MINI_AFTER_MS = 8000;
+
+// The full banner shows when something is added or changed; after a stretch of browsing without touching the cart
+// it folds into a mini banner (a small track on top of the round cart button, with the count badge), so it stays
+// out of the way. Any cart change opens it again; hovering or focusing it opens it while the pointer or focus is on
+// it. It never folds mid-celebration.
+function useMiniBanner(signature: string, active: boolean) {
+  const [mini, setMini] = useState(false);
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    setMini(false);
+    if (!active) return;
+    const timer = window.setTimeout(() => setMini(true), MINI_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [signature, active]);
+  const hold = {
+    onPointerEnter: () => setHeld(true),
+    onPointerLeave: () => setHeld(false),
+    onFocus: () => setHeld(true),
+    onBlur: () => setHeld(false),
+  };
+  return { mini: mini && !held, hold };
+}
+
 export function FloatingCartBar({ footer }: { footer: RefObject<HTMLElement | null> }) {
   const { isArabic } = useSiteLanguage();
   const { pathname } = useLocation();
   const settings = useStoreSettings();
   const items = useCartStore((state) => state.items);
   const count = items.reduce((sum, item) => sum + item.quantity, 0);
-  // An empty cart is an idle state, not a reason to hide the cart: the bar shrinks to the cart button with a
-  // small empty track above it, and opens out again as soon as something is added.
-  const visible = (settings.data?.orderingEnabled ?? true) && !HIDDEN_ON.test(pathname);
-  const idle = count === 0;
+  // Nothing to show for an empty cart: the header's cart icon is enough.
+  const visible = count > 0 && (settings.data?.orderingEnabled ?? true) && !HIDDEN_ON.test(pathname);
+  const total = cartSubtotal(items);
+  const phase = useFreeDeliveryStore((state) => state.phase);
+  const { mini, hold } = useMiniBanner(`${count}:${total}`, visible && (phase === "progress" || phase === "done"));
   const placement = useFooterPlacement(footer, visible);
 
   useEffect(() => {
     document.body.classList.toggle("has-floating-cart", visible);
-    document.body.classList.toggle("has-floating-cart--idle", visible && idle);
-    return () => document.body.classList.remove("has-floating-cart", "has-floating-cart--idle");
-  }, [visible, idle]);
+    return () => document.body.classList.remove("has-floating-cart");
+  }, [visible]);
 
   if (!visible) return null;
-  const total = cartSubtotal(items);
   const { className, footerHeight } = floatingCartStyle(placement);
-  const label = idle
-    ? (isArabic ? "فتح السلة، السلة فارغة" : "Open cart, your cart is empty")
-    : (isArabic
-      ? `فتح السلة، ${count} منتجات، المجموع ${total} ر.ق`
-      : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`)
-      + (total >= FREE_DELIVERY_THRESHOLD_QAR ? (isArabic ? "، توصيل مجاني" : ", free delivery unlocked") : "");
+  const label = (isArabic
+    ? `فتح السلة، ${count} منتجات، المجموع ${total} ر.ق`
+    : `Open cart, ${count} item${count === 1 ? "" : "s"}, total ${total} QAR`)
+    + (total >= FREE_DELIVERY_THRESHOLD_QAR ? (isArabic ? "، توصيل مجاني" : ", free delivery unlocked") : "");
 
   return (
-    <div className={`${className}${idle ? " floating-cart--idle" : ""}`} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined} data-state={idle ? "idle" : "active"}>
-      <FreeDeliveryProgress subtotalQar={total} compact idle={idle} />
+    <div className={`${className}${mini ? " floating-cart--mini" : ""}`} style={footerHeight ? { ["--footer-height" as string]: footerHeight } : undefined} data-state={mini ? "mini" : "full"} {...hold}>
+      <FreeDeliveryProgress subtotalQar={total} compact mini={mini} />
       <Link to="/cart" className="floating-cart__button" aria-label={label} data-testid="floating-cart" data-fd-target="floating">
         <span className="floating-cart__icon">
           <BagIcon />
-          {idle ? null : <span className="floating-cart__badge" aria-hidden="true">{count > 99 ? "99+" : count}</span>}
+          <span className="floating-cart__badge" aria-hidden="true">{count > 99 ? "99+" : count}</span>
         </span>
         <span className="floating-cart__total" aria-hidden="true"><span>{total} QAR</span></span>
       </Link>

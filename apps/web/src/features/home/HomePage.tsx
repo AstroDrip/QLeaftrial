@@ -1,4 +1,5 @@
 import "./home.css";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
@@ -42,8 +43,39 @@ function ProductShelf({ shelf, orderingEnabled, viewAll }: { shelf: Shelf; order
   );
 }
 
+// Fades the progressive blur in over the first stretch of scrolling (one blur-strip height): 0 at rest, so the hero
+// is sharp, 1 once the categories are sliding over it. One passive scroll listener, one style write per frame.
+function useStageBlur() {
+  const strip = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // The strip appears once the categories have loaded, so it is looked up on each frame rather than once.
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const element = strip.current;
+      if (!element) return;
+      const distance = element.offsetHeight || 1;
+      const amount = Math.min(1, Math.max(0, window.scrollY / distance));
+      element.style.setProperty("--stage-blur", amount.toFixed(3));
+    };
+    const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(update); };
+    update();
+    const settle = window.setTimeout(update, 1500);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.clearTimeout(settle);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+  return strip;
+}
+
 export function HomePage() {
   const { content, language, isArabic } = useSiteLanguage();
+  const stageBlur = useStageBlur();
   const settings = useStoreSettings();
   const orderingEnabled = settings.data?.orderingEnabled ?? true;
   const t = content.home;
@@ -99,7 +131,7 @@ export function HomePage() {
 
       {categories.length ? (
         <section className="home-section container home-stage__sheet" aria-labelledby="home-categories">
-          <div className="home-stage__blur" aria-hidden="true"><span /><span /><span /></div>
+          <div className="home-stage__blur" aria-hidden="true" ref={stageBlur}><span /><span /><span /></div>
           <CategoryRail
             items={categories.map(([category, count]) => ({
               key: category,

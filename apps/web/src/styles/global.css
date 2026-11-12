@@ -451,9 +451,10 @@ body.has-floating-cart .main-content { padding-bottom: 150px; }
 .shop-menu__panel a > span:first-child, .shop-menu__all a, .site-menu__sublink > span:first-child { text-transform: uppercase; letter-spacing: .08em; font-size: .82rem; font-weight: 600; }
 html[lang="ar"] :is(.section-head h2, .product-detail__related > h2, .stories__intro h2, .shop-menu__panel a > span:first-child, .site-menu__sublink > span:first-child) { letter-spacing: 0; }
 
-/* ---------- Floating cart: idle (empty) and active states ----------
-   Idle: a 52px round cart button with a matching mini track above it, one component. Active: the track opens
-   into the delivery card and the button gains its total and a count badge. Only width, padding, gap and the
+/* ---------- Floating cart: full banner and mini banner ----------
+   Mini (after a while of browsing without changing the cart): a 52px round cart button with its count badge and a
+   matching small track above it, one component. Full (after any cart change, or on hover/focus): the track opens
+   into the delivery card and the button shows its total. Only width, padding, gap and the
    opacity/size of secondary parts move, on one shared curve, so the bar stays anchored where it is. */
 .floating-cart { --fc-ease: cubic-bezier(.22, .7, .25, 1); --fc-time: 380ms; --fc-size: 52px; }
 .floating-cart__button { gap: .875rem; min-width: var(--fc-size); justify-content: center; transition: gap var(--fc-time) var(--fc-ease), padding var(--fc-time) var(--fc-ease), background-color 160ms var(--ease-out); }
@@ -478,10 +479,9 @@ html[lang="ar"] :is(.section-head h2, .product-detail__related > h2, .stories__i
 }
 /* The total sits in a box whose width can close to nothing, so the button narrows to a circle without a jump. */
 .floating-cart__total { display: grid; grid-template-columns: 1fr; max-width: 9em; overflow: hidden; white-space: nowrap; transition: max-width var(--fc-time) var(--fc-ease), opacity 220ms ease; }
-.floating-cart--idle .floating-cart__button { gap: 0; padding-inline: 0; }
-.floating-cart--idle .floating-cart__total { max-width: 0; opacity: 0; }
+.floating-cart--mini .floating-cart__button { gap: 0; padding-inline: 0; }
+.floating-cart--mini .floating-cart__total { max-width: 0; opacity: 0; }
 @keyframes floating-cart-badge-in { from { opacity: 0; transform: scale(.6); } }
-body.has-floating-cart--idle .main-content { padding-bottom: 110px; }
 @media (prefers-reduced-motion: reduce) { .floating-cart__badge { animation: none; } }
 
 /* Checkout and confirmation: the delivery line, and the notice when the team will confirm the delivery charge. */

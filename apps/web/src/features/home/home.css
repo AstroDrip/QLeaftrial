@@ -64,37 +64,33 @@
 }
 
 /* Progressive blur along the sheet's leading edge: three layers, each blurring harder and covering less, so the
-   photo goes soft gradually as the sheet passes over it. Each layer's blur grows from nothing over the first part
-   of the scroll, so the hero is perfectly sharp at rest. (The blur itself is animated, not the opacity: opacity on
-   the strip would cut the layers off from the photo behind them.) Browsers without scroll-driven animations
-   simply leave the strip out. */
-.home-stage__blur { display: none; }
-@supports (animation-timeline: scroll()) {
-  .home-stage__blur {
-    --blur-h: clamp(72px, 12vw, 140px);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    display: block;
-    width: 100vw;
-    height: var(--blur-h);
-    translate: -50% 0;
-    pointer-events: none;
-  }
-  .home-stage__blur span {
-    position: absolute;
-    inset: 0;
-    -webkit-mask: linear-gradient(to top, #000 0%, transparent var(--reach));
-    mask: linear-gradient(to top, #000 0%, transparent var(--reach));
-    animation: home-stage-blur linear both;
-    animation-timeline: scroll(root);
-    animation-range: 0 var(--blur-h);
-  }
-  .home-stage__blur span:nth-child(1) { --blur: 2px; --reach: 100%; }
-  .home-stage__blur span:nth-child(2) { --blur: 6px; --reach: 66%; }
-  .home-stage__blur span:nth-child(3) { --blur: 12px; --reach: 33%; }
+   photo goes soft gradually as the sheet passes over it. Each layer has a fixed blur; only its opacity changes, set
+   from the scroll position by HomePage (--stage-blur, 0 at rest so the hero is sharp, 1 once the sheet is moving).
+   Opacity sits on each blurring layer itself, never on the strip around them: opacity on a parent would cut the
+   layers off from the photo behind them. Works in every browser with backdrop-filter (Safari needs the prefix). */
+.home-stage__blur {
+  --blur-h: clamp(72px, 12vw, 140px);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 100vw;
+  height: var(--blur-h);
+  translate: -50% 0;
+  pointer-events: none;
 }
-@keyframes home-stage-blur { from { backdrop-filter: blur(0); } to { backdrop-filter: blur(var(--blur)); } }
+.home-stage__blur span {
+  position: absolute;
+  inset: 0;
+  opacity: var(--stage-blur, 0);
+  -webkit-mask: linear-gradient(to top, #000 0%, transparent var(--reach));
+  mask: linear-gradient(to top, #000 0%, transparent var(--reach));
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  will-change: opacity;
+}
+.home-stage__blur span:nth-child(1) { --blur: 2px; --reach: 100%; }
+.home-stage__blur span:nth-child(2) { --blur: 6px; --reach: 66%; }
+.home-stage__blur span:nth-child(3) { --blur: 12px; --reach: 33%; }
 
 /* Screens too short to hold the whole hero, and readers who ask for less motion: the hero scrolls normally. */
 @media (max-height: 520px), (prefers-reduced-motion: reduce) {
