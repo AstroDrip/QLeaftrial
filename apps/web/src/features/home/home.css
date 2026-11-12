@@ -1,79 +1,5 @@
 .home { display: grid; gap: var(--space-8); padding-bottom: var(--space-6); }
 
-/* Full-width grid: gutter | text | carousel | gutter. The text lines up with the page
-   content while the carousel runs on to the edge of the screen. */
-.home-hero {
-  --hero-content: min(var(--page-max) - 2 * var(--gutter), 100% - 2 * var(--gutter));
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(var(--gutter), 1fr) calc(var(--hero-content) * .47) calc(var(--hero-content) * .53) minmax(var(--gutter), 1fr);
-  align-items: center;
-  padding-top: var(--space-7);
-}
-.home-hero__copy { grid-column: 2; padding-inline-end: var(--space-7); }
-.hero-carousel { grid-column: 3 / -1; }
-.home-hero__gallery { grid-column: 3; }
-/* Light particle field behind the hero copy and photos; never intercepts clicks. */
-.home-hero__particles { position: absolute; inset: 0 0 calc(var(--space-6) * -1); z-index: 0; width: 100%; height: calc(100% + var(--space-6)); pointer-events: none; }
-.home-hero__copy, .home-hero__gallery { position: relative; z-index: 1; }
-
-/* Flex Carousel hero: a looping, draggable row with blurred, softly fading edges. */
-/* No z-index or mask on this box: either would isolate it into its own layer, and the
-   canvas's multiply blend would then mix with nothing instead of the cream page. */
-.hero-carousel { position: relative; overflow: hidden; overflow: clip; height: clamp(400px, 42vw, 520px); color: var(--ink); touch-action: pan-y; }
-.hero-carousel .flex-carousel { height: 100%; }
-/* Multiply turns the photos' white backgrounds into the page's cream, and the mask fades the
-   row out on every side, so cards dissolve into the hero instead of ending at a box edge. */
-.hero-carousel canvas {
-  --fade-x: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
-  --fade-y: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
-  mix-blend-mode: multiply;
-  -webkit-mask-image: var(--fade-x), var(--fade-y);
-  -webkit-mask-composite: source-in;
-  mask-image: var(--fade-x), var(--fade-y);
-  mask-composite: intersect;
-}
-.hero-carousel .flex-carousel:focus-visible { box-shadow: inset 0 0 0 2px var(--rust); }
-.hero-carousel .flex-carousel__title { font-family: var(--sans); font-weight: 600; }
-.hero-carousel__placeholder { position: absolute; inset: 0; width: 62%; height: auto; margin: auto; aspect-ratio: 1; border-radius: 18px; background: #fff; object-fit: cover; }
-/* Gaussian blur that is strongest at each side and fades out both inward and toward the
-   top and bottom, so the blurred area has no visible edges of its own. */
-.hero-carousel__blur {
-  --blur-y: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 2;
-  width: 18%;
-  pointer-events: none;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-.hero-carousel__blur--start { --blur-x: linear-gradient(to right, #000, transparent); inset-inline-start: 0; }
-.hero-carousel__blur--end { --blur-x: linear-gradient(to left, #000, transparent); inset-inline-end: 0; }
-[dir="rtl"] .hero-carousel__blur--start { --blur-x: linear-gradient(to left, #000, transparent); }
-[dir="rtl"] .hero-carousel__blur--end { --blur-x: linear-gradient(to right, #000, transparent); }
-.hero-carousel__blur { -webkit-mask-image: var(--blur-x), var(--blur-y); mask-image: var(--blur-x), var(--blur-y); }
-/* On desktop the start edge sits mid-page beside the text. A backdrop blur is cut off at its
-   own box edge, which shows as a seam there, so that side relies on the carousel's soft lens
-   and the fade mask; the Gaussian blur stays on the screen-edge side. */
-@media (min-width: 861px) {
-  .hero-carousel__blur--start { display: none; }
-}
-
-.home-hero__copy { display: grid; gap: var(--space-4); justify-items: start; }
-.home-hero h1 { max-width: 14ch; font-size: var(--step-4); font-weight: 400; }
-.home-hero__lead { max-width: 46ch; color: var(--text-muted); font-size: var(--step-1); }
-.home-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
-.home-hero__gallery { display: grid; grid-template-columns: 1.3fr 1fr; grid-template-rows: 1fr 1fr; gap: var(--space-3); aspect-ratio: 5 / 4; }
-.home-hero__gallery img { width: 100%; height: 100%; border-radius: var(--radius-lg); background: #fff; object-fit: cover; }
-.home-hero__gallery img:first-child { grid-row: 1 / span 2; }
-/* Each new photo mounts fresh (keyed by src), so it fades in when the gallery rotates. */
-.home-hero__photo { animation: hero-photo-in 700ms var(--ease-out); }
-@keyframes hero-photo-in { from { opacity: 0; } }
-
 .home-promises ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); margin: 0; padding: var(--space-5) 0; list-style: none; border-block: 1px solid var(--line); }
 .home-promises li { display: grid; gap: .2rem; }
 .home-promises strong { font-family: var(--serif); font-size: var(--step-1); font-weight: 500; }
@@ -109,14 +35,5 @@
 
 @media (max-width: 860px) {
   .home { gap: var(--space-7); }
-  .home-hero { grid-template-columns: var(--gutter) minmax(0, 1fr) var(--gutter); row-gap: var(--space-5); padding-top: var(--space-5); }
-  .home-hero__copy { grid-column: 2; padding-inline-end: 0; }
-  .hero-carousel { grid-column: 1 / -1; }
-  .home-hero__gallery { grid-column: 2; }
-  .home-hero__gallery { grid-template-columns: 1fr; grid-template-rows: auto; aspect-ratio: auto; }
-  .home-hero__gallery img:first-child { grid-row: auto; height: auto; aspect-ratio: 16 / 11; }
-  .home-hero__gallery img:not(:first-child) { display: none; }
-  .hero-carousel { height: clamp(400px, 104vw, 440px); }
-  .hero-carousel__blur { width: 12%; }
   .home-promises ul { grid-template-columns: 1fr; }
 }

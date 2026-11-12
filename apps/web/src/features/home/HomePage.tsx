@@ -6,9 +6,8 @@ import { prefetchRoute } from "../../app/route-modules";
 import { Seo, qleavesStructuredData } from "../../components/Seo";
 import { productApi } from "../catalog/product-api";
 import { ProductCard } from "../catalog/ProductCard";
-import { HeroCarousel } from "./HeroCarousel";
 import { CategoryRail } from "./CategoryRail";
-import { HeroParticles } from "./HeroParticles";
+import { BotanicalHero } from "./BotanicalHero";
 import { ReviewStories } from "../reviews/ReviewStories";
 import { categoryCounts, useCatalogue } from "../catalog/catalogue-client";
 import { catalogueListResponse } from "../catalog/catalogue-view";
@@ -52,26 +51,7 @@ export function HomePage() {
     <article className="home" data-testid="home-page">
       <Seo title="QLeaves" description={isArabic ? "نباتات داخلية وخارجية مختارة بعناية مع التوصيل داخل قطر." : "Hand-picked indoor and outdoor plants, delivered across Qatar."} path="/" structuredData={qleavesStructuredData} />
 
-      <section className="home-hero" aria-labelledby="hero-heading">
-        <HeroParticles />
-        <div className="home-hero__copy">
-          <p className="eyebrow">{t.basedIn}</p>
-          <h1 id="hero-heading">{t.heroTitle}</h1>
-          <p className="home-hero__lead">{t.heroSubtitle}</p>
-          <div className="home-hero__actions">
-            <Link to="/shop" className="button" onMouseEnter={() => prefetchRoute("/shop")}>{t.shopCta}</Link>
-          </div>
-        </div>
-        <HeroCarousel isArabic={isArabic} />
-      </section>
-
-      <section className="home-promises container" aria-label={t.promisesLabel}>
-        <ul>
-          {t.promises.map(([title, body]) => (
-            <li key={title}><strong>{title}</strong><span>{body}</span></li>
-          ))}
-        </ul>
-      </section>
+      <BotanicalHero copy={{ eyebrow: t.basedIn, title: t.heroTitle, lead: t.heroSubtitle, cta: t.shopCta }} />
 
       {categories.length ? (
         <section className="home-section container" aria-labelledby="home-categories">
@@ -109,6 +89,14 @@ export function HomePage() {
             {featured.map((product) => <ProductCard key={product.id} product={product} orderingEnabled={orderingEnabled} headingLevel={3} />)}
           </ul>
         )}
+      </section>
+
+      <section className="home-promises container" aria-label={t.promisesLabel}>
+        <ul>
+          {t.promises.map(([title, body]) => (
+            <li key={title}><strong>{title}</strong><span>{body}</span></li>
+          ))}
+        </ul>
       </section>
 
       <ReviewStories />

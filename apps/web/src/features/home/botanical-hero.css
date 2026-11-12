@@ -1,0 +1,88 @@
+/* Botanical hero: plants | headline | plants. The plant groups are grid cells of their own, so the
+   headline and the Shop now button always have a clear box. The layout is pinned left-to-right (the
+   plants lean toward the middle from their physical side) and only the text follows the language. */
+.botanical-hero {
+  --hero-copy: 34rem;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--hero-copy)) minmax(0, 1fr);
+  grid-template-areas: "left copy right";
+  min-height: clamp(520px, 72svh, 700px);
+  overflow: hidden;
+  direction: ltr;
+  background:
+    radial-gradient(ellipse 60% 70% at 50% 42%, var(--surface) 0%, transparent 70%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+}
+:is([dir="rtl"], [lang="ar"]) .botanical-hero__copy { direction: rtl; }
+
+.botanical-hero__plants { position: relative; min-width: 0; min-height: 0; }
+.botanical-hero__plants--left { grid-area: left; }
+.botanical-hero__plants--right { grid-area: right; }
+.botanical-hero__plants-art {
+  position: absolute;
+  inset: var(--space-5) 0 0;
+  width: 100%;
+  height: calc(100% - var(--space-5));
+  overflow: visible;
+  transition: opacity 700ms var(--ease-out);
+}
+
+/* The moving plants: drawn over the still ones, then the still ones fade out. Never takes clicks. */
+.botanical-hero__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 700ms var(--ease-out);
+}
+.botanical-hero.is-live .botanical-hero__canvas { opacity: 1; }
+.botanical-hero.is-live .botanical-hero__plants-art { opacity: 0; }
+
+.botanical-hero__copy {
+  grid-area: copy;
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  padding: var(--space-7) var(--space-4) var(--space-8);
+  text-align: center;
+  animation: botanical-copy-in 700ms var(--ease-out) both;
+}
+.botanical-hero__copy .eyebrow { margin: 0; }
+.botanical-hero h1 {
+  max-width: 13ch;
+  margin: 0;
+  font-size: var(--step-4);
+  font-weight: 400;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.botanical-hero__lead { max-width: 40ch; margin: 0; color: var(--text-muted); font-size: var(--step-1); text-wrap: pretty; }
+.botanical-hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-2); }
+.botanical-hero__cta { min-width: 11rem; }
+
+@keyframes botanical-copy-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* Narrower screens: the headline first, the two plant groups growing up beneath it, one in each corner. */
+@media (max-width: 900px) {
+  .botanical-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto clamp(200px, 60vw, 300px);
+    grid-template-areas: "copy copy" "left right";
+    min-height: 0;
+  }
+  .botanical-hero__copy { padding: var(--space-6) var(--gutter) var(--space-2); }
+  .botanical-hero__plants-art { inset: 0; height: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .botanical-hero__copy { animation: none; }
+  .botanical-hero__canvas, .botanical-hero__plants-art { transition: none; }
+}
