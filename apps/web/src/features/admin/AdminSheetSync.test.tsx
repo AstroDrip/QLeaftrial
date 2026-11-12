@@ -36,7 +36,15 @@ describe("Google Sheet card on the dashboard", () => {
     expect(screen.getByRole("link", { name: "Open sheet" })).toHaveAttribute("href", "https://docs.google.com/spreadsheets/d/abc");
     fireEvent.click(screen.getByRole("button", { name: "Sync all orders now" }));
 
-    expect(await screen.findByText("Synced 3 orders.")).toBeInTheDocument();
+    expect(await screen.findByText('Updated 3 orders in the "Orders" tab.')).toBeInTheDocument();
+  });
+
+  it("explains an empty result instead of only saying nothing was synced", async () => {
+    vi.mocked(adminApi.sheetsStatus).mockResolvedValue({ configured: true, tab: "Orders", sheetUrl: "https://docs.google.com/spreadsheets/d/abc" });
+    vi.mocked(adminApi.syncSheets).mockResolvedValue({ synced: 0 });
+    renderDashboard();
+    fireEvent.click(await screen.findByRole("button", { name: "Sync all orders now" }));
+    expect(await screen.findByText('No completed, paid orders yet. An order is added to the "Orders" tab once it is marked Completed and Paid.')).toBeInTheDocument();
   });
 
   it("tells the admin when the sync fails", async () => {

@@ -1,6 +1,5 @@
 import { getAccessToken, normalizePrivateKey, SheetsError, type ServiceAccount } from "./google-auth.js";
 import { prisma } from "../../lib/prisma.js";
-import { FREE_DELIVERY_THRESHOLD_QAR } from "../../lib/delivery.js";
 
 const API = "https://sheets.googleapis.com/v4/spreadsheets";
 const REQUEST_TIMEOUT_MS = 8_000;
@@ -8,13 +7,15 @@ const REQUEST_TIMEOUT_MS = 8_000;
 const MIRROR_BUDGET_MS = 6_000;
 const DEFAULT_TAB = "Orders";
 
+// The shop's chosen columns (November 2026). Rows are keyed by the order number, so it has a fixed column.
 export const SHEET_HEADER = [
-  "Order no.", "Invoice no.", "Date (Qatar)", "Customer", "Phone", "Area", "Address", "Items",
-  "Subtotal (QAR)", "Total (QAR)", "Payment method", "Payment status", "Order status", "Delivery notes", "Updated (Qatar)",
-  // Added November 2026, at the end so rows written before keep their columns.
-  "Delivery (QAR)", "Delivery charge",
+  "Date (Qatar)", "Order no.", "Invoice no.", "Customer", "Phone", "Area", "Address", "Items",
+  "Delivery (QAR)", "Total (QAR)", "Payment method",
 ];
-const LAST_COLUMN = "Q";
+const LAST_COLUMN = "K";
+const ORDER_NO_COLUMN = "B";
+// Wide enough to read any earlier layout of the sheet when moving its rows into the current columns.
+const READ_ALL = "A:Z";
 
 export type SheetOrder = {
   id?: string;
@@ -35,12 +36,6 @@ export type SheetOrder = {
   items: Array<{ productName: string; quantity: number }>;
 };
 
-// Whether the delivery charge in the row is final. Orders from before the rule simply say "Not recorded".
-export function deliveryChargeLabel(order: Pick<SheetOrder, "subtotalQar" | "deliveryChargePending" | "deliveryFeeConfirmedAt">): string {
-  if (order.deliveryChargePending) return "To confirm";
-  if (order.deliveryFeeConfirmedAt) return "Confirmed";
-  return order.subtotalQar >= FREE_DELIVERY_THRESHOLD_QAR ? "Free" : "Not recorded";
-}
 
 // The sheet is the books for finished sales: an order is written once it is completed and paid.
 export function qualifiesForSheet(order: Pick<SheetOrder, "status" | "paymentStatus">): boolean {
@@ -61,10 +56,6 @@ export function sheetUrl(config: SheetsConfig): string {
   return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(config.spreadsheetId)}`;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pending", CONFIRMED: "Accepted", PREPARING: "Preparing", OUT_FOR_DELIVERY: "Out for delivery", DELIVERED: "Completed", CANCELLED: "Declined",
-};
-const PAYMENT_LABELS: Record<string, string> = { PAID: "Paid", PENDING: "Pending", FAILED: "Failed" };
 const METHOD_LABELS: Record<string, string> = { COD: "Cash on delivery", PAYMENT_LINK: "Payment link" };
 
 function qatarDateTime(value: Date | string): string {
@@ -74,25 +65,19 @@ function qatarDateTime(value: Date | string): string {
 }
 
 // Email is deliberately left out: the sheet is an operations record, not a customer database.
-export function orderToRow(order: SheetOrder, now: Date = new Date()): Array<string | number> {
+export function orderToRow(order: SheetOrder): Array<string | number> {
   return [
+    qatarDateTime(order.createdAt),
     order.orderNumber,
     `INV-${order.orderNumber}`,
-    qatarDateTime(order.createdAt),
     order.customerName,
     order.phone,
     order.area,
     order.addressLine1,
     order.items.map((item) => `${item.productName} × ${item.quantity}`).join("; "),
-    order.subtotalQar,
+    order.deliveryFeeQar,
     order.subtotalQar + order.deliveryFeeQar,
     METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod,
-    PAYMENT_LABELS[order.paymentStatus] ?? order.paymentStatus,
-    STATUS_LABELS[order.status] ?? order.status,
-    order.deliveryNotes ?? "",
-    qatarDateTime(now),
-    order.deliveryFeeQar,
-    deliveryChargeLabel(order),
   ];
 }
 
@@ -111,23 +96,33 @@ async function call<T>(config: SheetsConfig, path: string, init: { method?: stri
   return response.json() as Promise<T>;
 }
 
-const prepared = new Map<string, Promise<void>>();
+const prepared = new Map<string, Promise<number>>();
 
-// Creates the tab and header row once per server instance; a failure is retried on the next call.
-async function ensureSheet(config: SheetsConfig): Promise<void> {
+// Creates the tab and header row once per server instance (a failure is retried on the next call) and returns the
+// tab's id, which row deletion needs.
+async function ensureSheet(config: SheetsConfig): Promise<number> {
   const key = `${config.spreadsheetId}:${config.tab}`;
   let pending = prepared.get(key);
   if (!pending) {
     pending = (async () => {
-      const meta = await call<{ sheets?: Array<{ properties?: { title?: string } }> }>(config, "?fields=sheets.properties.title");
-      if (!meta.sheets?.some((sheet) => sheet.properties?.title === config.tab)) {
-        await call(config, ":batchUpdate", { method: "POST", body: { requests: [{ addSheet: { properties: { title: config.tab } } }] } });
+      const meta = await call<{ sheets?: Array<{ properties?: { title?: string; sheetId?: number } }> }>(config, "?fields=sheets.properties(title,sheetId)");
+      let sheetId = meta.sheets?.find((sheet) => sheet.properties?.title === config.tab)?.properties?.sheetId;
+      if (sheetId === undefined) {
+        const added = await call<{ replies?: Array<{ addSheet?: { properties?: { sheetId?: number } } }> }>(config, ":batchUpdate", { method: "POST", body: { requests: [{ addSheet: { properties: { title: config.tab } } }] } });
+        sheetId = added.replies?.[0]?.addSheet?.properties?.sheetId ?? 0;
       }
-      const first = await call<{ values?: string[][] }>(config, `/values/${range(config, `A1:${LAST_COLUMN}1`)}`);
-      // Also rewrites an older, shorter header so the new columns get their titles.
-      if ((first.values?.[0] ?? []).join("|") !== SHEET_HEADER.join("|")) {
-        await call(config, `/values/${range(config, `A1:${LAST_COLUMN}1`)}?valueInputOption=RAW`, { method: "PUT", body: { values: [SHEET_HEADER] } });
+      const sheet = await call<{ values?: Array<Array<string | number>> }>(config, `/values/${range(config, READ_ALL)}`);
+      const rows = sheet.values ?? [];
+      const header = (rows[0] ?? []).map(String);
+      if (header.join("|") !== SHEET_HEADER.join("|")) {
+        // An empty sheet just gets the header. A sheet in an earlier layout keeps every row: each value moves to the
+        // column with the same title, and columns that are no longer used are dropped.
+        const position = new Map(header.map((title, column) => [title, column]));
+        const moved = rows.slice(1).map((row) => SHEET_HEADER.map((title) => (position.has(title) ? row[position.get(title)!] ?? "" : "")));
+        if (rows.length) await call(config, `/values/${range(config, READ_ALL)}:clear`, { method: "POST", body: {} });
+        await call(config, `/values/${range(config, `A1:${LAST_COLUMN}${moved.length + 1}`)}?valueInputOption=RAW`, { method: "PUT", body: { values: [SHEET_HEADER, ...moved] } });
       }
+      return sheetId;
     })();
     prepared.set(key, pending);
     pending.catch(() => prepared.delete(key));
@@ -136,19 +131,29 @@ async function ensureSheet(config: SheetsConfig): Promise<void> {
 }
 
 async function orderNumberColumn(config: SheetsConfig): Promise<string[]> {
-  const column = await call<{ values?: string[][] }>(config, `/values/${range(config, "A:A")}`);
+  const column = await call<{ values?: string[][] }>(config, `/values/${range(config, `${ORDER_NO_COLUMN}:${ORDER_NO_COLUMN}`)}`);
   return (column.values ?? []).map((row) => row[0] ?? "");
 }
 
-// Writes or updates one order's row and says whether the sheet was written. The order number (column A) is the
-// row's key, so a retry updates the same row instead of adding a second one.
+function deleteRows(config: SheetsConfig, sheetId: number, indexes: number[]) {
+  // Highest first, so each deletion leaves the positions of the others unchanged.
+  const requests = [...indexes].sort((a, b) => b - a).map((index) => ({ deleteDimension: { range: { sheetId, dimension: "ROWS", startIndex: index, endIndex: index + 1 } } }));
+  return requests.length ? call(config, ":batchUpdate", { method: "POST", body: { requests } }) : Promise.resolve();
+}
+
+// Writes or updates one order's row and says whether the sheet was written. The order number (column B) is the
+// row's key, so a retry updates the same row instead of adding a second one. The sheet lists completed, paid orders
+// only, so an order that stops being one (marked unpaid, reopened) has its row removed.
 export async function syncOrder(order: SheetOrder, config: SheetsConfig): Promise<boolean> {
   const qualifies = qualifiesForSheet(order);
-  // A completed order that has since been marked unpaid is only corrected if it is already in the sheet.
+  // Only a completed order can be in the sheet; anything else needs no call to Google.
   if (!qualifies && order.status !== "DELIVERED") return false;
-  await ensureSheet(config);
+  const sheetId = await ensureSheet(config);
   const index = (await orderNumberColumn(config)).indexOf(order.orderNumber);
-  if (index < 0 && !qualifies) return false;
+  if (!qualifies) {
+    if (index >= 1) { await deleteRows(config, sheetId, [index]); return true; }
+    return false;
+  }
   const row = orderToRow(order);
   if (index >= 0) {
     const line = index + 1;
@@ -174,23 +179,28 @@ export async function recordSheetSync(orderIds: string[], errorCode: string | nu
   }
 }
 
-// Updates rows that exist and appends completed, paid orders that are missing. It never deletes, so
-// orders removed from the shop admin stay in the sheet as a record. Returns how many orders it wrote.
+// Updates rows of completed, paid orders, appends the missing ones and removes rows of orders that are no longer
+// completed and paid. Orders deleted from the shop admin are left in the sheet as a record. Returns how many
+// orders it wrote or removed.
 export async function syncAllOrders(orders: SheetOrder[], config: SheetsConfig): Promise<number> {
-  await ensureSheet(config);
+  const sheetId = await ensureSheet(config);
   const existing = await orderNumberColumn(config);
   const updates: Array<{ range: string; values: Array<Array<string | number>> }> = [];
   const additions: Array<Array<string | number>> = [];
+  const removals: number[] = [];
   for (const order of orders) {
     const index = existing.indexOf(order.orderNumber);
+    if (!qualifiesForSheet(order)) { if (index >= 1) removals.push(index); continue; }
     if (index >= 0) updates.push({ range: `${quoted(config.tab)}!A${index + 1}:${LAST_COLUMN}${index + 1}`, values: [orderToRow(order)] });
-    else if (qualifiesForSheet(order)) additions.push(orderToRow(order));
+    else additions.push(orderToRow(order));
   }
   if (updates.length) await call(config, "/values:batchUpdate", { method: "POST", body: { valueInputOption: "RAW", data: updates } });
   if (additions.length) await call(config, `/values/${range(config, `A:${LAST_COLUMN}`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { method: "POST", body: { values: additions } });
-  const written = orders.filter((order) => existing.includes(order.orderNumber) || qualifiesForSheet(order)).flatMap((order) => (order.id ? [order.id] : []));
+  // Removals last: they shift the rows below them, and the updates above were addressed by position.
+  await deleteRows(config, sheetId, removals);
+  const written = orders.filter((order) => qualifiesForSheet(order)).flatMap((order) => (order.id ? [order.id] : []));
   await recordSheetSync(written, null);
-  return updates.length + additions.length;
+  return updates.length + additions.length + removals.length;
 }
 
 function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {

@@ -4,7 +4,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
 import { getAccessToken, normalizePrivateKey, resetGoogleTokenCache, signServiceAccountJwt } from "../src/modules/sheets/google-auth";
-import { deliveryChargeLabel, mirrorOrderToSheet, orderToRow, resetSheetPreparation, SHEET_HEADER, sheetsConfig, syncAllOrders, syncOrder, type SheetOrder } from "../src/modules/sheets/order-sheet";
+import { mirrorOrderToSheet, orderToRow, resetSheetPreparation, SHEET_HEADER, sheetsConfig, syncAllOrders, syncOrder, type SheetOrder } from "../src/modules/sheets/order-sheet";
 import { loggedInAgent, resetDatabase, seededProduct, validOrder } from "./helpers";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
@@ -16,6 +16,7 @@ type Call = { method: string; path: string; body?: Record<string, unknown> };
 // A minimal in-memory Google Sheets: tabs, a header row and rows, behaving like the real API for the calls we make.
 function fakeGoogle(options: { sheetsStatus?: number; tokenStatus?: number } = {}) {
   const state = { tabs: ["Sheet1"], rows: [] as Cell[][], calls: [] as Call[], tokenRequests: 0 };
+  const tabId = (title: string) => state.tabs.indexOf(title) + 100;
   const respond = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
   const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
@@ -30,16 +31,22 @@ function fakeGoogle(options: { sheetsStatus?: number; tokenStatus?: number } = {
     if ((init?.headers as Record<string, string>).Authorization !== "Bearer test-token") return respond(401, {});
     if (options.sheetsStatus) return respond(options.sheetsStatus, { error: { message: "customer data would be here" } });
 
-    const cells = /!(A\d*:?[A-Z]?\d*)/.exec(path)?.[1] ?? "";
-    if (method === "GET" && path.startsWith("?fields=")) return respond(200, { sheets: state.tabs.map((title) => ({ properties: { title } })) });
-    if (method === "POST" && path === ":batchUpdate") { state.tabs.push(((body as { requests: Array<{ addSheet: { properties: { title: string } } }> }).requests[0].addSheet.properties.title)); return respond(200, {}); }
+    const cells = /!([A-Z]+\d*:?[A-Z]*\d*)/.exec(path)?.[1] ?? "";
+    if (method === "GET" && path.startsWith("?fields=")) return respond(200, { sheets: state.tabs.map((title) => ({ properties: { title, sheetId: tabId(title) } })) });
+    if (method === "POST" && path === ":batchUpdate") {
+      const requests = (body as { requests: Array<{ addSheet?: { properties: { title: string } }; deleteDimension?: { range: { sheetId: number; startIndex: number } } }> }).requests;
+      if (requests[0].addSheet) { state.tabs.push(requests[0].addSheet.properties.title); return respond(200, { replies: [{ addSheet: { properties: { sheetId: tabId(requests[0].addSheet.properties.title) } } }] }); }
+      for (const request of requests) { if (request.deleteDimension!.range.sheetId !== tabId("Orders")) return respond(400, {}); state.rows.splice(request.deleteDimension!.range.startIndex, 1); }
+      return respond(200, {});
+    }
+    if (method === "POST" && path.includes(":clear")) { state.rows = []; return respond(200, {}); }
     if (method === "POST" && path === "/values:batchUpdate") {
       for (const entry of (body as { data: Array<{ range: string; values: Cell[][] }> }).data) state.rows[Number(/!A(\d+):/.exec(entry.range)![1]) - 1] = entry.values[0];
       return respond(200, {});
     }
-    if (method === "GET" && /^A1:[A-Z]1$/.test(cells)) return respond(200, state.rows[0] ? { values: [state.rows[0]] } : {});
-    if (method === "GET" && cells === "A:A") return respond(200, state.rows.length ? { values: state.rows.map((row) => [row[0]]) } : {});
-    if (method === "PUT") { state.rows[Number(/!A(\d+):/.exec(path)![1]) - 1] = (body as { values: Cell[][] }).values[0]; return respond(200, {}); }
+    if (method === "GET" && cells === "A:Z") return respond(200, state.rows.length ? { values: state.rows } : {});
+    if (method === "GET" && cells === "B:B") return respond(200, state.rows.length ? { values: state.rows.map((row) => [row[1]]) } : {});
+    if (method === "PUT") { const start = Number(/!A(\d+):/.exec(path)![1]) - 1; (body as { values: Cell[][] }).values.forEach((values, offset) => { state.rows[start + offset] = values; }); return respond(200, {}); }
     if (method === "POST" && path.includes(":append")) { state.rows.push(...(body as { values: Cell[][] }).values); return respond(200, {}); }
     return respond(404, {});
   });
@@ -104,34 +111,31 @@ describe("Google Sheets order sync", () => {
 
   describe("rows", () => {
     it("builds a tidy row in Qatar time with the total and invoice number, and without the email", () => {
-      const row = orderToRow(sheetOrder(), new Date("2026-10-28T10:05:00Z"));
+      expect(SHEET_HEADER).toEqual(["Date (Qatar)", "Order no.", "Invoice no.", "Customer", "Phone", "Area", "Address", "Items", "Delivery (QAR)", "Total (QAR)", "Payment method"]);
+      const row = orderToRow(sheetOrder());
       expect(row).toHaveLength(SHEET_HEADER.length);
-      expect(row).toEqual(["QL-20261028-AAA111", "INV-QL-20261028-AAA111", "2026-10-28 01:30", "Aisha Al-Mansoori", "+974 5555 1234", "Doha", "Villa 12, Street 30", "Areca Palm × 2; Orchid × 1", 245, 245, "Cash on delivery", "Paid", "Completed", "", "2026-10-28 13:05", 0, "Free"]);
+      expect(row).toEqual(["2026-10-28 01:30", "QL-20261028-AAA111", "INV-QL-20261028-AAA111", "Aisha Al-Mansoori", "+974 5555 1234", "Doha", "Villa 12, Street 30", "Areca Palm × 2; Orchid × 1", 0, 245, "Cash on delivery"]);
     });
   });
 
   describe("delivery charge columns", () => {
-    it("records the delivery charge and whether it is final", () => {
-      expect(deliveryChargeLabel({ subtotalQar: 120, deliveryChargePending: true })).toBe("To confirm");
-      expect(deliveryChargeLabel({ subtotalQar: 120, deliveryChargePending: false, deliveryFeeConfirmedAt: "2026-11-13T08:00:00Z" })).toBe("Confirmed");
-      expect(deliveryChargeLabel({ subtotalQar: 150 })).toBe("Free");
-      expect(deliveryChargeLabel({ subtotalQar: 90 })).toBe("Not recorded");
-      const row = orderToRow(sheetOrder({ subtotalQar: 120, deliveryFeeQar: 15, deliveryChargePending: false, deliveryFeeConfirmedAt: "2026-11-13T08:00:00Z" }));
-      expect(row[8]).toBe(120);
+    it("puts the delivery charge in its own column and in the total", () => {
+      const row = orderToRow(sheetOrder({ subtotalQar: 120, deliveryFeeQar: 15 }));
+      expect(row[8]).toBe(15);
       expect(row[9]).toBe(135);
-      expect(row.slice(15)).toEqual([15, "Confirmed"]);
     });
 
-    it("upgrades a sheet that still has the older, shorter header without touching its rows", async () => {
+    it("moves rows written in an earlier layout into the new columns, keeping every order and adding no duplicate", async () => {
       configureSheets();
       const { state, fetchMock } = fakeGoogle();
       state.tabs.push("Orders");
-      state.rows.push(SHEET_HEADER.slice(0, 15), ["QL-OLD-1", "INV-QL-OLD-1"]);
+      const old = ["Order no.", "Invoice no.", "Date (Qatar)", "Customer", "Phone", "Area", "Address", "Items", "Subtotal (QAR)", "Total (QAR)", "Payment method", "Payment status", "Order status", "Delivery notes", "Updated (Qatar)", "Delivery (QAR)", "Delivery charge"];
+      state.rows.push(old, ["QL-20261028-AAA111", "INV-QL-20261028-AAA111", "2026-10-28 01:30", "Aisha", "+974 1", "Doha", "Villa 12", "Areca Palm × 2", 245, 245, "Cash on delivery", "Paid", "Completed", "", "2026-10-28 13:05", 0, "Free"]);
       vi.stubGlobal("fetch", fetchMock);
       await syncOrder(sheetOrder(), sheetsConfig()!);
       expect(state.rows[0]).toEqual(SHEET_HEADER);
-      expect(state.rows[1]).toEqual(["QL-OLD-1", "INV-QL-OLD-1"]);
-      expect(state.rows).toHaveLength(3);
+      expect(state.rows).toHaveLength(2);
+      expect(state.rows[1].slice(0, 3)).toEqual(["2026-10-28 01:30", "QL-20261028-AAA111", "INV-QL-20261028-AAA111"]);
     });
   });
 
@@ -147,14 +151,17 @@ describe("Google Sheets order sync", () => {
       expect(state.rows).toHaveLength(2);
       expect(state.rows[0]).toEqual(SHEET_HEADER);
 
-      // A completed order later marked unpaid is corrected in place, not duplicated.
-      await syncOrder(sheetOrder({ paymentStatus: "PENDING" }), config);
+      // Syncing the same order again updates its row in place, never duplicates it.
+      await syncOrder(sheetOrder({ customerName: "Aisha M." }), config);
       expect(state.rows).toHaveLength(2);
-      expect(state.rows[1][12]).toBe("Completed");
-      expect(state.rows[1][11]).toBe("Pending");
+      expect(state.rows[1][3]).toBe("Aisha M.");
 
       await syncOrder(sheetOrder({ orderNumber: "QL-20261028-BBB222" }), config);
-      expect(state.rows.map((row) => row[0])).toEqual(["Order no.", "QL-20261028-AAA111", "QL-20261028-BBB222"]);
+      expect(state.rows.map((row) => row[1])).toEqual(["Order no.", "QL-20261028-AAA111", "QL-20261028-BBB222"]);
+
+      // A completed order later marked unpaid is no longer a finished sale: its row is removed.
+      await syncOrder(sheetOrder({ paymentStatus: "PENDING" }), config);
+      expect(state.rows.map((row) => row[1])).toEqual(["Order no.", "QL-20261028-BBB222"]);
       expect(state.tokenRequests).toBe(1);
     });
 
@@ -203,9 +210,9 @@ describe("Google Sheets order sync", () => {
         sheetOrder({ orderNumber: "QL-OLD", paymentStatus: "PENDING" }),
       ], config);
 
+      // QL-OLD is no longer paid, so its row goes; the two new completed, paid orders are added.
       expect(count).toBe(3);
-      expect(state.rows.map((row) => row[0])).toEqual(["Order no.", "QL-OLD", "QL-NEW-1", "QL-NEW-2"]);
-      expect(state.rows[1][11]).toBe("Pending");
+      expect(state.rows.map((row) => row[1])).toEqual(["Order no.", "QL-NEW-1", "QL-NEW-2"]);
     });
   });
 
@@ -264,13 +271,10 @@ describe("Google Sheets in the API", () => {
 
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);
     expect(state.rows).toHaveLength(2);
-    expect(state.rows[1][0]).toBe(created.body.orderNumber);
-    expect(state.rows[1][11]).toBe("Paid");
-    expect(state.rows[1][12]).toBe("Completed");
+    expect(state.rows[1][1]).toBe(created.body.orderNumber);
 
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PENDING" }).expect(200);
-    expect(state.rows).toHaveLength(2);
-    expect(state.rows[1][11]).toBe("Pending");
+    expect(state.rows).toHaveLength(1);
   });
 
   it("still saves the change when Google is failing", async () => {
@@ -348,7 +352,7 @@ describe("Google Sheets in the API", () => {
     vi.stubGlobal("fetch", fetchMock);
     expect((await agent.post(`/api/v1/admin/sheets/sync/${order.id}`).expect(200)).body).toEqual({ written: true, qualifies: true });
     await agent.post(`/api/v1/admin/sheets/sync/${order.id}`).expect(200);
-    expect(state.rows.filter((row) => row[0] === order.orderNumber)).toHaveLength(1);
+    expect(state.rows.filter((row) => row[1] === order.orderNumber)).toHaveLength(1);
     const synced = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
     expect(synced.sheetSyncError).toBeNull();
     expect(synced.sheetSyncedAt).toBeInstanceOf(Date);
