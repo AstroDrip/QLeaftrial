@@ -1,6 +1,6 @@
 # Plant photo report
 
-Source: `C:\Users\HP\Desktop\plannts` (122 photographs, unchanged). Full detail per photo: `photo-manifest.json`.
+Source: `C:\Users\HP\Desktop\plannts` (122 photographs, unchanged). Full detail per photo: `photo-manifest.json`; old and new file names: `photo-renames.md`.
 
 ## Needs your confirmation before publishing
 
@@ -50,12 +50,12 @@ Source: `C:\Users\HP\Desktop\plannts` (122 photographs, unchanged). Full detail 
 
 | Photo | Existing listing | Note |
 | --- | --- | --- |
-| #9 `WhatsApp Image 2026-11-10 at 8.47.07 PM (1).jpeg` | `monstera-deliciosa-big-size-120-cm` | Monstera deliciosa; size not confirmable from the photo |
-| #12 `WhatsApp Image 2026-11-10 at 8.47.07 PM.jpeg` | `monstera-deliciosa-big-size-120-cm` | Monstera deliciosa on a moss pole; size not confirmable |
-| #38 `WhatsApp Image 2026-11-10 at 8.47.13 PM.jpeg` | `anthurium-red-55-cm` | Red anthurium; listing is 55 cm |
-| #63 `WhatsApp Image 2026-11-10 at 8.47.20 PM (1).jpeg` | `areca-palm-110-cm` | Areca palm; listing is 110 cm |
-| #64 `WhatsApp Image 2026-11-10 at 8.47.20 PM (2).jpeg` | `areca-palm-110-cm` | Areca palm (taller, slimmer); listing is 110 cm |
-| #79 `WhatsApp Image 2026-11-10 at 8.47.24 PM (1).jpeg` | `calathea-makoyana-70-cm` | Calathea makoyana pattern; listing is 70 cm |
+| #9 `009-monstera-deliciosa-big-size-120-cm-probable-match.jpeg` | `monstera-deliciosa-big-size-120-cm` | Monstera deliciosa; size not confirmable from the photo |
+| #12 `012-monstera-deliciosa-big-size-120-cm-probable-match-2.jpeg` | `monstera-deliciosa-big-size-120-cm` | Monstera deliciosa on a moss pole; size not confirmable |
+| #38 `038-anthurium-red-55-cm-probable-match.jpeg` | `anthurium-red-55-cm` | Red anthurium; listing is 55 cm |
+| #63 `063-areca-palm-110-cm-probable-match.jpeg` | `areca-palm-110-cm` | Areca palm; listing is 110 cm |
+| #64 `064-areca-palm-110-cm-probable-match-2.jpeg` | `areca-palm-110-cm` | Areca palm (taller, slimmer); listing is 110 cm |
+| #79 `079-calathea-makoyana-70-cm-probable-match.jpeg` | `calathea-makoyana-70-cm` | Calathea makoyana pattern; listing is 70 cm |
 
 ## Photos that replace an existing listing's photo
 
