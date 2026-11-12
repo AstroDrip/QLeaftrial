@@ -1,76 +1,79 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BotanicalHero } from "./BotanicalHero";
-import { CLUSTER_HEIGHT, LEFT_CLUSTER, RIGHT_CLUSTER, halfWidth, leafPath } from "./botanical-leaves";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { BotanicalHero, LEFT_PLANTS, RIGHT_PLANTS } from "./BotanicalHero";
 
-const start = vi.fn(() => ({ dispose: vi.fn() }));
-vi.mock("./botanical-scene", () => ({ startBotanicalScene: (...args: unknown[]) => start(...(args as [])) }));
+const animate = vi.fn(() => ({ revert: vi.fn() }));
+vi.mock("animejs", () => ({ animate: (...args: unknown[]) => animate(...(args as [])), stagger: () => 0 }));
 
 const copy = { eyebrow: "Plants delivered across Qatar", title: "For the love of art and plants.", lead: "Hand-picked plants.", cta: "Shop plants" };
 
-function renderHero() {
+function setup({ reduced, fine }: { reduced: boolean; fine: boolean }) {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("reduce") ? reduced : query.includes("pointer: fine") ? fine : false,
+    media: query, addEventListener: () => undefined, removeEventListener: () => undefined,
+  }));
+  vi.stubGlobal("requestIdleCallback", (callback: () => void) => { callback(); return 1; });
+  vi.stubGlobal("cancelIdleCallback", () => undefined);
   return render(<MemoryRouter><BotanicalHero copy={copy} /></MemoryRouter>);
 }
 
-function allowMotion(reduced: boolean, webgl: boolean) {
-  vi.stubGlobal("matchMedia", (query: string) => ({ matches: reduced && query.includes("reduce"), media: query, addEventListener: () => undefined, removeEventListener: () => undefined }));
-  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue((webgl ? {} : null) as never);
-  vi.stubGlobal("requestIdleCallback", (callback: () => void) => { callback(); return 1; });
-  vi.stubGlobal("cancelIdleCallback", () => undefined);
-}
+// jsdom has no PointerEvent; a mouse event carrying pointerType is what the hero reads.
+const pointer = (type: "mouse" | "touch") => Object.assign(new MouseEvent("pointermove", { clientX: 0, clientY: 0 }), { pointerType: type });
+
+const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
 
 describe("BotanicalHero", () => {
-  beforeEach(() => start.mockClear());
-  afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+  afterEach(() => { cleanup(); vi.unstubAllGlobals(); animate.mockClear(); });
 
-  it("is complete in the first paint: headline, text, a Shop now link and the still plants", () => {
-    allowMotion(true, false);
-    const { container } = renderHero();
-
+  it("is complete in the first paint: headline, text, Shop now and the plant photographs, hidden from screen readers", () => {
+    const { container } = setup({ reduced: true, fine: false });
     expect(screen.getByRole("heading", { level: 1, name: copy.title })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Shop plants" })).toHaveAttribute("href", "/shop");
-    const groups = container.querySelectorAll(".botanical-hero__plants");
-    expect(groups).toHaveLength(2);
-    for (const group of groups) expect(group).toHaveAttribute("aria-hidden", "true");
-    expect(container.querySelectorAll(".botanical-hero__plants-art path").length).toBe((LEFT_CLUSTER.length + RIGHT_CLUSTER.length) * 2);
-    expect(container.querySelector(".botanical-hero")).not.toHaveClass("is-live");
+    const plants = container.querySelectorAll<HTMLImageElement>(".botanical-hero__plant");
+    expect(plants).toHaveLength(LEFT_PLANTS.length + RIGHT_PLANTS.length);
+    for (const group of container.querySelectorAll(".botanical-hero__plants")) expect(group).toHaveAttribute("aria-hidden", "true");
+    // Dimensions are reserved, so the page does not shift as the photos load.
+    for (const plant of plants) expect(Number(plant.getAttribute("width")) * Number(plant.getAttribute("height"))).toBeGreaterThan(0);
   });
 
-  it("never loads the moving plants for visitors who prefer reduced motion", async () => {
-    allowMotion(true, true);
-    renderHero();
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
-    expect(start).not.toHaveBeenCalled();
+  it("ships every hero photograph it refers to", () => {
+    for (const plant of [...LEFT_PLANTS, ...RIGHT_PLANTS]) {
+      // Built with node:path: Vite rewrites new URL(..., import.meta.url) into a web asset URL.
+      const file = resolve(dirname(fileURLToPath(import.meta.url)), "../../../public/media/hero", `${plant.src}.webp`);
+      expect(existsSync(file), plant.src).toBe(true);
+    }
   });
 
-  it("keeps the still plants when the browser has no WebGL", async () => {
-    allowMotion(false, false);
-    const { container } = renderHero();
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
-    expect(start).not.toHaveBeenCalled();
-    expect(container.querySelector(".botanical-hero")).not.toHaveClass("is-live");
+  it("never animates for visitors who prefer reduced motion", async () => {
+    setup({ reduced: true, fine: true });
+    await settle();
+    expect(animate).not.toHaveBeenCalled();
   });
 
-  it("starts the moving plants once the page is idle, and cleans them up on the way out", async () => {
-    allowMotion(false, true);
-    const dispose = vi.fn();
-    start.mockReturnValueOnce({ dispose });
-    const { container, unmount } = renderHero();
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+  it("plays the entry once and follows a mouse pointer, nearer plants further than farther ones", async () => {
+    const { container } = setup({ reduced: false, fine: true });
+    await settle();
+    expect(animate).toHaveBeenCalledTimes(1);
 
-    expect(start).toHaveBeenCalledTimes(1);
-    expect(container.querySelector(".botanical-hero")).toHaveClass("is-live");
-    unmount();
-    expect(dispose).toHaveBeenCalledTimes(1);
+    window.dispatchEvent(pointer("mouse"));
+    await act(async () => { await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))); });
+
+    const moves = animate.mock.calls.slice(1) as unknown as Array<[HTMLElement, { x: number }]>;
+    expect(moves.length).toBe(container.querySelectorAll(".botanical-hero__plant").length);
+    const reach = (depth: string) => Math.abs(moves.find(([plant]) => plant.dataset.depth === depth)![1].x);
+    expect(reach("front")).toBeGreaterThan(reach("mid"));
+    expect(reach("mid")).toBeGreaterThan(reach("rear"));
   });
 
-  it("draws leaves that grow from the soil line, with a fine tip and a narrow stalk", () => {
-    const leaf = LEFT_CLUSTER[1];
-    const firstPoint = leafPath(leaf, false).match(/^M([\d.]+) ([\d.]+)/)!;
-    expect(Number(firstPoint[2])).toBeCloseTo(CLUSTER_HEIGHT, 0);
-    expect(halfWidth(1, leaf.width)).toBeLessThan(leaf.width * 0.05);
-    expect(halfWidth(0.05, leaf.width)).toBeLessThan(leaf.width * 0.05);
-    expect(halfWidth(0.45, leaf.width)).toBeGreaterThan(leaf.width * 0.4);
+  it("does not follow touches", async () => {
+    setup({ reduced: false, fine: false });
+    await settle();
+    window.dispatchEvent(pointer("touch"));
+    await settle();
+    expect(animate).toHaveBeenCalledTimes(1);
   });
 });

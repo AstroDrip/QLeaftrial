@@ -1,6 +1,6 @@
-/* Botanical hero: plants | headline | plants. The plant groups are grid cells of their own, so the
-   headline and the Shop now button always have a clear box. The layout is pinned left-to-right (the
-   plants lean toward the middle from their physical side) and only the text follows the language. */
+/* Botanical hero: plants | headline | plants, on a warm plaster wall and stone floor. The plant groups are
+   grid cells of their own, so the headline and the Shop now button always have a clear box. The layout is
+   pinned left-to-right (each group stands at its own physical edge) and only the text follows the language. */
 .botanical-hero {
   --hero-copy: 34rem;
   position: relative;
@@ -11,42 +11,47 @@
   min-height: clamp(520px, 72svh, 700px);
   overflow: hidden;
   direction: ltr;
-  background:
-    radial-gradient(ellipse 60% 70% at 50% 42%, var(--surface) 0%, transparent 70%),
-    linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+  background: #e9dcbd url("/media/hero/backdrop.webp") center bottom / cover no-repeat;
+}
+/* A soft pool of light behind the headline keeps it crisp against the textured wall. */
+.botanical-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse 34% 52% at 50% 44%, rgba(255, 251, 236, .78), rgba(255, 251, 236, 0) 72%);
+  pointer-events: none;
 }
 :is([dir="rtl"], [lang="ar"]) .botanical-hero__copy { direction: rtl; }
 
-.botanical-hero__plants { position: relative; min-width: 0; min-height: 0; }
+.botanical-hero__plants { position: relative; min-width: 0; min-height: 0; pointer-events: none; }
 .botanical-hero__plants--left { grid-area: left; }
 .botanical-hero__plants--right { grid-area: right; }
-.botanical-hero__plants-art {
-  position: absolute;
-  inset: var(--space-5) 0 0;
-  width: 100%;
-  height: calc(100% - var(--space-5));
-  overflow: visible;
-  transition: opacity 700ms var(--ease-out);
-}
 
-/* The moving plants: drawn over the still ones, then the still ones fade out. Never takes clicks. */
-.botanical-hero__canvas {
+/* Each plant: its height is a share of the cell, its distance from the outer edge and its lift above the
+   floor come from --x and --b. It may shrink to fit the cell but never grows past it or into the text. */
+.botanical-hero__plant {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 700ms var(--ease-out);
+  bottom: var(--b);
+  height: var(--h);
+  width: auto;
+  max-width: calc(100% - max(var(--x), 0%));
+  object-fit: contain;
+  user-select: none;
+  will-change: transform;
 }
-.botanical-hero.is-live .botanical-hero__canvas { opacity: 1; }
-.botanical-hero.is-live .botanical-hero__plants-art { opacity: 0; }
+.botanical-hero__plants--left .botanical-hero__plant { left: var(--x); object-position: left bottom; }
+.botanical-hero__plants--right .botanical-hero__plant { right: var(--x); object-position: right bottom; }
+/* Daylight from the upper right: shadows fall to the left, longer and darker for nearer plants. Farther
+   plants are a touch softer in contrast, as they would be across a room. */
+.botanical-hero__plant--rear { z-index: 1; filter: drop-shadow(-9px 5px 9px rgba(72, 52, 24, .16)) saturate(.9) brightness(.97); }
+.botanical-hero__plant--mid { z-index: 2; filter: drop-shadow(-15px 8px 12px rgba(72, 52, 24, .2)); }
+.botanical-hero__plant--front { z-index: 3; filter: drop-shadow(-22px 12px 15px rgba(72, 52, 24, .24)); }
 
 .botanical-hero__copy {
   grid-area: copy;
   position: relative;
-  z-index: 1;
+  z-index: 4;
   align-self: center;
   display: grid;
   justify-items: center;
@@ -70,19 +75,18 @@
 
 @keyframes botanical-copy-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-/* Narrower screens: the headline first, the two plant groups growing up beneath it, one in each corner. */
+/* Narrower screens: the headline first, the two plant groups standing beneath it, one in each corner. */
 @media (max-width: 900px) {
   .botanical-hero {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto clamp(200px, 60vw, 300px);
+    grid-template-rows: auto clamp(210px, 62vw, 320px);
     grid-template-areas: "copy copy" "left right";
     min-height: 0;
   }
+  .botanical-hero::before { background: radial-gradient(ellipse 70% 40% at 50% 26%, rgba(255, 251, 236, .8), rgba(255, 251, 236, 0) 75%); }
   .botanical-hero__copy { padding: var(--space-6) var(--gutter) var(--space-2); }
-  .botanical-hero__plants-art { inset: 0; height: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .botanical-hero__copy { animation: none; }
-  .botanical-hero__canvas, .botanical-hero__plants-art { transition: none; }
 }

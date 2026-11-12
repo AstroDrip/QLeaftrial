@@ -1,111 +1,116 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { prefetchRoute } from "../../app/route-modules";
 import "./botanical-hero.css";
-import {
-  CLUSTER_HEIGHT,
-  CLUSTER_WIDTH,
-  LEFT_CLUSTER,
-  RIGHT_CLUSTER,
-  cssColor,
-  drawOrder,
-  leafPath,
-  midribPath,
-  type Leaf,
-} from "./botanical-leaves";
 
-// The home page hero: a headline and a Shop now button between two groups of plants.
+// The home page hero: a headline and a Shop now button between two groups of real plants.
 //
-// The plants are inline SVG, so the whole hero is complete in the first paint with nothing to download.
-// After the page has settled, and only on capable devices that allow motion, a small WebGL scene with the
-// very same leaves fades in over them and lets them sway. Anything going wrong (no WebGL, a lost GPU
-// context, reduced motion, data saver, a weak device) simply leaves the still picture in place.
-// The plants live in their own grid cells beside (or below) the text, so they never cover it.
+// The plants are cut-outs of the shop's own studio photographs (scripts/catalogue/hero_cutouts.py), standing
+// on a warm plaster wall and stone floor. Each keeps its soft studio contact shadow, and a cast shadow
+// falls away from the daylight on the upper right; the further back a plant is, the softer its shadow.
+// The plant groups are grid cells of their own beside (or, on narrow screens, below) the text, so they
+// never cover the headline or the button.
+//
+// Motion (Anime.js, loaded after the page is idle): the plants rise into place once, then shift a few
+// pixels with the pointer, nearer plants more than farther ones, for a gentle sense of depth. Nothing runs
+// continuously, nothing moves on touch screens, and nothing moves at all for reduced motion.
 
 type Copy = { eyebrow: string; title: string; lead: string; cta: string };
+type Depth = "rear" | "mid" | "front";
+type Plant = { src: string; width: number; height: number; depth: Depth; x: number; bottom: number; size: number };
 
-function Cluster({ leaves, mirror }: { leaves: Leaf[]; mirror: boolean }) {
+// x: distance from the hero's outer edge, bottom: lift above the floor, size: height. All in % of the cell.
+export const LEFT_PLANTS: Plant[] = [
+  { src: "areca", width: 557, height: 893, depth: "rear", x: 2, bottom: 14, size: 80 },
+  { src: "dracaena-compacta", width: 427, height: 760, depth: "mid", x: 38, bottom: 9, size: 62 },
+  { src: "bird-nest", width: 682, height: 460, depth: "front", x: -6, bottom: 0, size: 30 },
+  { src: "orbifolia", width: 655, height: 560, depth: "front", x: 40, bottom: 0, size: 32 },
+];
+export const RIGHT_PLANTS: Plant[] = [
+  { src: "marginata", width: 541, height: 900, depth: "rear", x: 4, bottom: 14, size: 82 },
+  { src: "prince-orange", width: 538, height: 520, depth: "mid", x: 40, bottom: 7, size: 36 },
+  { src: "rosso", width: 436, height: 420, depth: "front", x: 2, bottom: 0, size: 26 },
+];
+
+// Pixels each layer may travel at the pointer's furthest reach.
+const PARALLAX: Record<Depth, number> = { rear: 4, mid: 8, front: 13 };
+
+function PlantGroup({ side, plants }: { side: "left" | "right"; plants: Plant[] }) {
   return (
-    <svg
-      className="botanical-hero__plants-art"
-      viewBox={`0 0 ${CLUSTER_WIDTH} ${CLUSTER_HEIGHT}`}
-      preserveAspectRatio={mirror ? "xMaxYMax meet" : "xMinYMax meet"}
-      aria-hidden="true"
-      focusable="false"
-    >
-      {drawOrder(leaves).map((leaf, index) => (
-        <g key={index}>
-          <path d={leafPath(leaf, mirror)} fill={cssColor(leaf.color, leaf.depth)} />
-          <path d={midribPath(leaf, mirror)} fill="none" stroke="rgba(255,255,255,.28)" strokeWidth={Math.max(1.4, leaf.width * 0.035)} strokeLinecap="round" />
-        </g>
+    <div className={`botanical-hero__plants botanical-hero__plants--${side}`} aria-hidden="true">
+      {plants.map((plant) => (
+        <img
+          key={plant.src}
+          className={`botanical-hero__plant botanical-hero__plant--${plant.depth}`}
+          data-depth={plant.depth}
+          src={`/media/hero/${plant.src}.webp`}
+          width={plant.width}
+          height={plant.height}
+          alt=""
+          decoding="async"
+          // The nearest plants are part of the first view; the farther ones may arrive a moment later.
+          fetchPriority={plant.depth === "front" ? "high" : "auto"}
+          style={{ "--x": `${plant.x}%`, "--b": `${plant.bottom}%`, "--h": `${plant.size}%` } as React.CSSProperties}
+        />
       ))}
-    </svg>
+    </div>
   );
-}
-
-function motionWelcome(): boolean {
-  if (typeof window === "undefined") return false;
-  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
-  const nav = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
-  if (nav.connection?.saveData) return false;
-  if ((nav.hardwareConcurrency ?? 4) <= 2 || (nav.deviceMemory ?? 4) <= 2) return false;
-  try {
-    const probe = document.createElement("canvas");
-    return Boolean(probe.getContext("webgl2") ?? probe.getContext("webgl"));
-  } catch {
-    return false;
-  }
 }
 
 export function BotanicalHero({ copy }: { copy: Copy }) {
   const hero = useRef<HTMLElement>(null);
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const left = useRef<HTMLDivElement>(null);
-  const right = useRef<HTMLDivElement>(null);
-  const [live, setLive] = useState(false);
 
   useEffect(() => {
-    if (!motionWelcome()) return;
+    const root = hero.current;
+    if (!root || typeof window === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const finePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)").matches ?? false;
     let disposed = false;
-    let scene: { dispose: () => void } | null = null;
-    const schedule = window.requestIdleCallback ?? ((callback: () => void) => window.setTimeout(callback, 400));
+    let cleanup: () => void = () => undefined;
+    const schedule = window.requestIdleCallback ?? ((callback: () => void) => window.setTimeout(callback, 200));
     const cancel = window.cancelIdleCallback ?? window.clearTimeout;
     const handle = schedule(() => {
-      void import("./botanical-scene").then(({ startBotanicalScene }) => {
-        if (disposed || !canvas.current) return;
-        scene = startBotanicalScene({
-          canvas: canvas.current,
-          cells: () => {
-            const area = hero.current?.getBoundingClientRect();
-            // The SVG boxes, so the moving leaves land exactly on the still ones.
-            const a = left.current?.firstElementChild?.getBoundingClientRect();
-            const b = right.current?.firstElementChild?.getBoundingClientRect();
-            if (!area || !a || !b) return null;
-            const local = (box: DOMRect) => ({ left: box.left - area.left, top: box.top - area.top, width: box.width, height: box.height });
-            return { left: local(a), right: local(b) };
-          },
-          onLost: () => {
-            scene?.dispose();
-            scene = null;
-            setLive(false);
-          },
-        });
-        if (scene) setLive(true);
+      void import("animejs").then(({ animate, stagger }) => {
+        if (disposed) return;
+        const plants = Array.from(root.querySelectorAll<HTMLElement>(".botanical-hero__plant"));
+        // Entry: the plants settle into place once, back to front.
+        const entry = animate(plants, { opacity: [0, 1], y: [14, 0], duration: 900, delay: stagger(70), ease: "outCubic" });
+        let frame = 0;
+        let target = { x: 0, y: 0 };
+        const move = () => {
+          frame = 0;
+          for (const plant of plants) {
+            const reach = PARALLAX[(plant.dataset.depth as Depth) ?? "mid"];
+            animate(plant, { x: target.x * reach, y: target.y * reach * 0.5, duration: 1100, ease: "outQuart" });
+          }
+        };
+        const onPointer = (event: PointerEvent) => {
+          if (event.pointerType !== "mouse") return;
+          const box = root.getBoundingClientRect();
+          if (box.bottom < 0 || box.top > window.innerHeight) return;
+          const clamp = (value: number) => Math.max(-1, Math.min(1, value));
+          target = { x: clamp((event.clientX / window.innerWidth - 0.5) * -2), y: clamp(((event.clientY - box.top) / box.height - 0.5) * -2) };
+          if (!frame) frame = requestAnimationFrame(move);
+        };
+        if (finePointer) window.addEventListener("pointermove", onPointer, { passive: true });
+        cleanup = () => {
+          window.removeEventListener("pointermove", onPointer);
+          cancelAnimationFrame(frame);
+          entry.revert();
+          for (const plant of plants) { plant.style.transform = ""; plant.style.opacity = ""; }
+        };
       }).catch(() => undefined);
     });
     return () => {
       disposed = true;
       cancel(handle);
-      scene?.dispose();
+      cleanup();
     };
   }, []);
 
   return (
-    <section ref={hero} className={`botanical-hero${live ? " is-live" : ""}`} aria-labelledby="hero-heading">
-      <canvas ref={canvas} className="botanical-hero__canvas" aria-hidden="true" />
-      <div ref={left} className="botanical-hero__plants botanical-hero__plants--left" aria-hidden="true">
-        <Cluster leaves={LEFT_CLUSTER} mirror={false} />
-      </div>
+    <section ref={hero} className="botanical-hero" aria-labelledby="hero-heading">
+      <PlantGroup side="left" plants={LEFT_PLANTS} />
       <div className="botanical-hero__copy">
         <p className="eyebrow">{copy.eyebrow}</p>
         <h1 id="hero-heading">{copy.title}</h1>
@@ -114,9 +119,7 @@ export function BotanicalHero({ copy }: { copy: Copy }) {
           <Link to="/shop" className="button botanical-hero__cta" onMouseEnter={() => prefetchRoute("/shop")} onFocus={() => prefetchRoute("/shop")}>{copy.cta}</Link>
         </div>
       </div>
-      <div ref={right} className="botanical-hero__plants botanical-hero__plants--right" aria-hidden="true">
-        <Cluster leaves={RIGHT_CLUSTER} mirror />
-      </div>
+      <PlantGroup side="right" plants={RIGHT_PLANTS} />
     </section>
   );
 }
