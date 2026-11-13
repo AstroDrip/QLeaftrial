@@ -156,9 +156,40 @@ model Order {
   // Google Sheets mirror: when this order's row was last written, or why the last attempt failed (a code only).
   sheetSyncedAt  DateTime?
   sheetSyncError String?
+  // Checkout map: the confirmed location, or true when the customer could only give a written address (map or search
+  // unavailable). Neither on older orders.
+  deliveryLocation       OrderDeliveryLocation?
+  deliveryLocationManual Boolean @default(false)
   items           OrderItem[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+// The delivery location the customer confirmed on the checkout map: a snapshot belonging to this one order, so later
+// changes elsewhere never move an old order. Private: only the admin order screens read it.
+model OrderDeliveryLocation {
+  id               String   @id @default(cuid())
+  orderId          String   @unique
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  latitude         Float
+  longitude        Float
+  formattedAddress String
+  countryCode      String   @default("QA")
+  // "gps" | "search" | "pin" (dropped or moved by hand)
+  source           String
+  // "gps" | "landmark" | "street" | "area" | "pin": how exactly the point was found, never claimed finer than it is
+  precision        String
+  accuracyMeters   Float?
+  area             String?
+  zone             String?
+  street           String?
+  building         String?
+  unit             String?
+  landmark         String?
+  provider         String?
+  providerRef      String?
+  confirmedAt      DateTime
+  createdAt        DateTime @default(now())
 }
 
 model OrderItem {

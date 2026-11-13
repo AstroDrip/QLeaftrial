@@ -101,6 +101,22 @@ export type OrderChange =
   | { type: "quantity"; name: string; from: number; to: number }
   | { type: "replaced"; from: string; to: string; quantity: number };
 
+export interface AdminDeliveryLocation {
+  latitude: number;
+  longitude: number;
+  formattedAddress: string;
+  source: string;
+  precision: string;
+  accuracyMeters?: number | null;
+  area?: string | null;
+  zone?: string | null;
+  street?: string | null;
+  building?: string | null;
+  unit?: string | null;
+  landmark?: string | null;
+  confirmedAt: string;
+}
+
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -118,6 +134,8 @@ export interface AdminOrder {
   deliveryFeeConfirmedAt?: string | null;
   sheetSyncedAt?: string | null;
   sheetSyncError?: string | null;
+  deliveryLocation?: AdminDeliveryLocation | null;
+  deliveryLocationManual?: boolean;
   status: string;
   paymentStatus: string;
   createdAt: string;

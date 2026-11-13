@@ -9,12 +9,14 @@ export default defineConfig({
       "/api": "http://localhost:3000",
     },
   },
+  // MapLibre loads its worker from a file next to its own module; serving the package as-is keeps that file in reach.
+  optimizeDeps: { exclude: ["maplibre-gl"] },
   build: {
     rollupOptions: {
       output: {
-        // Shared framework code in one long-cached chunk; pages are split by route.
-        // ogl (WebGL) is only used by the lazily loaded hero carousel, so it stays in that chunk.
-        manualChunks: (id) => (id.includes("/node_modules/") && !id.includes("/node_modules/ogl/") ? "vendor" : undefined),
+        // Shared framework code in one long-cached chunk; pages are split by route. The map libraries are only used
+        // by the checkout location step and admin order locations, so they stay in their own lazily loaded chunks.
+        manualChunks: (id) => (id.includes("/node_modules/") && !/\/node_modules\/(maplibre-gl|pmtiles|@protomaps)\//.test(id) ? "vendor" : undefined),
       },
     },
   },

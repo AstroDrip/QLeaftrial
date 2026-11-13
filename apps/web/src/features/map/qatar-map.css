@@ -1,0 +1,37 @@
+/* The QLeaves dark Qatar map. Controls sit in their own corners: zoom on one side, "Back to pin" on the other, and
+   the map credit along the bottom edge, so none of them can cover another at any width. */
+.qatar-map { position: relative; overflow: hidden; width: 100%; height: 100%; min-height: 220px; border-radius: var(--radius-lg, 16px); background: #0f1311; isolation: isolate; }
+/* More specific than MapLibre's own .maplibregl-map { position: relative }, which would collapse the map to no height. */
+.qatar-map .qatar-map__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.qatar-map__canvas:focus-visible { outline: 2px solid #a7c957; outline-offset: -2px; }
+.qatar-map__status { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 16px; background: #0f1311; color: #c9d1c4; font-size: .9rem; text-align: center; }
+.qatar-map__status--error { background: #141917; }
+.qatar-map__spinner { width: 28px; height: 28px; border: 3px solid rgba(167, 201, 87, .25); border-top-color: #a7c957; border-radius: 50%; animation: qatar-map-spin 900ms linear infinite; }
+@keyframes qatar-map-spin { to { transform: rotate(360deg); } }
+
+.qatar-map__pin { width: 40px; height: 52px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .55)); animation: qatar-map-pin-in 320ms cubic-bezier(.22, .7, .25, 1) both; transform-origin: 50% 100%; }
+.qatar-map__pin svg { display: block; }
+.qatar-map__pin.is-editable { cursor: grab; }
+.qatar-map__pin.is-editable:active { cursor: grabbing; }
+@keyframes qatar-map-pin-in { from { opacity: 0; translate: 0 -14px; } }
+
+.qatar-map__recentre {
+  position: absolute; top: 10px; left: 10px; z-index: 1;
+  min-height: 36px; padding: 0 12px; border: 1px solid rgba(246, 241, 214, .2); border-radius: 999px;
+  background: rgba(15, 19, 17, .88); color: #f6f1d6; font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer;
+}
+.qatar-map__recentre--end { left: auto; right: 10px; }
+.qatar-map__recentre:hover { background: #1c2420; }
+.qatar-map__recentre:focus-visible { outline: 2px solid #a7c957; outline-offset: 2px; }
+
+/* MapLibre's own controls, in the map's colours. */
+.qatar-map .maplibregl-ctrl-group { background: rgba(15, 19, 17, .9); border: 1px solid rgba(246, 241, 214, .16); box-shadow: none; }
+.qatar-map .maplibregl-ctrl-group button { width: 36px; height: 36px; }
+.qatar-map .maplibregl-ctrl-group button + button { border-top: 1px solid rgba(246, 241, 214, .14); }
+.qatar-map .maplibregl-ctrl-icon { filter: invert(1) brightness(.92); }
+.qatar-map .maplibregl-ctrl-attrib { background: rgba(15, 19, 17, .78); color: #b9c2b4; font-size: 11px; }
+.qatar-map .maplibregl-ctrl-attrib a { color: #e6e2c8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .qatar-map__pin, .qatar-map__spinner { animation: none; }
+}

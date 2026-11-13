@@ -6,6 +6,45 @@ import type { AcceptEditedOrderInput, CreateOrderInput } from "./order.schemas.j
 import type { PrismaClient as SqlitePrismaClient } from "../../../generated/sqlite/index.js";
 import type { OrderChange } from "./order-changes.js";
 import { deliveryChargeToConfirm } from "../../lib/delivery.js";
+import { isInQatar, reverseGeocode } from "../../lib/geo/qatar.js";
+
+// Every order read returns its lines and, when there is one, its confirmed delivery location.
+const ORDER_INCLUDE = { items: true, deliveryLocation: true } as const;
+
+// A confirmation older than this (or from the future) is treated as stale: the customer must confirm again.
+const LOCATION_CONFIRMATION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+const CLOCK_SKEW_MS = 5 * 60 * 1000;
+
+function checkedLocation(location: CreateOrderInput["deliveryLocation"], now = Date.now()) {
+  if (!location) return null;
+  if (!isInQatar(location.latitude, location.longitude)) {
+    throw new ApiError(400, "LOCATION_OUTSIDE_QATAR", "The delivery location must be in Qatar");
+  }
+  const confirmedAt = new Date(location.confirmedAt);
+  if (!(confirmedAt.getTime() <= now + CLOCK_SKEW_MS && confirmedAt.getTime() >= now - LOCATION_CONFIRMATION_MAX_AGE_MS)) {
+    throw new ApiError(400, "LOCATION_CONFIRMATION_STALE", "Please confirm the delivery location again");
+  }
+  // The area name comes from our own Qatar index for these coordinates, not from the request.
+  const area = reverseGeocode(location.latitude, location.longitude, "en").area;
+  return {
+    latitude: location.latitude,
+    longitude: location.longitude,
+    formattedAddress: location.formattedAddress,
+    countryCode: "QA",
+    source: location.source,
+    precision: location.precision,
+    accuracyMeters: location.accuracyMeters ?? null,
+    area,
+    zone: location.zone ?? null,
+    street: location.street ?? null,
+    building: location.building ?? null,
+    unit: location.unit ?? null,
+    landmark: location.landmark ?? null,
+    provider: location.provider ?? null,
+    providerRef: location.providerRef ?? null,
+    confirmedAt,
+  };
+}
 
 // Both generated clients expose the same application models; this removes the
 // provider union from query method overloads without weakening query typing.
@@ -149,6 +188,9 @@ export async function createOrder(
     if (existing) return { order: existing, replayed: true };
   }
 
+  // Checked before anything is written: a bad location never leaves a half-made order behind.
+  checkedLocation(input.deliveryLocation);
+
   const settings = await getStoreSettings();
   if (!settings.orderingEnabled) {
     throw new ApiError(503, "ORDERING_DISABLED", "Ordering is currently unavailable");
@@ -175,7 +217,7 @@ export async function createOrder(
 
 async function findOrderByIdempotencyKey(idempotencyKey: string) {
   try {
-    return await db.order.findUnique({ where: { idempotencyKey }, include: { items: true } });
+    return await db.order.findUnique({ where: { idempotencyKey }, include: ORDER_INCLUDE });
   } catch (error) {
     if (missingIdempotencyColumn(error)) return null;
     throw error;
@@ -238,22 +280,25 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
         // admin enters it. Decided here from the server's own subtotal, never from the request.
         deliveryFeeQar: 0,
         deliveryChargePending: deliveryChargeToConfirm(subtotalQar),
+        // Saved in the same transaction as the order, so an order and its location are never separated.
+        ...(input.deliveryLocation ? { deliveryLocation: { create: checkedLocation(input.deliveryLocation)! } } : {}),
+        deliveryLocationManual: !input.deliveryLocation && input.deliveryLocationManual === true,
         items: { create: items },
       },
-      include: { items: true },
+      include: ORDER_INCLUDE,
     });
   });
 }
 
 export async function listOrders() {
-  return db.order.findMany({ orderBy: { createdAt: "desc" }, include: { items: true } });
+  return db.order.findMany({ orderBy: { createdAt: "desc" }, include: ORDER_INCLUDE });
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatusInput) {
   const persistedStatus = normalizeStatus(status);
 
   return db.$transaction(async (tx: any) => {
-    const order = await tx.order.findUnique({ where: { id }, include: { items: true } });
+    const order = await tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
     if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
 
     if (order.status === persistedStatus) return order;
@@ -274,14 +319,14 @@ export async function updateOrderStatus(id: string, status: OrderStatusInput) {
     return tx.order.update({
       where: { id },
       data: { status: persistedStatus },
-      include: { items: true },
+      include: ORDER_INCLUDE,
     });
   });
 }
 
 export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInput) {
   return db.$transaction(async (tx: any) => {
-    const order = await tx.order.findUnique({ where: { id }, include: { items: true } });
+    const order = await tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
     if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
     if (order.status !== "PENDING") {
       throw new ApiError(409, "ORDER_NOT_PENDING", "Only pending orders can be edited before acceptance");
@@ -411,7 +456,7 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
         // An edit can move the subtotal across the threshold; a charge an admin already confirmed is kept.
         ...(order.deliveryFeeConfirmedAt ? {} : { deliveryChargePending: deliveryChargeToConfirm(subtotalQar) }),
       },
-      include: { items: true },
+      include: ORDER_INCLUDE,
     });
   });
 }
@@ -424,7 +469,7 @@ export async function confirmDeliveryFee(id: string, deliveryFeeQar: number) {
   return db.order.update({
     where: { id },
     data: { deliveryFeeQar, deliveryChargePending: false, deliveryFeeConfirmedAt: new Date() },
-    include: { items: true },
+    include: ORDER_INCLUDE,
   });
 }
 
@@ -436,7 +481,7 @@ export async function updatePaymentStatus(
     return await db.order.update({
       where: { id },
       data: { paymentStatus },
-      include: { items: true },
+      include: ORDER_INCLUDE,
     });
   } catch {
     throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");

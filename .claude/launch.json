@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["cross-env", "PORT=3000", "npm", "run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "qleaves-web-build-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "preview", "--port", "4173", "--strictPort", "--config", "apps/web/vite.config.ts", "apps/web"],
+      "port": 4173
     }
   ]
 }

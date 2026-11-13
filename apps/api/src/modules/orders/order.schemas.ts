@@ -3,6 +3,27 @@ import { z } from "zod";
 // The areas checkout offers, as the storefront sends them (English or Arabic label).
 export const DELIVERY_AREAS = ["Doha", "Al Rayyan", "Al Wakrah", "Al Khor", "الدوحة", "الريان", "الوكرة", "الخور"] as const;
 
+const optionalText = (max: number) => z.string().trim().max(max).optional().transform((value) => (value ? value : undefined));
+
+// The location the customer confirmed on the checkout map. The coordinates are re-checked on the server (inside
+// Qatar, confirmed recently); the address text is the customer's choice and is never taken as proof of anything.
+export const deliveryLocationSchema = z.object({
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180),
+  formattedAddress: z.string().trim().min(3).max(300),
+  source: z.enum(["gps", "search", "pin"]),
+  precision: z.enum(["gps", "landmark", "street", "area", "pin"]),
+  accuracyMeters: z.number().finite().nonnegative().max(100_000).optional(),
+  zone: optionalText(20),
+  street: optionalText(80),
+  building: optionalText(60),
+  unit: optionalText(80),
+  landmark: optionalText(160),
+  provider: optionalText(40),
+  providerRef: optionalText(60),
+  confirmedAt: z.string().datetime(),
+}).strict();
+
 export const createOrderSchema = z.object({
   customerName: z.string().trim().min(2).max(120),
   phone: z.string().trim().min(5).max(40),
@@ -14,7 +35,12 @@ export const createOrderSchema = z.object({
   // Delivery is no longer priced. Older cached storefront pages may still send this; it is ignored.
   deliveryFeeQar: z.number().int().nonnegative().optional(),
   items: z.array(z.object({ productId: z.string().min(1), quantity: z.number().int().positive().max(100) })).min(1).max(50),
-}).strict();
+  deliveryLocation: deliveryLocationSchema.optional(),
+  // True when the map or address search was unavailable and the customer could only write their address.
+  deliveryLocationManual: z.boolean().optional(),
+}).strict().refine((order) => !(order.deliveryLocation && order.deliveryLocationManual), {
+  message: "Send either a confirmed location or a manual address, not both",
+});
 
 export const updateOrderStatusSchema = z.object({
   // Accept Semi's vocabulary while retaining QLeaves' persisted enum.

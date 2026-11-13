@@ -491,3 +491,6 @@ html[lang="ar"] :is(.section-head h2, .product-detail__related > h2, .stories__i
 /* Each policy link stays on one line, so a link never splits across lines into its neighbour's box. */
 .checkout-form__legal a { display: inline-block; white-space: nowrap; }
 html[lang="ar"] .checkout-form__legal { line-height: 1.8; }
+/* Checkout: the written-address fallback shown only when the map or address search is unavailable. */
+.checkout-form .checkout-form__fallback { display: flex; align-items: flex-start; gap: .6rem; margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px dashed var(--line); border-radius: var(--radius-md); font-size: .9rem; }
+.checkout-form__fallback input { flex: 0 0 auto; margin-top: .2rem; }

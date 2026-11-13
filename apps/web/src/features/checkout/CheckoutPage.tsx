@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
-import { errorFromResponse } from "../../lib/api-error";
+import { ApiClientError, errorFromResponse } from "../../lib/api-error";
 import { rememberOrderSummary, type OrderSummary } from "./order-summary";
 import { DeliveryLines } from "./DeliveryLines";
+import { LocationPicker } from "./LocationPicker";
+import { emptyLocation, isConfirmed, locationPayload, unconfirm, type DeliveryLocationState } from "./delivery-location";
 import { deliveryChargeToConfirm } from "../cart/delivery-rules";
 import { FreeDeliveryProgress } from "../cart/FreeDeliveryProgress";
 import { friendlyError } from "../../lib/friendly-error";
@@ -46,6 +48,15 @@ export function CheckoutPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const attempt = useRef<{ cart: string; key: string } | null>(null);
+  // Delivery location: a confirmed map pin is required, unless the map or address search is not working, in which
+  // case the customer may continue with their written address (the order is marked for the team to check).
+  const [location, setLocation] = useState<DeliveryLocationState>(emptyLocation);
+  const [mapAvailable, setMapAvailable] = useState(true);
+  const [writtenOnly, setWrittenOnly] = useState(false);
+  const [locationError, setLocationError] = useState("");
+  const locationSection = useRef<HTMLDivElement>(null);
+  const locationConfirmed = isConfirmed(location);
+  const useWrittenAddress = !locationConfirmed && !mapAvailable && writtenOnly;
 
   function handleChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -62,6 +73,13 @@ export function CheckoutPage() {
       return;
     }
     if (submitting) return;
+    if (!locationConfirmed && !useWrittenAddress) {
+      setLocationError(isArabic ? "يرجى تحديد موقع التوصيل على الخريطة وتأكيده." : "Please find your delivery location on the map and confirm it.");
+      locationSection.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      locationSection.current?.querySelector<HTMLInputElement>("input[role='combobox']")?.focus({ preventScroll: true });
+      return;
+    }
+    setLocationError("");
     const cart = JSON.stringify(items.map(({ id, quantity }) => [id, quantity]));
     if (!attempt.current || attempt.current.cart !== cart) attempt.current = { cart, key: newAttemptKey() };
     setSubmitting(true);
@@ -78,6 +96,8 @@ export function CheckoutPage() {
           deliveryNotes: form.notes,
           paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK",
           items: items.map(({ id, quantity }) => ({ productId: id, quantity })),
+          ...(locationConfirmed ? { deliveryLocation: locationPayload(location) } : {}),
+          ...(useWrittenAddress ? { deliveryLocationManual: true } : {}),
         }),
       });
       if (!response.ok) throw await errorFromResponse(response);
@@ -99,6 +119,15 @@ export function CheckoutPage() {
       clearCart();
       navigate(`/order/${body.orderNumber}`, { state: { order: summary } });
     } catch (submissionError) {
+      // The server re-checks the pin: outside Qatar or confirmed too long ago means confirming it again.
+      if (submissionError instanceof ApiClientError && (submissionError.code === "LOCATION_OUTSIDE_QATAR" || submissionError.code === "LOCATION_CONFIRMATION_STALE")) {
+        setLocation((current) => unconfirm(current));
+        setLocationError(submissionError.code === "LOCATION_OUTSIDE_QATAR"
+          ? (isArabic ? "يجب أن يكون موقع التوصيل داخل قطر." : "The delivery location must be in Qatar.")
+          : (isArabic ? "يرجى تأكيد موقع التوصيل مرة أخرى." : "Please confirm your delivery location again."));
+        locationSection.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
       setError(friendlyError(submissionError, isArabic ? "ar" : "en"));
     } finally {
       setSubmitting(false);
@@ -187,6 +216,22 @@ export function CheckoutPage() {
               ))}
             </select>
           </label>
+
+          <div className="checkout-form__full" ref={locationSection}>
+            <LocationPicker
+              language={isArabic ? "ar" : "en"}
+              value={location}
+              onChange={(next) => { setLocation(next); if (isConfirmed(next)) setLocationError(""); }}
+              onAvailabilityChange={setMapAvailable}
+              error={locationError}
+            />
+            {!mapAvailable && !locationConfirmed ? (
+              <label className="checkout-form__fallback">
+                <input type="checkbox" checked={writtenOnly} onChange={(event) => setWrittenOnly(event.target.checked)} />
+                <span>{isArabic ? "الخريطة لا تعمل الآن. أكمل الطلب بعنواني المكتوب، وسيتواصل الفريق للتأكد من الموقع." : "The map is not working right now. Continue with my written address; the team will contact me to confirm the location."}</span>
+              </label>
+            ) : null}
+          </div>
 
           <label>
             <span>{content.checkout.paymentMethod}</span>

@@ -5,6 +5,7 @@ import { describeDraftChanges, whatsappText } from "./order-messages";
 import { useSiteLanguage } from "../../app/providers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { OrderDeliveryAndSheet } from "./OrderDeliveryAndSheet";
+import { LocationStatusChip, OrderLocation } from "./OrderLocation";
 import {
   adminApi,
   type AdminOrder,
@@ -170,7 +171,8 @@ function OrderCard({
         ))}
       </ul>
 
-      <p className="admin-order-address">{order.addressLine1}, {order.area}</p>
+      <p className="admin-order-address">{order.addressLine1}, {order.area} <LocationStatusChip order={order} isArabic={isArabic} /></p>
+      <OrderLocation order={order} isArabic={isArabic} />
       <OrderDeliveryAndSheet order={order} isArabic={isArabic} />
       {order.deliveryNotes ? (
         <p className="admin-order-note"><strong>Customer note:</strong> {order.deliveryNotes}</p>

@@ -119,3 +119,11 @@ deployments never write to the real sheet):
 4. In admin → Orders, press **Sync all**. Only completed and paid orders are written, one row per order number
    (a retry updates that row, never adds a second). An order whose row failed shows "This order is not in the
    Google Sheet yet" with a **Retry** button. Never put the JSON key in chat, email or Git.
+
+## 7. Before pushing the delivery map (November 2026)
+
+Orders can now carry a confirmed delivery location. That needs migration `5_order_delivery_location` on the
+Mumbai database **before** the code goes live (it adds one new table and one yes/no column; no existing data
+changes). Run the same commands as section 4; `deploy` should apply `5_order_delivery_location`.
+
+Nothing else is needed: the map file, fonts and address search ship with the site itself. See `docs/maps/README.md`.
