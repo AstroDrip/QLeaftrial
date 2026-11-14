@@ -66,6 +66,10 @@ export function QatarMap({ language, pin, focusKey, editable = false, onPinMove,
         pitchWithRotate: false,
         touchPitch: false,
         cooperativeGestures: false,
+        // A tap places the pin, so a double tap must not also zoom; pinch or the + / − buttons zoom instead.
+        doubleClickZoom: false,
+        // A finger moves a little while tapping; up to 8 px still counts as a tap rather than a swipe.
+        clickTolerance: 8,
       });
       created.touchZoomRotate.disableRotation();
       created.keyboard.disableRotation();
@@ -116,6 +120,15 @@ export function QatarMap({ language, pin, focusKey, editable = false, onPinMove,
     marker.current.setDraggable(editable);
     marker.current.getElement().classList.toggle("is-editable", editable);
   }, [pin, editable, modules, state]);
+
+  // Labels follow the site's language. The pin is an HTML marker, so it stays put while the style changes.
+  const styledIn = useRef(language);
+  useEffect(() => {
+    const current = map.current;
+    if (!current || state !== "ready" || styledIn.current === language) return;
+    styledIn.current = language;
+    current.setStyle(qatarStyle(language));
+  }, [language, state]);
 
   // Fly to a point chosen elsewhere (search result, current location).
   useEffect(() => {

@@ -13,7 +13,7 @@ vi.mock("../map/QatarMap", () => {
       <>
         <p data-testid="stub-map">{props.pin ? `${props.pin.latitude},${props.pin.longitude}` : "no pin"}</p>
         {/* A tap on the real map only reaches onPinMove while the map is editable. */}
-        <button type="button" onClick={() => { taps += 1; if (props.editable) props.onPinMove?.({ latitude: [25.31, 25.32, 25.33, 25.34][taps - 1] ?? 25.35, longitude: 51.5 }); }}>Test: tap map</button>
+        <button type="button" onClick={() => { taps += 1; if (props.editable) props.onPinMove?.({ latitude: [25.31, 25.32, 25.33, 25.34][taps - 1] ?? Number((25.4 + taps / 1000).toFixed(3)), longitude: 51.5 }); }}>Test: tap map</button>
       </>
     );
   }
@@ -148,20 +148,67 @@ describe("LocationPicker", () => {
     expect(screen.getByRole("button", { name: "Confirm delivery location" })).toBeInTheDocument();
   });
 
-  it("drops the first pin with a tap, and after that only moves it in Adjust pin mode", async () => {
-    stubGeo();
+  it("drops a pin with a tap and moves it with every later tap; a tap outside Qatar puts the pin back", async () => {
+    // Answers depend on the point: 25.34 is "outside Qatar" for this test.
+    vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { latitude: number };
+      const outside = body.latitude === 25.34;
+      return { ok: true, status: 200, json: async () => (outside ? { inQatar: false } : { inQatar: true, formattedAddress: `Street ${body.latitude}, Al Dafna, Qatar`, area: "Al Dafna", street: `Street ${body.latitude}`, landmark: null, precision: "street", municipality: { en: "Doha", ar: "الدوحة", deliveryArea: "doha" } }) } as Response;
+    }));
     render(<Harness />);
-    expect(screen.getByText("Or tap the map to drop a pin on your building.")).toBeInTheDocument();
-    await userEvent.click(await screen.findByRole("button", { name: "Test: tap map" }));
+    expect(screen.getByText(/Tap the map to drop a pin on your building/)).toBeInTheDocument();
+    const tap = async () => userEvent.click(await screen.findByRole("button", { name: "Test: tap map" }));
+
+    await tap();
     await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.31,51.5"));
-    expect(screen.getByText("Placed by you on the map")).toBeInTheDocument();
+    expect(await screen.findByText("Street 25.31, Al Dafna, Qatar")).toBeInTheDocument();
+    expect(screen.getByText("Municipality: Doha")).toBeInTheDocument();
+    expect(screen.getByLabelText("Street")).toHaveValue("Street 25.31");
 
-    // A stray tap does not move an existing pin.
-    await userEvent.click(screen.getByRole("button", { name: "Test: tap map" }));
-    expect(screen.getByTestId("stub-map")).toHaveTextContent("25.31,51.5");
+    await tap();
+    await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.32,51.5"));
+    expect(await screen.findByText("Street 25.32, Al Dafna, Qatar")).toBeInTheDocument();
+    expect(screen.getByLabelText("Street")).toHaveValue("Street 25.32");
 
-    await userEvent.click(screen.getByRole("button", { name: "Adjust pin" }));
-    await userEvent.click(screen.getByRole("button", { name: "Test: tap map" }));
+    // The customer types their own street; later pins leave it alone.
+    await userEvent.clear(screen.getByLabelText("Street"));
+    await userEvent.type(screen.getByLabelText("Street"), "My street");
+    await tap();
     await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.33,51.5"));
+    await screen.findByText("Street 25.33, Al Dafna, Qatar");
+    expect(screen.getByLabelText("Street")).toHaveValue("My street");
+
+    // Outside Qatar: the previous pin comes back, with an explanation.
+    await tap();
+    expect(await screen.findByText(/That spot is outside Qatar/)).toBeInTheDocument();
+    expect(screen.getByTestId("stub-map")).toHaveTextContent("25.33,51.5");
+  });
+
+  it("warns when the pin is outside the areas QLeaves delivers to", async () => {
+    stubGeo([], { inQatar: true, formattedAddress: "Lusail Marina, Qatar", area: "Lusail", street: null, landmark: "Lusail Marina", precision: "landmark", municipality: { en: "Al Daayen", ar: "الضعاين", deliveryArea: null } });
+    render(<Harness />);
+    await userEvent.click(await screen.findByRole("button", { name: "Test: tap map" }));
+    expect(await screen.findByText(/Al Daayen is outside the areas we usually deliver to/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Landmark (optional)")).toHaveValue("Lusail Marina");
+  });
+
+  it("ignores a slow answer for an older choice, so it cannot overwrite a newer one", async () => {
+    let releaseFirst: () => void = () => undefined;
+    let call = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      call += 1;
+      const answer = { inQatar: true, formattedAddress: call === 1 ? "OLD place, Qatar" : "NEW place, Qatar", area: null, street: null, landmark: null, precision: "street", municipality: null };
+      if (call === 1) await new Promise<void>((resolve) => { releaseFirst = resolve; });
+      return { ok: true, status: 200, json: async () => answer } as Response;
+    }));
+    render(<Harness />);
+    const tap = async () => userEvent.click(await screen.findByRole("button", { name: "Test: tap map" }));
+    await tap();
+    await tap();
+    expect(await screen.findByText("NEW place, Qatar")).toBeInTheDocument();
+    releaseFirst();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.queryByText("OLD place, Qatar")).not.toBeInTheDocument();
+    expect(screen.getByText("NEW place, Qatar")).toBeInTheDocument();
   });
 });

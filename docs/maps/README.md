@@ -15,6 +15,17 @@ accounts and no per-request costs.
 | "Is it in Qatar?" | `apps/api/src/lib/geo/qatar-boundary.json` | Point-in-polygon check on the server for every order location. |
 | Order location | `OrderDeliveryLocation` table (migration `5_order_delivery_location`) | Saved in the same transaction as the order; only the admin order screens read it. |
 
+## What the pin fills in
+
+Tapping the map (or choosing a search result, or using the current location) places the pin. From the pin the site
+fills in the street, a nearby landmark, the checkout address line and the delivery area (from the municipality the
+pin is in: `apps/api/src/lib/geo/qatar-municipalities.json`, OpenStreetMap admin_level 4 boundaries, rebuilt with
+`scripts/maps/build-qatar-municipalities.ts`). Anything the customer types themselves is never overwritten. Zone and
+building numbers are not in OpenStreetMap, so the customer reads them off their blue plate. A pin outside Doha,
+Al Rayyan, Al Wakrah and Al Khor is allowed, with a notice to the customer and an "Outside delivery areas" flag in admin.
+
+On phones: a tap places or moves the pin, a one-finger swipe moves the map, a pinch zooms.
+
 ## Data, source and licence
 
 - **Map data**: OpenStreetMap contributors, © OpenStreetMap contributors, licensed under the Open Database

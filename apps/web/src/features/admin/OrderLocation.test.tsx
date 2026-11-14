@@ -47,4 +47,17 @@ describe("admin order location", () => {
     expect(screen.getByText("Written address only")).toBeInTheDocument();
     expect(screen.getByText(/confirm the location with them/)).toBeInTheDocument();
   });
+
+  it("shows the pin's municipality and flags a pin outside the delivery areas", () => {
+    const outside = { ...located, deliveryMunicipality: { en: "Al Daayen", ar: "الضعاين", deliveryArea: null } } as AdminOrder;
+    render(<><LocationStatusChip order={outside} isArabic={false} /><OrderLocation order={outside} isArabic={false} /></>);
+    expect(screen.getByTestId("location-outside")).toHaveTextContent("Outside delivery areas");
+    expect(screen.getByText("Al Daayen")).toBeInTheDocument();
+    expect(screen.getByText(/Confirm delivery with the customer/)).toBeInTheDocument();
+    cleanup();
+    const inside = { ...located, deliveryMunicipality: { en: "Doha", ar: "الدوحة", deliveryArea: "doha" } } as AdminOrder;
+    render(<><LocationStatusChip order={inside} isArabic={false} /><OrderLocation order={inside} isArabic={false} /></>);
+    expect(screen.queryByTestId("location-outside")).not.toBeInTheDocument();
+    expect(screen.getByText("Doha")).toBeInTheDocument();
+  });
 });

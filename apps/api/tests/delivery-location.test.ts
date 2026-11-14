@@ -2,7 +2,7 @@ import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
-import { isInQatar, reverseGeocode, searchPlaces } from "../src/lib/geo/qatar";
+import { isInQatar, municipalityAt, reverseGeocode, searchPlaces } from "../src/lib/geo/qatar";
 import { loggedInAgent, resetDatabase, seededProduct, validOrder } from "./helpers";
 import { clearOrderRateLimit } from "../src/modules/orders/order-rate-limit";
 
@@ -55,6 +55,20 @@ describe("Qatar geography", () => {
     expect(desert.street).toBeNull();
     expect(desert.precision).not.toBe("street");
     expect(reverseGeocode(25.1566, 51.6013, "ar").formattedAddress).toContain("قطر");
+  });
+});
+
+describe("municipalities", () => {
+  it("knows which municipality a point is in, and whether QLeaves delivers there", () => {
+    expect(municipalityAt(25.322, 51.531)).toEqual({ en: "Doha", ar: "الدوحة", deliveryArea: "doha" });
+    expect(municipalityAt(25.3175, 51.4362)?.deliveryArea).toBe("alRayyan");
+    expect(municipalityAt(25.1566, 51.6013)?.deliveryArea).toBe("alWakrah");
+    expect(municipalityAt(25.6838, 51.5031)?.deliveryArea).toBe("alKhor");
+    expect(municipalityAt(25.4229, 51.5197)).toMatchObject({ en: "Al Daayen", deliveryArea: null });
+    expect(municipalityAt(25.4189, 50.7876)).toMatchObject({ en: "Al Shahaniya", deliveryArea: null });
+    expect(municipalityAt(26.2235, 50.5876)).toBeNull();
+    expect(municipalityAt(Number.NaN, 51)).toBeNull();
+    expect(reverseGeocode(25.2867, 51.5333, "en").municipality).toMatchObject({ en: "Doha", deliveryArea: "doha" });
   });
 });
 
@@ -145,6 +159,7 @@ describe("delivery location on orders", () => {
     const listed = await agent.get("/api/v1/admin/orders").expect(200);
     const mine = listed.body.items.find((item: { id: string }) => item.id === created.body.id);
     expect(mine.deliveryLocation).toMatchObject({ ...SOUQ_WAQIF, area: "Souq Waqif" });
+    expect(mine.deliveryMunicipality).toEqual({ en: "Doha", ar: "الدوحة", deliveryArea: "doha" });
 
     const invoice = await request(createApp()).get(`/api/v1/invoices/${created.body.orderNumber}?token=${mine.invoiceToken}`);
     expect(invoice.status).toBe(200);

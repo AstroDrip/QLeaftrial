@@ -15,11 +15,12 @@ const copyText = {
     status: { confirmed: "Location confirmed", manual: "Written address only", missing: "Location not recorded" } as Record<LocationStatus, string>,
     manualNote: "The map was unavailable when this order was placed. The customer gave a written address only; confirm the location with them.",
     missingNote: "Delivery location was not recorded for this order.",
+    municipality: "Municipality", outside: "Outside delivery areas", outsideNote: "This pin is outside Doha, Al Rayyan, Al Wakrah and Al Khor. Confirm delivery with the customer.",
     area: "Area", zone: "Zone", street: "Street", building: "Building", unit: "Floor / flat", landmark: "Landmark",
     coordinates: "Coordinates", source: "Found by", accuracy: "Device accuracy", confirmedAt: "Confirmed",
     sources: { gps: "Customer's device location", search: "Address search", pin: "Pin placed by the customer" } as Record<string, string>,
     precision: { gps: "device location", landmark: "named place", street: "street level", area: "area only", pin: "placed by hand" } as Record<string, string>,
-    copyCoords: "Copy coordinates", copyAddress: "Copy address", copied: "Copied", openMaps: "Open in Google Maps",
+    copyCoords: "Copy coordinates", copyAddress: "Copy address", copied: "Copied", copyFailed: "Could not copy; select the text instead", openMaps: "Open in Google Maps",
     showMap: "Show on map", hideMap: "Hide map", larger: "Larger map", close: "Close", mapLabel: "Map of the delivery location",
   },
   ar: {
@@ -27,11 +28,12 @@ const copyText = {
     status: { confirmed: "تم تأكيد الموقع", manual: "عنوان مكتوب فقط", missing: "لم يُسجّل الموقع" } as Record<LocationStatus, string>,
     manualNote: "كانت الخريطة غير متاحة عند تقديم هذا الطلب. قدّم العميل عنوانًا مكتوبًا فقط؛ أكّد الموقع معه.",
     missingNote: "لم يُسجّل موقع التوصيل لهذا الطلب.",
+    municipality: "البلدية", outside: "خارج مناطق التوصيل", outsideNote: "هذا الدبوس خارج الدوحة والريان والوكرة والخور. أكّد التوصيل مع العميل.",
     area: "المنطقة", zone: "المنطقة (رقم)", street: "الشارع", building: "المبنى", unit: "الطابق / الشقة", landmark: "معلم قريب",
     coordinates: "الإحداثيات", source: "طريقة التحديد", accuracy: "دقة الجهاز", confirmedAt: "وقت التأكيد",
     sources: { gps: "موقع جهاز العميل", search: "البحث عن العنوان", pin: "دبوس وضعه العميل" } as Record<string, string>,
     precision: { gps: "موقع الجهاز", landmark: "مكان معروف", street: "مستوى الشارع", area: "المنطقة فقط", pin: "وُضع يدويًا" } as Record<string, string>,
-    copyCoords: "نسخ الإحداثيات", copyAddress: "نسخ العنوان", copied: "تم النسخ", openMaps: "فتح في خرائط Google",
+    copyCoords: "نسخ الإحداثيات", copyAddress: "نسخ العنوان", copied: "تم النسخ", copyFailed: "تعذر النسخ؛ حدّد النص بدلًا من ذلك", openMaps: "فتح في خرائط Google",
     showMap: "عرض على الخريطة", hideMap: "إخفاء الخريطة", larger: "خريطة أكبر", close: "إغلاق", mapLabel: "خريطة موقع التوصيل",
   },
 } as const;
@@ -57,13 +59,20 @@ function googleMapsUrl(latitude: number, longitude: number): string {
 
 export function LocationStatusChip({ order, isArabic }: { order: AdminOrder; isArabic: boolean }) {
   const status = locationStatus(order);
-  return <span className={`admin-location-chip admin-location-chip--${status}`} data-testid="location-status">{copyText[isArabic ? "ar" : "en"].status[status]}</span>;
+  const t = copyText[isArabic ? "ar" : "en"];
+  const outside = status === "confirmed" && order.deliveryMunicipality && !order.deliveryMunicipality.deliveryArea;
+  return (
+    <>
+      <span className={`admin-location-chip admin-location-chip--${status}`} data-testid="location-status">{t.status[status]}</span>
+      {outside ? <span className="admin-location-chip admin-location-chip--manual" data-testid="location-outside">{t.outside}</span> : null}
+    </>
+  );
 }
 
 export function OrderLocation({ order, isArabic }: { order: AdminOrder; isArabic: boolean }) {
   const t = copyText[isArabic ? "ar" : "en"];
   const location = order.deliveryLocation;
-  const [copied, setCopied] = useState<"coords" | "address" | null>(null);
+  const [copied, setCopied] = useState<"coords" | "address" | "failed" | null>(null);
   const [showMap, setShowMap] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const [large, setLarge] = useState(false);
@@ -84,15 +93,32 @@ export function OrderLocation({ order, isArabic }: { order: AdminOrder; isArabic
   }
 
   const coords = `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+  // The Clipboard API needs a secure page and permission; the older copy command is the fallback, and if both are
+  // unavailable the admin is told rather than left guessing.
   async function copy(kind: "coords" | "address") {
+    const text = kind === "coords" ? coords : fullAddress(location!);
     try {
-      await navigator.clipboard.writeText(kind === "coords" ? coords : fullAddress(location!));
+      await navigator.clipboard.writeText(text);
       setCopied(kind);
+      return;
     } catch {
-      setCopied(null);
+      // fall through
     }
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.append(area);
+    area.select();
+    let done = false;
+    try { done = document.execCommand("copy"); } catch { done = false; }
+    area.remove();
+    setCopied(done ? kind : "failed");
   }
+  const municipality = order.deliveryMunicipality;
   const rows: Array<[string, string | null | undefined]> = [
+    [t.municipality, municipality ? (isArabic ? municipality.ar : municipality.en) : null],
     [t.area, location.area], [t.zone, location.zone], [t.street, location.street], [t.building, location.building], [t.unit, location.unit], [t.landmark, location.landmark],
   ];
   const confirmed = new Intl.DateTimeFormat(isArabic ? "ar-QA" : "en-GB", { timeZone: "Asia/Qatar", dateStyle: "medium", timeStyle: "short" }).format(new Date(location.confirmedAt));
@@ -102,6 +128,7 @@ export function OrderLocation({ order, isArabic }: { order: AdminOrder; isArabic
     <div className="admin-location" data-testid="order-location">
       <h3 className="admin-location__title">{t.title}</h3>
       <p className="admin-location__address" dir="auto">{location.formattedAddress}</p>
+      {municipality && !municipality.deliveryArea ? <p className="admin-location__note admin-location__note--warn">{t.outsideNote}</p> : null}
       <dl className="admin-location__details">
         {rows.filter(([, value]) => value).map(([label, value]) => (
           <div key={label}><dt>{label}</dt><dd dir="auto">{value}</dd></div>
@@ -118,6 +145,7 @@ export function OrderLocation({ order, isArabic }: { order: AdminOrder; isArabic
         <button type="button" className="admin-order-extras__button" aria-expanded={showMap} onClick={() => setShowMap((current) => !current)}>{showMap ? t.hideMap : t.showMap}</button>
         {showMap ? <button type="button" className="admin-order-extras__button" onClick={() => { setLarge(true); dialog.current?.showModal(); }}>{t.larger}</button> : null}
       </div>
+      {copied === "failed" ? <p className="admin-location__note admin-location__note--warn" role="status">{t.copyFailed}</p> : null}
       {showMap ? (
         <div className="admin-location__map">
           <Suspense fallback={<div className="admin-location__map-placeholder" />}>

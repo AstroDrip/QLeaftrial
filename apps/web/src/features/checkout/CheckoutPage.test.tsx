@@ -20,7 +20,7 @@ import { useCartStore } from "../cart/cart-store";
 const plant = (priceQar: number, quantity = 1) => ({ id: "plant-1", slug: "plant", name: "Plant", priceQar, stock: 20, image: null, quantity });
 
 // Geo requests get a fixed Qatar answer; everything else goes to the test's own fetch mock.
-const reverseAnswer = { inQatar: true, formattedAddress: "Ali Bin Abdulla Street, Souq Waqif, Qatar", area: "Souq Waqif", street: "Ali Bin Abdulla Street", landmark: null, precision: "street" };
+const reverseAnswer: Record<string, unknown> = { inQatar: true, formattedAddress: "Ali Bin Abdulla Street, Souq Waqif, Qatar", area: "Souq Waqif", street: "Ali Bin Abdulla Street", landmark: null, precision: "street" };
 function renderCheckout(fetchMock = vi.fn()) {
   vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     if (String(input).includes("/api/v1/geo/")) return Promise.resolve({ ok: true, status: 200, json: async () => reverseAnswer } as Response);
@@ -218,5 +218,28 @@ describe("CheckoutPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Place order" }));
     expect(await screen.findByText("Please confirm your delivery location again.")).toBeInTheDocument();
     expect(screen.queryByText("Delivery location confirmed")).not.toBeInTheDocument();
+  });
+
+  it("fills the address line and delivery area from the pin, and stops once the customer edits them", async () => {
+    reverseAnswer.municipality = { en: "Doha", ar: "الدوحة", deliveryArea: "doha" };
+    try {
+      useCartStore.setState({ items: [plant(20)] });
+      renderCheckout(vi.fn());
+      await userEvent.click(await screen.findByRole("button", { name: "Test: drop pin" }));
+      const address = screen.getByPlaceholderText("Villa 12, Street 30");
+      await waitFor(() => expect(address).toHaveValue("Ali Bin Abdulla Street, Souq Waqif"));
+      expect(screen.getByRole("combobox", { name: /area or town/i })).toHaveValue("Doha");
+
+      await userEvent.type(screen.getByLabelText("Building"), "7");
+      await userEvent.type(screen.getByLabelText("Zone"), "3");
+      await waitFor(() => expect(address).toHaveValue("Building 7, Ali Bin Abdulla Street, Zone 3, Souq Waqif"));
+
+      await userEvent.clear(address);
+      await userEvent.type(address, "Villa 9, my own words");
+      await userEvent.type(screen.getByLabelText("Floor / flat"), "Flat 2");
+      expect(address).toHaveValue("Villa 9, my own words");
+    } finally {
+      delete reverseAnswer.municipality;
+    }
   });
 });

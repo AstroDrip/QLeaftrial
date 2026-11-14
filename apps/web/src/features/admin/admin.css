@@ -421,3 +421,4 @@ html[lang="ar"] .admin-location__title { letter-spacing: 0; }
 .admin-location__dialog-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--a-2); margin-bottom: var(--a-3); }
 .admin-location__dialog-head p { flex: 1 1 200px; min-width: 0; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .admin-location__dialog-map { height: min(70dvh, 620px); }
+.admin-location__note--warn { color: #f2c66d; }

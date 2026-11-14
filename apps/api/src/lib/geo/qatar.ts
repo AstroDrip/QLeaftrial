@@ -38,13 +38,47 @@ export function isInQatar(latitude: number, longitude: number): boolean {
   return false;
 }
 
+// ---------- Municipalities ----------
+// QLeaves delivers to these municipalities; the keys match checkout's delivery-area options.
+export type DeliveryAreaKey = "doha" | "alRayyan" | "alWakrah" | "alKhor";
+const DELIVERED: Record<string, DeliveryAreaKey> = { "Doha": "doha", "Al Rayyan": "alRayyan", "Al Wakrah": "alWakrah", "Al Khor and Al Thakhira": "alKhor" };
+export type Municipality = { en: string; ar: string; deliveryArea: DeliveryAreaKey | null };
+
+let municipalities: Array<{ en: string; ar: string; coordinates: Array<Ring[]> }> | null = null;
+function insidePolygons(polygons: Array<Ring[]>, latitude: number, longitude: number): boolean {
+  for (const polygon of polygons) {
+    let inside = false;
+    for (const ring of polygon) {
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i];
+        const [xj, yj] = ring[j];
+        if (yi > latitude !== yj > latitude && longitude < ((xj - xi) * (latitude - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+    }
+    if (inside) return true;
+  }
+  return false;
+}
+
+/** The municipality a point is in (OpenStreetMap boundaries), and which QLeaves delivery area that is, if any. */
+export function municipalityAt(latitude: number, longitude: number): Municipality | null {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  municipalities ??= read<{ municipalities: Array<{ en: string; ar: string; coordinates: Array<Ring[]> }> }>("qatar-municipalities.json").municipalities;
+  for (const municipality of municipalities) {
+    if (insidePolygons(municipality.coordinates, latitude, longitude)) {
+      return { en: municipality.en, ar: municipality.ar, deliveryArea: DELIVERED[municipality.en] ?? null };
+    }
+  }
+  return null;
+}
+
 // ---------- Place index ----------
 export type PlaceKind = "area" | "landmark" | "street";
 /** How exactly a result pins a door: an area or street is only approximate; a landmark is a specific place. */
 export type Precision = "area" | "street" | "landmark";
 export type Place = { id: string; kind: PlaceKind; type: string; en: string; ar: string; latitude: number; longitude: number };
 export type PlaceResult = Place & { label: string; context: string; precision: Precision };
-export type ReverseResult = { formattedAddress: string; area: string | null; street: string | null; landmark: string | null; precision: Precision | "none" };
+export type ReverseResult = { formattedAddress: string; area: string | null; street: string | null; landmark: string | null; precision: Precision | "none"; municipality: Municipality | null };
 
 type RawIndex = {
   areas: Array<[string, string, string, number, number]>;
@@ -170,6 +204,7 @@ export function reverseGeocode(latitude: number, longitude: number, language: "e
     street: street ? nameIn(street.place, language) : null,
     landmark: landmark ? nameIn(landmark.place, language) : null,
     precision: landmark ? "landmark" : street ? "street" : area ? "area" : "none",
+    municipality: municipalityAt(latitude, longitude),
   };
 }
 

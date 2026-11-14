@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { Seo } from "../../components/Seo";
@@ -6,8 +6,8 @@ import { useCartStore, cartSubtotal } from "../cart/cart-store";
 import { ApiClientError, errorFromResponse } from "../../lib/api-error";
 import { rememberOrderSummary, type OrderSummary } from "./order-summary";
 import { DeliveryLines } from "./DeliveryLines";
-import { LocationPicker } from "./LocationPicker";
-import { emptyLocation, isConfirmed, locationPayload, unconfirm, type DeliveryLocationState } from "./delivery-location";
+import { LocationPicker, type ResolvedPlace } from "./LocationPicker";
+import { emptyLocation, isConfirmed, locationPayload, unconfirm, type DeliveryLocationState, type LocationDetails } from "./delivery-location";
 import { deliveryChargeToConfirm } from "../cart/delivery-rules";
 import { FreeDeliveryProgress } from "../cart/FreeDeliveryProgress";
 import { friendlyError } from "../../lib/friendly-error";
@@ -39,6 +39,18 @@ function newAttemptKey(): string {
   return `checkout-${random}`;
 }
 
+/** The address line written from the pin and the details the customer gave: flat, building, street, zone, area. */
+export function composeAddressLine(details: LocationDetails, place: ResolvedPlace | null, isArabic: boolean): string {
+  const parts = [
+    details.unit.trim(),
+    details.building.trim() && (isArabic ? `مبنى ${details.building.trim()}` : `Building ${details.building.trim()}`),
+    details.street.trim() || place?.street || "",
+    details.zone.trim() && (isArabic ? `منطقة ${details.zone.trim()}` : `Zone ${details.zone.trim()}`),
+    place?.area ?? "",
+  ].filter(Boolean);
+  return [...new Set(parts)].join(isArabic ? "، " : ", ").slice(0, 240);
+}
+
 export function CheckoutPage() {
   const { content, isArabic } = useSiteLanguage();
   const navigate = useNavigate();
@@ -57,6 +69,32 @@ export function CheckoutPage() {
   const locationSection = useRef<HTMLDivElement>(null);
   const locationConfirmed = isConfirmed(location);
   const useWrittenAddress = !locationConfirmed && !mapAvailable && writtenOnly;
+
+  // The pin fills the address line and the delivery area. A field is only filled while it is empty or still holds
+  // what we filled before; once the customer types in it, it is theirs.
+  const [place, setPlace] = useState<ResolvedPlace | null>(null);
+  const formNow = useRef(form);
+  formNow.current = form;
+  const autoAddress = useRef("");
+  const autoArea = useRef("");
+  useEffect(() => {
+    if (!location.selection) return;
+    const line = composeAddressLine(location.details, place, isArabic);
+    const areaKey = place?.municipality?.deliveryArea;
+    const areaLabel = areaKey ? content.checkout.deliveryAreas[areaKey] : "";
+    // Decided here, outside the state updater (updaters must stay free of side effects: React may run them twice).
+    const current = formNow.current;
+    const patch: Partial<typeof initialForm> = {};
+    if (line && (!current.address || current.address === autoAddress.current) && current.address !== line) {
+      autoAddress.current = line;
+      patch.address = line;
+    }
+    if (areaLabel && (!current.area || current.area === autoArea.current) && current.area !== areaLabel) {
+      autoArea.current = areaLabel;
+      patch.area = areaLabel;
+    }
+    if (Object.keys(patch).length) setForm((previous) => ({ ...previous, ...patch }));
+  }, [location.selection, location.details, place, isArabic, content.checkout.deliveryAreas]);
 
   function handleChange(
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -223,6 +261,7 @@ export function CheckoutPage() {
               value={location}
               onChange={(next) => { setLocation(next); if (isConfirmed(next)) setLocationError(""); }}
               onAvailabilityChange={setMapAvailable}
+              onResolved={setPlace}
               error={locationError}
             />
             {!mapAvailable && !locationConfirmed ? (

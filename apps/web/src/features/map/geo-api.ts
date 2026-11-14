@@ -4,7 +4,8 @@ import type { LatLon } from "./QatarMap";
 // index. POST keeps typed addresses and coordinates out of URLs. Recent answers are cached in memory only.
 export type Precision = "gps" | "landmark" | "street" | "area" | "pin";
 export type PlaceSuggestion = { id: string; kind: "area" | "landmark" | "street"; label: string; context: string; latitude: number; longitude: number; precision: "area" | "landmark" | "street" };
-export type ReverseAnswer = { inQatar: false } | { inQatar: true; formattedAddress: string; area: string | null; street: string | null; landmark: string | null; precision: "landmark" | "street" | "area" | "none" };
+export type Municipality = { en: string; ar: string; deliveryArea: "doha" | "alRayyan" | "alWakrah" | "alKhor" | null };
+export type ReverseAnswer = { inQatar: false } | { inQatar: true; formattedAddress: string; area: string | null; street: string | null; landmark: string | null; precision: "landmark" | "street" | "area" | "none"; municipality: Municipality | null };
 
 export class GeoServiceError extends Error {
   constructor(public readonly status: number) {

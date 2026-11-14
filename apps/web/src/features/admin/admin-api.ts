@@ -136,6 +136,8 @@ export interface AdminOrder {
   sheetSyncError?: string | null;
   deliveryLocation?: AdminDeliveryLocation | null;
   deliveryLocationManual?: boolean;
+  /** The municipality the pin is in (worked out on the server from the coordinates). */
+  deliveryMunicipality?: { en: string; ar: string; deliveryArea: string | null } | null;
   status: string;
   paymentStatus: string;
   createdAt: string;

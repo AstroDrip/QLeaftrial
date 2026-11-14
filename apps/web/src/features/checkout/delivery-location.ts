@@ -29,6 +29,12 @@ export function editDetails(state: DeliveryLocationState, patch: Partial<Locatio
   return { ...state, details: { ...state.details, ...patch }, confirmedAt: null };
 }
 
+/** Re-names the chosen point (e.g. after the language changes). The point is unchanged, so a confirmation stands. */
+export function renameSelection(state: DeliveryLocationState, formattedAddress: string): DeliveryLocationState {
+  if (!state.selection || !formattedAddress) return state;
+  return { ...state, selection: { ...state.selection, formattedAddress } };
+}
+
 export function confirmLocation(state: DeliveryLocationState, now = new Date()): DeliveryLocationState {
   if (!state.selection || !state.selection.formattedAddress) return state;
   return { ...state, confirmedAt: now.toISOString() };
