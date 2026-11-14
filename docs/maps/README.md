@@ -21,8 +21,14 @@ Tapping the map (or choosing a search result, or using the current location) pla
 fills in the street, a nearby landmark, the checkout address line and the delivery area (from the municipality the
 pin is in: `apps/api/src/lib/geo/qatar-municipalities.json`, OpenStreetMap admin_level 4 boundaries, rebuilt with
 `scripts/maps/build-qatar-municipalities.ts`). Anything the customer types themselves is never overwritten. Zone and
-building numbers are not in OpenStreetMap, so the customer reads them off their blue plate. A pin outside Doha,
-Al Rayyan, Al Wakrah and Al Khor is allowed, with a notice to the customer and an "Outside delivery areas" flag in admin.
+building numbers are not in OpenStreetMap, so the customer reads them off their blue plate; those fields stay empty
+and are marked "Please add".
+
+Delivery is Qatar-wide. A confirmed pin anywhere inside the Qatar boundary is accepted, in all eight municipalities,
+with no zones, radius or distance pricing. The order's area is set on the server from the municipality the pin is in.
+Moving the pin to a different neighbourhood refreshes area, street and landmark, clears zone, building and flat typed
+for the old spot, and asks for confirmation again. Admin shows country, municipality, every address detail, the
+coordinates and the map, and marks each of area, street and landmark as "from the map" or "typed by customer".
 
 On phones: a tap places or moves the pin, a one-finger swipe moves the map, a pinch zooms.
 

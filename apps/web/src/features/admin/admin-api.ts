@@ -137,7 +137,9 @@ export interface AdminOrder {
   deliveryLocation?: AdminDeliveryLocation | null;
   deliveryLocationManual?: boolean;
   /** The municipality the pin is in (worked out on the server from the coordinates). */
-  deliveryMunicipality?: { en: string; ar: string; deliveryArea: string | null } | null;
+  deliveryMunicipality?: { key: string; en: string; ar: string; label: string; labelAr: string } | null;
+  /** For each address part: "map" when it matches what the map knows for the pin, "customer" when typed by the customer. */
+  deliveryFieldSources?: { area: "map" | "customer" | null; street: "map" | "customer" | null; landmark: "map" | "customer" | null };
   status: string;
   paymentStatus: string;
   createdAt: string;

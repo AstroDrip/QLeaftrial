@@ -6,7 +6,7 @@ import type { AcceptEditedOrderInput, CreateOrderInput } from "./order.schemas.j
 import type { PrismaClient as SqlitePrismaClient } from "../../../generated/sqlite/index.js";
 import type { OrderChange } from "./order-changes.js";
 import { deliveryChargeToConfirm } from "../../lib/delivery.js";
-import { isInQatar, reverseGeocode } from "../../lib/geo/qatar.js";
+import { isInQatar, municipalityAt, reverseGeocode } from "../../lib/geo/qatar.js";
 
 // Every order read returns its lines and, when there is one, its confirmed delivery location.
 const ORDER_INCLUDE = { items: true, deliveryLocation: true } as const;
@@ -24,8 +24,8 @@ function checkedLocation(location: CreateOrderInput["deliveryLocation"], now = D
   if (!(confirmedAt.getTime() <= now + CLOCK_SKEW_MS && confirmedAt.getTime() >= now - LOCATION_CONFIRMATION_MAX_AGE_MS)) {
     throw new ApiError(400, "LOCATION_CONFIRMATION_STALE", "Please confirm the delivery location again");
   }
-  // The area name comes from our own Qatar index for these coordinates, not from the request.
-  const area = reverseGeocode(location.latitude, location.longitude, "en").area;
+  // The neighbourhood: the customer's own wording if they gave one, otherwise our Qatar index's name for the point.
+  const area = location.area ?? reverseGeocode(location.latitude, location.longitude, "en").area;
   return {
     latitude: location.latitude,
     longitude: location.longitude,
@@ -271,7 +271,8 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
         phone: input.phone,
         email: input.email,
         addressLine1: input.addressLine1,
-        area: input.area,
+        // With a confirmed pin, the order's area is the municipality the pin is in (so the two can never disagree).
+        area: (input.deliveryLocation && municipalityAt(input.deliveryLocation.latitude, input.deliveryLocation.longitude)?.label) || input.area,
         deliveryNotes: input.deliveryNotes,
         paymentMethod: input.paymentMethod,
         subtotalQar,

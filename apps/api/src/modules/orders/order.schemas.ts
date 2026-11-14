@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { QATAR_MUNICIPALITIES } from "../../lib/geo/qatar.js";
 
 // The areas checkout offers, as the storefront sends them (English or Arabic label).
-export const DELIVERY_AREAS = ["Doha", "Al Rayyan", "Al Wakrah", "Al Khor", "الدوحة", "الريان", "الوكرة", "الخور"] as const;
+// QLeaves delivers anywhere in Qatar: the eight municipalities, as the storefront sends them (English or Arabic).
+export const DELIVERY_AREAS: readonly string[] = QATAR_MUNICIPALITIES.flatMap((entry) => [entry.label, entry.labelAr, entry.osmName]);
 
 const optionalText = (max: number) => z.string().trim().max(max).optional().transform((value) => (value ? value : undefined));
 
@@ -14,6 +16,8 @@ export const deliveryLocationSchema = z.object({
   source: z.enum(["gps", "search", "pin"]),
   precision: z.enum(["gps", "landmark", "street", "area", "pin"]),
   accuracyMeters: z.number().finite().nonnegative().max(100_000).optional(),
+  // The neighbourhood: filled from the map, editable by the customer.
+  area: optionalText(80),
   zone: optionalText(20),
   street: optionalText(80),
   building: optionalText(60),
@@ -29,7 +33,7 @@ export const createOrderSchema = z.object({
   phone: z.string().trim().min(5).max(40),
   email: z.string().email().max(200),
   addressLine1: z.string().trim().min(3).max(240),
-  area: z.string().trim().refine((value) => (DELIVERY_AREAS as readonly string[]).includes(value), "We deliver to Doha, Al Rayyan, Al Wakrah and Al Khor"),
+  area: z.string().trim().refine((value) => DELIVERY_AREAS.includes(value), "Choose your municipality in Qatar"),
   deliveryNotes: z.string().trim().max(500).optional(),
   paymentMethod: z.enum(["COD", "PAYMENT_LINK"]),
   // Delivery is no longer priced. Older cached storefront pages may still send this; it is ignored.

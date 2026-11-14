@@ -39,10 +39,20 @@ export function isInQatar(latitude: number, longitude: number): boolean {
 }
 
 // ---------- Municipalities ----------
-// QLeaves delivers to these municipalities; the keys match checkout's delivery-area options.
-export type DeliveryAreaKey = "doha" | "alRayyan" | "alWakrah" | "alKhor";
-const DELIVERED: Record<string, DeliveryAreaKey> = { "Doha": "doha", "Al Rayyan": "alRayyan", "Al Wakrah": "alWakrah", "Al Khor and Al Thakhira": "alKhor" };
-export type Municipality = { en: string; ar: string; deliveryArea: DeliveryAreaKey | null };
+// QLeaves delivers anywhere in Qatar. The eight municipalities are the choices of checkout's "Area or town" field;
+// `label` is the short name shown there and stored on the order.
+export type DeliveryAreaKey = "doha" | "alRayyan" | "alWakrah" | "alKhor" | "ummSalal" | "alDaayen" | "alShamal" | "alShahaniya";
+export const QATAR_MUNICIPALITIES: ReadonlyArray<{ key: DeliveryAreaKey; osmName: string; label: string; labelAr: string }> = [
+  { key: "doha", osmName: "Doha", label: "Doha", labelAr: "الدوحة" },
+  { key: "alRayyan", osmName: "Al Rayyan", label: "Al Rayyan", labelAr: "الريان" },
+  { key: "alWakrah", osmName: "Al Wakrah", label: "Al Wakrah", labelAr: "الوكرة" },
+  { key: "alKhor", osmName: "Al Khor and Al Thakhira", label: "Al Khor", labelAr: "الخور" },
+  { key: "ummSalal", osmName: "Umm Salal", label: "Umm Salal", labelAr: "أم صلال" },
+  { key: "alDaayen", osmName: "Al Daayen", label: "Al Daayen", labelAr: "الضعاين" },
+  { key: "alShamal", osmName: "Al Shamal", label: "Al Shamal", labelAr: "الشمال" },
+  { key: "alShahaniya", osmName: "Al Shahaniya", label: "Al Shahaniya", labelAr: "الشحانية" },
+];
+export type Municipality = { key: DeliveryAreaKey; en: string; ar: string; label: string; labelAr: string };
 
 let municipalities: Array<{ en: string; ar: string; coordinates: Array<Ring[]> }> | null = null;
 function insidePolygons(polygons: Array<Ring[]>, latitude: number, longitude: number): boolean {
@@ -66,7 +76,8 @@ export function municipalityAt(latitude: number, longitude: number): Municipalit
   municipalities ??= read<{ municipalities: Array<{ en: string; ar: string; coordinates: Array<Ring[]> }> }>("qatar-municipalities.json").municipalities;
   for (const municipality of municipalities) {
     if (insidePolygons(municipality.coordinates, latitude, longitude)) {
-      return { en: municipality.en, ar: municipality.ar, deliveryArea: DELIVERED[municipality.en] ?? null };
+      const known = QATAR_MUNICIPALITIES.find((entry) => entry.osmName === municipality.en);
+      if (known) return { key: known.key, en: municipality.en, ar: municipality.ar, label: known.label, labelAr: known.labelAr };
     }
   }
   return null;
@@ -194,8 +205,11 @@ export function searchPlaces(query: string, language: "en" | "ar", options: { ne
 
 /** The nearest named place to a point: a landmark within 40 m, the street within 120 m, and the area. */
 export function reverseGeocode(latitude: number, longitude: number, language: "en" | "ar"): ReverseResult {
-  const landmark = nearest(latitude, longitude, "landmark", 40);
   const street = nearest(latitude, longitude, "street", 120);
+  // Some map points (bus stops, signs) are named after the street they stand on; that is not a landmark.
+  const found = nearest(latitude, longitude, "landmark", 40);
+  const sameAsStreet = found && street && (found.place.en || found.place.ar).trim().toLowerCase() === (street.place.en || street.place.ar).trim().toLowerCase();
+  const landmark = sameAsStreet ? null : found;
   const area = areaFor(latitude, longitude, language);
   const parts = [landmark && nameIn(landmark.place, language), street && nameIn(street.place, language), area, language === "ar" ? "قطر" : "Qatar"].filter(Boolean) as string[];
   return {

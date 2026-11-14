@@ -55,20 +55,24 @@ describe("Qatar geography", () => {
     expect(desert.street).toBeNull();
     expect(desert.precision).not.toBe("street");
     expect(reverseGeocode(25.1566, 51.6013, "ar").formattedAddress).toContain("قطر");
+    // In Dukhan a map point is named after the street it stands on: that is the street, not a landmark.
+    const dukhan = reverseGeocode(25.41886, 50.78765, "en");
+    expect(dukhan.street).toBe("Street 412");
+    expect(dukhan.landmark).toBeNull();
   });
 });
 
 describe("municipalities", () => {
   it("knows which municipality a point is in, and whether QLeaves delivers there", () => {
-    expect(municipalityAt(25.322, 51.531)).toEqual({ en: "Doha", ar: "الدوحة", deliveryArea: "doha" });
-    expect(municipalityAt(25.3175, 51.4362)?.deliveryArea).toBe("alRayyan");
-    expect(municipalityAt(25.1566, 51.6013)?.deliveryArea).toBe("alWakrah");
-    expect(municipalityAt(25.6838, 51.5031)?.deliveryArea).toBe("alKhor");
-    expect(municipalityAt(25.4229, 51.5197)).toMatchObject({ en: "Al Daayen", deliveryArea: null });
-    expect(municipalityAt(25.4189, 50.7876)).toMatchObject({ en: "Al Shahaniya", deliveryArea: null });
+    expect(municipalityAt(25.322, 51.531)).toEqual({ key: "doha", en: "Doha", ar: "الدوحة", label: "Doha", labelAr: "الدوحة" });
+    expect(municipalityAt(25.3175, 51.4362)?.key).toBe("alRayyan");
+    expect(municipalityAt(25.1566, 51.6013)?.key).toBe("alWakrah");
+    expect(municipalityAt(25.6838, 51.5031)?.key).toBe("alKhor");
+    expect(municipalityAt(25.4229, 51.5197)).toMatchObject({ en: "Al Daayen", key: "alDaayen" });
+    expect(municipalityAt(25.4189, 50.7876)).toMatchObject({ en: "Al Shahaniya", key: "alShahaniya" });
     expect(municipalityAt(26.2235, 50.5876)).toBeNull();
     expect(municipalityAt(Number.NaN, 51)).toBeNull();
-    expect(reverseGeocode(25.2867, 51.5333, "en").municipality).toMatchObject({ en: "Doha", deliveryArea: "doha" });
+    expect(reverseGeocode(25.2867, 51.5333, "en").municipality).toMatchObject({ en: "Doha", key: "doha" });
   });
 });
 
@@ -159,7 +163,8 @@ describe("delivery location on orders", () => {
     const listed = await agent.get("/api/v1/admin/orders").expect(200);
     const mine = listed.body.items.find((item: { id: string }) => item.id === created.body.id);
     expect(mine.deliveryLocation).toMatchObject({ ...SOUQ_WAQIF, area: "Souq Waqif" });
-    expect(mine.deliveryMunicipality).toEqual({ en: "Doha", ar: "الدوحة", deliveryArea: "doha" });
+    expect(mine.deliveryMunicipality).toMatchObject({ key: "doha", label: "Doha" });
+    expect(mine.deliveryFieldSources).toEqual({ area: "map", street: "map", landmark: "customer" });
 
     const invoice = await request(createApp()).get(`/api/v1/invoices/${created.body.orderNumber}?token=${mine.invoiceToken}`);
     expect(invoice.status).toBe(200);
@@ -173,5 +178,42 @@ describe("delivery location on orders", () => {
     await prisma.orderItem.deleteMany({ where: { orderId: created.body.id } });
     await prisma.order.delete({ where: { id: created.body.id } });
     expect(await prisma.orderDeliveryLocation.count()).toBe(0);
+  });
+
+  // Delivery is Qatar-wide: a confirmed pin in any populated part of the country is accepted, the order's area
+  // follows the pin, and the admin sees the same coordinates and details.
+  it("accepts orders from all over Qatar and carries the location through to admin", async () => {
+    const places: Array<[string, number, number, string]> = [
+      ["Doha (West Bay)", 25.322, 51.531, "Doha"],
+      ["Lusail", 25.4229, 51.5197, "Al Daayen"],
+      ["Al Wakrah", 25.1566, 51.6013, "Al Wakrah"],
+      ["Mesaieed", 24.9954, 51.5494, "Al Wakrah"],
+      ["Al Khor", 25.6838, 51.5031, "Al Khor"],
+      ["Al Rayyan (Education City)", 25.3175, 51.4362, "Al Rayyan"],
+      ["Dukhan", 25.4189, 50.7876, "Al Shahaniya"],
+      ["Umm Salal Ali", 25.4698, 51.3976, "Umm Salal"],
+      ["Madinat ash Shamal", 26.12, 51.2, "Al Shamal"],
+      ["Abu Samra", 24.75, 50.84, "Al Rayyan"],
+    ];
+    const agent = await loggedInAgent();
+    for (const [name, latitude, longitude, municipality] of places) {
+      // The customer's dropdown says Doha on purpose: the pin decides the area.
+      const created = await order({ area: "Doha", deliveryLocation: location({ latitude, longitude, formattedAddress: `${name}, Qatar`, source: "search", precision: "area", area: undefined, street: undefined, zone: "7", building: "3", landmark: undefined }) });
+      expect(created.status, name).toBe(201);
+      expect(created.body.area, name).toBe(municipality);
+      const listed = await agent.get("/api/v1/admin/orders").expect(200);
+      const mine = listed.body.items.find((item: { id: string }) => item.id === created.body.id);
+      expect(mine.deliveryLocation, name).toMatchObject({ latitude, longitude, zone: "7", building: "3", countryCode: "QA" });
+      expect(mine.deliveryMunicipality.label, name).toBe(municipality);
+    }
+  });
+
+  it("keeps the customer's own neighbourhood wording, and still accepts written-address orders for any municipality", async () => {
+    const custom = await order({ deliveryLocation: location({ area: "Old Souq quarter" }) });
+    expect((await prisma.orderDeliveryLocation.findUniqueOrThrow({ where: { orderId: custom.body.id } })).area).toBe("Old Souq quarter");
+    for (const area of ["Umm Salal", "Al Daayen", "Al Shamal", "Al Shahaniya", "الشحانية", "Al Khor"]) {
+      expect((await order({ area, deliveryLocationManual: true })).status, area).toBe(201);
+    }
+    expect((await order({ area: "Manama", deliveryLocationManual: true })).status).toBe(400);
   });
 });

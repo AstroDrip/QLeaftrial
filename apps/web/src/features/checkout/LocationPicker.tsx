@@ -33,9 +33,11 @@ const copy = {
     hintPlaced: "Tap the map or drag the pin to move it.",
     selected: "Selected location",
     precision: { gps: "From your device's location", pin: "Placed by you on the map", landmark: "At a named place", street: "On this street. Add your building below", area: "General area only. Please put the pin on your building" } as Record<Precision, string>,
-    municipality: (name: string) => `Municipality: ${name}`,
-    outsideAreas: (name: string) => `${name} is outside the areas we usually deliver to (Doha, Al Rayyan, Al Wakrah and Al Khor). You can still order; our team will contact you about delivery.`,
-    plateHint: "Your zone, street and building numbers are on the blue plate by your building's entrance.",
+    municipality: (name: string) => `${name}, Qatar`,
+    plateHint: "We filled in what the map knows. Please check it and add your zone and building numbers (on the blue plate by your entrance).",
+    needed: "Please add",
+    cleared: "The pin moved to a different area, so the details from the previous spot were cleared.",
+    area: "Area / neighbourhood",
     zone: "Zone",
     street: "Street",
     building: "Building",
@@ -72,10 +74,12 @@ const copy = {
     hintPlaced: "انقر على الخريطة أو اسحب الدبوس لتحريكه.",
     selected: "الموقع المحدد",
     precision: { gps: "من موقع جهازك", pin: "وضعته بنفسك على الخريطة", landmark: "عند مكان معروف", street: "على هذا الشارع. أضف رقم المبنى أدناه", area: "المنطقة فقط. يرجى وضع الدبوس على مبناك" } as Record<Precision, string>,
-    municipality: (name: string) => `البلدية: ${name}`,
-    outsideAreas: (name: string) => `${name} خارج المناطق التي نوصل إليها عادةً (الدوحة والريان والوكرة والخور). يمكنك الطلب، وسيتواصل معك فريقنا بشأن التوصيل.`,
-    plateHint: "أرقام المنطقة والشارع والمبنى مكتوبة على اللوحة الزرقاء عند مدخل مبناك.",
-    zone: "المنطقة (رقم)",
+    municipality: (name: string) => `${name}، قطر`,
+    plateHint: "ملأنا ما تعرفه الخريطة. يرجى مراجعته وإضافة رقم المنطقة ورقم المبنى (على اللوحة الزرقاء عند مدخلك).",
+    needed: "يرجى الإضافة",
+    cleared: "انتقل الدبوس إلى منطقة أخرى، لذا مُسحت تفاصيل الموقع السابق.",
+    area: "المنطقة / الحي",
+    zone: "رقم المنطقة",
     street: "الشارع",
     building: "المبنى",
     unit: "الطابق / الشقة",
@@ -91,7 +95,7 @@ const copy = {
 } as const;
 
 /** What the pin resolved to, for checkout to fill its own address fields. */
-export type ResolvedPlace = { formattedAddress: string; area: string | null; street: string | null; municipality: Municipality | null };
+export type ResolvedPlace = { formattedAddress: string; area: string | null; street: string | null; municipality: Municipality | null; /** The pin moved to a different neighbourhood: address fields describing the old spot are stale. */ movedArea: boolean };
 
 type Props = {
   language: "en" | "ar";
@@ -137,6 +141,9 @@ export function LocationPicker({ language, value, onChange, onResolved, onAvaila
   const choice = useRef(0);
   // Values we filled in ourselves, so a new pin can replace them without touching anything the customer typed.
   const autoFilled = useRef<Partial<Record<keyof LocationDetails, string>>>({});
+  // The neighbourhood of the current pin; when a new pin lands in a different one, details typed for the old spot
+  // (zone, building, flat and any edited street or landmark) no longer describe the location and are cleared.
+  const pinArea = useRef<string | null>(null);
   const confirmed = isConfirmed(value);
 
   // The map is only loaded when the location step comes near the screen (or is used).
@@ -177,19 +184,30 @@ export function LocationPicker({ language, value, onChange, onResolved, onAvaila
   // Abandon any lookup in flight when the picker goes away.
   useEffect(() => () => reverseRequest.current?.abort(), []);
 
-  /** Fills street and landmark from a lookup, replacing only what we filled before (or empty fields). */
-  const autofill = useCallback((answer: Extract<ReverseAnswer, { inQatar: true }>, extra: PlaceExtra) => {
+  /**
+   * Fills area, street and landmark from a lookup. Within the same neighbourhood only empty fields and fields we
+   * filled before are replaced (the customer's corrections stay). In a different neighbourhood everything is
+   * refreshed, and what the map cannot know (zone, building, flat) is emptied for the customer to fill in again.
+   */
+  const autofill = useCallback((answer: Extract<ReverseAnswer, { inQatar: true }>, extra: PlaceExtra): boolean => {
+    const movedArea = pinArea.current !== null && (answer.area ?? "") !== pinArea.current;
+    pinArea.current = answer.area ?? "";
     const patch: Partial<LocationDetails> = {};
     const fill = (field: keyof LocationDetails, next: string) => {
       const current = latest.current.details[field];
-      if (current && current !== autoFilled.current[field]) return;
+      if (!movedArea && current && current !== autoFilled.current[field]) return;
       autoFilled.current[field] = next;
       if (current !== next) patch[field] = next;
     };
+    fill("area", answer.area ?? "");
     fill("street", answer.street ?? "");
     fill("landmark", answer.landmark ?? (extra.kind === "landmark" && extra.label ? extra.label : ""));
+    if (movedArea) for (const field of ["zone", "building", "unit"] as const) if (latest.current.details[field]) patch[field] = "";
+    const hadTyped = movedArea && (["zone", "building", "unit"] as const).some((field) => latest.current.details[field]);
     if (Object.keys(patch).length) apply(editDetails(latest.current, patch));
-  }, [apply]);
+    setNotice(hadTyped ? t.cleared : "");
+    return movedArea;
+  }, [apply, t.cleared]);
 
   // Puts the pin at a point and names it. The pin shows at once; a point outside Qatar puts the previous one back.
   const placePoint = useCallback(async (point: LatLon, source: LocationSource, extra: PlaceExtra = {}) => {
@@ -216,9 +234,9 @@ export function LocationPicker({ language, value, onChange, onResolved, onAvaila
         ? [extra.label, answer.area, language === "ar" ? "قطر" : "Qatar"].filter((part, index, all) => part && all.indexOf(part) === index).join(language === "ar" ? "، " : ", ")
         : answer.formattedAddress;
       apply(selectPoint(latest.current, { ...point, source, precision, formattedAddress, accuracyMeters: extra.accuracyMeters, providerRef: extra.providerRef }));
-      autofill(answer, extra);
+      const movedArea = autofill(answer, extra);
       setMunicipality(answer.municipality);
-      resolvedCallback.current?.({ formattedAddress, area: answer.area, street: answer.street, municipality: answer.municipality });
+      resolvedCallback.current?.({ formattedAddress, area: answer.area, street: answer.street, municipality: answer.municipality, movedArea });
       onAvailabilityChange?.(true);
       return true;
     } catch (lookupError) {
@@ -296,10 +314,11 @@ export function LocationPicker({ language, value, onChange, onResolved, onAvaila
   const selection = value.selection;
   const pin = selection ? { latitude: selection.latitude, longitude: selection.longitude } : null;
   const listId = `${ids}-results`;
-  const municipalityName = municipality ? (language === "ar" ? municipality.ar : municipality.en) : null;
+  const municipalityName = municipality ? (language === "ar" ? municipality.labelAr : municipality.label) : null;
+  // Zone and building are never on the map: while empty they are marked as needing the customer.
   const detail = (name: keyof LocationDetails, label: string, inputMode?: "numeric") => (
     <label className="location-picker__field">
-      <span>{label}</span>
+      <span>{label}{(name === "zone" || name === "building") && !value.details[name] ? <em className="location-picker__needed"> · {t.needed}</em> : null}</span>
       <input
         value={value.details[name]}
         inputMode={inputMode}
@@ -405,18 +424,16 @@ export function LocationPicker({ language, value, onChange, onResolved, onAvaila
             <span className="location-picker__eyebrow">{t.selected}</span>
             <strong dir="auto">{selection.formattedAddress}</strong>
             <span className="location-picker__precision">{t.precision[selection.precision]}{selection.accuracyMeters !== undefined ? ` (±${Math.round(selection.accuracyMeters)} ${t.unit_m})` : ""}</span>
-            {municipalityName ? <span className="location-picker__precision">{t.municipality(municipalityName)}</span> : null}
+            <span className="location-picker__precision" data-testid="location-municipality">{municipalityName ? t.municipality(municipalityName) : (language === "ar" ? "قطر" : "Qatar")}</span>
             {lookupFailed ? <span className="location-picker__note location-picker__note--error" role="status">{t.lookupFailed}</span> : null}
           </div>
         </div>
-      ) : null}
-      {selection && municipality && !municipality.deliveryArea ? (
-        <p className="location-picker__notice" role="status">{t.outsideAreas(municipalityName!)}</p>
       ) : null}
 
       {selection ? (
         <div className="location-picker__details">
           <p className="location-picker__plate-hint location-picker__wide">{t.plateHint}</p>
+          {detail("area", t.area)}
           {detail("zone", t.zone, "numeric")}
           {detail("street", t.street)}
           {detail("building", t.building)}

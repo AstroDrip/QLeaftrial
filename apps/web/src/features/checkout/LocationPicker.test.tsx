@@ -143,7 +143,7 @@ describe("LocationPicker", () => {
     render(<Harness initial={selectPoint(emptyLocation, point)} />);
     await userEvent.click(screen.getByRole("button", { name: "Confirm delivery location" }));
     expect(screen.getByText("Delivery location confirmed")).toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText("Building"), "7");
+    await userEvent.type(screen.getByLabelText(/^Building/), "7");
     expect(screen.queryByText("Delivery location confirmed")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Confirm delivery location" })).toBeInTheDocument();
   });
@@ -153,7 +153,7 @@ describe("LocationPicker", () => {
     vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body ?? "{}")) as { latitude: number };
       const outside = body.latitude === 25.34;
-      return { ok: true, status: 200, json: async () => (outside ? { inQatar: false } : { inQatar: true, formattedAddress: `Street ${body.latitude}, Al Dafna, Qatar`, area: "Al Dafna", street: `Street ${body.latitude}`, landmark: null, precision: "street", municipality: { en: "Doha", ar: "الدوحة", deliveryArea: "doha" } }) } as Response;
+      return { ok: true, status: 200, json: async () => (outside ? { inQatar: false } : { inQatar: true, formattedAddress: `Street ${body.latitude}, Al Dafna, Qatar`, area: "Al Dafna", street: `Street ${body.latitude}`, landmark: null, precision: "street", municipality: { key: "doha", en: "Doha", ar: "الدوحة", label: "Doha", labelAr: "الدوحة" } }) } as Response;
     }));
     render(<Harness />);
     expect(screen.getByText(/Tap the map to drop a pin on your building/)).toBeInTheDocument();
@@ -162,21 +162,22 @@ describe("LocationPicker", () => {
     await tap();
     await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.31,51.5"));
     expect(await screen.findByText("Street 25.31, Al Dafna, Qatar")).toBeInTheDocument();
-    expect(screen.getByText("Municipality: Doha")).toBeInTheDocument();
-    expect(screen.getByLabelText("Street")).toHaveValue("Street 25.31");
+    expect(screen.getByTestId("location-municipality")).toHaveTextContent("Doha, Qatar");
+    expect(screen.getByLabelText("Area / neighbourhood")).toHaveValue("Al Dafna");
+    expect(screen.getByLabelText(/^Street/)).toHaveValue("Street 25.31");
 
     await tap();
     await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.32,51.5"));
     expect(await screen.findByText("Street 25.32, Al Dafna, Qatar")).toBeInTheDocument();
-    expect(screen.getByLabelText("Street")).toHaveValue("Street 25.32");
+    expect(screen.getByLabelText(/^Street/)).toHaveValue("Street 25.32");
 
     // The customer types their own street; later pins leave it alone.
-    await userEvent.clear(screen.getByLabelText("Street"));
-    await userEvent.type(screen.getByLabelText("Street"), "My street");
+    await userEvent.clear(screen.getByLabelText(/^Street/));
+    await userEvent.type(screen.getByLabelText(/^Street/), "My street");
     await tap();
     await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.33,51.5"));
     await screen.findByText("Street 25.33, Al Dafna, Qatar");
-    expect(screen.getByLabelText("Street")).toHaveValue("My street");
+    expect(screen.getByLabelText(/^Street/)).toHaveValue("My street");
 
     // Outside Qatar: the previous pin comes back, with an explanation.
     await tap();
@@ -184,12 +185,45 @@ describe("LocationPicker", () => {
     expect(screen.getByTestId("stub-map")).toHaveTextContent("25.33,51.5");
   });
 
-  it("warns when the pin is outside the areas QLeaves delivers to", async () => {
-    stubGeo([], { inQatar: true, formattedAddress: "Lusail Marina, Qatar", area: "Lusail", street: null, landmark: "Lusail Marina", precision: "landmark", municipality: { en: "Al Daayen", ar: "الضعاين", deliveryArea: null } });
+  it("accepts a pin anywhere in Qatar without any delivery-area warning, and fills area and landmark", async () => {
+    stubGeo([], { inQatar: true, formattedAddress: "Lusail Marina, Lusail, Qatar", area: "Lusail", street: null, landmark: "Lusail Marina", precision: "landmark", municipality: { key: "alDaayen", en: "Al Daayen", ar: "الضعاين", label: "Al Daayen", labelAr: "الضعاين" } });
     render(<Harness />);
     await userEvent.click(await screen.findByRole("button", { name: "Test: tap map" }));
-    expect(await screen.findByText(/Al Daayen is outside the areas we usually deliver to/)).toBeInTheDocument();
+    expect(await screen.findByTestId("location-municipality")).toHaveTextContent("Al Daayen, Qatar");
+    expect(screen.queryByText(/outside the areas/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Area / neighbourhood")).toHaveValue("Lusail");
     expect(screen.getByLabelText("Landmark (optional)")).toHaveValue("Lusail Marina");
+    // The map knows no street here and never knows zone or building: they stay empty and are marked for the customer.
+    expect(screen.getByLabelText(/^Street/)).toHaveValue("");
+    expect(screen.getByLabelText(/^Zone/)).toHaveValue("");
+    expect(screen.getByLabelText(/^Building/)).toHaveValue("");
+    expect(screen.getAllByText(/Please add/)).toHaveLength(2);
+  });
+
+  it("clears details typed for the old spot when the pin moves to a different neighbourhood, and keeps them within the same one", async () => {
+    const areas = ["Al Sadd", "Al Sadd", "Al Wakrah"];
+    let call = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      const area = areas[Math.min(call, areas.length - 1)];
+      call += 1;
+      return { ok: true, status: 200, json: async () => ({ inQatar: true, formattedAddress: `Main Street, ${area}, Qatar`, area, street: "Main Street", landmark: null, precision: "street", municipality: null }) } as Response;
+    }));
+    render(<Harness />);
+    const tap = async () => userEvent.click(await screen.findByRole("button", { name: "Test: tap map" }));
+    await tap();
+    await waitFor(() => expect(screen.getByLabelText("Area / neighbourhood")).toHaveValue("Al Sadd"));
+    await userEvent.type(screen.getByLabelText(/^Building/), "12");
+    await userEvent.type(screen.getByLabelText(/^Zone/), "38");
+
+    await tap(); // still Al Sadd: a small adjustment
+    await screen.findByText("Main Street, Al Sadd, Qatar");
+    expect(screen.getByLabelText(/^Building/)).toHaveValue("12");
+
+    await tap(); // now Al Wakrah
+    await waitFor(() => expect(screen.getByLabelText("Area / neighbourhood")).toHaveValue("Al Wakrah"));
+    expect(screen.getByLabelText(/^Building/)).toHaveValue("");
+    expect(screen.getByLabelText(/^Zone/)).toHaveValue("");
+    expect(screen.getByText(/details from the previous spot were cleared/)).toBeInTheDocument();
   });
 
   it("ignores a slow answer for an older choice, so it cannot overwrite a newer one", async () => {

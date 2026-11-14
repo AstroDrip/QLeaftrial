@@ -100,7 +100,7 @@
 
 /* ---------- Order status tabs ---------- */
 .admin-order-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--a-3); }
-.status-tabs { display: flex; gap: 7.2px; padding: 6px; border-radius: 18px; background: #dfeedd; }
+.status-tabs { display: flex; flex-wrap: wrap; max-width: 100%; gap: 7.2px; padding: 6px; border-radius: 18px; background: #dfeedd; }
 .status-tab {
   display: inline-flex;
   align-items: center;
@@ -422,3 +422,4 @@ html[lang="ar"] .admin-location__title { letter-spacing: 0; }
 .admin-location__dialog-head p { flex: 1 1 200px; min-width: 0; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .admin-location__dialog-map { height: min(70dvh, 620px); }
 .admin-location__note--warn { color: #f2c66d; }
+.admin-location__source { color: var(--admin-muted); font-size: .72rem; }

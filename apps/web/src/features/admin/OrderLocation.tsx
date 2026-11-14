@@ -15,7 +15,7 @@ const copyText = {
     status: { confirmed: "Location confirmed", manual: "Written address only", missing: "Location not recorded" } as Record<LocationStatus, string>,
     manualNote: "The map was unavailable when this order was placed. The customer gave a written address only; confirm the location with them.",
     missingNote: "Delivery location was not recorded for this order.",
-    municipality: "Municipality", outside: "Outside delivery areas", outsideNote: "This pin is outside Doha, Al Rayyan, Al Wakrah and Al Khor. Confirm delivery with the customer.",
+    municipality: "Municipality", country: "Country", qatar: "Qatar", fromMap: "from the map", fromCustomer: "typed by customer",
     area: "Area", zone: "Zone", street: "Street", building: "Building", unit: "Floor / flat", landmark: "Landmark",
     coordinates: "Coordinates", source: "Found by", accuracy: "Device accuracy", confirmedAt: "Confirmed",
     sources: { gps: "Customer's device location", search: "Address search", pin: "Pin placed by the customer" } as Record<string, string>,
@@ -28,7 +28,7 @@ const copyText = {
     status: { confirmed: "تم تأكيد الموقع", manual: "عنوان مكتوب فقط", missing: "لم يُسجّل الموقع" } as Record<LocationStatus, string>,
     manualNote: "كانت الخريطة غير متاحة عند تقديم هذا الطلب. قدّم العميل عنوانًا مكتوبًا فقط؛ أكّد الموقع معه.",
     missingNote: "لم يُسجّل موقع التوصيل لهذا الطلب.",
-    municipality: "البلدية", outside: "خارج مناطق التوصيل", outsideNote: "هذا الدبوس خارج الدوحة والريان والوكرة والخور. أكّد التوصيل مع العميل.",
+    municipality: "البلدية", country: "الدولة", qatar: "قطر", fromMap: "من الخريطة", fromCustomer: "كتبه العميل",
     area: "المنطقة", zone: "المنطقة (رقم)", street: "الشارع", building: "المبنى", unit: "الطابق / الشقة", landmark: "معلم قريب",
     coordinates: "الإحداثيات", source: "طريقة التحديد", accuracy: "دقة الجهاز", confirmedAt: "وقت التأكيد",
     sources: { gps: "موقع جهاز العميل", search: "البحث عن العنوان", pin: "دبوس وضعه العميل" } as Record<string, string>,
@@ -60,13 +60,7 @@ function googleMapsUrl(latitude: number, longitude: number): string {
 export function LocationStatusChip({ order, isArabic }: { order: AdminOrder; isArabic: boolean }) {
   const status = locationStatus(order);
   const t = copyText[isArabic ? "ar" : "en"];
-  const outside = status === "confirmed" && order.deliveryMunicipality && !order.deliveryMunicipality.deliveryArea;
-  return (
-    <>
-      <span className={`admin-location-chip admin-location-chip--${status}`} data-testid="location-status">{t.status[status]}</span>
-      {outside ? <span className="admin-location-chip admin-location-chip--manual" data-testid="location-outside">{t.outside}</span> : null}
-    </>
-  );
+  return <span className={`admin-location-chip admin-location-chip--${status}`} data-testid="location-status">{t.status[status]}</span>;
 }
 
 export function OrderLocation({ order, isArabic }: { order: AdminOrder; isArabic: boolean }) {
@@ -117,9 +111,14 @@ export function OrderLocation({ order, isArabic }: { order: AdminOrder; isArabic
     setCopied(done ? kind : "failed");
   }
   const municipality = order.deliveryMunicipality;
-  const rows: Array<[string, string | null | undefined]> = [
-    [t.municipality, municipality ? (isArabic ? municipality.ar : municipality.en) : null],
-    [t.area, location.area], [t.zone, location.zone], [t.street, location.street], [t.building, location.building], [t.unit, location.unit], [t.landmark, location.landmark],
+  // Area, street and landmark say whether they came from the map or were typed; zone, building and flat are always typed.
+  const sources = order.deliveryFieldSources;
+  const tag = (source: "map" | "customer" | null | undefined) => (source === "map" ? t.fromMap : source === "customer" ? t.fromCustomer : null);
+  const rows: Array<[string, string | null | undefined, string | null]> = [
+    [t.country, t.qatar, null],
+    [t.municipality, municipality ? (isArabic ? municipality.ar : municipality.en) : null, null],
+    [t.area, location.area, tag(sources?.area)], [t.zone, location.zone, tag("customer")], [t.street, location.street, tag(sources?.street)],
+    [t.building, location.building, tag("customer")], [t.unit, location.unit, tag("customer")], [t.landmark, location.landmark, tag(sources?.landmark)],
   ];
   const confirmed = new Intl.DateTimeFormat(isArabic ? "ar-QA" : "en-GB", { timeZone: "Asia/Qatar", dateStyle: "medium", timeStyle: "short" }).format(new Date(location.confirmedAt));
   const pin = { latitude: location.latitude, longitude: location.longitude };
@@ -128,10 +127,9 @@ export function OrderLocation({ order, isArabic }: { order: AdminOrder; isArabic
     <div className="admin-location" data-testid="order-location">
       <h3 className="admin-location__title">{t.title}</h3>
       <p className="admin-location__address" dir="auto">{location.formattedAddress}</p>
-      {municipality && !municipality.deliveryArea ? <p className="admin-location__note admin-location__note--warn">{t.outsideNote}</p> : null}
       <dl className="admin-location__details">
-        {rows.filter(([, value]) => value).map(([label, value]) => (
-          <div key={label}><dt>{label}</dt><dd dir="auto">{value}</dd></div>
+        {rows.filter(([, value]) => value).map(([label, value, source]) => (
+          <div key={label}><dt>{label}</dt><dd dir="auto">{value}{source ? <span className="admin-location__source"> · {source}</span> : null}</dd></div>
         ))}
         <div><dt>{t.coordinates}</dt><dd dir="ltr" className="admin-location__coords">{coords}</dd></div>
         <div><dt>{t.source}</dt><dd>{t.sources[location.source] ?? location.source} · {t.precision[location.precision] ?? location.precision}</dd></div>

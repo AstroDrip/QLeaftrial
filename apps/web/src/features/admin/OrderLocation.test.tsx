@@ -48,16 +48,15 @@ describe("admin order location", () => {
     expect(screen.getByText(/confirm the location with them/)).toBeInTheDocument();
   });
 
-  it("shows the pin's municipality and flags a pin outside the delivery areas", () => {
-    const outside = { ...located, deliveryMunicipality: { en: "Al Daayen", ar: "الضعاين", deliveryArea: null } } as AdminOrder;
-    render(<><LocationStatusChip order={outside} isArabic={false} /><OrderLocation order={outside} isArabic={false} /></>);
-    expect(screen.getByTestId("location-outside")).toHaveTextContent("Outside delivery areas");
+  it("shows the municipality for any part of Qatar without flagging it, and says which details came from the map", () => {
+    const lusail = { ...located, deliveryMunicipality: { key: "alDaayen", en: "Al Daayen", ar: "الضعاين", label: "Al Daayen", labelAr: "الضعاين" }, deliveryFieldSources: { area: "map", street: "customer", landmark: null } } as AdminOrder;
+    render(<><LocationStatusChip order={lusail} isArabic={false} /><OrderLocation order={lusail} isArabic={false} /></>);
+    expect(screen.getByTestId("location-status")).toHaveTextContent("Location confirmed");
+    expect(screen.queryByText(/outside/i)).not.toBeInTheDocument();
     expect(screen.getByText("Al Daayen")).toBeInTheDocument();
-    expect(screen.getByText(/Confirm delivery with the customer/)).toBeInTheDocument();
-    cleanup();
-    const inside = { ...located, deliveryMunicipality: { en: "Doha", ar: "الدوحة", deliveryArea: "doha" } } as AdminOrder;
-    render(<><LocationStatusChip order={inside} isArabic={false} /><OrderLocation order={inside} isArabic={false} /></>);
-    expect(screen.queryByTestId("location-outside")).not.toBeInTheDocument();
-    expect(screen.getByText("Doha")).toBeInTheDocument();
+    expect(screen.getByText("Qatar")).toBeInTheDocument();
+    expect(screen.getByText("Souq Waqif").closest("dd")).toHaveTextContent("from the map");
+    expect(screen.getByText("Ali Bin Abdulla Street").closest("dd")).toHaveTextContent("typed by customer");
+    expect(screen.getByText("Flat 4").closest("dd")).toHaveTextContent("typed by customer");
   });
 });

@@ -46,7 +46,7 @@ export function composeAddressLine(details: LocationDetails, place: ResolvedPlac
     details.building.trim() && (isArabic ? `مبنى ${details.building.trim()}` : `Building ${details.building.trim()}`),
     details.street.trim() || place?.street || "",
     details.zone.trim() && (isArabic ? `منطقة ${details.zone.trim()}` : `Zone ${details.zone.trim()}`),
-    place?.area ?? "",
+    details.area.trim() || place?.area || "",
   ].filter(Boolean);
   return [...new Set(parts)].join(isArabic ? "، " : ", ").slice(0, 240);
 }
@@ -77,11 +77,18 @@ export function CheckoutPage() {
   formNow.current = form;
   const autoAddress = useRef("");
   const autoArea = useRef("");
+  const movedHandled = useRef<ResolvedPlace | null>(null);
   useEffect(() => {
     if (!location.selection) return;
     const line = composeAddressLine(location.details, place, isArabic);
-    const areaKey = place?.municipality?.deliveryArea;
+    const areaKey = place?.municipality?.key;
     const areaLabel = areaKey ? content.checkout.deliveryAreas[areaKey] : "";
+    // A pin in a different neighbourhood makes a hand-edited address line stale too: it is written afresh.
+    if (place?.movedArea && movedHandled.current !== place) {
+      movedHandled.current = place;
+      autoAddress.current = formNow.current.address;
+      autoArea.current = formNow.current.area;
+    }
     // Decided here, outside the state updater (updaters must stay free of side effects: React may run them twice).
     const current = formNow.current;
     const patch: Partial<typeof initialForm> = {};

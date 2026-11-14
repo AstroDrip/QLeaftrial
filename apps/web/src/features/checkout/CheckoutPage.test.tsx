@@ -221,7 +221,7 @@ describe("CheckoutPage", () => {
   });
 
   it("fills the address line and delivery area from the pin, and stops once the customer edits them", async () => {
-    reverseAnswer.municipality = { en: "Doha", ar: "الدوحة", deliveryArea: "doha" };
+    reverseAnswer.municipality = { key: "doha", en: "Doha", ar: "الدوحة", label: "Doha", labelAr: "الدوحة" };
     try {
       useCartStore.setState({ items: [plant(20)] });
       renderCheckout(vi.fn());
@@ -230,14 +230,29 @@ describe("CheckoutPage", () => {
       await waitFor(() => expect(address).toHaveValue("Ali Bin Abdulla Street, Souq Waqif"));
       expect(screen.getByRole("combobox", { name: /area or town/i })).toHaveValue("Doha");
 
-      await userEvent.type(screen.getByLabelText("Building"), "7");
-      await userEvent.type(screen.getByLabelText("Zone"), "3");
+      await userEvent.type(screen.getByLabelText(/^Building/), "7");
+      await userEvent.type(screen.getByLabelText(/^Zone/), "3");
       await waitFor(() => expect(address).toHaveValue("Building 7, Ali Bin Abdulla Street, Zone 3, Souq Waqif"));
 
       await userEvent.clear(address);
       await userEvent.type(address, "Villa 9, my own words");
       await userEvent.type(screen.getByLabelText("Floor / flat"), "Flat 2");
       expect(address).toHaveValue("Villa 9, my own words");
+    } finally {
+      delete reverseAnswer.municipality;
+    }
+  });
+
+  it("offers every municipality in Qatar and selects the pin's one, wherever it is", async () => {
+    reverseAnswer.municipality = { key: "alDaayen", en: "Al Daayen", ar: "الضعاين", label: "Al Daayen", labelAr: "الضعاين" };
+    try {
+      useCartStore.setState({ items: [plant(20)] });
+      renderCheckout(vi.fn());
+      const area = screen.getByRole("combobox", { name: /area or town/i });
+      const options = [...area.querySelectorAll("option")].map((option) => option.textContent);
+      expect(options).toEqual(["Select a delivery area", "Doha", "Al Rayyan", "Al Wakrah", "Al Khor", "Umm Salal", "Al Daayen", "Al Shamal", "Al Shahaniya"]);
+      await userEvent.click(await screen.findByRole("button", { name: "Test: drop pin" }));
+      await waitFor(() => expect(area).toHaveValue("Al Daayen"));
     } finally {
       delete reverseAnswer.municipality;
     }

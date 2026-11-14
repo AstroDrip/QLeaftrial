@@ -12,12 +12,12 @@ export type LocationSelection = {
   accuracyMeters?: number;
   providerRef?: string;
 };
-export type LocationDetails = { zone: string; street: string; building: string; unit: string; landmark: string };
+export type LocationDetails = { area: string; zone: string; street: string; building: string; unit: string; landmark: string };
 export type DeliveryLocationState = { selection: LocationSelection | null; details: LocationDetails; confirmedAt: string | null };
 
 export const emptyLocation: DeliveryLocationState = {
   selection: null,
-  details: { zone: "", street: "", building: "", unit: "", landmark: "" },
+  details: { area: "", zone: "", street: "", building: "", unit: "", landmark: "" },
   confirmedAt: null,
 };
 
@@ -58,6 +58,7 @@ export function locationPayload(state: DeliveryLocationState) {
     precision,
     formattedAddress,
     ...(accuracyMeters !== undefined ? { accuracyMeters: Math.round(accuracyMeters) } : {}),
+    area: text(state.details.area),
     zone: text(state.details.zone),
     street: text(state.details.street),
     building: text(state.details.building),

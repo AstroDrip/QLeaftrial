@@ -61,6 +61,6 @@ html[lang="ar"] .location-picker__eyebrow { letter-spacing: 0; }
   .location-picker__confirm-button { width: 100%; }
 }
 
-/* Pin outside the usual delivery areas, and the blue-plate hint above the address details. */
-.location-picker__notice { margin: 0; padding: var(--space-3) var(--space-4); border-inline-start: 3px solid #c58a1b; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: rgba(197, 138, 27, .1); color: var(--ink); font-size: .88rem; }
+/* The hint above the address details, and the "please add" mark on fields the map cannot fill. */
 .location-picker__plate-hint { margin: 0; color: var(--text-soft); font-size: .82rem; }
+.location-picker__needed { color: #a3322b; font-style: normal; font-weight: 600; }

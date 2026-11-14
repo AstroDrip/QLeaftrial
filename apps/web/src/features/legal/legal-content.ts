@@ -66,7 +66,7 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
       title: "Shipping & Returns",
       description: "QLeaves delivery areas, charges, cancellations, faulty items and returns for plant orders in Qatar.",
       sections: [
-        { title: "Delivery areas and charges", body: ["We deliver to Doha, Al Rayyan, Al Wakrah and Al Khor. Delivery is free on orders of 150 QAR or more, and you can still order below that amount. After ordering, we contact you to confirm a delivery time."] },
+        { title: "Delivery areas and charges", body: ["We deliver anywhere in Qatar. Delivery is free on orders of 150 QAR or more, and you can still order below that amount. After ordering, we contact you to confirm a delivery time."] },
         { title: "Receiving your plants", body: ["Please keep your phone available on the delivery day and check your plants when they arrive. Unpack them promptly and keep them out of harsh direct sun until they settle in."] },
         { title: "Changing or cancelling an order", body: ["To change or cancel an order, contact us as soon as possible with your order number. Orders that have not been prepared or dispatched can be changed or cancelled; after dispatch it depends on how far the delivery has progressed."] },
         { title: "Damaged, incorrect or missing items", body: ["If an item arrives damaged, is different from what you ordered, or is missing, contact us promptly with your order number and a photo. In line with the Consumer Protection Law we will replace it, refund it, or fix the problem free of charge, including any collection needed."] },
@@ -134,7 +134,7 @@ export const legalContent: Record<"en" | "ar", { privacy: LegalDocument; terms: 
       title: "الشحن والإرجاع",
       description: "مناطق التوصيل والرسوم والإلغاء والمنتجات المعيبة والإرجاع لطلبات النباتات من QLeaves في قطر.",
       sections: [
-        { title: "مناطق التوصيل والرسوم", body: ["نوصل إلى الدوحة والريان والوكرة والخور. التوصيل مجاني للطلبات من 150 ر.ق فأكثر، ويمكنك الطلب بأقل من ذلك. وبعد الطلب نتواصل معك لتأكيد موعد التوصيل."] },
+        { title: "مناطق التوصيل والرسوم", body: ["نوصل إلى أي مكان في قطر. التوصيل مجاني للطلبات من 150 ر.ق فأكثر، ويمكنك الطلب بأقل من ذلك. وبعد الطلب نتواصل معك لتأكيد موعد التوصيل."] },
         { title: "استلام نباتاتك", body: ["يرجى إبقاء هاتفك متاحًا يوم التوصيل وفحص النباتات عند وصولها. أخرجها من التغليف سريعًا وأبعدها عن الشمس المباشرة القوية حتى تستقر."] },
         { title: "تعديل الطلب أو إلغاؤه", body: ["لتعديل طلب أو إلغائه تواصل معنا في أسرع وقت مع رقم الطلب. يمكن تعديل الطلبات أو إلغاؤها قبل تجهيزها أو إرسالها، وبعد الإرسال يعتمد ذلك على مرحلة التوصيل."] },
         { title: "العناصر التالفة أو الخاطئة أو الناقصة", body: ["إذا وصل عنصر تالفًا أو مختلفًا عما طلبته أو كان ناقصًا، تواصل معنا سريعًا مع رقم الطلب وصورة. ووفقًا لقانون حماية المستهلك سنستبدله أو نرد قيمته أو نصلح المشكلة مجانًا، بما في ذلك أي استلام لازم."] },
