@@ -6,9 +6,16 @@ import { LocationPicker } from "./LocationPicker";
 import { confirmLocation, editDetails, emptyLocation, isConfirmed, locationPayload, selectPoint, type DeliveryLocationState } from "./delivery-location";
 
 vi.mock("../map/QatarMap", () => {
-  function StubMap(props: { onReady?: () => void; pin: { latitude: number; longitude: number } | null }) {
+  let taps = 0;
+  function StubMap(props: { onReady?: () => void; pin: { latitude: number; longitude: number } | null; editable?: boolean; onPinMove?: (point: { latitude: number; longitude: number }) => void }) {
     useEffect(() => { props.onReady?.(); }, []);
-    return <p data-testid="stub-map">{props.pin ? `${props.pin.latitude},${props.pin.longitude}` : "no pin"}</p>;
+    return (
+      <>
+        <p data-testid="stub-map">{props.pin ? `${props.pin.latitude},${props.pin.longitude}` : "no pin"}</p>
+        {/* A tap on the real map only reaches onPinMove while the map is editable. */}
+        <button type="button" onClick={() => { taps += 1; if (props.editable) props.onPinMove?.({ latitude: [25.31, 25.32, 25.33, 25.34][taps - 1] ?? 25.35, longitude: 51.5 }); }}>Test: tap map</button>
+      </>
+    );
   }
   return { default: StubMap, QatarMap: StubMap };
 });
@@ -139,5 +146,22 @@ describe("LocationPicker", () => {
     await userEvent.type(screen.getByLabelText("Building"), "7");
     expect(screen.queryByText("Delivery location confirmed")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Confirm delivery location" })).toBeInTheDocument();
+  });
+
+  it("drops the first pin with a tap, and after that only moves it in Adjust pin mode", async () => {
+    stubGeo();
+    render(<Harness />);
+    expect(screen.getByText("Or tap the map to drop a pin on your building.")).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("button", { name: "Test: tap map" }));
+    await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.31,51.5"));
+    expect(screen.getByText("Placed by you on the map")).toBeInTheDocument();
+
+    // A stray tap does not move an existing pin.
+    await userEvent.click(screen.getByRole("button", { name: "Test: tap map" }));
+    expect(screen.getByTestId("stub-map")).toHaveTextContent("25.31,51.5");
+
+    await userEvent.click(screen.getByRole("button", { name: "Adjust pin" }));
+    await userEvent.click(screen.getByRole("button", { name: "Test: tap map" }));
+    await waitFor(() => expect(screen.getByTestId("stub-map")).toHaveTextContent("25.33,51.5"));
   });
 });

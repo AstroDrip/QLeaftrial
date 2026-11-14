@@ -33,6 +33,7 @@ const copy = {
     adjust: "Adjust pin",
     doneAdjusting: "Done adjusting",
     adjustHint: "Drag the pin or tap the map to place it on your door.",
+    tapHint: "Or tap the map to drop a pin on your building.",
     zone: "Zone",
     street: "Street",
     building: "Building",
@@ -68,6 +69,7 @@ const copy = {
     adjust: "ضبط الدبوس",
     doneAdjusting: "تم الضبط",
     adjustHint: "اسحب الدبوس أو انقر على الخريطة لوضعه عند بابك.",
+    tapHint: "أو انقر على الخريطة لوضع دبوس على مبناك.",
     zone: "المنطقة (رقم)",
     street: "الشارع",
     building: "المبنى",
@@ -302,16 +304,21 @@ export function LocationPicker({ language, value, onChange, onAvailabilityChange
               language={language}
               pin={pin}
               focusKey={focusKey}
-              editable={adjusting}
+              editable={adjusting || !value.selection}
               label={t.mapLabel}
-              onPinMove={(point) => { setOpen(false); void placePoint(point, "pin"); }}
+              onPinMove={(point) => {
+                setOpen(false);
+                // The first pin zooms the map in onto it, so it can be put on the right building.
+                if (!latest.current.selection) setFocusKey((key) => key + 1);
+                void placePoint(point, "pin");
+              }}
               onReady={() => onAvailabilityChange?.(true)}
               onError={() => onAvailabilityChange?.(false)}
             />
           </Suspense>
         ) : <div className="location-picker__map-placeholder" />}
       </div>
-      {adjusting ? <p className="location-picker__note" role="note">{t.adjustHint}</p> : null}
+      {adjusting ? <p className="location-picker__note" role="note">{t.adjustHint}</p> : !value.selection ? <p className="location-picker__note" role="note">{t.tapHint}</p> : null}
 
       {selection ? (
         <div className="location-picker__selected">
