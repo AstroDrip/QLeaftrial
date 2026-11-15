@@ -314,16 +314,17 @@ export async function updateOrderStatus(id: string, status: OrderStatusInput, ac
       );
     }
 
+    // The status is changed only if it is still what was just read. Two requests arriving together (a double tap,
+    // two admins) cannot both win, so stock is put back once and only once.
+    const written = await tx.order.updateMany({ where: { id, status: currentStatus }, data: { status: persistedStatus } });
+    if (written.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
+
     if (persistedStatus === "CANCELLED") {
       await releaseReservedItems(tx, order.items);
     }
 
     await tx.adminAuditLog.create({ data: auditRow(actor, "order.status", order, { from: currentStatus, to: persistedStatus }) });
-    return tx.order.update({
-      where: { id },
-      data: { status: persistedStatus },
-      include: ORDER_INCLUDE,
-    });
+    return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
   });
 }
 
@@ -334,6 +335,11 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
     if (order.status !== "PENDING") {
       throw new ApiError(409, "ORDER_NOT_PENDING", "Only pending orders can be edited before acceptance");
     }
+
+    // Claim the order first: if another request has just accepted, declined or edited it, this one stops here
+    // before any stock is moved. (If a later check fails, the whole transaction, this claim included, is undone.)
+    const claimed = await tx.order.updateMany({ where: { id, status: "PENDING" }, data: { status: "CONFIRMED" } });
+    if (claimed.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
 
     const editIds = input.items.map((item) => item.orderItemId);
     if (new Set(editIds).size !== editIds.length || input.items.length !== order.items.length) {
