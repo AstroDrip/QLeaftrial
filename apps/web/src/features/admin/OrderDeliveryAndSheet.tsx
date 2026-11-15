@@ -12,7 +12,14 @@ export function OrderDeliveryAndSheet({ order, isArabic }: { order: AdminOrder; 
     ? { pending: "رسوم التوصيل: يجب تأكيدها مع العميل (الطلب أقل من 150 ر.ق)", label: "رسوم التوصيل (ر.ق)", save: "تأكيد الرسوم", saving: "جارٍ الحفظ…", invalid: "أدخل رقمًا صحيحًا من 0 أو أكثر", failed: "تعذر حفظ الرسوم", confirmed: (value: number) => `رسوم التوصيل المؤكدة: ${value} ر.ق`, sheetFailed: "لم يتم تحديث جدول Google لهذا الطلب.", retry: "إعادة المحاولة", retrying: "جارٍ المحاولة…", sheetDone: "تم التحديث في جدول Google" }
     : { pending: "Delivery charge: to confirm with the customer (order below 150 QAR)", label: "Delivery charge (QAR)", save: "Confirm charge", saving: "Saving…", invalid: "Enter a whole number, 0 or more", failed: "Could not save the charge", confirmed: (value: number) => `Delivery charge confirmed: ${value} QAR`, sheetFailed: "This order is not in the Google Sheet yet.", retry: "Retry", retrying: "Retrying…", sheetDone: "In the Google Sheet" };
 
+  // The email that tells the shop about this order: sent, waiting, failed (with a retry), or not set up.
+  const e = isArabic
+    ? { sent: "تم إرسال بريد الطلب", waiting: "بريد الطلب في انتظار الإرسال", failed: "لم يُرسل بريد الطلب", off: "بريد الطلبات غير مُعدّ", retry: "إعادة الإرسال", retrying: "جارٍ الإرسال…", retryFailed: "تعذّر الإرسال. حاول لاحقًا" }
+    : { sent: "Order email sent", waiting: "Order email waiting to be sent", failed: "Order email was not delivered", off: "Order emails are not set up", retry: "Send again", retrying: "Sending…", retryFailed: "Could not send. Try again later" };
+  const email = order.notifications?.find((notification) => notification.eventType === "ORDER_CREATED") ?? null;
+
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+  const resend = useMutation({ mutationFn: () => adminApi.retryNotification(email!.id), onSettled: refresh });
   const confirm = useMutation({
     mutationFn: (value: number) => adminApi.confirmDeliveryFee(order.id, value),
     onSuccess: () => { setFee(""); setError(null); return refresh(); },
@@ -29,7 +36,7 @@ export function OrderDeliveryAndSheet({ order, isArabic }: { order: AdminOrder; 
 
   const showDelivery = order.deliveryChargePending || Boolean(order.deliveryFeeConfirmedAt);
   const showSheet = Boolean(order.sheetSyncError) || Boolean(order.sheetSyncedAt);
-  if (!showDelivery && !showSheet) return null;
+  if (!showDelivery && !showSheet && !email) return null;
 
   return (
     <div className="admin-order-extras">
@@ -55,6 +62,16 @@ export function OrderDeliveryAndSheet({ order, isArabic }: { order: AdminOrder; 
         </div>
       ) : order.sheetSyncedAt ? (
         <p className="admin-order-sheet admin-order-sheet--ok">{t.sheetDone}</p>
+      ) : null}
+      {email?.status === "FAILED" ? (
+        <div className="admin-order-sheet" role="status" data-testid="order-email-status">
+          <span>{resend.isError || resend.data?.status === "FAILED" ? e.retryFailed : e.failed}</span>
+          <button type="button" className="admin-order-extras__button" onClick={() => resend.mutate()} disabled={resend.isPending}>{resend.isPending ? e.retrying : e.retry}</button>
+        </div>
+      ) : email ? (
+        <p className="admin-order-sheet admin-order-sheet--ok" data-testid="order-email-status">
+          {email.status === "SENT" ? e.sent : email.status === "DISABLED" ? e.off : e.waiting}
+        </p>
       ) : null}
     </div>
   );

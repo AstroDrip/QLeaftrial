@@ -11,6 +11,8 @@ import { sheetsRouter } from "./modules/sheets/sheets.routes.js";
 import { invoiceRouter } from "./modules/orders/invoice.routes.js";
 import { reviewRouter } from "./modules/reviews/review.routes.js";
 
+import { notificationRouter } from "./modules/notifications/notification.routes.js";
+
 export const apiRouter = Router();
 export const siteRouter = Router();
 
@@ -24,5 +26,6 @@ apiRouter.use(geoRouter);
 apiRouter.use(storeSettingsRouter);
 apiRouter.use(securityRouter);
 apiRouter.use(sheetsRouter);
+apiRouter.use(notificationRouter);
 apiRouter.use(invoiceRouter);
 apiRouter.use(reviewRouter);

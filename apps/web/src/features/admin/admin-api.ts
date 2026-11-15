@@ -117,6 +117,16 @@ export interface AdminDeliveryLocation {
   confirmedAt: string;
 }
 
+export interface OrderNotification {
+  id: string;
+  eventType: "ORDER_CREATED" | "PAYMENT_VERIFIED" | "PAYMENT_FAILED" | "ORDER_CANCELLED";
+  /** DISABLED: order emails were not set up when the order was placed. */
+  status: "PENDING" | "SENDING" | "SENT" | "FAILED" | "DISABLED";
+  attempts: number;
+  lastErrorCode?: string | null;
+  sentAt?: string | null;
+}
+
 export interface AdminOrder {
   id: string;
   orderNumber: string;
@@ -134,6 +144,8 @@ export interface AdminOrder {
   deliveryFeeConfirmedAt?: string | null;
   sheetSyncedAt?: string | null;
   sheetSyncError?: string | null;
+  /** Emails to the shop about this order, oldest first. */
+  notifications?: OrderNotification[];
   deliveryLocation?: AdminDeliveryLocation | null;
   deliveryLocationManual?: boolean;
   /** The municipality the pin is in (worked out on the server from the coordinates). */
@@ -347,6 +359,8 @@ export const adminApi = {
       method: "PATCH",
       body: JSON.stringify({ deliveryFeeQar }),
     }),
+  retryNotification: (id: string): Promise<OrderNotification> =>
+    request(`/admin/notifications/${id}/retry`, { method: "POST" }),
   syncOrderToSheet: (id: string): Promise<{ written: boolean; qualifies: boolean }> =>
     request(`/admin/sheets/sync/${id}`, { method: "POST" }),
   updatePaymentStatus: (id: string, paymentStatus: string) =>

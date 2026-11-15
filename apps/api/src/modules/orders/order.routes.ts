@@ -24,6 +24,7 @@ import { publicOrderRateLimit } from "./order-rate-limit.js";
 import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
 import { toAdminOrder, toPublicOrder } from "./order-view.js";
 import { actorFrom, listAudit } from "../admin/audit.js";
+import { deliverForOrder, processDueNotifications } from "../notifications/outbox.js";
 
 export const orderRouter = Router();
 
@@ -49,8 +50,13 @@ orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
   const parsed = createOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order details");
   const { order, replayed } = await createOrder(parsed.data, header);
-  // The order is saved before anything else happens; a slow or failing sheet sync never fails it.
-  if (!replayed) await mirrorOrderToSheet(order);
+  // The order is saved before anything else happens. The admin's email is sent now and waited for (a serverless
+  // function may be frozen once it answers), with a short time limit; if it fails it stays recorded for retry.
+  // A slow or failing email or sheet sync never fails the order.
+  if (!replayed) {
+    await deliverForOrder(order.id);
+    await mirrorOrderToSheet(order);
+  }
   res.setHeader("Cache-Control", "no-store");
   if (replayed) res.setHeader("Idempotent-Replayed", "true");
   res.status(replayed ? 200 : 201).json(toPublicOrder(order));
@@ -59,6 +65,8 @@ orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
 orderRouter.use("/admin/orders", requireAdmin);
 
 orderRouter.get("/admin/orders", async (_req, res) => {
+  // An admin is looking: a good moment to retry any email that failed earlier (at most two, briefly).
+  await processDueNotifications({ limit: 2, budgetMs: 6_000 });
   res.setHeader("Cache-Control", "no-store");
   res.json({ items: (await listOrders()).map(toAdminOrder) });
 });

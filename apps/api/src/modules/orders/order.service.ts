@@ -8,9 +8,18 @@ import type { OrderChange } from "./order-changes.js";
 import { deliveryChargeToConfirm } from "../../lib/delivery.js";
 import { isInQatar, municipalityAt, reverseGeocode } from "../../lib/geo/qatar.js";
 import { auditRow, type Actor } from "../admin/audit.js";
+import { recordNotification } from "../notifications/outbox.js";
 
 // Every order read returns its lines and, when there is one, its confirmed delivery location.
 const ORDER_INCLUDE = { items: true, deliveryLocation: true } as const;
+// Admin screens also see whether each order's notification emails were delivered.
+const ADMIN_ORDER_INCLUDE = {
+  ...ORDER_INCLUDE,
+  notifications: {
+    orderBy: { createdAt: "asc" },
+    select: { id: true, eventType: true, status: true, attempts: true, lastErrorCode: true, sentAt: true, nextAttemptAt: true },
+  },
+} as const;
 
 // A confirmation older than this (or from the future) is treated as stale: the customer must confirm again.
 const LOCATION_CONFIRMATION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
@@ -155,6 +164,13 @@ function missingIdempotencyColumn(error: unknown): boolean {
   return (code === "P2022" || /column/i.test(detail)) && /idempotencyKey/.test(detail);
 }
 
+function missingNotificationTable(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const { code, message } = error as { code?: unknown; message?: unknown };
+  const detail = String(message ?? "") + JSON.stringify((error as { meta?: unknown }).meta ?? {});
+  return (code === "P2021" || /does not exist|no such table/i.test(detail)) && /NotificationOutbox/.test(detail);
+}
+
 const ORDER_NUMBER_ATTEMPTS = 3;
 
 async function releaseReservedItems(
@@ -197,9 +213,10 @@ export async function createOrder(
     throw new ApiError(503, "ORDERING_DISABLED", "Ordering is currently unavailable");
   }
 
+  let notify = true;
   for (let attempt = 1; ; attempt += 1) {
     try {
-      return { order: await insertOrder(input, key), replayed: false };
+      return { order: await insertOrder(input, key, notify), replayed: false };
     } catch (error) {
       if (key && uniqueViolationOn(error, "idempotencyKey")) {
         const existing = await findOrderByIdempotencyKey(key);
@@ -208,6 +225,12 @@ export async function createOrder(
       if (key && missingIdempotencyColumn(error)) {
         console.warn(JSON.stringify({ level: "warn", event: "order-idempotency-unavailable", reason: "column missing; run the pending migration" }));
         key = undefined;
+        continue;
+      }
+      if (notify && missingNotificationTable(error)) {
+        // The notification table has not been added to this database yet: the order still goes through.
+        console.warn(JSON.stringify({ level: "warn", event: "order-notification-unavailable", reason: "table missing; run the pending migration" }));
+        notify = false;
         continue;
       }
       if (uniqueViolationOn(error, "orderNumber") && attempt < ORDER_NUMBER_ATTEMPTS) continue;
@@ -225,7 +248,7 @@ async function findOrderByIdempotencyKey(idempotencyKey: string) {
   }
 }
 
-async function insertOrder(input: CreateOrderInput, idempotencyKey: string | undefined) {
+async function insertOrder(input: CreateOrderInput, idempotencyKey: string | undefined, notify: boolean) {
   return db.$transaction(async (tx) => {
     const quantities = new Map<string, number>();
     for (const item of input.items) {
@@ -264,7 +287,7 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
       });
     }
 
-    return tx.order.create({
+    const order = await tx.order.create({
       data: {
         orderNumber: orderNumber(),
         ...(idempotencyKey ? { idempotencyKey } : {}),
@@ -289,18 +312,21 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
       },
       include: ORDER_INCLUDE,
     });
+    // The admin's new-order email is recorded with the order itself: both are saved or neither is.
+    if (notify) await recordNotification(tx, { orderId: order.id, eventType: "ORDER_CREATED", dedupeKey: `order-created:${order.id}` });
+    return order;
   });
 }
 
 export async function listOrders() {
-  return db.order.findMany({ orderBy: { createdAt: "desc" }, include: ORDER_INCLUDE });
+  return db.order.findMany({ orderBy: { createdAt: "desc" }, include: ADMIN_ORDER_INCLUDE });
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatusInput, actor: Actor) {
   const persistedStatus = normalizeStatus(status);
 
   return db.$transaction(async (tx: any) => {
-    const order = await tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    const order = await tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
     if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
 
     if (order.status === persistedStatus) return order;
@@ -324,13 +350,13 @@ export async function updateOrderStatus(id: string, status: OrderStatusInput, ac
     }
 
     await tx.adminAuditLog.create({ data: auditRow(actor, "order.status", order, { from: currentStatus, to: persistedStatus }) });
-    return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
   });
 }
 
 export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInput, actor: Actor) {
   return db.$transaction(async (tx: any) => {
-    const order = await tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    const order = await tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
     if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
     if (order.status !== "PENDING") {
       throw new ApiError(409, "ORDER_NOT_PENDING", "Only pending orders can be edited before acceptance");
@@ -472,7 +498,7 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
         // An edit can move the subtotal across the threshold; a charge an admin already confirmed is kept.
         ...(order.deliveryFeeConfirmedAt ? {} : { deliveryChargePending: deliveryChargeToConfirm(subtotalQar) }),
       },
-      include: ORDER_INCLUDE,
+      include: ADMIN_ORDER_INCLUDE,
     });
   });
 }
@@ -492,7 +518,7 @@ export async function confirmDeliveryFee(id: string, deliveryFeeQar: number, act
       throw new ApiError(409, "DELIVERY_FEE_FINAL", "This order is already paid, so its delivery charge can no longer be changed");
     }
     const previous: number | null = order.deliveryFeeConfirmedAt ? order.deliveryFeeQar : null;
-    if (previous === deliveryFeeQar) return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    if (previous === deliveryFeeQar) return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
 
     // The conditions are repeated in the write itself, so a payment or a decline that lands at the same moment
     // cannot slip in between the check above and this update.
@@ -502,7 +528,7 @@ export async function confirmDeliveryFee(id: string, deliveryFeeQar: number, act
     });
     if (written.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
     await tx.adminAuditLog.create({ data: auditRow(actor, "order.deliveryFee", order, { from: previous, to: deliveryFeeQar }) });
-    return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
   });
 }
 
@@ -520,7 +546,7 @@ export async function updatePaymentStatus(
       select: { id: true, orderNumber: true, status: true, paymentStatus: true, deliveryChargePending: true },
     });
     if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
-    if (order.paymentStatus === paymentStatus) return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    if (order.paymentStatus === paymentStatus) return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
     if (paymentStatus === "PAID") {
       if (order.status === "CANCELLED") throw new ApiError(409, "ORDER_CLOSED", "A declined order cannot be marked paid");
       if (order.deliveryChargePending) {
@@ -537,7 +563,7 @@ export async function updatePaymentStatus(
     });
     if (written.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
     await tx.adminAuditLog.create({ data: auditRow(actor, "order.payment", order, { from: order.paymentStatus, to: paymentStatus }) });
-    return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
   });
 }
 
