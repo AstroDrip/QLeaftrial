@@ -13,7 +13,7 @@ type AdminRecord = {
 type SessionRecord = {
   tokenHash: string;
   expiresAt: Date;
-  adminUser: { name: string };
+  adminUser: { id: string; name: string };
 };
 
 type AdminRepository = {
@@ -40,7 +40,7 @@ type SessionRepository = {
     select: {
       tokenHash: true;
       expiresAt: true;
-      adminUser: { select: { name: true } };
+      adminUser: { select: { id: true; name: true } };
     };
   }): Promise<SessionRecord | null>;
   deleteMany(args: { where: { tokenHash?: string; expiresAt?: { lte: Date } } }): Promise<unknown>;
@@ -88,6 +88,7 @@ export async function authenticatePassword(password: string): Promise<{
 }
 
 export async function sessionForToken(token: string | null): Promise<{
+  id: string;
   name: string;
 } | null> {
   if (!token) return null;
@@ -97,7 +98,7 @@ export async function sessionForToken(token: string | null): Promise<{
     select: {
       tokenHash: true,
       expiresAt: true,
-      adminUser: { select: { name: true } },
+      adminUser: { select: { id: true, name: true } },
     },
   });
 

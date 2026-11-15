@@ -7,6 +7,7 @@ import type { PrismaClient as SqlitePrismaClient } from "../../../generated/sqli
 import type { OrderChange } from "./order-changes.js";
 import { deliveryChargeToConfirm } from "../../lib/delivery.js";
 import { isInQatar, municipalityAt, reverseGeocode } from "../../lib/geo/qatar.js";
+import { auditRow, type Actor } from "../admin/audit.js";
 
 // Every order read returns its lines and, when there is one, its confirmed delivery location.
 const ORDER_INCLUDE = { items: true, deliveryLocation: true } as const;
@@ -295,7 +296,7 @@ export async function listOrders() {
   return db.order.findMany({ orderBy: { createdAt: "desc" }, include: ORDER_INCLUDE });
 }
 
-export async function updateOrderStatus(id: string, status: OrderStatusInput) {
+export async function updateOrderStatus(id: string, status: OrderStatusInput, actor: Actor) {
   const persistedStatus = normalizeStatus(status);
 
   return db.$transaction(async (tx: any) => {
@@ -317,6 +318,7 @@ export async function updateOrderStatus(id: string, status: OrderStatusInput) {
       await releaseReservedItems(tx, order.items);
     }
 
+    await tx.adminAuditLog.create({ data: auditRow(actor, "order.status", order, { from: currentStatus, to: persistedStatus }) });
     return tx.order.update({
       where: { id },
       data: { status: persistedStatus },
@@ -325,7 +327,7 @@ export async function updateOrderStatus(id: string, status: OrderStatusInput) {
   });
 }
 
-export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInput) {
+export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInput, actor: Actor) {
   return db.$transaction(async (tx: any) => {
     const order = await tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
     if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
@@ -448,6 +450,13 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
       await tx.orderItem.create({ data: { orderId: id, ...line } });
     }
 
+    await tx.adminAuditLog.create({
+      data: auditRow(actor, "order.edit", order, {
+        status: { from: "PENDING", to: "CONFIRMED" },
+        subtotalQar: { from: order.subtotalQar, to: subtotalQar },
+        changes: changes.length,
+      }),
+    });
     return tx.order.update({
       where: { id },
       data: {
@@ -463,52 +472,95 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
 }
 
 // The admin enters the delivery charge agreed with the customer (0 is allowed). It is added to the invoice total.
-export async function confirmDeliveryFee(id: string, deliveryFeeQar: number) {
-  const order = await db.order.findUnique({ where: { id }, select: { status: true } });
-  if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
-  if (order.status === "CANCELLED") throw new ApiError(409, "ORDER_CLOSED", "A declined order cannot be changed");
-  return db.order.update({
-    where: { id },
-    data: { deliveryFeeQar, deliveryChargePending: false, deliveryFeeConfirmedAt: new Date() },
-    include: ORDER_INCLUDE,
+// A charge can be corrected while the order is open; every confirmation or correction is recorded with the admin's
+// name. Once the order is paid the charge is final: the customer has already paid a total that included it.
+export async function confirmDeliveryFee(id: string, deliveryFeeQar: number, actor: Actor) {
+  return db.$transaction(async (tx: any) => {
+    const order = await tx.order.findUnique({
+      where: { id },
+      select: { id: true, orderNumber: true, status: true, paymentStatus: true, deliveryFeeQar: true, deliveryFeeConfirmedAt: true },
+    });
+    if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
+    if (order.status === "CANCELLED") throw new ApiError(409, "ORDER_CLOSED", "A declined order cannot be changed");
+    if (order.paymentStatus === "PAID") {
+      throw new ApiError(409, "DELIVERY_FEE_FINAL", "This order is already paid, so its delivery charge can no longer be changed");
+    }
+    const previous: number | null = order.deliveryFeeConfirmedAt ? order.deliveryFeeQar : null;
+    if (previous === deliveryFeeQar) return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+
+    // The conditions are repeated in the write itself, so a payment or a decline that lands at the same moment
+    // cannot slip in between the check above and this update.
+    const written = await tx.order.updateMany({
+      where: { id, status: { not: "CANCELLED" }, paymentStatus: { not: "PAID" } },
+      data: { deliveryFeeQar, deliveryChargePending: false, deliveryFeeConfirmedAt: new Date(), deliveryFeeConfirmedBy: actor.name },
+    });
+    if (written.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
+    await tx.adminAuditLog.create({ data: auditRow(actor, "order.deliveryFee", order, { from: previous, to: deliveryFeeQar }) });
+    return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
   });
 }
 
+// Payment status is set by an admin (cash on delivery, payment link). A declined order can never become paid, and
+// an order is not marked paid while its delivery charge is still to be confirmed, because its total is not final.
+// A missing order is a 404; any other failure (for example the database being down) keeps its own error.
 export async function updatePaymentStatus(
   id: string,
   paymentStatus: "PENDING" | "PAID" | "FAILED",
+  actor: Actor,
 ) {
-  try {
-    return await db.order.update({
+  return db.$transaction(async (tx: any) => {
+    const order = await tx.order.findUnique({
       where: { id },
-      data: { paymentStatus },
-      include: ORDER_INCLUDE,
+      select: { id: true, orderNumber: true, status: true, paymentStatus: true, deliveryChargePending: true },
     });
-  } catch {
-    throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
-  }
+    if (!order) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
+    if (order.paymentStatus === paymentStatus) return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+    if (paymentStatus === "PAID") {
+      if (order.status === "CANCELLED") throw new ApiError(409, "ORDER_CLOSED", "A declined order cannot be marked paid");
+      if (order.deliveryChargePending) {
+        throw new ApiError(409, "DELIVERY_CHARGE_PENDING", "Confirm the delivery charge before marking this order paid");
+      }
+    }
+    const written = await tx.order.updateMany({
+      where: {
+        id,
+        paymentStatus: order.paymentStatus,
+        ...(paymentStatus === "PAID" ? { status: { not: "CANCELLED" }, deliveryChargePending: false } : {}),
+      },
+      data: { paymentStatus },
+    });
+    if (written.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
+    await tx.adminAuditLog.create({ data: auditRow(actor, "order.payment", order, { from: order.paymentStatus, to: paymentStatus }) });
+    return tx.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
+  });
 }
 
-export async function deleteOrder(id: string) {
-  const existing = await db.order.findUnique({ where: { id }, select: { id: true, status: true } });
-  if (!existing) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
-  if (existing.status !== "CANCELLED" && existing.status !== "DELIVERED") {
-    throw new ApiError(409, "ORDER_NOT_DELETABLE", "Only declined or completed orders can be deleted");
-  }
-  await db.order.delete({ where: { id } });
+export async function deleteOrder(id: string, actor: Actor) {
+  await db.$transaction(async (tx: any) => {
+    const existing = await tx.order.findUnique({ where: { id }, select: { id: true, orderNumber: true, status: true, paymentStatus: true } });
+    if (!existing) throw new ApiError(404, "ORDER_NOT_FOUND", "Order not found");
+    if (existing.status !== "CANCELLED" && existing.status !== "DELIVERED") {
+      throw new ApiError(409, "ORDER_NOT_DELETABLE", "Only declined or completed orders can be deleted");
+    }
+    await tx.adminAuditLog.create({ data: auditRow(actor, "order.delete", existing, { status: existing.status, paymentStatus: existing.paymentStatus }) });
+    await tx.order.delete({ where: { id } });
+  });
 }
 
-export async function deleteOrders(ids: string[]) {
-  await db.$transaction(async (transaction) => {
+export async function deleteOrders(ids: string[], actor: Actor) {
+  await db.$transaction(async (transaction: any) => {
     const orders = await transaction.order.findMany({
       where: { id: { in: ids } },
-      select: { id: true, status: true },
+      select: { id: true, orderNumber: true, status: true, paymentStatus: true },
     });
     if (orders.length !== ids.length) {
       throw new ApiError(404, "ORDER_NOT_FOUND", "One or more orders were not found");
     }
-    if (orders.some((order) => order.status !== "CANCELLED" && order.status !== "DELIVERED")) {
+    if (orders.some((order: { status: string }) => order.status !== "CANCELLED" && order.status !== "DELIVERED")) {
       throw new ApiError(409, "ORDER_NOT_DELETABLE", "Only declined or completed orders can be deleted");
+    }
+    for (const order of orders) {
+      await transaction.adminAuditLog.create({ data: auditRow(actor, "order.delete", order, { status: order.status, paymentStatus: order.paymentStatus }) });
     }
     await transaction.order.deleteMany({ where: { id: { in: ids } } });
   });
@@ -521,7 +573,7 @@ export async function dashboardStats() {
     db.inventory.aggregate({ _sum: { quantity: true } }),
     db.inventory.count({ where: { quantity: { lte: 5 } } }),
     db.order.aggregate({
-      _sum: { subtotalQar: true },
+      _sum: { subtotalQar: true, deliveryFeeQar: true },
       where: { paymentStatus: "PENDING", status: { not: "CANCELLED" } },
     }),
   ]);
@@ -529,7 +581,10 @@ export async function dashboardStats() {
     ordersToday,
     liveInventory: inventory._sum.quantity ?? 0,
     lowStock,
-    pendingPayoutsQar: pending._sum.subtotalQar ?? 0,
+    // What is still to be collected: goods plus the delivery charges confirmed so far.
+    pendingPayoutsQar: (pending._sum.subtotalQar ?? 0) + (pending._sum.deliveryFeeQar ?? 0),
+    pendingMerchandiseQar: pending._sum.subtotalQar ?? 0,
+    pendingDeliveryQar: pending._sum.deliveryFeeQar ?? 0,
   };
 }
 
@@ -544,39 +599,55 @@ export async function salesReport(from?: Date, to?: Date) {
     where,
     select: {
       subtotalQar: true,
+      deliveryFeeQar: true,
       createdAt: true,
       paymentStatus: true,
       items: { select: { productName: true, quantity: true } },
     },
   });
 
-  const byDay = new Map<string, { orders: number; revenueQar: number }>();
+  // "revenue" figures are merchandise only, as they always were. Delivery charges and the totals customers actually
+  // pay are reported beside them, never mixed in.
+  const byDay = new Map<string, { orders: number; revenueQar: number; deliveryQar: number; totalQar: number }>();
   const sold = new Map<string, number>();
+  let merchandiseQar = 0;
+  let deliveryQar = 0;
   let paidRevenueQar = 0;
+  let paidTotalQar = 0;
 
   for (const order of orders) {
+    const total = order.subtotalQar + order.deliveryFeeQar;
     const day = qatarDateKey(order.createdAt);
-    const current = byDay.get(day) ?? { orders: 0, revenueQar: 0 };
+    const current = byDay.get(day) ?? { orders: 0, revenueQar: 0, deliveryQar: 0, totalQar: 0 };
     current.orders += 1;
     current.revenueQar += order.subtotalQar;
+    current.deliveryQar += order.deliveryFeeQar;
+    current.totalQar += total;
     byDay.set(day, current);
 
-    if (order.paymentStatus === "PAID") paidRevenueQar += order.subtotalQar;
+    merchandiseQar += order.subtotalQar;
+    deliveryQar += order.deliveryFeeQar;
+    if (order.paymentStatus === "PAID") {
+      paidRevenueQar += order.subtotalQar;
+      paidTotalQar += total;
+    }
     for (const item of order.items) {
       sold.set(item.productName, (sold.get(item.productName) ?? 0) + item.quantity);
     }
   }
 
-  const revenueQar = orders.reduce(
-    (total: number, order: { subtotalQar: number }) => total + order.subtotalQar,
-    0,
-  );
+  const totalQar = merchandiseQar + deliveryQar;
 
   return {
     orders: orders.length,
-    revenueQar,
+    revenueQar: merchandiseQar,
     paidRevenueQar,
-    unpaidRevenueQar: revenueQar - paidRevenueQar,
+    unpaidRevenueQar: merchandiseQar - paidRevenueQar,
+    merchandiseQar,
+    deliveryQar,
+    totalQar,
+    paidTotalQar,
+    unpaidTotalQar: totalQar - paidTotalQar,
     topItems: [...sold.entries()]
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .slice(0, 10)

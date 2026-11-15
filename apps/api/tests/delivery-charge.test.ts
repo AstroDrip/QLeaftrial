@@ -62,14 +62,16 @@ describe("delivery charge below the free-delivery threshold", () => {
     const placed = await orderAt(80, 2);
     expect(placed.body).toMatchObject({ subtotalQar: 160, deliveryChargePending: false });
     const agent = await loggedInAgent();
-    const line = placed.body.items[0];
+    // Order-line ids are not sent to the customer; the admin list has them.
+    const lineOf = async (orderId: string) => (await agent.get("/api/v1/admin/orders").expect(200)).body.items.find((item: { id: string }) => item.id === orderId).items[0];
+    const line = await lineOf(placed.body.id);
     const edited = await agent.post(`/api/v1/admin/orders/${placed.body.id}/accept-edited`)
       .send({ items: [{ orderItemId: line.id, included: true, productId: line.productId, quantity: 1 }] }).expect(200);
     expect(edited.body).toMatchObject({ subtotalQar: 80, deliveryChargePending: true });
 
     const second = await orderAt(60);
     await agent.patch(`/api/v1/admin/orders/${second.body.id}/delivery-fee`).send({ deliveryFeeQar: 0 }).expect(200);
-    const secondLine = second.body.items[0];
+    const secondLine = await lineOf(second.body.id);
     const kept = await agent.post(`/api/v1/admin/orders/${second.body.id}/accept-edited`)
       .send({ items: [{ orderItemId: secondLine.id, included: true, productId: secondLine.productId, quantity: 1 }] }).expect(200);
     expect(kept.body).toMatchObject({ deliveryFeeQar: 0, deliveryChargePending: false });

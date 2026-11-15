@@ -34,4 +34,16 @@ describe("AdminSalesPage", () => {
     expect(adminApi.sales).toHaveBeenLastCalledWith(expect.stringMatching(/^\d{4}-\d{2}-01$/), expect.stringMatching(/^\d{4}-\d{2}-01$/));
     expect(await screen.findByRole("table")).toBeInTheDocument();
   });
+
+  it("shows merchandise, delivery charges and the total side by side", async () => {
+    vi.mocked(adminApi.sales).mockResolvedValue({
+      orders: 2, revenueQar: 320, paidRevenueQar: 120, unpaidRevenueQar: 200,
+      merchandiseQar: 320, deliveryQar: 15, totalQar: 335, paidTotalQar: 135, unpaidTotalQar: 200,
+      topItems: [], byDay: [{ date: "2026-11-15", orders: 2, revenueQar: 320, deliveryQar: 15, totalQar: 335 }],
+    });
+    renderPage();
+    expect(await screen.findByText("Delivery charges", { selector: "p, span, dt, strong, div" })).toBeInTheDocument();
+    for (const figure of ["QAR 320", "QAR 15", "QAR 335", "QAR 135"]) expect(screen.getAllByText(figure).length).toBeGreaterThan(0);
+    expect(screen.getByRole("columnheader", { name: "Total with delivery" })).toBeInTheDocument();
+  });
 });

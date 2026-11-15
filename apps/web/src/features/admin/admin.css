@@ -259,7 +259,10 @@
 .admin-sales-controls__date input { width: auto; }
 .admin-sales-controls__range { margin-inline-start: auto; color: var(--admin-text); font-weight: 600; }
 .admin-sales-sections { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .6fr); align-items: start; gap: var(--a-4); }
+/* A wide table scrolls inside its own panel; it never widens the page. */
+.admin-panel:has(> .admin-table) { min-width: 0; overflow-x: auto; }
 .admin-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.admin-table th + th, .admin-table td + td { padding-inline-start: var(--a-3); }
 .admin-table th { padding: 0 0 var(--a-2); color: var(--admin-muted); font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-align: start; text-transform: uppercase; }
 .admin-table td { padding: var(--a-2) 0; border-top: 1px solid var(--admin-border); font-variant-numeric: tabular-nums; }
 .admin-table th:last-child, .admin-table td:last-child { text-align: end; }

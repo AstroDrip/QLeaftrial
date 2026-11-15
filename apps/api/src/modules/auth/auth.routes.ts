@@ -58,7 +58,8 @@ authRouter.post("/auth/login", async (request, response) => {
 
 authRouter.get("/auth/session", requireAdmin, (_request, response) => {
   response.setHeader("Cache-Control", "no-store");
-  response.json({ authenticated: true, admin: response.locals.admin });
+  // The admin id stays on the server; the screen only needs the name.
+  response.json({ authenticated: true, admin: { name: response.locals.admin.name } });
 });
 
 authRouter.post("/auth/logout", async (request, response) => {

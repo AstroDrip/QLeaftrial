@@ -62,6 +62,8 @@ describe("fake orders, from the catalogue to delivery", () => {
 
   it("records a failed payment without touching the order lines or stock, and allows a retry to succeed", async () => {
     const product = await seededProduct("snake-plant");
+    // Priced at the free-delivery threshold, so no delivery charge has to be confirmed before payment.
+    await prisma.product.update({ where: { id: product.id }, data: { priceQar: 150 } });
     const placed = await request(createApp()).post("/api/v1/orders").send(validOrder({ paymentMethod: "PAYMENT_LINK", items: [{ productId: product.id, quantity: 1 }] }));
     const stock = (await inventoryFor(product.id)).quantity;
     const admin = await loggedInAgent();

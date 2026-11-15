@@ -153,6 +153,8 @@ model Order {
   // admin enters it (deliveryFeeQar, possibly 0); deliveryFeeConfirmedAt records when.
   deliveryChargePending  Boolean   @default(false)
   deliveryFeeConfirmedAt DateTime?
+  // Name of the admin who last confirmed or corrected the delivery charge.
+  deliveryFeeConfirmedBy String?
   // Google Sheets mirror: when this order's row was last written, or why the last attempt failed (a code only).
   sheetSyncedAt  DateTime?
   sheetSyncError String?
@@ -161,8 +163,55 @@ model Order {
   deliveryLocation       OrderDeliveryLocation?
   deliveryLocationManual Boolean @default(false)
   items           OrderItem[]
+  notifications   NotificationOutbox[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+// Who changed what on an order's money or state. Kept even when the order or the admin account is later deleted,
+// so there is deliberately no foreign key to either.
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String?
+  adminName   String
+  // "order.status" | "order.payment" | "order.deliveryFee" | "order.edit" | "order.delete"
+  action      String
+  orderId     String?
+  orderNumber String?
+  // JSON: { from, to } or a short summary. Never customer contact details.
+  detail      String
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([orderNumber])
+  @@index([createdAt])
+}
+
+// One row per notification that must be sent (for example the admin's new-order email). Written in the same
+// transaction as the event that causes it, then delivered and retried by the worker until sent or given up.
+model NotificationOutbox {
+  id                String    @id @default(cuid())
+  // One event is recorded once: "order-created:<orderId>", "order-cancelled:<orderId>", "payment-paid:<paymentId>".
+  dedupeKey         String    @unique
+  orderId           String
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // "ORDER_CREATED" | "PAYMENT_VERIFIED" | "PAYMENT_FAILED" | "ORDER_CANCELLED"
+  eventType         String
+  recipient         String
+  // "PENDING" | "SENDING" | "SENT" | "FAILED" (gave up after the last attempt)
+  status            String    @default("PENDING")
+  attempts          Int       @default(0)
+  lastAttemptAt     DateTime?
+  nextAttemptAt     DateTime  @default(now())
+  // A short code only (for example "TIMEOUT", "PROVIDER_4XX"); never a message body or a credential.
+  lastErrorCode     String?
+  providerMessageId String?
+  sentAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([orderId])
 }
 
 // The delivery location the customer confirmed on the checkout map: a snapshot belonging to this one order, so later

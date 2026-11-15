@@ -22,7 +22,8 @@ import {
 } from "./order.service.js";
 import { publicOrderRateLimit } from "./order-rate-limit.js";
 import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
-import { toAdminOrder } from "./order-view.js";
+import { toAdminOrder, toPublicOrder } from "./order-view.js";
+import { actorFrom, listAudit } from "../admin/audit.js";
 
 export const orderRouter = Router();
 
@@ -52,7 +53,7 @@ orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
   if (!replayed) await mirrorOrderToSheet(order);
   res.setHeader("Cache-Control", "no-store");
   if (replayed) res.setHeader("Idempotent-Replayed", "true");
-  res.status(replayed ? 200 : 201).json(order);
+  res.status(replayed ? 200 : 201).json(toPublicOrder(order));
 });
 
 orderRouter.use("/admin/orders", requireAdmin);
@@ -65,14 +66,14 @@ orderRouter.get("/admin/orders", async (_req, res) => {
 orderRouter.delete("/admin/orders", async (req, res) => {
   const parsed = deleteOrdersSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order selection");
-  await deleteOrders(parsed.data.ids);
+  await deleteOrders(parsed.data.ids, actorFrom(res.locals));
   res.status(204).end();
 });
 
 orderRouter.patch("/admin/orders/:id/status", async (req, res) => {
   const parsed = updateOrderStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order status");
-  const order = await updateOrderStatus(req.params.id, parsed.data.status);
+  const order = await updateOrderStatus(req.params.id, parsed.data.status, actorFrom(res.locals));
   await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
 });
@@ -80,7 +81,7 @@ orderRouter.patch("/admin/orders/:id/status", async (req, res) => {
 orderRouter.post("/admin/orders/:id/accept-edited", async (req, res) => {
   const parsed = acceptEditedOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid edited order");
-  const order = await acceptEditedOrder(req.params.id, parsed.data);
+  const order = await acceptEditedOrder(req.params.id, parsed.data, actorFrom(res.locals));
   await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
 });
@@ -88,7 +89,7 @@ orderRouter.post("/admin/orders/:id/accept-edited", async (req, res) => {
 orderRouter.patch("/admin/orders/:id/delivery-fee", async (req, res) => {
   const parsed = confirmDeliveryFeeSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Enter the delivery charge in whole QAR");
-  const order = await confirmDeliveryFee(req.params.id, parsed.data.deliveryFeeQar);
+  const order = await confirmDeliveryFee(req.params.id, parsed.data.deliveryFeeQar, actorFrom(res.locals));
   await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
 });
@@ -96,7 +97,7 @@ orderRouter.patch("/admin/orders/:id/delivery-fee", async (req, res) => {
 orderRouter.patch("/admin/orders/:id/payment", async (req, res) => {
   const parsed = updatePaymentStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid payment status");
-  const order = await updatePaymentStatus(req.params.id, parsed.data.paymentStatus);
+  const order = await updatePaymentStatus(req.params.id, parsed.data.paymentStatus, actorFrom(res.locals));
   await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
 });
@@ -104,13 +105,21 @@ orderRouter.patch("/admin/orders/:id/payment", async (req, res) => {
 orderRouter.post("/admin/orders/bulk-delete", async (req, res) => {
   const parsed = bulkDeleteOrdersSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order selection");
-  await deleteOrders(parsed.data.ids);
+  await deleteOrders(parsed.data.ids, actorFrom(res.locals));
   res.json({ deleted: parsed.data.ids.length });
 });
 
 orderRouter.delete("/admin/orders/:id", async (req, res) => {
-  await deleteOrder(req.params.id);
+  await deleteOrder(req.params.id, actorFrom(res.locals));
   res.status(204).end();
+});
+
+// Who changed an order's status, payment or delivery charge, oldest first. Optionally for one order number.
+orderRouter.get("/admin/audit", requireAdmin, async (req, res) => {
+  const orderNumber = typeof req.query.orderNumber === "string" && /^[A-Za-z0-9-]{1,40}$/.test(req.query.orderNumber) ? req.query.orderNumber : undefined;
+  if (req.query.orderNumber !== undefined && !orderNumber) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order number");
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ items: await listAudit({ orderNumber }) });
 });
 
 orderRouter.get("/admin/dashboard", requireAdmin, async (_req, res) => {

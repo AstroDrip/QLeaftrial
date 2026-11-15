@@ -31,3 +31,32 @@ export function toAdminOrder<T extends { id: string; editSummary?: string | null
     ...(location ? { deliveryMunicipality: municipalityAt(location.latitude, location.longitude), deliveryFieldSources: fieldSources(location) } : {}),
   };
 }
+
+type StoredOrder = {
+  id: string; orderNumber: string; status: string; paymentMethod: string; paymentStatus: string; area: string;
+  subtotalQar: number; deliveryFeeQar: number; deliveryChargePending: boolean; createdAt: Date;
+  items: Array<{ productId: string; productName: string; quantity: number; unitPriceQar: number }>;
+};
+
+// What the customer's browser receives after placing an order: enough for the confirmation page and nothing else.
+// Listed field by field on purpose, so a column added to the database later is never sent out by accident.
+export function toPublicOrder(order: StoredOrder) {
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    area: order.area,
+    subtotalQar: order.subtotalQar,
+    deliveryFeeQar: order.deliveryFeeQar,
+    deliveryChargePending: order.deliveryChargePending,
+    createdAt: order.createdAt,
+    items: order.items.map((item) => ({
+      productId: item.productId,
+      productName: item.productName,
+      quantity: item.quantity,
+      unitPriceQar: item.unitPriceQar,
+    })),
+  };
+}

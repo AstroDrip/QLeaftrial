@@ -159,7 +159,10 @@ export interface AdminDashboard {
   ordersToday: number;
   liveInventory: number;
   lowStock: number;
+  // Goods plus confirmed delivery charges still to be collected; the two parts are also given separately.
   pendingPayoutsQar: number;
+  pendingMerchandiseQar?: number;
+  pendingDeliveryQar?: number;
 }
 
 export interface StoreSettings {
@@ -176,8 +179,14 @@ export interface AdminSalesReport {
   revenueQar: number;
   paidRevenueQar: number;
   unpaidRevenueQar: number;
+  // "Revenue" figures are merchandise only. Delivery charges and totals are reported beside them.
+  merchandiseQar?: number;
+  deliveryQar?: number;
+  totalQar?: number;
+  paidTotalQar?: number;
+  unpaidTotalQar?: number;
   topItems: Array<{ name: string; quantity: number }>;
-  byDay: Array<{ date: string; orders: number; revenueQar: number }>;
+  byDay: Array<{ date: string; orders: number; revenueQar: number; deliveryQar?: number; totalQar?: number }>;
 }
 
 export interface AdminReview {

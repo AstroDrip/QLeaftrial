@@ -63,8 +63,8 @@ function rangeLabel(range: { from?: string; to?: string }, language: "en" | "ar"
 export function AdminSalesPage() {
   const { content, language, isArabic } = useSiteLanguage();
   const t = isArabic
-    ? { range: "الفترة", modes: { all: "الكل", day: "يوم", week: "أسبوع", month: "شهر" }, reference: "التاريخ المرجعي", allTime: "كل الفترات", loading: "جارٍ تحميل المبيعات…", error: "تعذر تحميل تقرير المبيعات.", orders: "الطلبات المكتملة", revenue: "الإيرادات", paid: "المدفوع", unpaid: "غير المدفوع", byDay: "المبيعات حسب اليوم", date: "التاريخ", count: "الطلبات", top: "الأكثر مبيعًا", noDays: "لا توجد طلبات مكتملة في هذه الفترة.", noItems: "لا توجد مبيعات مكتملة في هذه الفترة.", note: "يشمل التقرير الطلبات المكتملة فقط، بدون رسوم التوصيل." }
-    : { range: "Range", modes: { all: "All", day: "Day", week: "Week", month: "Month" }, reference: "Reference date", allTime: "All time", loading: "Loading sales…", error: "Could not load the sales report.", orders: "Completed orders", revenue: "Revenue", paid: "Paid", unpaid: "Unpaid", byDay: "Sales by day", date: "Date", count: "Orders", top: "Top plants sold", noDays: "No completed orders in this range.", noItems: "No completed plant sales in this range.", note: "Only completed orders are counted. Delivery charges are excluded." };
+    ? { range: "الفترة", modes: { all: "الكل", day: "يوم", week: "أسبوع", month: "شهر" }, reference: "التاريخ المرجعي", allTime: "كل الفترات", loading: "جارٍ تحميل المبيعات…", error: "تعذر تحميل تقرير المبيعات.", orders: "الطلبات المكتملة", revenue: "قيمة المنتجات", paid: "المنتجات المدفوعة", unpaid: "المنتجات غير المدفوعة", delivery: "رسوم التوصيل", total: "الإجمالي مع التوصيل", paidTotal: "الإجمالي المدفوع", unpaidTotal: "الإجمالي غير المدفوع", byDay: "المبيعات حسب اليوم", date: "التاريخ", count: "الطلبات", top: "الأكثر مبيعًا", noDays: "لا توجد طلبات مكتملة في هذه الفترة.", noItems: "لا توجد مبيعات مكتملة في هذه الفترة.", note: "تُحتسب الطلبات المكتملة فقط. قيمة المنتجات ورسوم التوصيل معروضة كلٌّ على حدة، والإجمالي يجمعهما." }
+    : { range: "Range", modes: { all: "All", day: "Day", week: "Week", month: "Month" }, reference: "Reference date", allTime: "All time", loading: "Loading sales…", error: "Could not load the sales report.", orders: "Completed orders", revenue: "Merchandise", paid: "Merchandise paid", unpaid: "Merchandise unpaid", delivery: "Delivery charges", total: "Total with delivery", paidTotal: "Total paid", unpaidTotal: "Total unpaid", byDay: "Sales by day", date: "Date", count: "Orders", top: "Top plants sold", noDays: "No completed orders in this range.", noItems: "No completed plant sales in this range.", note: "Only completed orders are counted. Merchandise and delivery charges are shown separately; the total adds them together." };
   const [mode, setMode] = useState<RangeMode>("all");
   const [referenceDate, setReferenceDate] = useState(qatarToday);
   const range = useMemo(() => reportRange(mode, referenceDate), [mode, referenceDate]);
@@ -77,6 +77,10 @@ export function AdminSalesPage() {
     [t.revenue, `QAR ${report.data.revenueQar}`],
     [t.paid, `QAR ${report.data.paidRevenueQar}`],
     [t.unpaid, `QAR ${report.data.unpaidRevenueQar}`],
+    [t.delivery, `QAR ${report.data.deliveryQar ?? 0}`],
+    [t.total, `QAR ${report.data.totalQar ?? report.data.revenueQar}`],
+    [t.paidTotal, `QAR ${report.data.paidTotalQar ?? report.data.paidRevenueQar}`],
+    [t.unpaidTotal, `QAR ${report.data.unpaidTotalQar ?? report.data.unpaidRevenueQar}`],
   ] : [];
 
   return (
@@ -124,7 +128,7 @@ export function AdminSalesPage() {
               {report.data.byDay.length ? (
                 <table className="admin-table">
                   <thead>
-                    <tr><th scope="col">{t.date}</th><th scope="col">{t.count}</th><th scope="col">{t.revenue}</th></tr>
+                    <tr><th scope="col">{t.date}</th><th scope="col">{t.count}</th><th scope="col">{t.revenue}</th><th scope="col">{t.delivery}</th><th scope="col">{t.total}</th></tr>
                   </thead>
                   <tbody>
                     {report.data.byDay.map((day) => (
@@ -132,6 +136,8 @@ export function AdminSalesPage() {
                         <td>{formatDay(day.date, language)}</td>
                         <td>{day.orders}</td>
                         <td>QAR {day.revenueQar}</td>
+                        <td>QAR {day.deliveryQar ?? 0}</td>
+                        <td>QAR {day.totalQar ?? day.revenueQar}</td>
                       </tr>
                     ))}
                   </tbody>
