@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { prisma } from "./prisma.js";
+import { buildHomeBootstrap, isHomeBootstrap } from "./home-bootstrap.js";
 
 // The public catalogue: every published product with only customer-safe fields. It is served two ways:
 //  - GET /api/v1/catalogue, which Vercel's CDN caches for a minute and keeps serving while it refreshes
@@ -207,4 +208,17 @@ export async function writeCatalogueFile(catalogue: PublicCatalogue, directory =
   writeFileSync(tmpPath, `${JSON.stringify(catalogue)}\n`, "utf8");
   renameSync(tmpPath, outputPath);
   return outputPath;
+}
+
+/** Cuts the homepage bootstrap from a catalogue and writes it beside the snapshot (a git-ignored build output). */
+export async function writeHomeBootstrapFile(catalogue: PublicCatalogue, directory = catalogueDir): Promise<{ path: string; products: number }> {
+  const bootstrap = buildHomeBootstrap(catalogue);
+  if (!isHomeBootstrap(bootstrap)) throw new Error("The catalogue has no products to put on the homepage");
+  const { mkdirSync, renameSync, writeFileSync } = await import("node:fs");
+  mkdirSync(directory, { recursive: true });
+  const outputPath = resolve(directory, "home-bootstrap.json");
+  const tmpPath = `${outputPath}.tmp`;
+  writeFileSync(tmpPath, `${JSON.stringify(bootstrap)}\n`, "utf8");
+  renameSync(tmpPath, outputPath);
+  return { path: outputPath, products: bootstrap.products.length };
 }

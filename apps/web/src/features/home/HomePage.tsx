@@ -16,6 +16,7 @@ import { friendlyError } from "../../lib/friendly-error";
 import type { ProductSummary } from "../catalog/product-types";
 import type { CatalogueProduct } from "../catalog/catalogue-types";
 import { canonicalCategory, categoryName, findShopCategory, orderedCategoryCounts } from "../catalog/shop-categories";
+import { readHomeBootstrap } from "./home-bootstrap";
 
 const NOT_IN_NEW_ARRIVALS = new Set(["Garden Accessories"]);
 
@@ -83,9 +84,14 @@ export function HomePage() {
   const t = content.home;
   // The saved catalogue fills the page at once and stands in if the live API is down; the live lists
   // replace it as soon as they arrive. Counts are always real counts of published products.
+  // Before either arrives (a first visit, a slow or unreachable API) the page shows the bootstrap that shipped
+  // inside its own HTML: no request, so no wait. A catalogue at least as new as the bootstrap replaces it.
   const catalogue = useCatalogue();
-  const savedFeatured = catalogue.data
-    ? catalogueListResponse(catalogue.data.products, { page: 1, sort: "newest", lang: language }).items
+  const bootstrap = readHomeBootstrap();
+  const useBootstrap = Boolean(bootstrap) && (!catalogue.data || catalogue.data.version < bootstrap!.version);
+  const shownProducts: CatalogueProduct[] | undefined = useBootstrap ? bootstrap!.products : catalogue.data?.products;
+  const savedFeatured = shownProducts
+    ? catalogueListResponse(shownProducts, { page: 1, sort: "newest", lang: language }).items
     : undefined;
   const products = useQuery({
     queryKey: ["products", "home", language],
@@ -96,17 +102,19 @@ export function HomePage() {
   // New Arrivals is for plants: garden accessories (soil, fertiliser, tools) stay in their own category.
   const newArrivals = (products.data?.items ?? savedFeatured ?? []).filter((item) => !NOT_IN_NEW_ARRIVALS.has(canonicalCategory(item.category)));
   const showingSaved = !products.data && Boolean(savedFeatured?.length);
-  const savedCategories = catalogue.data ? categoryCounts(catalogue.data.products) : [];
+  const savedCategories = useBootstrap
+    ? Object.entries(bootstrap!.categoryCounts).map(([category, count]) => ({ category, categoryAr: bootstrap!.categoryLabelsAr[category] ?? null, count }))
+    : catalogue.data ? categoryCounts(catalogue.data.products) : [];
   // Every category in the shop's order (lib/shop-categories.ts), empty ones included, once real counts are known.
   const counts: Record<string, number> | null = filters.data?.categoryCounts
-    ?? (catalogue.data ? Object.fromEntries(savedCategories.map((entry) => [entry.category, entry.count])) : null);
+    ?? (savedCategories.length ? Object.fromEntries(savedCategories.map((entry) => [entry.category, entry.count])) : null);
   const categories: Array<[string, number]> = counts ? orderedCategoryCounts(counts).map((entry) => [entry.category, entry.count]) : [];
   const categoryLabel = (category: string) =>
     categoryName(category, isArabic ? "ar" : "en", filters.data?.categoryLabels?.[category] || savedCategories.find((entry) => entry.category === category)?.categoryAr);
 
   // Featured, offers and the discovery shelves come from the published catalogue (all products, newest
   // first). Each product appears on one shelf only: a shelf skips anything an earlier shelf already shows.
-  const entries = catalogue.data ? sortCatalogue(catalogue.data.products, "newest") : [];
+  const entries = shownProducts ? sortCatalogue(shownProducts, "newest") : [];
   const pick = (test: (product: CatalogueProduct) => boolean) =>
     entries.filter(test).map((product) => catalogueProductToSummary(product, language));
   const shown = new Set<string>();

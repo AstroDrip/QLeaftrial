@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "catalog:import": "node --experimental-strip-types prisma/import-catalog.ts",
-    "catalog:generate": "tsx scripts/generate-catalogue.ts"
+    "catalog:generate": "tsx scripts/generate-catalogue.ts",
+    "home:fallback": "tsx scripts/refresh-home-fallback.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.16.2",
