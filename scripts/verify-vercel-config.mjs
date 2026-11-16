@@ -105,8 +105,8 @@ if (!reportOnlyCsp) {
     "default-src 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' data: https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
     "report-uri /api/v1/security/csp-report",
   ]) {
     if (!reportOnlyCsp.includes(directive)) {
