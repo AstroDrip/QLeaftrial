@@ -104,7 +104,7 @@ describe("delivery location on orders", () => {
   async function order(body: Record<string, unknown>) {
     await clearOrderRateLimit();
     const product = await seededProduct("house-plant");
-    return request(createApp()).post("/api/v1/orders").send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), ...body });
+    return request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), ...body });
   }
 
   it("saves the confirmed location with the order, with the area taken from the coordinates", async () => {
@@ -151,7 +151,7 @@ describe("delivery location on orders", () => {
 
   it("does not leave a location behind when the order itself fails", async () => {
     const product = await seededProduct("house-plant");
-    const response = await request(createApp()).post("/api/v1/orders").send({ ...validOrder({ items: [{ productId: product.id, quantity: 999_99 }] }), deliveryLocation: location() });
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send({ ...validOrder({ items: [{ productId: product.id, quantity: 999_99 }] }), deliveryLocation: location() });
     expect(response.status).toBeGreaterThanOrEqual(400);
     expect(await prisma.orderDeliveryLocation.count()).toBe(0);
   });

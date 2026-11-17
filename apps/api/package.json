@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "test": "cross-env QLEAVES_DATABASE_PROVIDER=sqlite vitest run",
+    "test:pg": "vitest run --config vitest.pg.config.ts",
     "prisma:generate": "npm run prisma:generate:local && npm run prisma:generate:production",
     "prisma:generate:local": "node scripts/prisma.mjs generate --schema prisma/schema.prisma",
     "prisma:generate:production": "node scripts/prisma.mjs generate --schema prisma/postgresql/schema.prisma",
@@ -39,6 +40,7 @@
     "@types/pg": "^8.23.1",
     "@types/supertest": "^6.0.3",
     "cross-env": "^10.1.0",
+    "embedded-postgres": "17.10.0-beta.17",
     "pbf": "^5.1.2",
     "pmtiles": "^4.5.0",
     "prisma": "6.16.2",

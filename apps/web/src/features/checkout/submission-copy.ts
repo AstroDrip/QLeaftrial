@@ -22,6 +22,10 @@ export const submissionCopy = {
     noticeReceived: (orderNumber: string) => `Your order ${orderNumber} has been received.`,
     noticeReceivedView: "See your order",
     leaveWarning: "Your order hasn't been confirmed yet and isn't saved on this device. Leave anyway?",
+    pricesChanged: (changes: string[]) => `Some prices changed since you added these plants to your cart: ${changes.join("; ")}. Your cart now shows today's prices. Please check your order and place it again.`,
+    priceChange: (name: string, from: number, to: number) => `${name} is now QAR ${to} (was QAR ${from})`,
+    pricesChangedGeneral: "Some prices changed since you added these plants to your cart. Your cart now shows today's prices. Please check your order and place it again.",
+    keyReused: "We may already have received this order. Please message us on WhatsApp before placing it again, so you aren't charged twice.",
   },
   ar: {
     sending: "جارٍ إرسال طلبك…",
@@ -44,5 +48,9 @@ export const submissionCopy = {
     noticeReceived: (orderNumber: string) => `تم استلام طلبك ${orderNumber}.`,
     noticeReceivedView: "عرض طلبك",
     leaveWarning: "لم يتم تأكيد طلبك بعد ولم يُحفظ على هذا الجهاز. هل تريد المغادرة؟",
+    pricesChanged: (changes: string[]) => `تغيّرت بعض الأسعار منذ أضفت هذه النباتات إلى سلتك: ${changes.join("؛ ")}. تعرض سلتك الآن أسعار اليوم. يُرجى مراجعة طلبك وإرساله مرة أخرى.`,
+    priceChange: (name: string, from: number, to: number) => `${name} أصبح ${to} ر.ق (كان ${from} ر.ق)`,
+    pricesChangedGeneral: "تغيّرت بعض الأسعار منذ أضفت هذه النباتات إلى سلتك. تعرض سلتك الآن أسعار اليوم. يُرجى مراجعة طلبك وإرساله مرة أخرى.",
+    keyReused: "ربما استلمنا هذا الطلب بالفعل. يُرجى مراسلتنا على واتساب قبل إرساله مرة أخرى، حتى لا يُحتسب مرتين.",
   },
 } as const;

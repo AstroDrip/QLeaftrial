@@ -5,6 +5,8 @@ export class ApiError extends Error {
     public readonly statusCode: number,
     public readonly code: string,
     message: string,
+    // Customer-safe facts the storefront can act on (for example the current prices after a price change).
+    public readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ApiError";
@@ -46,7 +48,7 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, _nex
   if (error instanceof ApiError) {
     response.locals.errorCategory = error.code;
     response.status(error.statusCode).json({
-      error: { code: error.code, message: error.message, ...(error.statusCode >= 500 ? { requestId } : {}) },
+      error: { code: error.code, message: error.message, ...(error.details ? { details: error.details } : {}), ...(error.statusCode >= 500 ? { requestId } : {}) },
     });
     return;
   }

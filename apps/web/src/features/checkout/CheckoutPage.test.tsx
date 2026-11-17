@@ -272,4 +272,24 @@ describe("CheckoutPage", () => {
       delete reverseAnswer.municipality;
     }
   });
+
+  it("sends the total the customer saw, and on a price change updates the cart and says what changed", async () => {
+    useCartStore.setState({ items: [plant(100, 2)] });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      headers: new Headers(),
+      json: async () => ({ error: { code: "PRICE_CHANGED", message: "Prices have changed", details: { subtotalQar: 240, items: [{ productId: "plant-1", name: "Plant", priceQar: 120 }] } } }),
+    });
+    renderCheckout(fetchMock);
+    await fillForm();
+    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string).expectedSubtotalQar).toBe(200);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Plant is now QAR 120 (was QAR 100)");
+    expect(useCartStore.getState().items[0]).toMatchObject({ priceQar: 120, quantity: 2 });
+    // Nothing was ordered: the customer places it again at the new price, when they are ready.
+    expect(screen.getByRole("button", { name: "Place order" })).toBeEnabled();
+    expect(screen.queryByText("Order placed")).not.toBeInTheDocument();
+  });
 });

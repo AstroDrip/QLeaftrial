@@ -18,11 +18,12 @@ import {
   listOrders,
   salesReport,
   updateOrderStatus,
-  updatePaymentStatus, confirmDeliveryFee,
+  updatePaymentStatus, confirmDeliveryFee, findOrderForKey, requestFingerprint,
 } from "./order.service.js";
-import { publicOrderRateLimit } from "./order-rate-limit.js";
+import { consumeOrderAttempt, consumeOrderReplay } from "./order-rate-limit.js";
 import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
 import { toAdminOrder, toPublicOrder } from "./order-view.js";
+import type { Response } from "express";
 import { actorFrom, listAudit } from "../admin/audit.js";
 import { deliverForOrder, processDueNotifications } from "../notifications/outbox.js";
 
@@ -42,14 +43,37 @@ function qatarDateBoundary(value: unknown): Date | undefined {
 
 const IDEMPOTENCY_KEY = /^[A-Za-z0-9_-]{16,80}$/;
 
-orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
-  const header = req.get("Idempotency-Key");
-  if (header !== undefined && !IDEMPOTENCY_KEY.test(header)) {
-    throw new ApiError(400, "VALIDATION_ERROR", "Invalid idempotency key");
+function tooManyAttempts(res: Response, retryAfterSeconds: number) {
+  res.setHeader("Retry-After", String(retryAfterSeconds));
+  res.status(429).json({ error: { code: "TOO_MANY_ORDER_ATTEMPTS", message: "Too many order attempts. Please try again later." } });
+}
+
+// Every order carries an idempotency key (the storefront keeps it with the order on the customer's device). The
+// same key with the same request returns the order already saved, however often it is sent; the same key with a
+// different request is refused. Recovering an existing order does not count towards the limit on new orders, so a
+// customer whose connection dropped is never locked out of their own confirmation.
+orderRouter.post("/orders", async (req, res) => {
+  const key = req.get("Idempotency-Key");
+  if (!key || !IDEMPOTENCY_KEY.test(key)) {
+    throw new ApiError(400, "IDEMPOTENCY_KEY_REQUIRED", "This order request is missing its reference. Please reload the page and try again");
   }
   const parsed = createOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order details");
-  const { order, replayed } = await createOrder(parsed.data, header);
+  const fingerprint = requestFingerprint(parsed.data);
+  const client = req.ip || req.socket.remoteAddress || "unknown";
+  res.setHeader("Cache-Control", "no-store");
+
+  const existing = await findOrderForKey(key, fingerprint);
+  if (existing) {
+    const replay = await consumeOrderReplay(client);
+    if (replay.limited) return tooManyAttempts(res, replay.retryAfterSeconds);
+    res.setHeader("Idempotent-Replayed", "true");
+    return res.status(200).json(toPublicOrder(existing));
+  }
+
+  const attempt = await consumeOrderAttempt(client);
+  if (attempt.limited) return tooManyAttempts(res, attempt.retryAfterSeconds);
+  const { order, replayed } = await createOrder(parsed.data, key, fingerprint);
   // The order is saved before anything else happens. The admin's email is sent now and waited for (a serverless
   // function may be frozen once it answers), with a short time limit; if it fails it stays recorded for retry.
   // A slow or failing email or sheet sync never fails the order.
@@ -57,7 +81,6 @@ orderRouter.post("/orders", publicOrderRateLimit, async (req, res) => {
     await deliverForOrder(order.id);
     await mirrorOrderToSheet(order);
   }
-  res.setHeader("Cache-Control", "no-store");
   if (replayed) res.setHeader("Idempotent-Replayed", "true");
   res.status(replayed ? 200 : 201).json(toPublicOrder(order));
 });

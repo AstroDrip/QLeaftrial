@@ -53,7 +53,7 @@ describe("storefront ordering settings", () => {
     await prisma.storeSettings.update({ where: { id: "storefront" }, data: { deliveryFeeQar: 20 } });
 
     const response = await request(createApp())
-      .post("/api/v1/orders")
+      .post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`)
       .send(validOrder({ deliveryFeeQar: 15, items: [{ productId: product.id, quantity: 1 }] }));
 
     expect(response.status).toBe(201);
@@ -73,7 +73,7 @@ describe("storefront ordering settings", () => {
     await admin.put("/api/v1/admin/storefront-settings").send({ orderingEnabled: false });
 
     const response = await request(createApp())
-      .post("/api/v1/orders")
+      .post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`)
       .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
 
     expect(response.status).toBe(503);

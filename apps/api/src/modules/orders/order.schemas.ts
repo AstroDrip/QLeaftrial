@@ -42,6 +42,9 @@ export const createOrderSchema = z.object({
   deliveryLocation: deliveryLocationSchema.optional(),
   // True when the map or address search was unavailable and the customer could only write their address.
   deliveryLocationManual: z.boolean().optional(),
+  // The merchandise subtotal the customer saw. If today's prices give a different one, the order is not placed and
+  // the customer is shown the new prices (409 PRICE_CHANGED). Optional for older storefront pages.
+  expectedSubtotalQar: z.number().int().nonnegative().max(10_000_000).optional(),
 }).strict().refine((order) => !(order.deliveryLocation && order.deliveryLocationManual), {
   message: "Send either a confirmed location or a manual address, not both",
 });

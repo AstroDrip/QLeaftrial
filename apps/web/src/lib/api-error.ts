@@ -3,6 +3,7 @@ type PublicApiError = {
     code?: unknown;
     message?: unknown;
     requestId?: unknown;
+    details?: unknown;
   };
 };
 
@@ -14,6 +15,8 @@ export class ApiClientError extends Error {
     public readonly code?: string,
     public readonly requestId?: string,
     public readonly status?: number,
+    /** Facts the server sends with some answers (for example current prices after a price change). */
+    public readonly details?: Record<string, unknown>,
   ) {
     // The request reference stays on the error object (for logs and admin screens); it is never part of the
     // message a customer may be shown.
@@ -35,6 +38,9 @@ export async function errorFromResponse(response: Response): Promise<ApiClientEr
     ? candidateRequestId
     : undefined;
 
-  return new ApiClientError(message, code, requestId, response.status);
+  const details = body.error?.details && typeof body.error.details === "object" && !Array.isArray(body.error.details)
+    ? body.error.details as Record<string, unknown>
+    : undefined;
+  return new ApiClientError(message, code, requestId, response.status, details);
 }
 

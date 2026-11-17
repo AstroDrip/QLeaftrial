@@ -26,7 +26,7 @@ describe("fake orders, from the catalogue to delivery", () => {
     const stockA = (await inventoryFor(a.id)).quantity;
     const stockB = (await inventoryFor(b.id)).quantity;
 
-    const placed = await request(app).post("/api/v1/orders").set("Idempotency-Key", "journey-order-0001").send(validOrder({
+    const placed = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "journey-order-0001").send(validOrder({
       paymentMethod: "PAYMENT_LINK",
       items: [{ productId: a.id, quantity: 2 }, { productId: b.id, quantity: 1 }, { productId: a.id, quantity: 1 }],
     }));
@@ -64,7 +64,7 @@ describe("fake orders, from the catalogue to delivery", () => {
     const product = await seededProduct("snake-plant");
     // Priced at the free-delivery threshold, so no delivery charge has to be confirmed before payment.
     await prisma.product.update({ where: { id: product.id }, data: { priceQar: 150 } });
-    const placed = await request(createApp()).post("/api/v1/orders").send(validOrder({ paymentMethod: "PAYMENT_LINK", items: [{ productId: product.id, quantity: 1 }] }));
+    const placed = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ paymentMethod: "PAYMENT_LINK", items: [{ productId: product.id, quantity: 1 }] }));
     const stock = (await inventoryFor(product.id)).quantity;
     const admin = await loggedInAgent();
 
@@ -81,7 +81,7 @@ describe("fake orders, from the catalogue to delivery", () => {
   it("puts the stock back exactly once when an order is cancelled", async () => {
     const product = await seededProduct("snake-plant");
     const before = (await inventoryFor(product.id)).quantity;
-    const placed = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 2 }] }));
+    const placed = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 2 }] }));
     expect((await inventoryFor(product.id)).quantity).toBe(before - 2);
     const admin = await loggedInAgent();
 
@@ -110,7 +110,7 @@ describe("fake orders, from the catalogue to delivery", () => {
     ];
 
     for (const body of attempts) {
-      const response = await request(app).post("/api/v1/orders").send(body);
+      const response = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(body);
       expect(response.status, JSON.stringify(body).slice(0, 80)).toBe(400);
     }
     expect(await prisma.order.count()).toBe(0);
@@ -119,7 +119,7 @@ describe("fake orders, from the catalogue to delivery", () => {
 
   it("accepts the delivery area in Arabic, as the Arabic checkout sends it", async () => {
     const product = await seededProduct("snake-plant");
-    const response = await request(createApp()).post("/api/v1/orders").send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), area: "الوكرة" });
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), area: "الوكرة" });
     expect(response.status).toBe(201);
     expect(response.body.area).toBe("الوكرة");
   });
@@ -130,7 +130,7 @@ describe("fake orders, from the catalogue to delivery", () => {
     await prisma.inventory.update({ where: { productId: scarce.id }, data: { quantity: 1 } });
     const plentyBefore = (await inventoryFor(plenty.id)).quantity;
 
-    const response = await request(createApp()).post("/api/v1/orders").send(validOrder({
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({
       items: [{ productId: plenty.id, quantity: 2 }, { productId: scarce.id, quantity: 3 }],
     }));
 
@@ -144,14 +144,14 @@ describe("fake orders, from the catalogue to delivery", () => {
   it("refuses a product unpublished while it sat in the cart", async () => {
     const product = await seededProduct("snake-plant");
     await prisma.product.update({ where: { id: product.id }, data: { published: false } });
-    const response = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     expect(response.status).toBe(400);
     expect(await prisma.order.count()).toBe(0);
   });
 
   it("keeps every order and payment action behind the admin login", async () => {
     const product = await seededProduct("snake-plant");
-    const placed = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const placed = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     const app = createApp();
 
     const attempts = await Promise.all([

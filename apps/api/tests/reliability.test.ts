@@ -42,8 +42,8 @@ describe("placing an order exactly once", () => {
     const body = validOrder({ items: [{ productId: product.id, quantity: 1 }] });
     const app = createApp();
 
-    const first = await request(app).post("/api/v1/orders").set("Idempotency-Key", "checkout-retry-0001").send(body);
-    const retry = await request(app).post("/api/v1/orders").set("Idempotency-Key", "checkout-retry-0001").send(body);
+    const first = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "checkout-retry-0001").send(body);
+    const retry = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "checkout-retry-0001").send(body);
 
     expect(first.status).toBe(201);
     expect(retry.status).toBe(200);
@@ -61,8 +61,8 @@ describe("placing an order exactly once", () => {
     const app = createApp();
 
     const [a, b] = await Promise.all([
-      request(app).post("/api/v1/orders").set("Idempotency-Key", "double-tap-key-0001").send(body),
-      request(app).post("/api/v1/orders").set("Idempotency-Key", "double-tap-key-0001").send(body),
+      request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "double-tap-key-0001").send(body),
+      request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "double-tap-key-0001").send(body),
     ]);
 
     expect([a.status, b.status].sort()).toEqual([200, 201]);
@@ -75,9 +75,9 @@ describe("placing an order exactly once", () => {
     const body = validOrder({ items: [{ productId: product.id, quantity: 1 }] });
     const app = createApp();
 
-    const one = await request(app).post("/api/v1/orders").set("Idempotency-Key", "checkout-one-00001").send(body);
-    const two = await request(app).post("/api/v1/orders").set("Idempotency-Key", "checkout-two-00002").send(body);
-    const bad = await request(app).post("/api/v1/orders").set("Idempotency-Key", "x").send(body);
+    const one = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "checkout-one-00001").send(body);
+    const two = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "checkout-two-00002").send(body);
+    const bad = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "x").send(body);
 
     expect(one.body.id).not.toBe(two.body.id);
     expect(one.body.orderNumber).not.toBe(two.body.orderNumber);
@@ -91,7 +91,7 @@ describe("placing an order exactly once", () => {
     const body = validOrder({ items: [{ productId: product.id, quantity: 1 }] });
     const app = createApp();
 
-    const responses = await Promise.all(Array.from({ length: 8 }, () => request(app).post("/api/v1/orders").send(body)));
+    const responses = await Promise.all(Array.from({ length: 8 }, () => request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(body)));
 
     expect(responses.every((response) => response.status === 201)).toBe(true);
     const numbers = responses.map((response) => response.body.orderNumber as string);
@@ -103,8 +103,8 @@ describe("placing an order exactly once", () => {
     const product = await seededProduct("house-plant");
     const app = createApp();
 
-    const lowPrice = await request(app).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 2, unitPriceQar: 1 }] }));
-    const tamperedTotal = await request(app).post("/api/v1/orders").send({
+    const lowPrice = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 2, unitPriceQar: 1 }] }));
+    const tamperedTotal = await request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send({
       ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }),
       subtotalQar: 1,
     });
@@ -120,9 +120,9 @@ describe("placing an order exactly once", () => {
     const product = await seededProduct("house-plant");
     await prisma.product.update({ where: { id: product.id }, data: { published: false } });
 
-    const unpublished = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
-    const unknown = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: "no-such-product", quantity: 1 }] }));
-    const negative = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: -1 }] }));
+    const unpublished = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const unknown = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: "no-such-product", quantity: 1 }] }));
+    const negative = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: -1 }] }));
 
     expect(unpublished.status).toBe(400);
     expect(unknown.status).toBe(400);
@@ -137,8 +137,8 @@ describe("placing an order exactly once", () => {
     const app = createApp();
 
     const results = await Promise.all([
-      request(app).post("/api/v1/orders").send(body),
-      request(app).post("/api/v1/orders").send(body),
+      request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(body),
+      request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(body),
     ]);
 
     expect(results.map((result) => result.status).sort()).toEqual([201, 409]);

@@ -70,9 +70,9 @@ export function validOrder(overrides: Partial<ValidOrder> = {}): ValidOrder {
 export async function loggedInAgent() {
   await seedDatabase();
   const agent = request.agent(createApp());
-  const response = await agent.post("/api/v1/auth/login").send({
-    password: "taimuomar",
-  });
+  // SQLite test runs use the development seed password; the PostgreSQL run seeds its own (tests/pg/use-pg-database.ts).
+  const password = process.env.QLEAVES_DATABASE_PROVIDER === "postgresql" ? process.env.QLEAVES_ADMIN_SEED_PASSWORD : "taimuomar";
+  const response = await agent.post("/api/v1/auth/login").send({ password });
 
   if (response.status !== 200) {
     throw new Error(`Development admin login failed with status ${response.status}`);

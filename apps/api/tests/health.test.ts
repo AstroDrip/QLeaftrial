@@ -23,6 +23,7 @@ describe("GET /api/v1/health", () => {
     expect(response.body).toEqual({
       status: "ready",
       database: "connected",
+      schema: "current",
     });
   });
 

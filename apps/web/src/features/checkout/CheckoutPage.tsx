@@ -122,6 +122,8 @@ export function CheckoutPage() {
       items: items.map(({ id, quantity }) => ({ productId: id, quantity })),
       ...(locationConfirmed ? { deliveryLocation: locationPayload(location) } : {}),
       ...(useWrittenAddress ? { deliveryLocationManual: true } : {}),
+      // The total the customer is looking at: if today's prices differ, the order is not placed and they are told.
+      expectedSubtotalQar: cartSubtotal(items),
     };
     await submitOrder(payload, Object.fromEntries(items.map((item) => [item.id, item.nameAr?.trim() || null])));
   }
@@ -150,6 +152,22 @@ export function CheckoutPage() {
         : (isArabic ? "يرجى تأكيد موقع التوصيل مرة أخرى." : "Please confirm your delivery location again."));
       // Scrolling is a nicety: where it is not supported it must never break the page.
       locationSection.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      return;
+    }
+    const copy = submissionCopy[isArabic ? "ar" : "en"];
+    if (rejection instanceof ApiClientError && rejection.code === "PRICE_CHANGED") {
+      // Today's prices go into the cart, and the customer sees exactly what changed before ordering again.
+      const current = Array.isArray(rejection.details?.items) ? rejection.details!.items as Array<{ productId?: unknown; priceQar?: unknown }> : [];
+      const prices = new Map(current.filter((item) => typeof item.productId === "string" && typeof item.priceQar === "number").map((item) => [item.productId as string, item.priceQar as number]));
+      const cart = useCartStore.getState().items;
+      const changes = cart.filter((item) => prices.has(item.id) && prices.get(item.id) !== item.priceQar)
+        .map((item) => copy.priceChange(isArabic ? item.nameAr?.trim() || item.name : item.name, item.priceQar, prices.get(item.id)!));
+      useCartStore.setState({ items: cart.map((item) => (prices.has(item.id) ? { ...item, priceQar: prices.get(item.id)! } : item)) });
+      setError(changes.length ? copy.pricesChanged(changes) : copy.pricesChangedGeneral);
+      return;
+    }
+    if (rejection instanceof ApiClientError && rejection.code === "IDEMPOTENCY_KEY_REUSED") {
+      setError(copy.keyReused);
       return;
     }
     setError(friendlyError(rejection, isArabic ? "ar" : "en"));

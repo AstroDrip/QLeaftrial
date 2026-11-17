@@ -4,6 +4,7 @@ import { errorHandler } from "./middleware/error-handler.js";
 import { apiRouter, siteRouter } from "./routes.js";
 import { prisma } from "./lib/prisma.js";
 import { requestContext } from "./middleware/request-context.js";
+import { requiredSchemaState } from "./lib/schema-check.js";
 
 const productRepository = prisma.product as unknown as {
   count(): Promise<number>;
@@ -32,7 +33,13 @@ export function createApp(): Express {
         timer = setTimeout(() => reject(new Error("Database readiness timeout")), 5000);
       });
       await Promise.race([checkPromise, timeoutPromise]);
-      response.json({ status: "ready", database: "connected" });
+      // Connected is not enough: a database missing a migration would take orders without their safeguards.
+      if (await requiredSchemaState() === "outdated") {
+        console.error(JSON.stringify({ level: "error", requestId: response.locals.requestId, endpoint: "/api/v1/ready", event: "schema-outdated" }));
+        response.status(503).json({ status: "unavailable", database: "connected", schema: "outdated", error: { code: "SCHEMA_OUTDATED", message: "The database is missing a required migration" } });
+        return;
+      }
+      response.json({ status: "ready", database: "connected", schema: "current" });
     } catch (error) {
       const requestId = typeof response.locals.requestId === "string"
         ? response.locals.requestId

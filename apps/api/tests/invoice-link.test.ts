@@ -10,7 +10,7 @@ describe("customer invoice links and order change summaries", () => {
   afterAll(() => prisma.$disconnect());
 
   async function placeOrder(items: Array<{ productId: string; quantity: number }>) {
-    const created = await request(createApp()).post("/api/v1/orders").send(validOrder({ items }));
+    const created = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items }));
     expect(created.status).toBe(201);
     return created.body as { id: string; orderNumber: string };
   }

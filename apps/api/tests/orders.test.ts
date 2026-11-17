@@ -10,7 +10,7 @@ describe("orders and admin operations", () => {
 
   it("creates an order at server-side prices and decrements inventory", async () => {
     const product = await seededProduct("house-plant");
-    const response = await request(createApp()).post("/api/v1/orders").send(validOrder({
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({
       items: [{ productId: product.id, quantity: 2, unitPriceQar: 1 }],
     }));
     expect(response.status).toBe(201);
@@ -20,7 +20,7 @@ describe("orders and admin operations", () => {
 
   it("rejects orders that exceed stock without creating a record", async () => {
     const product = await seededProduct("house-plant");
-    const response = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 99 }] }));
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 99 }] }));
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe("INSUFFICIENT_STOCK");
     expect(await prisma.order.count()).toBe(0);
@@ -28,7 +28,7 @@ describe("orders and admin operations", () => {
 
   it("lists orders and updates status for an authenticated admin", async () => {
     const product = await seededProduct("house-plant");
-    const created = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const created = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     const agent = await loggedInAgent();
     const listed = await agent.get("/api/v1/admin/orders");
     expect(listed.status).toBe(200);
@@ -39,7 +39,7 @@ describe("orders and admin operations", () => {
 
   it("supports Semi status names and reports completed sales", async () => {
     const product = await seededProduct("house-plant");
-    const created = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const created = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     const agent = await loggedInAgent();
     const accepted = await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "accepted" });
     expect(accepted.body.status).toBe("CONFIRMED");
@@ -52,8 +52,8 @@ describe("orders and admin operations", () => {
 
   it("deletes a visible set atomically only when every order is deletable", async () => {
     const product = await seededProduct("house-plant");
-    const first = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
-    const second = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const first = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const second = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     const agent = await loggedInAgent();
     await agent.patch(`/api/v1/admin/orders/${first.body.id}/status`).send({ status: "completed" });
 
@@ -79,7 +79,7 @@ describe("orders and admin operations", () => {
     const fiddleLeaf = await prisma.product.findUniqueOrThrow({ where: { slug: "fiddle-leaf-fig" } });
     const agent = await loggedInAgent();
 
-    const created = await request(createApp()).post("/api/v1/orders").send(validOrder({
+    const created = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({
       items: [
         { productId: housePlant.id, quantity: 2 },
         { productId: snakePlant.id, quantity: 1 },
@@ -140,7 +140,7 @@ describe("orders and admin operations", () => {
     const housePlant = await seededProduct("house-plant");
     const fiddleLeaf = await prisma.product.findUniqueOrThrow({ where: { slug: "fiddle-leaf-fig" } });
     const agent = await loggedInAgent();
-    const created = await request(createApp()).post("/api/v1/orders").send(validOrder({
+    const created = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({
       items: [{ productId: housePlant.id, quantity: 1 }],
     }));
     const pending = (await agent.get("/api/v1/admin/orders")).body.items
@@ -173,7 +173,7 @@ describe("orders and admin operations", () => {
   it("returns reserved inventory exactly once when an order is declined", async () => {
     const product = await seededProduct("house-plant");
     const agent = await loggedInAgent();
-    const created = await request(createApp()).post("/api/v1/orders").send(validOrder({
+    const created = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({
       items: [{ productId: product.id, quantity: 2 }],
     }));
     expect(await inventoryFor(product.id)).toMatchObject({ quantity: 10 });
@@ -193,9 +193,9 @@ describe("orders and admin operations", () => {
 
   it("bulk deletes terminal orders atomically and rejects mixed non-terminal selections", async () => {
     const product = await seededProduct("house-plant");
-    const first = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
-    const second = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
-    const pending = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const first = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const second = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const pending = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     const agent = await loggedInAgent();
 
     await agent.patch(`/api/v1/admin/orders/${first.body.id}/status`).send({ status: "declined" });

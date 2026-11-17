@@ -18,7 +18,7 @@ describe("delivery charge below the free-delivery threshold", () => {
   async function orderAt(priceQar: number, quantity = 1) {
     const product = await seededProduct("house-plant");
     await prisma.product.update({ where: { id: product.id }, data: { priceQar } });
-    return request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity }] }));
+    return request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity }] }));
   }
 
   it("flags the order from the server's own prices, without inventing a fee", async () => {
@@ -36,9 +36,9 @@ describe("delivery charge below the free-delivery threshold", () => {
   it("ignores a delivery fee or flag sent by the browser", async () => {
     const product = await seededProduct("house-plant");
     await prisma.product.update({ where: { id: product.id }, data: { priceQar: 100 } });
-    const response = await request(createApp()).post("/api/v1/orders").send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), deliveryFeeQar: 0 });
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), deliveryFeeQar: 0 });
     expect(response.body).toMatchObject({ deliveryFeeQar: 0, deliveryChargePending: true });
-    const forged = await request(createApp()).post("/api/v1/orders").send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), deliveryChargePending: false });
+    const forged = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send({ ...validOrder({ items: [{ productId: product.id, quantity: 1 }] }), deliveryChargePending: false });
     expect(forged.status).toBe(400);
   });
 

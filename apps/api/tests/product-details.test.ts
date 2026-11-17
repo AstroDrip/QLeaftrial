@@ -64,7 +64,7 @@ describe("product details, merchandising and pricing rules", () => {
     await prisma.product.update({ where: { id: product.id }, data: { priceQar: 0 } });
     const stockBefore = (await prisma.inventory.findUniqueOrThrow({ where: { productId: product.id } })).quantity;
 
-    const order = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const order = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
 
     expect(order.status).toBe(400);
     expect(await prisma.order.count()).toBe(0);

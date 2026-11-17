@@ -1,4 +1,4 @@
-import { randomInt } from "node:crypto";
+import { createHash, randomInt } from "node:crypto";
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import { getStoreSettings } from "../admin/store-settings.service.js";
@@ -155,21 +155,16 @@ function uniqueViolationOn(error: unknown, field: string): boolean {
     String((error as { message?: unknown }).message ?? "").includes(field);
 }
 
-// Until the idempotency column has been added to a database (see docs/deployment/operator-checklist.md),
-// an order is still accepted without the key rather than checkout breaking.
-function missingIdempotencyColumn(error: unknown): boolean {
+// PostgreSQL gave up on a transaction because of a clash with another one (a deadlock or a serialisation failure).
+// Nothing was written, so the same request can safely run again.
+function transientConflict(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const { code, message } = error as { code?: unknown; message?: unknown };
-  const detail = String(message ?? "") + JSON.stringify((error as { meta?: unknown }).meta ?? {});
-  return (code === "P2022" || /column/i.test(detail)) && /idempotencyKey/.test(detail);
+  const detail = `${String(code ?? "")} ${String(message ?? "")} ${JSON.stringify((error as { meta?: unknown }).meta ?? {})}`;
+  return code === "P2034" || /40P01|40001|deadlock detected|could not serialize/i.test(detail);
 }
 
-function missingNotificationTable(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const { code, message } = error as { code?: unknown; message?: unknown };
-  const detail = String(message ?? "") + JSON.stringify((error as { meta?: unknown }).meta ?? {});
-  return (code === "P2021" || /does not exist|no such table/i.test(detail)) && /NotificationOutbox/.test(detail);
-}
+const TRANSIENT_ATTEMPTS = 3;
 
 const ORDER_NUMBER_ATTEMPTS = 3;
 
@@ -181,7 +176,7 @@ async function releaseReservedItems(
   for (const item of items) {
     quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity);
   }
-  for (const [productId, quantity] of quantities) {
+  for (const [productId, quantity] of [...quantities].sort(([a], [b]) => a.localeCompare(b))) {
     await tx.inventory.upsert({
       where: { productId },
       create: { productId, quantity },
@@ -192,18 +187,44 @@ async function releaseReservedItems(
 
 export type CreatedOrder = Awaited<ReturnType<typeof insertOrder>>;
 
-// Places an order exactly once. With an idempotency key, a retry (double tap, a timeout after the order was
-// saved, a reload) gets the order that already exists, and two simultaneous requests with the same key
-// cannot both create one: the unique index lets one win and the other returns the winner's order.
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value as Record<string, unknown>).filter((key) => (value as Record<string, unknown>)[key] !== undefined).sort()
+      .map((key) => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
+
+/** SHA-256 of the validated order request: the same order sent again gives the same fingerprint. */
+export function requestFingerprint(input: CreateOrderInput): string {
+  return createHash("sha256").update(canonical(input)).digest("hex");
+}
+
+/**
+ * The order already saved under this key, if any. The same key with a different request is refused: it never
+ * returns someone else's order, and never places a second one.
+ */
+export async function findOrderForKey(idempotencyKey: string, fingerprint: string): Promise<CreatedOrder | null> {
+  const existing = await db.order.findUnique({ where: { idempotencyKey }, include: ORDER_INCLUDE });
+  if (!existing) return null;
+  if (existing.requestFingerprint && existing.requestFingerprint !== fingerprint) {
+    throw new ApiError(409, "IDEMPOTENCY_KEY_REUSED", "This order request does not match the order already received with the same key");
+  }
+  return existing;
+}
+
+// Places an order exactly once per key. A retry (double tap, a timeout after the order was saved, a reload) gets the
+// order that already exists, and two simultaneous requests with the same key cannot both create one: the unique
+// index lets one win and the other returns the winner's order. The key is required; a database without the key
+// column is a failed release, so the error surfaces instead of orders being taken without protection.
 export async function createOrder(
   input: CreateOrderInput,
-  idempotencyKey?: string,
+  idempotencyKey: string,
+  fingerprint = requestFingerprint(input),
 ): Promise<{ order: CreatedOrder; replayed: boolean }> {
-  let key = idempotencyKey;
-  if (key) {
-    const existing = await findOrderByIdempotencyKey(key);
-    if (existing) return { order: existing, replayed: true };
-  }
+  const existing = await findOrderForKey(idempotencyKey, fingerprint);
+  if (existing) return { order: existing, replayed: true };
 
   // Checked before anything is written: a bad location never leaves a half-made order behind.
   checkedLocation(input.deliveryLocation);
@@ -213,42 +234,24 @@ export async function createOrder(
     throw new ApiError(503, "ORDERING_DISABLED", "Ordering is currently unavailable");
   }
 
-  let notify = true;
-  for (let attempt = 1; ; attempt += 1) {
+  let numberClashes = 0;
+  let transientFailures = 0;
+  for (;;) {
     try {
-      return { order: await insertOrder(input, key, notify), replayed: false };
+      return { order: await insertOrder(input, idempotencyKey, fingerprint), replayed: false };
     } catch (error) {
-      if (key && uniqueViolationOn(error, "idempotencyKey")) {
-        const existing = await findOrderByIdempotencyKey(key);
-        if (existing) return { order: existing, replayed: true };
+      if (uniqueViolationOn(error, "idempotencyKey")) {
+        const winner = await findOrderForKey(idempotencyKey, fingerprint);
+        if (winner) return { order: winner, replayed: true };
       }
-      if (key && missingIdempotencyColumn(error)) {
-        console.warn(JSON.stringify({ level: "warn", event: "order-idempotency-unavailable", reason: "column missing; run the pending migration" }));
-        key = undefined;
-        continue;
-      }
-      if (notify && missingNotificationTable(error)) {
-        // The notification table has not been added to this database yet: the order still goes through.
-        console.warn(JSON.stringify({ level: "warn", event: "order-notification-unavailable", reason: "table missing; run the pending migration" }));
-        notify = false;
-        continue;
-      }
-      if (uniqueViolationOn(error, "orderNumber") && attempt < ORDER_NUMBER_ATTEMPTS) continue;
+      if (uniqueViolationOn(error, "orderNumber") && ++numberClashes < ORDER_NUMBER_ATTEMPTS) continue;
+      if (transientConflict(error) && ++transientFailures < TRANSIENT_ATTEMPTS) continue;
       throw error;
     }
   }
 }
 
-async function findOrderByIdempotencyKey(idempotencyKey: string) {
-  try {
-    return await db.order.findUnique({ where: { idempotencyKey }, include: ORDER_INCLUDE });
-  } catch (error) {
-    if (missingIdempotencyColumn(error)) return null;
-    throw error;
-  }
-}
-
-async function insertOrder(input: CreateOrderInput, idempotencyKey: string | undefined, notify: boolean) {
+async function insertOrder(input: CreateOrderInput, idempotencyKey: string, fingerprint: string) {
   return db.$transaction(async (tx) => {
     const quantities = new Map<string, number>();
     for (const item of input.items) {
@@ -261,9 +264,21 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
       // A published product without a real price can never be bought.
       where: { id: { in: [...quantities.keys()] }, published: true, priceQar: { gt: 0 } },
       select: { id: true, name: true, sku: true, priceQar: true },
+      // Stock rows are always locked in the same (id) order, so two orders for the same plants can never wait on
+      // each other in opposite order (a PostgreSQL deadlock).
+      orderBy: { id: "asc" },
     });
     if (products.length !== quantities.size) {
       throw new ApiError(400, "PRODUCT_NOT_FOUND", "One or more products are unavailable");
+    }
+
+    // The customer agreed to a total. If a price changed since, nothing is charged at the new price without asking.
+    const priced = products.reduce((total, product) => total + product.priceQar * quantities.get(product.id)!, 0);
+    if (input.expectedSubtotalQar !== undefined && input.expectedSubtotalQar !== priced) {
+      throw new ApiError(409, "PRICE_CHANGED", "Prices have changed since this order was prepared", {
+        subtotalQar: priced,
+        items: products.map((product) => ({ productId: product.id, name: product.name, priceQar: product.priceQar })),
+      });
     }
 
     const items = [];
@@ -290,7 +305,8 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
     const order = await tx.order.create({
       data: {
         orderNumber: orderNumber(),
-        ...(idempotencyKey ? { idempotencyKey } : {}),
+        idempotencyKey,
+        requestFingerprint: fingerprint,
         customerName: input.customerName,
         phone: input.phone,
         email: input.email,
@@ -313,7 +329,7 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string | und
       include: ORDER_INCLUDE,
     });
     // The admin's new-order email is recorded with the order itself: both are saved or neither is.
-    if (notify) await recordNotification(tx, { orderId: order.id, eventType: "ORDER_CREATED", dedupeKey: `order-created:${order.id}` });
+    await recordNotification(tx, { orderId: order.id, eventType: "ORDER_CREATED", dedupeKey: `order-created:${order.id}` });
     return order;
   });
 }
@@ -418,7 +434,8 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
       );
     }
 
-    const allProductIds = new Set([...currentReservations.keys(), ...desiredReservations.keys()]);
+    // Same fixed (id) order as order creation, so an edit and a new order never deadlock on stock rows.
+    const allProductIds = [...new Set([...currentReservations.keys(), ...desiredReservations.keys()])].sort();
     for (const productId of allProductIds) {
       const current = currentReservations.get(productId) ?? 0;
       const desired = desiredReservations.get(productId) ?? 0;

@@ -33,6 +33,15 @@ custom-domain/DNS setup, and deployment health checks are documented in
 ```bash
 npm run prisma:generate -w @qleaves/api
 npm test
+npm run test:pg -w @qleaves/api
 npm run typecheck
 npm run build
 ```
+
+`npm test` runs on SQLite. `npm run test:pg -w @qleaves/api` starts a throwaway local PostgreSQL 17 (the
+`embedded-postgres` development package; no account, nothing leaves the machine), applies the production
+migrations to it, and runs the order transaction, concurrency and idempotency tests that SQLite cannot show.
+
+The Vercel build checks that every PostgreSQL migration in `apps/api/prisma/postgresql/migrations` is already
+applied to the production database and stops if one is missing. Apply a new migration before pushing the code that
+needs it.

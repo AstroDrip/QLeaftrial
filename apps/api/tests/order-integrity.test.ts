@@ -12,7 +12,7 @@ describe("order money and state integrity", () => {
   async function placed(priceQar = 120, quantity = 1) {
     const product = await seededProduct("house-plant");
     await prisma.product.update({ where: { id: product.id }, data: { priceQar } });
-    const response = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity }] }));
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity }] }));
     expect(response.status).toBe(201);
     return response.body as { id: string; orderNumber: string };
   }
@@ -20,7 +20,7 @@ describe("order money and state integrity", () => {
 
   it("returns only what the customer needs when an order is placed", async () => {
     const product = await seededProduct("house-plant");
-    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", "customer-view-key-0001")
+    const response = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "customer-view-key-0001")
       .send(validOrder({ items: [{ productId: product.id, quantity: 2 }] }));
     expect(response.status).toBe(201);
     expect(Object.keys(response.body).sort()).toEqual(["area", "createdAt", "deliveryChargePending", "deliveryFeeQar", "id", "items", "orderNumber", "paymentMethod", "paymentStatus", "status", "subtotalQar"]);
@@ -28,7 +28,7 @@ describe("order money and state integrity", () => {
     const text = JSON.stringify(response.body);
     for (const internal of ["idempotencyKey", "customer-view-key-0001", "sheetSync", "editSummary", "updatedAt", "sku", "aisha@example.com", "5555 1234"]) expect(text).not.toContain(internal);
     // A replay of the same attempt gets the same safe view.
-    const replay = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", "customer-view-key-0001")
+    const replay = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "customer-view-key-0001")
       .send(validOrder({ items: [{ productId: product.id, quantity: 2 }] }));
     expect(replay.status).toBe(200);
     expect(replay.body).toEqual(response.body);

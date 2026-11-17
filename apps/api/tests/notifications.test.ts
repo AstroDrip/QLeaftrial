@@ -42,7 +42,7 @@ describe("order email notifications", () => {
   async function place(overrides: Record<string, unknown> = {}, key?: string) {
     const product = await seededProduct("house-plant");
     await prisma.product.update({ where: { id: product.id }, data: { priceQar: 60 } });
-    const call = request(createApp()).post("/api/v1/orders");
+    const call = request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`);
     if (key) call.set("Idempotency-Key", key);
     return call.send({ ...validOrder({ items: [{ productId: product.id, quantity: 2 }] }), ...overrides });
   }

@@ -68,7 +68,7 @@ describe("admin product management", () => {
   it("keeps order history by refusing to delete an ordered product", async () => {
     const product = await seededProduct("house-plant");
     const order = await request(createApp())
-      .post("/api/v1/orders")
+      .post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`)
       .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     expect(order.status).toBe(201);
     const agent = await loggedInAgent();
@@ -84,7 +84,7 @@ describe("admin product management", () => {
   it("rejects deleting an ordered product at the database level", async () => {
     const product = await seededProduct("house-plant");
     await request(createApp())
-      .post("/api/v1/orders")
+      .post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`)
       .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
 
     await expect(prisma.product.delete({ where: { id: product.id } })).rejects.toMatchObject({ code: "P2003" });

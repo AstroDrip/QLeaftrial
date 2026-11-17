@@ -135,6 +135,9 @@ model Order {
   // Sent by the storefront with each checkout attempt: a retry with the same key returns the order
   // already created instead of creating a second one.
   idempotencyKey  String?       @unique
+  // SHA-256 of the normalised order request sent with that key. The same key with a different request is refused
+  // instead of being answered with this order. Empty on orders placed before it was recorded.
+  requestFingerprint String?
   customerName    String
   phone           String
   email           String
@@ -201,6 +204,9 @@ model NotificationOutbox {
   status            String    @default("PENDING")
   attempts          Int       @default(0)
   lastAttemptAt     DateTime?
+  // While a worker holds the row (status SENDING): until when. A lease that has run out means that worker stopped,
+  // and another may take the row.
+  leaseExpiresAt    DateTime?
   nextAttemptAt     DateTime  @default(now())
   // A short code only (for example "TIMEOUT", "PROVIDER_4XX"); never a message body or a credential.
   lastErrorCode     String?

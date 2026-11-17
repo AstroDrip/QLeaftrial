@@ -21,7 +21,7 @@ describe("client catalogue import", () => {
 
   it("replaces the sample products and keeps ordered ones for history", async () => {
     const ordered = await seededProduct("house-plant");
-    await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: ordered.id, quantity: 1 }] }));
+    await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: ordered.id, quantity: 1 }] }));
 
     const result = await importCatalog();
 

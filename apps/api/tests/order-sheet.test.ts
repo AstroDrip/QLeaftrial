@@ -254,7 +254,7 @@ describe("Google Sheets in the API", () => {
 
   async function placeOrder() {
     const product = await seededProduct("house-plant");
-    return request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    return request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
   }
 
   it("adds the order to the sheet only once it is completed and paid, and corrects it if payment is undone", async () => {
@@ -312,7 +312,7 @@ describe("Google Sheets in the API", () => {
 
     const product = await seededProduct("house-plant");
     const placed: string[] = [];
-    for (let index = 0; index < 3; index += 1) placed.push((await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }))).body.id);
+    for (let index = 0; index < 3; index += 1) placed.push((await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }))).body.id);
     await prisma.order.updateMany({ where: { id: { in: placed.slice(0, 2) } }, data: { status: "DELIVERED", paymentStatus: "PAID" } });
     configureSheets();
     const { state, fetchMock } = fakeGoogle();

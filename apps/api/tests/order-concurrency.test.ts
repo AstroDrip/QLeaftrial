@@ -19,7 +19,7 @@ describe("orders under simultaneous requests", () => {
     await prisma.inventory.update({ where: { productId: product.id }, data: { quantity: 3 } });
     const app = createApp();
     const responses = await Promise.all(Array.from({ length: 8 }, (_, index) =>
-      request(app).post("/api/v1/orders").set("Idempotency-Key", `last-plants-attempt-${index}`)
+      request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", `last-plants-attempt-${index}`)
         .send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }))));
     const created = responses.filter((response) => response.status === 201);
     for (const response of responses) expect([201, ...REFUSED]).toContain(response.status);
@@ -35,7 +35,7 @@ describe("orders under simultaneous requests", () => {
     const stock = (await inventoryFor(product.id)).quantity;
     const app = createApp();
     const responses = await Promise.all(Array.from({ length: 5 }, () =>
-      request(app).post("/api/v1/orders").set("Idempotency-Key", "same-attempt-key-0001")
+      request(app).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).set("Idempotency-Key", "same-attempt-key-0001")
         .send(validOrder({ items: [{ productId: product.id, quantity: 2 }] }))));
     const numbers = new Set(responses.filter((response) => response.status < 300).map((response) => response.body.orderNumber));
     expect(numbers.size).toBe(1);
@@ -46,7 +46,7 @@ describe("orders under simultaneous requests", () => {
   it("puts stock back once when an order is declined several times at the same moment", async () => {
     const product = await seededProduct("house-plant");
     const stock = (await inventoryFor(product.id)).quantity;
-    const placed = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 4 }] }));
+    const placed = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 4 }] }));
     expect((await inventoryFor(product.id)).quantity).toBe(stock - 4);
     const admin = await loggedInAgent();
     const responses = await Promise.all(Array.from({ length: 4 }, () =>
@@ -62,7 +62,7 @@ describe("orders under simultaneous requests", () => {
     await prisma.product.update({ where: { id: product.id }, data: { priceQar: 200 } });
     const admin = await loggedInAgent();
     for (let round = 0; round < 4; round += 1) {
-      const placed = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+      const placed = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
       await Promise.all([
         admin.patch(`/api/v1/admin/orders/${placed.body.id}/payment`).send({ paymentStatus: "PAID" }),
         admin.patch(`/api/v1/admin/orders/${placed.body.id}/status`).send({ status: "declined" }),
@@ -81,7 +81,7 @@ describe("orders under simultaneous requests", () => {
     const product = await seededProduct("house-plant");
     await prisma.product.update({ where: { id: product.id }, data: { priceQar: 100 } });
     const admin = await loggedInAgent();
-    const placed = await request(createApp()).post("/api/v1/orders").send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
+    const placed = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`).send(validOrder({ items: [{ productId: product.id, quantity: 1 }] }));
     await admin.patch(`/api/v1/admin/orders/${placed.body.id}/delivery-fee`).send({ deliveryFeeQar: 10 }).expect(200);
     await Promise.all([
       admin.patch(`/api/v1/admin/orders/${placed.body.id}/delivery-fee`).send({ deliveryFeeQar: 25 }),
