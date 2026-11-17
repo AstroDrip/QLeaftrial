@@ -7,6 +7,9 @@ import { prisma } from "../../src/lib/prisma";
 import { clearOrderRateLimit } from "../../src/modules/orders/order-rate-limit";
 import { inventoryFor, loggedInAgent, resetDatabase, seededProduct, validOrder } from "../helpers";
 import { PG_TEST_URL } from "./global-setup";
+import { vi } from "vitest";
+import { processOutbox } from "../../src/modules/notifications/outbox";
+import { settleBackgroundWork } from "../../src/lib/after-response";
 
 // The order rules on a real PostgreSQL, where requests really run at the same time on separate connections.
 const db = prisma as any;
@@ -45,8 +48,9 @@ describe("orders on PostgreSQL", () => {
     expect(await db.order.count()).toBe(1);
     expect(await db.orderItem.count()).toBe(1);
     expect((await inventoryFor(product.id)).quantity).toBe(stock - 2);
-    // And exactly one notification record for it.
-    expect(await db.notificationOutbox.count()).toBe(1);
+    // And exactly one email job and one sheet job for it.
+    expect(await db.notificationOutbox.count({ where: { eventType: "ORDER_CREATED" } })).toBe(1);
+    expect(await db.notificationOutbox.count({ where: { eventType: "SHEET_SYNC" } })).toBe(1);
   });
 
   it("never sells more than the stock when many customers order the last plants together", async () => {
@@ -133,5 +137,31 @@ describe("orders on PostgreSQL", () => {
     } finally {
       execFileSync(process.execPath, ["-e", `const pg=require("pg");const c=new pg.Client({connectionString:process.argv[1]});c.connect().then(()=>c.query("update \\"_prisma_migrations\\" set rolled_back_at=null where migration_name='7_order_fingerprint_outbox_lease'")).then(()=>c.end())`, PG_TEST_URL], { cwd: fileURLToPath(new URL("../..", import.meta.url)) });
     }
+  });
+
+  it("sends each email once when several workers run at the same time on separate connections", async () => {
+    const product = await seededProduct("house-plant");
+    // Orders placed while email was not set up: their jobs are waiting.
+    for (let index = 0; index < 6; index += 1) await place(validOrder({ items: [{ productId: product.id, quantity: 1 }] }), `pg-worker-order-${index}00000`);
+    await settleBackgroundWork();
+    await db.notificationOutbox.updateMany({ where: { eventType: "ORDER_CREATED" }, data: { status: "PENDING", nextAttemptAt: new Date(Date.now() - 1000) } });
+    process.env.EMAIL_PROVIDER_API_KEY = "re_test_key_not_a_real_key";
+    process.env.ORDER_NOTIFICATION_EMAIL = "delivered@resend.dev";
+    const sentKeys: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, init?: RequestInit) => {
+      sentKeys.push((init?.headers as Record<string, string>)["Idempotency-Key"]);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return new Response(JSON.stringify({ id: "email" }), { status: 200 });
+    }));
+    try {
+      await Promise.all(Array.from({ length: 5 }, () => processOutbox({ limit: 20 })));
+    } finally {
+      vi.unstubAllGlobals();
+      process.env.EMAIL_PROVIDER_API_KEY = "";
+      process.env.ORDER_NOTIFICATION_EMAIL = "";
+    }
+    expect(sentKeys).toHaveLength(6);
+    expect(new Set(sentKeys).size).toBe(6);
+    expect(await db.notificationOutbox.count({ where: { eventType: "ORDER_CREATED", status: "SENT" } })).toBe(6);
   });
 });

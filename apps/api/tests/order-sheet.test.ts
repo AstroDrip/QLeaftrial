@@ -4,7 +4,9 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
 import { getAccessToken, normalizePrivateKey, resetGoogleTokenCache, signServiceAccountJwt } from "../src/modules/sheets/google-auth";
-import { mirrorOrderToSheet, orderToRow, resetSheetPreparation, SHEET_HEADER, sheetsConfig, syncAllOrders, syncOrder, type SheetOrder } from "../src/modules/sheets/order-sheet";
+import { orderToRow, resetSheetPreparation, SHEET_HEADER, sheetsConfig, syncAllOrders, syncOrder, type SheetOrder } from "../src/modules/sheets/order-sheet";
+import { settleBackgroundWork } from "../src/lib/after-response";
+import { processOutbox } from "../src/modules/notifications/outbox";
 import { loggedInAgent, resetDatabase, seededProduct, validOrder } from "./helpers";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048, privateKeyEncoding: { type: "pkcs8", format: "pem" }, publicKeyEncoding: { type: "spki", format: "pem" } });
@@ -217,28 +219,15 @@ describe("Google Sheets order sync", () => {
   });
 
   describe("failure handling", () => {
-    it("never throws or logs customer details when Google is down", async () => {
+    it("never logs customer details when Google is down", async () => {
       configureSheets();
       const { fetchMock } = fakeGoogle({ sheetsStatus: 500 });
       vi.stubGlobal("fetch", fetchMock);
-      const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
-      await expect(mirrorOrderToSheet(sheetOrder())).resolves.toBeUndefined();
-
-      const logged = log.mock.calls.map((call) => String(call[0])).join("\n");
-      expect(logged).toContain("sheet-sync-failed");
-      expect(logged).not.toContain("Aisha");
-      expect(logged).not.toContain("customer data would be here");
-    });
-
-    it("does nothing at all when Google Sheets is not configured", async () => {
-      for (const key of ENV_KEYS) delete process.env[key];
-      const { fetchMock } = fakeGoogle();
-      vi.stubGlobal("fetch", fetchMock);
-
-      await mirrorOrderToSheet(sheetOrder());
-
-      expect(fetchMock).not.toHaveBeenCalled();
+      const config = sheetsConfig()!;
+      await expect(syncOrder(sheetOrder(), config)).rejects.toThrow();
+      // The error a worker records is a code; nothing the customer wrote is in it.
+      const error = await syncOrder(sheetOrder(), config).catch((caught: unknown) => caught as Error);
+      expect(String(error)).not.toContain("Aisha");
     });
   });
 });
@@ -267,28 +256,42 @@ describe("Google Sheets in the API", () => {
     const agent = await loggedInAgent();
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "CONFIRMED" }).expect(200);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
+    await settleBackgroundWork();
     expect(state.rows).toHaveLength(0);
 
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);
+    await settleBackgroundWork();
     expect(state.rows).toHaveLength(2);
     expect(state.rows[1][1]).toBe(created.body.orderNumber);
 
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PENDING" }).expect(200);
+    await settleBackgroundWork();
     expect(state.rows).toHaveLength(1);
+    // One sheet job per order, done.
+    expect(await (prisma as any).notificationOutbox.findMany({ where: { orderId: created.body.id, eventType: "SHEET_SYNC" } })).toEqual([expect.objectContaining({ status: "SENT" })]);
   });
 
   it("still saves the change when Google is failing", async () => {
     configureSheets();
     vi.stubGlobal("fetch", fakeGoogle({ tokenStatus: 500 }).fetchMock);
     vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
     const created = await placeOrder();
     const agent = await loggedInAgent();
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "CONFIRMED" }).expect(200);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);
+    await settleBackgroundWork();
 
     expect(await prisma.order.findUnique({ where: { id: created.body.id } })).toMatchObject({ status: "DELIVERED", paymentStatus: "PAID" });
+    // Google being down is never shown to anyone as a failed order: the job waits for a retry, the log has a code only.
+    const [job] = await (prisma as any).notificationOutbox.findMany({ where: { orderId: created.body.id, eventType: "SHEET_SYNC" } });
+    // Waiting for a retry. (If a change arrived while an attempt was still running, it waits for that attempt's lease
+    // to end before trying again, so its last error may already have been cleared.)
+    expect(job.status).toBe("PENDING");
+    const logged = vi.mocked(console.error).mock.calls.map((call) => String(call[0])).join("\n") + vi.mocked(console.warn).mock.calls.map((call) => String(call[0])).join("\n");
+    expect(logged).not.toContain("Aisha");
   });
 
   it("keeps ordering unchanged when the sheet is not configured", async () => {
@@ -296,8 +299,12 @@ describe("Google Sheets in the API", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    expect((await placeOrder()).status).toBe(201);
+    const placed = await placeOrder();
+    expect(placed.status).toBe(201);
+    await settleBackgroundWork();
+    await processOutbox();
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(await (prisma as any).notificationOutbox.findMany({ where: { orderId: placed.body.id, eventType: "SHEET_SYNC" } })).toEqual([expect.objectContaining({ status: "DISABLED" })]);
   });
 
   it("reports status and syncs every order, for the admin only", async () => {
@@ -368,7 +375,9 @@ describe("Google Sheets in the API", () => {
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "CONFIRMED" }).expect(200);
     vi.stubGlobal("fetch", vi.fn(async () => { throw new DOMException("The operation timed out.", "TimeoutError"); }));
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);
+    await settleBackgroundWork();
     expect(await prisma.order.findUniqueOrThrow({ where: { id: created.body.id } })).toMatchObject({ status: "DELIVERED", sheetSyncError: "SHEETS_SYNC_FAILED" });
   });
 

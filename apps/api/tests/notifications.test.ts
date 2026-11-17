@@ -4,6 +4,7 @@ import { createApp } from "../src/app";
 import { prisma } from "../src/lib/prisma";
 import { deliverNotification, MAX_ATTEMPTS, processDueNotifications } from "../src/modules/notifications/outbox";
 import { renderOrderEmail } from "../src/modules/notifications/email-templates";
+import { settleBackgroundWork } from "../src/lib/after-response";
 import { loggedInAgent, resetDatabase, seededProduct, validOrder } from "./helpers";
 
 // The admin's order emails. No real email is ever sent here: the provider's HTTP endpoint is replaced by a fake, and
@@ -44,7 +45,10 @@ describe("order email notifications", () => {
     await prisma.product.update({ where: { id: product.id }, data: { priceQar: 60 } });
     const call = request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`);
     if (key) call.set("Idempotency-Key", key);
-    return call.send({ ...validOrder({ items: [{ productId: product.id, quantity: 2 }] }), ...overrides });
+    const response = await call.send({ ...validOrder({ items: [{ productId: product.id, quantity: 2 }] }), ...overrides });
+    // The email is sent just after the answer; wait for that before looking.
+    await settleBackgroundWork();
+    return response;
   }
 
   it("emails the admin once when an order is placed, with the order's details and no internal data", async () => {
@@ -69,7 +73,7 @@ describe("order email notifications", () => {
     expect(email.body.html).toContain("Not provided");
     for (const secret of ["notify-attempt-key-0001", TEST_KEY, "idempotency", "passwordHash"]) expect(JSON.stringify(email.body)).not.toContain(secret);
 
-    const rows = await outbox.findMany({ where: { orderId: placed.body.id } });
+    const rows = await outbox.findMany({ where: { orderId: placed.body.id, eventType: "ORDER_CREATED" } });
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ eventType: "ORDER_CREATED", status: "SENT", attempts: 1, recipient: RECIPIENT, providerMessageId: "email_123", lastErrorCode: null });
     expect(rows[0].sentAt).toBeInstanceOf(Date);
@@ -78,7 +82,7 @@ describe("order email notifications", () => {
     const replay = await place({ deliveryNotes: "Ring the bell <twice>" }, "notify-attempt-key-0001");
     expect(replay.status).toBe(200);
     expect(sent).toHaveLength(1);
-    expect(await outbox.count()).toBe(1);
+    expect(await outbox.count({ where: { eventType: "ORDER_CREATED" } })).toBe(1);
   });
 
   it("shows the confirmed pin's address parts, in Arabic or English, and marks the ones that are missing", () => {
@@ -104,7 +108,7 @@ describe("order email notifications", () => {
     const sent = fakeProvider((attempt) => (attempt === 1 ? failing(503)() : accepted()));
     const placed = await place();
     expect(placed.status).toBe(201);
-    const [row] = await outbox.findMany({ where: { orderId: placed.body.id } });
+    const [row] = await outbox.findMany({ where: { orderId: placed.body.id, eventType: "ORDER_CREATED" } });
     expect(row).toMatchObject({ status: "PENDING", attempts: 1, lastErrorCode: "PROVIDER_ERROR" });
     expect(row.nextAttemptAt.getTime()).toBeGreaterThan(Date.now() + 30_000);
 
@@ -131,12 +135,12 @@ describe("order email notifications", () => {
     fakeProvider(failing(422));
     const rejected = await place();
     expect(rejected.status).toBe(201);
-    expect((await outbox.findMany({ where: { orderId: rejected.body.id } }))[0]).toMatchObject({ status: "FAILED", attempts: 1, lastErrorCode: "REJECTED" });
+    expect((await outbox.findMany({ where: { orderId: rejected.body.id, eventType: "ORDER_CREATED" } }))[0]).toMatchObject({ status: "FAILED", attempts: 1, lastErrorCode: "REJECTED" });
 
     vi.unstubAllGlobals();
     const sent = fakeProvider(failing(500));
     const second = await place();
-    const [row] = await outbox.findMany({ where: { orderId: second.body.id } });
+    const [row] = await outbox.findMany({ where: { orderId: second.body.id, eventType: "ORDER_CREATED" } });
     let now = Date.now();
     for (let attempt = 2; attempt <= MAX_ATTEMPTS; attempt += 1) {
       now += 24 * 3_600_000;
@@ -155,17 +159,17 @@ describe("order email notifications", () => {
     const later = new Date(Date.now() + 2 * 60_000);
     await Promise.all([processDueNotifications({ now: later }), processDueNotifications({ now: later }), processDueNotifications({ now: later })]);
     expect(sent).toHaveLength(2); // the failed first attempt, then exactly one retry
-    expect((await outbox.findMany({ where: { orderId: placed.body.id } }))[0]).toMatchObject({ status: "SENT", attempts: 2 });
+    expect((await outbox.findMany({ where: { orderId: placed.body.id, eventType: "ORDER_CREATED" } }))[0]).toMatchObject({ status: "SENT", attempts: 2 });
   });
 
   it("lets an admin see failed emails and send one again", async () => {
     fakeProvider(failing(422));
     const placed = await place();
-    const [row] = await outbox.findMany({ where: { orderId: placed.body.id } });
+    const [row] = await outbox.findMany({ where: { orderId: placed.body.id, eventType: "ORDER_CREATED" } });
     const admin = await loggedInAgent();
 
     const orders = await admin.get("/api/v1/admin/orders").expect(200);
-    expect(orders.body.items[0].notifications).toEqual([expect.objectContaining({ id: row.id, eventType: "ORDER_CREATED", status: "FAILED", lastErrorCode: "REJECTED" })]);
+    expect(orders.body.items[0].notifications).toEqual(expect.arrayContaining([expect.objectContaining({ id: row.id, eventType: "ORDER_CREATED", status: "FAILED", lastErrorCode: "REJECTED" })]));
     const failed = await admin.get("/api/v1/admin/notifications?status=FAILED").expect(200);
     expect(failed.body).toMatchObject({ configured: true });
     expect(failed.body.items).toHaveLength(1);
@@ -188,7 +192,7 @@ describe("order email notifications", () => {
     const placed = await place();
     expect(placed.status).toBe(201);
     expect(sent).toHaveLength(0);
-    expect((await outbox.findMany({ where: { orderId: placed.body.id } }))[0]).toMatchObject({ status: "DISABLED", attempts: 0 });
+    expect((await outbox.findMany({ where: { orderId: placed.body.id, eventType: "ORDER_CREATED" } }))[0]).toMatchObject({ status: "DISABLED", attempts: 0 });
     expect(await processDueNotifications({ now: new Date(Date.now() + 365 * 24 * 3_600_000) })).toMatchObject({ checked: 0 });
     const admin = await loggedInAgent();
     expect((await admin.get("/api/v1/admin/notifications").expect(200)).body.configured).toBe(false);
@@ -197,7 +201,7 @@ describe("order email notifications", () => {
   it("runs the scheduled worker only with the secret", async () => {
     const sent = fakeProvider((attempt) => (attempt === 1 ? failing(500)() : accepted()));
     const placed = await place();
-    await outbox.updateMany({ where: { orderId: placed.body.id }, data: { nextAttemptAt: new Date(Date.now() - 1000) } });
+    await outbox.updateMany({ where: { orderId: placed.body.id, eventType: "ORDER_CREATED" }, data: { nextAttemptAt: new Date(Date.now() - 1000) } });
     const app = createApp();
     expect((await request(app).get("/api/v1/internal/worker")).status).toBe(401);
     expect((await request(app).get("/api/v1/internal/worker").set("Authorization", "Bearer wrong-secret-0123456789abc")).status).toBe(401);

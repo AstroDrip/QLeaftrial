@@ -9,11 +9,12 @@ variables below.
 1. Checkout is validated and the order, its items and its delivery location are saved in one database transaction.
 2. In that same transaction a row is written to `NotificationOutbox` (`ORDER_CREATED`, key `order-created:<order id>`).
    The order and its notification record are saved together or not at all.
-3. After the transaction commits, the request sends the email through Resend and waits for the answer (5 second
-   limit). Nothing is left running after the response, because a Vercel function may be frozen once it answers.
-4. The result is recorded on the row: `SENT` with Resend's message id, or the failure code and the next retry time.
-5. The customer gets their order confirmation either way. An email failure never fails or delays an order beyond
-   that 5 second limit.
+3. The transaction commits and the customer gets their confirmation straight away. (Changed on 2026-11-17: the
+   request no longer waits for the email.)
+4. Right after the answer, the email is sent through Resend (Vercel keeps the function alive for it). If that is
+   cut short or fails, the outbox worker sends it later; see `docs/deployment/outbox-worker.md`.
+5. The result is recorded on the row: `SENT` with Resend's message id, or the failure code and the next retry time.
+   An email failure never fails or delays an order.
 
 ## Status values
 
@@ -32,13 +33,16 @@ variables below.
 - Failures that cannot pass by themselves (Resend 4xx: bad recipient, unverified sender, bad key) are `FAILED` at once.
 - Two workers cannot send the same email: a worker must first change the row from `PENDING` to `SENDING` in one
   conditional update, and only one can. Resend is also given the same idempotency key on every attempt.
-- A row stuck in `SENDING` for more than 2 minutes (its worker died) may be taken by another worker.
+- A worker holds a row with a 2-minute lease (`leaseExpiresAt`, migration 7). When the lease runs out (its worker
+  died) another worker takes the row, and only the current lease holder can record a result.
 
 What triggers a retry:
 
 | Trigger | When |
 |---|---|
-| An admin opens the orders page | Up to 2 due emails, 6 seconds at most |
+| Right after the order is placed | That order's email |
+| An admin opens the orders page | Up to 5 due jobs, after the page has its data |
+| Supabase `pg_cron`, once set up | Every minute, up to 20 due jobs |
 | Vercel scheduled job (`vercel.json` `crons`) | Once a day at 03:00 UTC, up to 20 due emails |
 | "Send again" on the order card | Immediately, for that one email |
 | Any scheduler calling `GET /api/v1/internal/worker` with `Authorization: Bearer <CRON_SECRET>` | Whenever it is set up |

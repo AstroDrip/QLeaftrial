@@ -8,7 +8,7 @@ import type { OrderChange } from "./order-changes.js";
 import { deliveryChargeToConfirm } from "../../lib/delivery.js";
 import { isInQatar, municipalityAt, reverseGeocode } from "../../lib/geo/qatar.js";
 import { auditRow, type Actor } from "../admin/audit.js";
-import { recordNotification } from "../notifications/outbox.js";
+import { recordNotification, requestSheetSync } from "../notifications/outbox.js";
 
 // Every order read returns its lines and, when there is one, its confirmed delivery location.
 const ORDER_INCLUDE = { items: true, deliveryLocation: true } as const;
@@ -330,6 +330,8 @@ async function insertOrder(input: CreateOrderInput, idempotencyKey: string, fing
     });
     // The admin's new-order email is recorded with the order itself: both are saved or neither is.
     await recordNotification(tx, { orderId: order.id, eventType: "ORDER_CREATED", dedupeKey: `order-created:${order.id}` });
+    // And its Google Sheet job (the sheet only lists completed, paid orders, so for now this has nothing to write).
+    await requestSheetSync(tx, order.id);
     return order;
   });
 }
@@ -366,6 +368,7 @@ export async function updateOrderStatus(id: string, status: OrderStatusInput, ac
     }
 
     await tx.adminAuditLog.create({ data: auditRow(actor, "order.status", order, { from: currentStatus, to: persistedStatus }) });
+    await requestSheetSync(tx, id);
     return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
   });
 }
@@ -506,6 +509,7 @@ export async function acceptEditedOrder(id: string, input: AcceptEditedOrderInpu
         changes: changes.length,
       }),
     });
+    await requestSheetSync(tx, id);
     return tx.order.update({
       where: { id },
       data: {
@@ -545,6 +549,7 @@ export async function confirmDeliveryFee(id: string, deliveryFeeQar: number, act
     });
     if (written.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
     await tx.adminAuditLog.create({ data: auditRow(actor, "order.deliveryFee", order, { from: previous, to: deliveryFeeQar }) });
+    await requestSheetSync(tx, id);
     return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
   });
 }
@@ -580,6 +585,7 @@ export async function updatePaymentStatus(
     });
     if (written.count !== 1) throw new ApiError(409, "ORDER_CHANGED", "This order was just changed by someone else. Reload and try again");
     await tx.adminAuditLog.create({ data: auditRow(actor, "order.payment", order, { from: order.paymentStatus, to: paymentStatus }) });
+    await requestSheetSync(tx, id);
     return tx.order.findUnique({ where: { id }, include: ADMIN_ORDER_INCLUDE });
   });
 }

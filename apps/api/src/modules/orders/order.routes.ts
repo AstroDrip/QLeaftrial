@@ -21,11 +21,11 @@ import {
   updatePaymentStatus, confirmDeliveryFee, findOrderForKey, requestFingerprint,
 } from "./order.service.js";
 import { consumeOrderAttempt, consumeOrderReplay } from "./order-rate-limit.js";
-import { mirrorOrderToSheet } from "../sheets/order-sheet.js";
 import { toAdminOrder, toPublicOrder } from "./order-view.js";
 import type { Response } from "express";
 import { actorFrom, listAudit } from "../admin/audit.js";
-import { deliverForOrder, processDueNotifications } from "../notifications/outbox.js";
+import { deliverForOrder, processOutbox } from "../notifications/outbox.js";
+import { afterResponse } from "../../lib/after-response.js";
 
 export const orderRouter = Router();
 
@@ -74,22 +74,19 @@ orderRouter.post("/orders", async (req, res) => {
   const attempt = await consumeOrderAttempt(client);
   if (attempt.limited) return tooManyAttempts(res, attempt.retryAfterSeconds);
   const { order, replayed } = await createOrder(parsed.data, key, fingerprint);
-  // The order is saved before anything else happens. The admin's email is sent now and waited for (a serverless
-  // function may be frozen once it answers), with a short time limit; if it fails it stays recorded for retry.
-  // A slow or failing email or sheet sync never fails the order.
-  if (!replayed) {
-    await deliverForOrder(order.id);
-    await mirrorOrderToSheet(order);
-  }
+  // The order is committed: the customer gets their confirmation now. The shop's email and the sheet were recorded in
+  // the same transaction; they start right after this answer and the scheduled worker finishes anything left, so a
+  // slow or failing email provider or Google never delays or fails the order.
   if (replayed) res.setHeader("Idempotent-Replayed", "true");
   res.status(replayed ? 200 : 201).json(toPublicOrder(order));
+  if (!replayed) afterResponse("order-created", () => deliverForOrder(order.id));
 });
 
 orderRouter.use("/admin/orders", requireAdmin);
 
 orderRouter.get("/admin/orders", async (_req, res) => {
-  // An admin is looking: a good moment to retry any email that failed earlier (at most two, briefly).
-  await processDueNotifications({ limit: 2, budgetMs: 6_000 });
+  // An admin is looking: a good moment to catch up on emails and sheet rows that are due (after the answer).
+  afterResponse("admin-sweep", () => processOutbox({ limit: 5, budgetMs: 15_000 }));
   res.setHeader("Cache-Control", "no-store");
   res.json({ items: (await listOrders()).map(toAdminOrder) });
 });
@@ -105,32 +102,32 @@ orderRouter.patch("/admin/orders/:id/status", async (req, res) => {
   const parsed = updateOrderStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid order status");
   const order = await updateOrderStatus(req.params.id, parsed.data.status, actorFrom(res.locals));
-  await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
+  afterResponse("order-changed", () => deliverForOrder(order.id));
 });
 
 orderRouter.post("/admin/orders/:id/accept-edited", async (req, res) => {
   const parsed = acceptEditedOrderSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid edited order");
   const order = await acceptEditedOrder(req.params.id, parsed.data, actorFrom(res.locals));
-  await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
+  afterResponse("order-changed", () => deliverForOrder(order.id));
 });
 
 orderRouter.patch("/admin/orders/:id/delivery-fee", async (req, res) => {
   const parsed = confirmDeliveryFeeSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Enter the delivery charge in whole QAR");
   const order = await confirmDeliveryFee(req.params.id, parsed.data.deliveryFeeQar, actorFrom(res.locals));
-  await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
+  afterResponse("order-changed", () => deliverForOrder(order.id));
 });
 
 orderRouter.patch("/admin/orders/:id/payment", async (req, res) => {
   const parsed = updatePaymentStatusSchema.safeParse(req.body);
   if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid payment status");
   const order = await updatePaymentStatus(req.params.id, parsed.data.paymentStatus, actorFrom(res.locals));
-  await mirrorOrderToSheet(order);
   res.json(toAdminOrder(order));
+  afterResponse("order-changed", () => deliverForOrder(order.id));
 });
 
 orderRouter.post("/admin/orders/bulk-delete", async (req, res) => {

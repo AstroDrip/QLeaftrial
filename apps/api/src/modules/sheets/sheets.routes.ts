@@ -5,6 +5,7 @@ import { listOrders } from "../orders/order.service.js";
 import { SheetsError } from "./google-auth.js";
 import { qualifiesForSheet, recordSheetSync, sheetUrl, sheetsConfig, syncAllOrders, syncOrder } from "./order-sheet.js";
 import { prisma } from "../../lib/prisma.js";
+import { markSheetSynced } from "../notifications/outbox.js";
 
 export const sheetsRouter = Router();
 
@@ -28,6 +29,7 @@ sheetsRouter.post("/admin/sheets/sync/:orderId", async (request, response) => {
   try {
     const written = await syncOrder(order, config);
     if (written) await recordSheetSync([orderId], null);
+    await markSheetSynced(orderId);
     response.json({ written, qualifies: qualifiesForSheet(order) });
   } catch (error) {
     const code = error instanceof SheetsError ? error.code : "SHEETS_SYNC_FAILED";

@@ -3,8 +3,6 @@ import { prisma } from "../../lib/prisma.js";
 
 const API = "https://sheets.googleapis.com/v4/spreadsheets";
 const REQUEST_TIMEOUT_MS = 8_000;
-// Orders are saved before the sheet is touched; this only bounds how long a customer waits for the response.
-const MIRROR_BUDGET_MS = 6_000;
 const DEFAULT_TAB = "Orders";
 
 // The shop's chosen columns (November 2026). Rows are keyed by the order number, so it has a fixed column.
@@ -201,30 +199,6 @@ export async function syncAllOrders(orders: SheetOrder[], config: SheetsConfig):
   const written = orders.filter((order) => qualifiesForSheet(order)).flatMap((order) => (order.id ? [order.id] : []));
   await recordSheetSync(written, null);
   return updates.length + additions.length + removals.length;
-}
-
-function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
-  let timer: ReturnType<typeof setTimeout>;
-  const limit = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new SheetsError("SHEETS_TIMEOUT")), ms); });
-  return Promise.race([work, limit]).finally(() => clearTimeout(timer));
-}
-
-// Called after an order has been saved. The shop must never fail because Google is slow or down,
-// so this swallows every error; "Sync all" in admin brings the sheet back in line.
-export async function mirrorOrderToSheet(order: SheetOrder): Promise<void> {
-  const config = sheetsConfig();
-  if (!config) return;
-  try {
-    const written = await withTimeout(syncOrder(order, config), MIRROR_BUDGET_MS);
-    if (written && order.id) await recordSheetSync([order.id], null);
-  } catch (error) {
-    const reason = error instanceof SheetsError ? error.message : error instanceof Error ? error.name : "unknown";
-    console.error(JSON.stringify({ level: "error", event: "sheet-sync-failed", reason }));
-    // Only orders that belong in the sheet are marked as failed (the others were never meant to be written).
-    if (order.id && (qualifiesForSheet(order) || order.status === "DELIVERED")) {
-      await recordSheetSync([order.id], error instanceof SheetsError ? error.code : "SHEETS_SYNC_FAILED");
-    }
-  }
 }
 
 export function resetSheetPreparation(): void {
