@@ -118,12 +118,15 @@ describe("the outbox worker", () => {
       const placed = await place();
       const admin = await loggedInAgent();
       await admin.patch(`/api/v1/admin/orders/${placed.body.id}/status`).send({ status: "accepted" }).expect(200);
+      // Let that change's sheet job finish first: a change made while it is still running would (correctly) wait for
+      // its lease instead of contacting Google straight away.
+      await settleBackgroundWork();
       // Completing an order is the change that makes the worker contact Google.
       const started = Date.now();
       await admin.patch(`/api/v1/admin/orders/${placed.body.id}/status`).send({ status: "completed" }).expect(200);
       expect(Date.now() - started).toBeLessThan(2_000);
       // Google really was being asked, and had not answered, when the admin got their answer.
-      await vi.waitFor(() => expect(googleCalls).toBeGreaterThan(0));
+      await vi.waitFor(() => expect(googleCalls).toBeGreaterThan(0), { timeout: 5_000 });
     } finally {
       for (const release of hanging) release();
       await settleBackgroundWork();
