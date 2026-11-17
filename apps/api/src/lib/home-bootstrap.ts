@@ -5,7 +5,7 @@ import { catalogueSizePhotos } from "./product-photos.js";
 // own HTML, so a first-time visitor sees categories and products without waiting for any request. It is built by
 // the same pure function at build time (from the database) and for the committed fallback (from the public
 // catalogue), and read by the homepage in the browser. Display only: checkout always re-reads prices and stock.
-export type BootstrapMedia = { url: string; altText: string; width: number | null; height: number | null; purpose: string | null; sortOrder: number };
+export type BootstrapMedia = { url: string; altText: string; width: number | null; height: number | null; purpose: string | null; sortOrder: number; photoKey?: string | null };
 
 export type BootstrapSourceProduct = {
   id: string; slug: string; name: string; nameAr: string | null; category: string; categoryAr: string | null;

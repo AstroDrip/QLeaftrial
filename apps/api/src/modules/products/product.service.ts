@@ -26,7 +26,7 @@ const publicProductSelection = {
   placement: true,
   createdAt: true,
   media: {
-    select: { url: true, altText: true, width: true, height: true, purpose: true },
+    select: { url: true, altText: true, width: true, height: true, purpose: true, photoKey: true },
     orderBy: { sortOrder: "asc" as const },
   },
   inventory: { select: { quantity: true } },
@@ -58,6 +58,7 @@ type PublicProductRecord = {
     width: number | null;
     height: number | null;
     purpose: string | null;
+    photoKey?: string | null;
   }>;
   inventory: { quantity: number } | null;
 };

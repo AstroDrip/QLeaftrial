@@ -1,28 +1,17 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { localeContent, type SiteLanguage } from "../../content/locales";
-import { FallbackImage } from "../../components/FallbackImage";
 import { ApiClientError } from "../../lib/api-error";
 import { useSiteLanguage } from "../../app/providers";
-import { adminApi, type AdminProduct, type AdminProductPatch, type CreateAdminProductFields } from "./admin-api";
+import { MAX_PRODUCT_PHOTOS, adminApi, photoFingerprint, type AdminProduct, type AdminProductPatch, type CreateAdminProductFields, type PhotoProgress } from "./admin-api";
+import { ProductPhotosEditor, photosShortLabel } from "./ProductPhotosEditor";
+import { acceptedPhotoTypes, imageProblem } from "./product-photo-files";
 import { friendlyError } from "../../lib/friendly-error";
 
 const emptyForm: CreateAdminProductFields = {
   name: "", nameAr: "", slug: "", sku: "", description: "", descriptionAr: "", category: "Indoor", categoryAr: "داخلي", light: "", lightAr: "",
   priceQar: 0, costPrice: 0, stock: 0, imageAltText: "",
 };
-
-const PRODUCTION_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
-const DEVELOPMENT_IMAGE_TYPES = [...PRODUCTION_IMAGE_TYPES, "image/gif"];
-
-// Production images are resized in the browser before upload, so larger originals are accepted.
-function imageProblem(file: File, isArabic: boolean): string | null {
-  const accepted = import.meta.env.PROD ? PRODUCTION_IMAGE_TYPES : DEVELOPMENT_IMAGE_TYPES;
-  const maximumBytes = import.meta.env.PROD ? 20 * 1024 * 1024 : 2 * 1024 * 1024;
-  if (accepted.includes(file.type) && file.size <= maximumBytes) return null;
-  if (import.meta.env.PROD) return isArabic ? "اختر صورة JPEG أو PNG أو WebP أصغر من 20 ميجابايت." : "Choose a JPEG, PNG, or WebP image smaller than 20 MB.";
-  return isArabic ? "اختر صورة PNG أو JPEG أو WebP أو GIF أصغر من 2 ميجابايت." : "Choose a PNG, JPEG, WebP, or GIF image smaller than 2 MB.";
-}
 
 function useProductCacheUpdate() {
   const queryClient = useQueryClient();
@@ -32,46 +21,6 @@ function useProductCacheUpdate() {
     void queryClient.invalidateQueries({ queryKey: ["product"] });
     void queryClient.invalidateQueries({ queryKey: ["catalog-filters"] });
   };
-}
-
-// The photo itself is the control: clicking it opens the file picker.
-function ProductPhoto({ product }: { product: AdminProduct }) {
-  const { isArabic } = useSiteLanguage();
-  const input = useRef<HTMLInputElement>(null);
-  const [problem, setProblem] = useState("");
-  const applyUpdate = useProductCacheUpdate();
-  const replace = useMutation({
-    mutationFn: (file: File) => adminApi.replaceProductImage(product.id, file, product.image?.altText || product.name),
-    onSuccess: (updated) => { setProblem(""); applyUpdate(updated); },
-    onError: (error) => setProblem(friendlyError(error, isArabic ? "ar" : "en")),
-  });
-
-  function choose(file: File | undefined) {
-    if (input.current) input.current.value = "";
-    if (!file) return;
-    const issue = imageProblem(file, isArabic);
-    if (issue) { setProblem(issue); return; }
-    replace.mutate(file);
-  }
-
-  const hint = replace.isPending ? (isArabic ? "جارٍ الرفع…" : "Uploading…") : (isArabic ? "تغيير الصورة" : "Change photo");
-  return (
-    <div className="admin-product-photo">
-      <input ref={input} type="file" hidden aria-label={`${product.name} new photo`} accept={(import.meta.env.PROD ? PRODUCTION_IMAGE_TYPES : DEVELOPMENT_IMAGE_TYPES).join(",")} onChange={(event) => choose(event.target.files?.[0])} />
-      <button
-        type="button"
-        className={`admin-product-photo__button${replace.isPending ? " is-busy" : ""}`}
-        aria-label={isArabic ? `تغيير صورة ${product.name}` : `Change photo for ${product.name}`}
-        aria-busy={replace.isPending}
-        disabled={replace.isPending}
-        onClick={() => input.current?.click()}
-      >
-        <FallbackImage className="admin-product-card__image" src={product.image?.url ?? "/images/hero/leaf-1.svg"} alt="" />
-        <span className="admin-product-photo__hint" aria-hidden="true">{hint}</span>
-      </button>
-      {problem ? <span role="alert" className="admin-product-photo__error">{problem}</span> : null}
-    </div>
-  );
 }
 
 type DetailsDraft = {
@@ -221,6 +170,7 @@ function ProductRow({ product }: { product: AdminProduct }) {
     ? { stock: "المخزون", price: "السعر (ر.ق)", invalid: "يجب أن يكون رقمًا صحيحًا غير سالب", stockFail: "فشل حفظ المخزون", priceFail: "فشل حفظ السعر", saving: "جارٍ الحفظ…", saved: "تم الحفظ", published: "منشور", draft: "غير منشور", publish: "انقر للنشر", unpublish: "انقر لإلغاء النشر", remove: "حذف", removing: "جارٍ الحذف…", removeFail: "فشل الحذف", hasOrders: "لا يمكن حذف هذا المنتج لأنه موجود في طلبات سابقة. ألغِ نشره بدلًا من ذلك.", cardLanguage: "لغة البطاقة", noArabic: "لا يوجد نص عربي بعد؛ يظهر النص الإنجليزي للعملاء.", confirmDelete: (name: string) => `حذف "${name}"؟ لا يمكن التراجع عن هذا الإجراء.` }
     : { stock: "Stock", price: "Price (QAR)", invalid: "must be a non-negative whole number", stockFail: "Stock save failed", priceFail: "Price save failed", saving: "Saving…", saved: "Saved", published: "Published", draft: "Unpublished", publish: "Click to publish", unpublish: "Click to unpublish", remove: "Delete", removing: "Deleting…", removeFail: "Delete failed", hasOrders: "This product appears in past orders, so it can't be deleted. Unpublish it instead.", cardLanguage: "Card language", noArabic: "No Arabic copy yet; customers see the English text.", confirmDelete: (name: string) => `Delete "${name}"? This cannot be undone.` };
   const queryClient = useQueryClient();
+  const applyUpdate = useProductCacheUpdate();
   const [cardLanguage, setCardLanguage] = useState<SiteLanguage>(adminLanguage);
   const [stock, setStock] = useState(String(product.stock));
   const [price, setPrice] = useState(String(product.priceQar));
@@ -288,6 +238,7 @@ function ProductRow({ product }: { product: AdminProduct }) {
   const shownLight = isArabic ? product.lightAr?.trim() || product.light : product.light;
   const shownDescription = isArabic ? product.descriptionAr?.trim() || product.description : product.description;
   const isPublished = product.published ?? true;
+  const photosShort = photosShortLabel(product, adminIsArabic);
   const errorMessage = [fieldErrors.stock, fieldErrors.priceQar].filter(Boolean).join(". ");
   const statusText = errorMessage
     ? <span role="alert">{errorMessage}</span>
@@ -295,7 +246,7 @@ function ProductRow({ product }: { product: AdminProduct }) {
 
   return (
     <li className={`admin-product-card${isPublished ? "" : " is-draft"}`}>
-      <ProductPhoto product={product} />
+      <ProductPhotosEditor product={product} onSaved={applyUpdate} onStale={() => void queryClient.invalidateQueries({ queryKey: ["admin", "products"] })} />
 
       <div className="admin-product-card__body">
         <div className="admin-product-card__top">
@@ -316,8 +267,9 @@ function ProductRow({ product }: { product: AdminProduct }) {
           </button>
         </div>
 
-        {product.featured || product.needsReview ? (
+        {product.featured || product.needsReview || photosShort ? (
           <p className="admin-product-card__flags">
+            {photosShort ? <span className="admin-flag admin-flag--review">{photosShort}</span> : null}
             {product.featured ? <span className="admin-flag admin-flag--featured">{adminIsArabic ? "مميز" : "Featured"}</span> : null}
             {product.needsReview ? (
               <span className="admin-flag admin-flag--review" title={product.reviewNote ?? undefined}>
@@ -367,7 +319,7 @@ function ProductRow({ product }: { product: AdminProduct }) {
 
 export function AdminProductsPage() {
   const { content, isArabic } = useSiteLanguage();
-  const t = isArabic ? { add: "إضافة نبات", name: "الاسم", arabicName: "الاسم العربي", slug: "الرابط المختصر", sku: "رمز المنتج", category: "الفئة", arabicCategory: "الفئة العربية", light: "الإضاءة (اختياري، اتركها فارغة للأحواض والتربة والإكسسوارات)", arabicLight: "الإضاءة بالعربية (اختياري)", price: "السعر (ر.ق)", cost: "التكلفة (ر.ق)", stock: "المخزون", description: "الوصف", arabicDescription: "الوصف العربي", alt: "النص البديل للصورة", image: "صورة النبات (مطلوبة)", preview: "معاينة النبات المحدد", adding: "جارٍ الإضافة…", product: "المنتج", status: "الحالة", loading: "جارٍ تحميل المنتجات…", loadError: "تعذر تحميل المنتجات.", imageRequired: "صورة النبات مطلوبة.", addError: "تعذر إضافة النبات", newPlant: "نبات جديد", close: "إغلاق النموذج" } : { add: "Add plant", name: "Name", arabicName: "Arabic name", slug: "Slug", sku: "SKU", category: "Category", arabicCategory: "Arabic category", light: "Light (optional, leave empty for pots, soil and accessories)", arabicLight: "Arabic light (optional)", price: "Price (QAR)", cost: "Cost (QAR)", stock: "Stock", description: "Description", arabicDescription: "Arabic description", alt: "Image alt text", image: "Plant image (required)", preview: "Selected plant preview", adding: "Adding…", product: "Product", status: "Status", loading: "Loading products…", loadError: "Could not load products.", imageRequired: "A plant image is required.", addError: "Could not add plant", newPlant: "New plant", close: "Close form" };
+  const t = isArabic ? { add: "إضافة نبات", name: "الاسم", arabicName: "الاسم العربي", slug: "الرابط المختصر", sku: "رمز المنتج", category: "الفئة", arabicCategory: "الفئة العربية", light: "الإضاءة (اختياري، اتركها فارغة للأحواض والتربة والإكسسوارات)", arabicLight: "الإضاءة بالعربية (اختياري)", price: "السعر (ر.ق)", cost: "التكلفة (ر.ق)", stock: "المخزون", description: "الوصف", arabicDescription: "الوصف العربي", alt: "النص البديل للصورة", image: "صور النبات (من 1 إلى 3، الأولى هي الرئيسية)", preview: (n: number) => `الصورة المحددة ${n}`, tooMany: "اختر 3 صور كحد أقصى.", sameTwice: "اخترت الصورة نفسها مرتين.", step: (n: number, total: number) => `جارٍ إضافة الصورة ${n} من ${total}…`, partial: "أُضيف النبات، لكن تعذر رفع بعض الصور. أضفها من بطاقة المنتج.", adding: "جارٍ الإضافة…", product: "المنتج", status: "الحالة", loading: "جارٍ تحميل المنتجات…", loadError: "تعذر تحميل المنتجات.", imageRequired: "صورة النبات مطلوبة.", addError: "تعذر إضافة النبات", newPlant: "نبات جديد", close: "إغلاق النموذج" } : { add: "Add plant", name: "Name", arabicName: "Arabic name", slug: "Slug", sku: "SKU", category: "Category", arabicCategory: "Arabic category", light: "Light (optional, leave empty for pots, soil and accessories)", arabicLight: "Arabic light (optional)", price: "Price (QAR)", cost: "Cost (QAR)", stock: "Stock", description: "Description", arabicDescription: "Arabic description", alt: "Image alt text", image: "Plant photos (1 to 3, the first is the main one)", preview: (n: number) => `Selected photo ${n}`, tooMany: "Choose at most 3 photos.", sameTwice: "The same photo was chosen twice.", step: (n: number, total: number) => `Adding photo ${n} of ${total}…`, partial: "The plant was added, but some photos could not be uploaded. Add them from the product card.", adding: "Adding…", product: "Product", status: "Status", loading: "Loading products…", loadError: "Could not load products.", imageRequired: "A plant image is required.", addError: "Could not add plant", newPlant: "New plant", close: "Close form" };
   const products = useQuery({ queryKey: ["admin", "products"], queryFn: adminApi.products });
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
@@ -375,54 +327,73 @@ export function AdminProductsPage() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"all" | "drafts" | "review" | "featured">("all");
   const [formOpen, setFormOpen] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [createStep, setCreateStep] = useState("");
   const imageInput = useRef<HTMLInputElement>(null);
+  const putInList = (product: AdminProduct) =>
+    queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => [...(items ?? []).filter((item) => item.id !== product.id), product].sort((a, b) => a.name.localeCompare(b.name)));
+  // The product is made with its first photo; the others are then added one at a time. If an extra photo fails, the
+  // product stays (it is complete with one photo) and the owner is told to add the rest from its card.
   const create = useMutation({
-    mutationFn: ({ input, file }: { input: CreateAdminProductFields; file: File }) =>
-      adminApi.createProductWithImage(input, file),
-    onSuccess: (created) => {
-      queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => [...(items ?? []), created].sort((a, b) => a.name.localeCompare(b.name)));
+    mutationFn: async ({ input, files }: { input: CreateAdminProductFields; files: File[] }) => {
+      const progress = (n: number) => (step: PhotoProgress) => { if (step.step !== "saving") setCreateStep(t.step(n, files.length)); };
+      let product = await adminApi.createProductWithImage(input, files[0], undefined, progress(1));
+      putInList(product);
+      for (const [index, file] of files.slice(1).entries()) {
+        try {
+          product = await adminApi.addPhoto(product.id, file, input.imageAltText, progress(index + 2));
+          putInList(product);
+        } catch {
+          return { product, partial: true };
+        }
+      }
+      return { product, partial: false };
+    },
+    onSuccess: ({ partial }) => {
       void queryClient.invalidateQueries({ queryKey: ["products"] });
       setForm(emptyForm);
-      setImageFile(null);
-      setImagePreview("");
+      setImageFiles([]);
+      setImagePreviews([]);
       if (imageInput.current) imageInput.current.value = "";
-      setFormError("");
+      setFormError(partial ? t.partial : "");
     },
     onError: (error) => setFormError(friendlyError(error, isArabic ? "ar" : "en")),
+    onSettled: () => setCreateStep(""),
   });
 
   function updateField(field: keyof typeof form, value: string | number) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  function readImage(file: File) {
-    const issue = imageProblem(file, isArabic);
-    if (issue) {
-      setImageFile(null);
-      setImagePreview("");
-      setFormError(issue);
-      return;
-    }
-    setImageFile(file);
+  async function readImages(files: File[]) {
+    setImageFiles([]);
+    setImagePreviews([]);
+    if (files.length === 0) return;
+    const problem = files.length > MAX_PRODUCT_PHOTOS ? t.tooMany : files.map((file) => imageProblem(file, isArabic)).find(Boolean);
+    if (problem) { setFormError(problem); return; }
+    const fingerprints = await Promise.all(files.map(photoFingerprint));
+    if (fingerprints.some((print, index) => print && fingerprints.indexOf(print) !== index)) { setFormError(t.sameTwice); return; }
+    setImageFiles(files);
     setFormError("");
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") setImagePreview(reader.result);
-    });
-    reader.readAsDataURL(file);
+    const previews = await Promise.all(files.map((file) => new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => resolve(typeof reader.result === "string" ? reader.result : ""));
+      reader.addEventListener("error", () => resolve(""));
+      reader.readAsDataURL(file);
+    })));
+    setImagePreviews(previews);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
-    if (!imageFile) {
+    if (imageFiles.length === 0) {
       setFormError(t.imageRequired);
       return;
     }
     create.mutate({
-      file: imageFile,
+      files: imageFiles,
       input: {
         ...form,
         light: form.light?.trim() || undefined,
@@ -477,9 +448,16 @@ export function AdminProductsPage() {
           <label className="admin-product-form__full">{t.description}<textarea required minLength={10} value={form.description} onChange={(event) => updateField("description", event.target.value)} /></label>
           <label className="admin-product-form__full">{t.arabicDescription}<textarea dir="rtl" required minLength={10} value={form.descriptionAr} onChange={(event) => updateField("descriptionAr", event.target.value)} /></label>
           <label>{t.alt}<input required value={form.imageAltText} onChange={(event) => updateField("imageAltText", event.target.value)} /></label>
-          <label>{t.image}<input ref={imageInput} required type="file" accept={import.meta.env.PROD ? "image/png,image/jpeg,image/webp" : "image/png,image/jpeg,image/webp,image/gif"} onChange={(event) => { const file = event.target.files?.[0]; if (file) readImage(file); }} /></label>
+          <label>{t.image}<input ref={imageInput} required type="file" multiple accept={acceptedPhotoTypes()} onChange={(event) => void readImages([...(event.target.files ?? [])])} /></label>
         </div>
-        {imagePreview ? <img className="admin-product-form__preview" src={imagePreview} alt={t.preview} /> : null}
+        {imagePreviews.length ? (
+          <ol className="admin-product-form__photos">
+            {imagePreviews.map((preview, index) => (
+              <li key={index}><img className="admin-product-form__preview" src={preview} alt={t.preview(index + 1)} />{index === 0 ? <span>{isArabic ? "الرئيسية" : "Main"}</span> : null}</li>
+            ))}
+          </ol>
+        ) : null}
+        {createStep ? <p role="status">{createStep}</p> : null}
         {formError ? <p role="alert">{formError}</p> : null}
         <button className="primary-button" type="submit" disabled={create.isPending}>{create.isPending ? t.adding : t.add}</button>
       </form>

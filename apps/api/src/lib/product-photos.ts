@@ -2,16 +2,28 @@
 // detail size for the product page), kept next to each other in sort order: a catalogue row followed by its detail
 // row. These helpers group the rows back into photographs and keep each photograph only once, so a product is never
 // shown with the same picture twice. Shared by the API (homepage data) and the storefront (cards, product page).
-export type PhotoMedia = { url: string; purpose?: string | null };
+export type PhotoMedia = { url: string; purpose?: string | null; photoKey?: string | null };
 
 export const MAX_PRODUCT_PHOTOS = 3;
 
-/** Media rows grouped into photographs, in order. A catalogue row is joined by the detail row right after it. */
+/**
+ * Media rows grouped into photographs, in order. Rows sharing a photoKey are one photograph; rows saved before keys
+ * existed follow the older rule: a catalogue row is joined by the detail row right after it.
+ */
 export function groupPhotos<T extends PhotoMedia>(media: readonly T[]): T[][] {
   const photos: T[][] = [];
+  const byKey = new Map<string, T[]>();
   for (const item of media) {
+    if (item.photoKey) {
+      const photo = byKey.get(item.photoKey);
+      if (photo) { photo.push(item); continue; }
+      const created = [item];
+      byKey.set(item.photoKey, created);
+      photos.push(created);
+      continue;
+    }
     const last = photos[photos.length - 1];
-    if (last && last.length === 1 && last[0].purpose === "catalog" && item.purpose === "detail") last.push(item);
+    if (last && last.length === 1 && !last[0].photoKey && last[0].purpose === "catalog" && item.purpose === "detail") last.push(item);
     else photos.push([item]);
   }
   return photos;

@@ -81,6 +81,9 @@ function requireOneImageSource(
   }
 }
 
+// SHA-256 (hex) of the original photograph, computed in the admin's browser; used to warn about duplicates.
+const contentHash = z.string().regex(/^[0-9a-f]{64}$/, "Invalid photo fingerprint").optional();
+
 export const createAdminProductSchema = z.object({
   name: z.string().trim().min(2).max(120),
   nameAr: optionalArabicText(2, 120),
@@ -98,6 +101,7 @@ export const createAdminProductSchema = z.object({
   imageDataUrl: imageDataUrl.optional(),
   stagedImages: z.array(stagedProductImageSchema).length(2).optional(),
   imageAltText: z.string().trim().min(2).max(200),
+  contentHash,
   ...productDetails,
 }).strict().superRefine(requireOneImageSource);
 
@@ -105,7 +109,19 @@ export const replaceProductImagesSchema = z.object({
   imageDataUrl: imageDataUrl.optional(),
   stagedImages: z.array(stagedProductImageSchema).length(2).optional(),
   imageAltText: englishText(2, 200),
+  contentHash,
 }).strict().superRefine(requireOneImageSource);
+
+/** One photograph added to, or replacing one of, a product's photographs. */
+export const productPhotoSchema = replaceProductImagesSchema;
+
+export const reorderProductPhotosSchema = z.object({
+  keys: z.array(z.string().min(1).max(80)).min(1).max(3),
+}).strict();
+
+export const describeProductPhotoSchema = z.object({
+  altText: englishText(2, 200),
+}).strict();
 
 export type CreateAdminProductInput = z.infer<typeof createAdminProductSchema>;
 export type ReplaceProductImagesInput = z.infer<typeof replaceProductImagesSchema>;

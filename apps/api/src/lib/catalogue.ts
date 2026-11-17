@@ -17,6 +17,8 @@ export interface PublicCatalogueMedia {
   height: number | null;
   purpose: string | null;
   sortOrder: number;
+  /** Links a photograph's catalogue and detail files (empty on older photographs). */
+  photoKey: string | null;
 }
 
 export interface PublicCatalogueProduct {
@@ -61,6 +63,7 @@ const publicMediaSelection = {
   height: true,
   purpose: true,
   sortOrder: true,
+  photoKey: true,
 } as const;
 
 const publicProductSelection = {
@@ -122,6 +125,7 @@ function mapProduct(record: {
     height: number | null;
     purpose: string | null;
     sortOrder: number;
+    photoKey: string | null;
   }>;
   inventory: { quantity: number } | null;
 }): PublicCatalogueProduct {
@@ -132,6 +136,7 @@ function mapProduct(record: {
     height: medium.height,
     purpose: medium.purpose,
     sortOrder: medium.sortOrder,
+    photoKey: medium.photoKey,
   }));
   const stock = record.inventory?.quantity ?? 0;
   return {

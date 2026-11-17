@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { requireAdmin } from "../auth/auth.middleware.js";
 import { ApiError } from "../../middleware/error-handler.js";
-import { createAdminProductSchema, productUploadMetadataSchema, replaceProductImagesSchema, updateAdminProductSchema } from "./admin-product.schemas.js";
-import { createAdminProduct, deleteAdminProduct, listAdminProducts, replaceAdminProductImages, updateAdminProduct } from "./admin-product.service.js";
+import { createAdminProductSchema, describeProductPhotoSchema, productPhotoSchema, productUploadMetadataSchema, reorderProductPhotosSchema, replaceProductImagesSchema, updateAdminProductSchema } from "./admin-product.schemas.js";
+import { createAdminProduct, deleteAdminProduct, getAdminProduct, listAdminProducts, replaceAdminProductImages, updateAdminProduct } from "./admin-product.service.js";
+import { addProductPhoto, describeProductPhoto, removeProductPhoto, reorderProductPhotos, replaceProductPhoto } from "./admin-product-photos.service.js";
 import { authorizeProductUpload } from "./product-upload.service.js";
 import { consumeRateLimit } from "../../lib/rate-limit.js";
 import { invalidateProductSearchIndex } from "../products/product-search-index.js";
@@ -73,6 +74,48 @@ adminProductRouter.put("/admin/products/:id/images", async (request, response) =
   }
   response.setHeader("Cache-Control", "no-store");
   response.json(await replaceAdminProductImages(request.params.id, parsed.data));
+});
+
+// One photograph at a time (up to three per product). Each answers with the product as it now is.
+const productId = (request: { params: Record<string, string | string[]> }) => String(request.params.id);
+const photoKey = (request: { params: Record<string, string | string[]> }) => String(request.params.key);
+
+adminProductRouter.post("/admin/products/:id/photos", async (request, response) => {
+  const parsed = productPhotoSchema.safeParse(request.body);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", parsed.error.issues[0]?.message ?? "Invalid product photo");
+  await addProductPhoto(productId(request), parsed.data);
+  response.setHeader("Cache-Control", "no-store");
+  response.status(201).json(await getAdminProduct(productId(request)));
+});
+
+adminProductRouter.put("/admin/products/:id/photos/order", async (request, response) => {
+  const parsed = reorderProductPhotosSchema.safeParse(request.body);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid photo order");
+  await reorderProductPhotos(productId(request), parsed.data.keys);
+  response.setHeader("Cache-Control", "no-store");
+  response.json(await getAdminProduct(productId(request)));
+});
+
+adminProductRouter.put("/admin/products/:id/photos/:key", async (request, response) => {
+  const parsed = productPhotoSchema.safeParse(request.body);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", parsed.error.issues[0]?.message ?? "Invalid product photo");
+  await replaceProductPhoto(productId(request), photoKey(request), parsed.data);
+  response.setHeader("Cache-Control", "no-store");
+  response.json(await getAdminProduct(productId(request)));
+});
+
+adminProductRouter.patch("/admin/products/:id/photos/:key", async (request, response) => {
+  const parsed = describeProductPhotoSchema.safeParse(request.body);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Describe the photo in 2 to 200 characters");
+  await describeProductPhoto(productId(request), photoKey(request), parsed.data.altText);
+  response.setHeader("Cache-Control", "no-store");
+  response.json(await getAdminProduct(productId(request)));
+});
+
+adminProductRouter.delete("/admin/products/:id/photos/:key", async (request, response) => {
+  await removeProductPhoto(productId(request), photoKey(request));
+  response.setHeader("Cache-Control", "no-store");
+  response.json(await getAdminProduct(productId(request)));
 });
 
 adminProductRouter.delete("/admin/products/:id", async (request, response) => {

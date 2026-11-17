@@ -1,13 +1,20 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminProductsPage } from "./AdminProductsPage";
-import { adminApi } from "./admin-api";
+import { createHash } from "node:crypto";
+import { adminApi, type AdminPhoto } from "./admin-api";
 
-vi.mock("./admin-api", () => ({
-  adminApi: { login: vi.fn(), session: vi.fn(), logout: vi.fn(), products: vi.fn(), updateProduct: vi.fn(), replaceProductImage: vi.fn(), createProduct: vi.fn(), createProductWithImage: vi.fn() },
+vi.mock("./admin-api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./admin-api")>()),
+  adminApi: {
+    login: vi.fn(), session: vi.fn(), logout: vi.fn(), products: vi.fn(), updateProduct: vi.fn(), replaceProductImage: vi.fn(), createProduct: vi.fn(), createProductWithImage: vi.fn(),
+    addPhoto: vi.fn(), replacePhoto: vi.fn(), removePhoto: vi.fn(), reorderPhotos: vi.fn(), describePhoto: vi.fn(),
+  },
 }));
+
+const photo = (key: string, extra: Partial<AdminPhoto> = {}): AdminPhoto => ({ key, url: `/${key}.webp`, detailUrl: `/${key}-detail.webp`, altText: `Monstera ${key}`, width: 640, height: 640, contentHash: null, ...extra });
 
 const product = {
   id: "plant-1", slug: "monstera", name: "Monstera", category: "Indoor",
@@ -89,13 +96,14 @@ describe("AdminProductsPage", () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
     await screen.findByText("Monstera");
-    expect(screen.queryByLabelText(/plant image/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/plant photos/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "+ New plant" }));
-    const imageInput = screen.getByLabelText(/plant image/i);
+    const imageInput = screen.getByLabelText(/plant photos/i);
     const file = new File(["image"], "fern.png", { type: "image/png" });
     await act(async () => {
       fireEvent.change(imageInput, { target: { files: [file] } });
     });
+    expect(await screen.findByAltText("Selected photo 1")).toBeInTheDocument();
 
     const submit = screen.getByRole("button", { name: "Add plant" });
     await act(async () => {
@@ -125,31 +133,107 @@ describe("AdminProductsPage", () => {
     expect(await screen.findByText("Details saved")).toBeInTheDocument();
   });
 
-  it("replaces a product photo from the card", async () => {
-    vi.mocked(adminApi.replaceProductImage).mockResolvedValue({ ...product, image: { url: "/new.png", altText: "Monstera" } });
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
-    await screen.findByRole("button", { name: "Change photo for Monstera" });
+  const renderPage = () => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><AdminProductsPage /></QueryClientProvider>);
+  const withPhotos = (...keys: string[]) => vi.mocked(adminApi.products).mockResolvedValue([{ ...product, photos: keys.map((key) => photo(key)) }]);
+
+  it("adds a photo from an empty slot", async () => {
+    withPhotos("a");
+    vi.mocked(adminApi.addPhoto).mockResolvedValue({ ...product, photos: [photo("a"), photo("b")] });
+    renderPage();
+    const [add] = await screen.findAllByRole("button", { name: "Add photo (Monstera)" });
+    const input = screen.getByLabelText("Monstera: Add photo") as HTMLInputElement;
+    const click = vi.spyOn(input, "click");
+    fireEvent.click(add);
+    expect(click).toHaveBeenCalled();
+    expect(screen.getByText("1 of 3 photos")).toBeInTheDocument();
 
     const file = new File(["image"], "monstera.png", { type: "image/png" });
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/monstera new photo/i), { target: { files: [file] } });
-    });
+    await act(async () => { fireEvent.change(input, { target: { files: [file] } }); });
 
-    expect(adminApi.replaceProductImage).toHaveBeenCalledWith("plant-1", file, "Monstera");
+    await waitFor(() => expect(adminApi.addPhoto).toHaveBeenCalledWith("plant-1", file, "Monstera", expect.any(Function)));
+    expect(await screen.findByRole("button", { name: "Photo 2 of 2" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("2 of 3 photos")).toBeInTheDocument();
   });
 
   it("rejects unsupported photo files before uploading", async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
-    await screen.findByRole("button", { name: "Change photo for Monstera" });
-
+    withPhotos("a");
+    renderPage();
+    await screen.findAllByRole("button", { name: "Add photo (Monstera)" });
     await act(async () => {
-      fireEvent.change(screen.getByLabelText(/monstera new photo/i), { target: { files: [new File(["x"], "notes.pdf", { type: "application/pdf" })] } });
+      fireEvent.change(screen.getByLabelText("Monstera: Add photo"), { target: { files: [new File(["x"], "notes.pdf", { type: "application/pdf" })] } });
     });
-
-    expect(adminApi.replaceProductImage).not.toHaveBeenCalled();
+    expect(adminApi.addPhoto).not.toHaveBeenCalled();
     expect(screen.getByRole("alert")).toHaveTextContent(/choose a png/i);
+  });
+
+  it("refuses a photo that is already on the product before uploading it", async () => {
+    const hash = createHash("sha256").update("image").digest("hex");
+    vi.mocked(adminApi.products).mockResolvedValue([{ ...product, photos: [photo("a", { contentHash: hash })] }]);
+    renderPage();
+    await screen.findAllByRole("button", { name: "Add photo (Monstera)" });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Monstera: Add photo"), { target: { files: [new File(["image"], "again.png", { type: "image/png" })] } });
+    });
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("This photo is already on this product."));
+    expect(adminApi.addPhoto).not.toHaveBeenCalled();
+  });
+
+  it("makes a photo the main one and moves photos with buttons", async () => {
+    withPhotos("a", "b", "c");
+    vi.mocked(adminApi.reorderPhotos).mockImplementation(async (_id, keys) => ({ ...product, photos: keys.map((key) => photo(key)) }));
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Make main" })).toBeDisabled();
+    expect(screen.queryByText(/of 3 photos/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Photo 3 of 3" }));
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Make main" })); });
+    expect(adminApi.reorderPhotos).toHaveBeenCalledWith("plant-1", ["c", "a", "b"]);
+    // The moved photo stays selected, now in first place.
+    expect(await screen.findByRole("button", { name: "Photo 1 of 3 (Main)" })).toHaveAttribute("aria-pressed", "true");
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Move later" })); });
+    expect(adminApi.reorderPhotos).toHaveBeenLastCalledWith("plant-1", ["a", "c", "b"]);
+  });
+
+  it("reorders photos by dragging one onto another", async () => {
+    withPhotos("a", "b", "c");
+    vi.mocked(adminApi.reorderPhotos).mockImplementation(async (_id, keys) => ({ ...product, photos: keys.map((key) => photo(key)) }));
+    renderPage();
+    const first = (await screen.findByRole("button", { name: "Photo 1 of 3 (Main)" })).closest("li")!;
+    const last = screen.getByRole("button", { name: "Photo 3 of 3" }).closest("li")!;
+    expect(first).toHaveAttribute("draggable", "true");
+    await act(async () => { fireEvent.dragStart(first); });
+    await act(async () => {
+      fireEvent.dragOver(last);
+      fireEvent.drop(last);
+    });
+    expect(adminApi.reorderPhotos).toHaveBeenCalledWith("plant-1", ["b", "c", "a"]);
+  });
+
+  it("removes a photo only after confirmation and never the last one", async () => {
+    withPhotos("a", "b");
+    vi.mocked(adminApi.removePhoto).mockResolvedValue({ ...product, photos: [photo("a")] });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Photo 2 of 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    expect(adminApi.removePhoto).not.toHaveBeenCalled();
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Yes, remove" })); });
+    expect(adminApi.removePhoto).toHaveBeenCalledWith("plant-1", "b");
+    expect(await screen.findByRole("button", { name: "Remove" })).toBeDisabled();
+  });
+
+  it("replaces the selected photo and saves its description", async () => {
+    withPhotos("a", "b");
+    vi.mocked(adminApi.replacePhoto).mockResolvedValue({ ...product, photos: [photo("a"), photo("b")] });
+    vi.mocked(adminApi.describePhoto).mockResolvedValue({ ...product, photos: [photo("a"), photo("b", { altText: "Monstera leaf close-up" })] });
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Photo 2 of 2" }));
+    const file = new File(["new"], "new.png", { type: "image/png" });
+    await act(async () => { fireEvent.change(screen.getByLabelText("Monstera: Replace"), { target: { files: [file] } }); });
+    await waitFor(() => expect(adminApi.replacePhoto).toHaveBeenCalledWith("plant-1", "b", file, "Monstera b", expect.any(Function)));
+
+    const description = await screen.findByLabelText("Photo description");
+    fireEvent.change(description, { target: { value: "Monstera leaf close-up" } });
+    await act(async () => { fireEvent.submit(description.closest("form")!); });
+    expect(adminApi.describePhoto).toHaveBeenCalledWith("plant-1", "b", "Monstera leaf close-up");
   });
 
   it("switches a single card between English and Arabic without affecting other cards", async () => {
@@ -209,17 +293,32 @@ describe("AdminProductsPage", () => {
     expect(await screen.findByRole("button", { name: "Published" })).toBeInTheDocument();
   });
 
-  it("opens the photo picker from the photo itself", async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
-    const photo = await screen.findByRole("button", { name: "Change photo for Monstera" });
-    const input = screen.getByLabelText(/monstera new photo/i) as HTMLInputElement;
-    const click = vi.spyOn(input, "click");
+  it("creates a product with its first photo and then adds the others in order", async () => {
+    vi.mocked(adminApi.createProductWithImage).mockResolvedValue({ ...product, id: "plant-9", name: "Fern", photos: [photo("a")] });
+    vi.mocked(adminApi.addPhoto).mockResolvedValue({ ...product, id: "plant-9", name: "Fern", photos: [photo("a"), photo("b")] });
+    renderPage();
+    await screen.findByText("Monstera");
+    fireEvent.click(screen.getByRole("button", { name: "+ New plant" }));
+    const files = [new File(["one"], "one.png", { type: "image/png" }), new File(["two"], "two.png", { type: "image/png" })];
+    await act(async () => { fireEvent.change(screen.getByLabelText(/plant photos/i), { target: { files } }); });
+    expect(await screen.findByAltText("Selected photo 2")).toBeInTheDocument();
+    await act(async () => { fireEvent.submit(screen.getByRole("button", { name: "Add plant" }).closest("form")!); });
 
-    fireEvent.click(photo);
+    expect(vi.mocked(adminApi.createProductWithImage).mock.calls[0]?.[1]).toBe(files[0]);
+    await waitFor(() => expect(adminApi.addPhoto).toHaveBeenCalledWith("plant-9", files[1], "", expect.any(Function)));
+  });
 
-    expect(click).toHaveBeenCalled();
-    expect(photo.querySelector("img")).not.toBeNull();
+  it("refuses more than three photos or the same photo twice in the new-plant form", async () => {
+    renderPage();
+    await screen.findByText("Monstera");
+    fireEvent.click(screen.getByRole("button", { name: "+ New plant" }));
+    const input = screen.getByLabelText(/plant photos/i);
+    const four = ["1", "2", "3", "4"].map((n) => new File([n], `${n}.png`, { type: "image/png" }));
+    await act(async () => { fireEvent.change(input, { target: { files: four } }); });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Choose at most 3 photos.");
+    const twice = [new File(["same"], "a.png", { type: "image/png" }), new File(["same"], "b.png", { type: "image/png" })];
+    await act(async () => { fireEvent.change(input, { target: { files: twice } }); });
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("The same photo was chosen twice."));
   });
 
   it("edits the featured flag, original price, care details and review flag, and filters by them", async () => {

@@ -28,7 +28,25 @@ export interface AdminProduct {
   needsReview?: boolean;
   reviewNote?: string | null;
   searchAliases?: string | null;
+  /** The product's photographs, main one first (at most three). */
+  photos?: AdminPhoto[];
+  /** How many more photographs the product can take before it has the full three. */
+  photosMissing?: number;
 }
+
+export interface AdminPhoto {
+  key: string;
+  url: string;
+  detailUrl: string | null;
+  altText: string;
+  width: number | null;
+  height: number | null;
+  contentHash: string | null;
+}
+
+/** Where an upload is: making the two sizes, sending them, saving. */
+export type PhotoProgress = { step: "preparing" } | { step: "uploading"; done: number; total: number } | { step: "saving" };
+export const MAX_PRODUCT_PHOTOS = 3;
 
 export interface CreateAdminProductFields {
   name: string;
@@ -300,11 +318,44 @@ async function uploadVariant(variant: ProductImageVariant): Promise<StagedProduc
   };
 }
 
-async function uploadImageVariants(file: File): Promise<StagedProductImage[]> {
+async function uploadImageVariants(file: File, onProgress?: (progress: PhotoProgress) => void): Promise<StagedProductImage[]> {
+  onProgress?.({ step: "preparing" });
   const variants = await createProductImageVariants(file);
   const stagedImages: StagedProductImage[] = [];
-  for (const variant of variants) stagedImages.push(await uploadVariant(variant));
+  for (const variant of variants) {
+    onProgress?.({ step: "uploading", done: stagedImages.length, total: variants.length });
+    stagedImages.push(await uploadVariant(variant));
+  }
+  onProgress?.({ step: "saving" });
   return stagedImages;
+}
+
+/** SHA-256 (hex) of the photograph as chosen, so the same picture can be recognised before anything is uploaded. */
+export async function photoFingerprint(file: Blob): Promise<string | undefined> {
+  try {
+    const bytes = typeof file.arrayBuffer === "function"
+      ? await file.arrayBuffer()
+      : await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as ArrayBuffer);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsArrayBuffer(file);
+      });
+    const digest = await crypto.subtle.digest("SHA-256", new Uint8Array(bytes));
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  } catch {
+    return undefined; // no Web Crypto here: the server still accepts the photo, only without the duplicate check
+  }
+}
+
+/** One photograph ready to send: both sizes uploaded straight to storage (production) or inline (development). */
+async function photoPayload(file: File, imageAltText: string, directUpload: boolean, onProgress?: (progress: PhotoProgress) => void) {
+  const contentHash = await photoFingerprint(file);
+  const images = directUpload
+    ? { stagedImages: await uploadImageVariants(file, onProgress) }
+    : { imageDataUrl: await fileAsDataUrl(file) };
+  if (!directUpload) onProgress?.({ step: "saving" });
+  return { imageAltText, ...(contentHash ? { contentHash } : {}), ...images };
 }
 
 export const adminApi = {
@@ -340,6 +391,16 @@ export const adminApi = {
         ? { imageAltText, stagedImages: await uploadImageVariants(file) }
         : { imageAltText, imageDataUrl: await fileAsDataUrl(file) }),
     }),
+  addPhoto: async (id: string, file: File, imageAltText: string, onProgress?: (progress: PhotoProgress) => void, directUpload = import.meta.env.PROD): Promise<AdminProduct> =>
+    request<AdminProduct>(`/admin/products/${id}/photos`, { method: "POST", body: JSON.stringify(await photoPayload(file, imageAltText, directUpload, onProgress)) }),
+  replacePhoto: async (id: string, key: string, file: File, imageAltText: string, onProgress?: (progress: PhotoProgress) => void, directUpload = import.meta.env.PROD): Promise<AdminProduct> =>
+    request<AdminProduct>(`/admin/products/${id}/photos/${encodeURIComponent(key)}`, { method: "PUT", body: JSON.stringify(await photoPayload(file, imageAltText, directUpload, onProgress)) }),
+  removePhoto: (id: string, key: string): Promise<AdminProduct> =>
+    request<AdminProduct>(`/admin/products/${id}/photos/${encodeURIComponent(key)}`, { method: "DELETE" }),
+  reorderPhotos: (id: string, keys: string[]): Promise<AdminProduct> =>
+    request<AdminProduct>(`/admin/products/${id}/photos/order`, { method: "PUT", body: JSON.stringify({ keys }) }),
+  describePhoto: (id: string, key: string, altText: string): Promise<AdminProduct> =>
+    request<AdminProduct>(`/admin/products/${id}/photos/${encodeURIComponent(key)}`, { method: "PATCH", body: JSON.stringify({ altText }) }),
   deleteProduct: (id: string): Promise<void> =>
     request<void>(`/admin/products/${id}`, { method: "DELETE" }),
   orders: async (): Promise<AdminOrder[]> =>
@@ -414,17 +475,12 @@ export const adminApi = {
     input: CreateAdminProductFields,
     file: File,
     directUpload = import.meta.env.PROD,
+    onProgress?: (progress: PhotoProgress) => void,
   ): Promise<AdminProduct> => {
-    if (!directUpload) {
-      return request<AdminProduct>("/admin/products", {
-        method: "POST",
-        body: JSON.stringify({ ...input, imageDataUrl: await fileAsDataUrl(file) }),
-      });
-    }
-
+    const { imageAltText: _alt, ...photo } = await photoPayload(file, input.imageAltText, directUpload, onProgress);
     return request<AdminProduct>("/admin/products", {
       method: "POST",
-      body: JSON.stringify({ ...input, stagedImages: await uploadImageVariants(file) }),
+      body: JSON.stringify({ ...input, ...photo }),
     });
   },
 };

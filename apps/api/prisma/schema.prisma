@@ -115,10 +115,16 @@ model ProductMedia {
   width     Int?
   height    Int?
   purpose   String?
+  // The photograph this file belongs to: a photograph's catalogue and detail sizes share one key. Empty on files
+  // saved before keys existed; those are paired by sort order (a catalogue row followed by its detail row).
+  photoKey  String?
+  // SHA-256 of the original photograph the admin uploaded, used to warn about the same photograph twice.
+  contentHash String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([productId, sortOrder])
+  @@index([productId, photoKey])
 }
 
 model Inventory {

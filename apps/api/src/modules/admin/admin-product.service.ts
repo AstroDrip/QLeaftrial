@@ -3,6 +3,9 @@ import { ApiError } from "../../middleware/error-handler.js";
 import type { CreateAdminProductInput, ReplaceProductImagesInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
 import { removeStoredProductImage, storagePathFromPublicUrl, storeProductImage } from "./product-image-storage.js";
 import { finalizeProductImages, removeProductImagePaths } from "./product-upload.service.js";
+import { MEDIA_SELECTION, photosFromMedia, type AdminPhoto, type MediaRecord } from "./admin-product-photos.service.js";
+import { randomUUID } from "node:crypto";
+import { MAX_PRODUCT_PHOTOS } from "../../lib/product-photos.js";
 
 const adminProductSelection = {
   id: true,
@@ -28,10 +31,11 @@ const adminProductSelection = {
   needsReview: true,
   reviewNote: true,
   searchAliases: true,
+  // Every file of the product's photographs (at most three photographs of two sizes; extra room for older data).
   media: {
-    select: { url: true, altText: true },
+    select: MEDIA_SELECTION,
     orderBy: { sortOrder: "asc" },
-    take: 1,
+    take: 12,
   },
   inventory: { select: { quantity: true } },
 } as const;
@@ -60,7 +64,7 @@ type AdminProductRecord = {
   needsReview: boolean;
   reviewNote: string | null;
   searchAliases: string | null;
-  media: Array<{ url: string; altText: string }>;
+  media: MediaRecord[];
   inventory: { quantity: number } | null;
 };
 
@@ -79,6 +83,10 @@ export type AdminProduct = {
   costPrice: number;
   stock: number;
   image: { url: string; altText: string } | null;
+  /** The product's photographs, main one first (at most three). */
+  photos: AdminPhoto[];
+  /** How many more photographs the product can take before it has the full three. */
+  photosMissing: number;
   published: boolean;
   compareAtPriceQar: number | null;
   featured: boolean;
@@ -208,6 +216,7 @@ const orderItemRepository = prisma.orderItem as unknown as {
 };
 
 function toAdminProduct(product: AdminProductRecord): AdminProduct {
+  const photos = photosFromMedia(product.media);
   return {
     id: product.id,
     slug: product.slug,
@@ -222,7 +231,9 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
     priceQar: product.priceQar,
     costPrice: product.costPrice,
     stock: product.inventory?.quantity ?? 0,
-    image: product.media[0] ?? null,
+    image: product.media[0] ? { url: product.media[0].url, altText: product.media[0].altText } : null,
+    photos,
+    photosMissing: Math.max(0, MAX_PRODUCT_PHOTOS - photos.length),
     published: product.published,
     compareAtPriceQar: product.compareAtPriceQar,
     featured: product.featured,
@@ -253,6 +264,13 @@ export async function listAdminProducts(): Promise<AdminProduct[]> {
     orderBy: { name: "asc" },
   });
   return products.map(toAdminProduct);
+}
+
+/** One product as admin sees it (after a photo change, for example). */
+export async function getAdminProduct(id: string): Promise<AdminProduct> {
+  const product = await (prisma.product as unknown as { findUnique(args: unknown): Promise<AdminProductRecord | null> }).findUnique({ where: { id }, select: adminProductSelection });
+  if (!product) throw new ApiError(404, "PRODUCT_NOT_FOUND", "Product not found");
+  return toAdminProduct(product);
 }
 
 export async function updateAdminProduct(
@@ -309,6 +327,8 @@ type MediaRow = {
   width?: number;
   height?: number;
   purpose?: string;
+  photoKey?: string;
+  contentHash?: string;
 };
 
 // Catalogue variant first, so list views (which take the first image) get the small one.
@@ -316,8 +336,11 @@ function mediaRows(
   finalizedImages: Awaited<ReturnType<typeof finalizeProductImages>>,
   legacyImage: { url: string } | undefined,
   altText: string,
+  contentHash?: string,
 ): MediaRow[] {
-  if (finalizedImages.length === 0) return [{ url: legacyImage!.url, altText, sortOrder: 0 }];
+  // One photograph: both of its files share a key.
+  const photo = { photoKey: randomUUID(), ...(contentHash ? { contentHash } : {}) };
+  if (finalizedImages.length === 0) return [{ url: legacyImage!.url, altText, sortOrder: 0, ...photo }];
   return [...finalizedImages]
     .sort((left, right) => left.purpose === "catalog" ? -1 : right.purpose === "catalog" ? 1 : 0)
     .map((image, sortOrder) => ({
@@ -327,6 +350,7 @@ function mediaRows(
       width: image.width,
       height: image.height,
       purpose: image.purpose,
+      ...photo,
     }));
 }
 
@@ -369,7 +393,7 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         ),
         inventory: { create: { quantity: input.stock } },
         media: {
-          create: mediaRows(finalizedImages, legacyImage, input.imageAltText),
+          create: mediaRows(finalizedImages, legacyImage, input.imageAltText, input.contentHash),
         },
       },
       select: adminProductSelection,
@@ -465,7 +489,7 @@ export async function replaceAdminProductImages(id: string, input: ReplaceProduc
     product = await mediaDatabase.$transaction(async (transaction) => {
       await transaction.productMedia.deleteMany({ where: { productId: id } });
       await transaction.productMedia.createMany({
-        data: mediaRows(finalizedImages, legacyImage, input.imageAltText).map((row) => ({ ...row, productId: id })),
+        data: mediaRows(finalizedImages, legacyImage, input.imageAltText, input.contentHash).map((row) => ({ ...row, productId: id })),
       });
       return transaction.product.findUnique({ where: { id }, select: adminProductSelection });
     });

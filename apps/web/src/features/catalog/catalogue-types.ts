@@ -9,6 +9,7 @@ export interface CatalogueMedia {
   height: number | null;
   purpose: string | null;
   sortOrder: number;
+  photoKey?: string | null;
 }
 
 export interface CatalogueProduct {

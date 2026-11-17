@@ -10,6 +10,8 @@ export interface ProductMedia {
   width?: number | null;
   height?: number | null;
   purpose?: "catalog" | "detail" | null;
+  /** Links a photograph's catalogue and detail files (empty on older photographs). */
+  photoKey?: string | null;
 }
 
 export interface ProductSummary {
