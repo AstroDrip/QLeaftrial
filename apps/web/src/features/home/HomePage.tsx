@@ -1,5 +1,5 @@
 import "./home.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
@@ -15,10 +15,11 @@ import { catalogueListResponse, catalogueProductToSummary, sortCatalogue } from 
 import { friendlyError } from "../../lib/friendly-error";
 import type { ProductSummary } from "../catalog/product-types";
 import type { CatalogueProduct } from "../catalog/catalogue-types";
-import { canonicalCategory, categoryName, findShopCategory, orderedCategoryCounts } from "../catalog/shop-categories";
+import { categoryName, findShopCategory, orderedCategoryCounts } from "../catalog/shop-categories";
 import { readHomeBootstrap } from "./home-bootstrap";
-
-const NOT_IN_NEW_ARRIVALS = new Set(["Garden Accessories"]);
+import { pickShelves, shelfPools, LOW_LIGHT, type ShelfProduct } from "./home-shelves";
+import { sessionSeed } from "./home-seed";
+import { startPhotos } from "./start-photos";
 
 // Each category's photograph is set in lib/shop-categories.ts; unlisted categories fall back to a leaf drawing.
 function categoryImage(category: string): { image: string; srcSet?: string } {
@@ -26,12 +27,11 @@ function categoryImage(category: string): { image: string; srcSet?: string } {
   return found ? { image: `${found.image}-640.webp`, srcSet: `${found.image}-640.webp 640w, ${found.image}-960.webp 960w` } : { image: "/images/hero/leaf-1.svg" };
 }
 
-const SHELF_SIZE = 8;
-
 type Shelf = { id: string; title: string; link: string; items: ProductSummary[] };
+type Candidate = ShelfProduct & { summary: ProductSummary };
 
 // A row of real products with a heading and a link to the matching shop view. Empty shelves are not drawn.
-function ProductShelf({ shelf, orderingEnabled, viewAll }: { shelf: Shelf; orderingEnabled: boolean; viewAll: string }) {
+function ProductShelf({ shelf, orderingEnabled, viewAll, start }: { shelf: Shelf; orderingEnabled: boolean; viewAll: string; start: Record<string, number> }) {
   if (shelf.items.length === 0) return null;
   return (
     <section className="home-section container" aria-labelledby={`home-${shelf.id}`} data-testid={`shelf-${shelf.id}`}>
@@ -40,7 +40,7 @@ function ProductShelf({ shelf, orderingEnabled, viewAll }: { shelf: Shelf; order
         <Link to={shelf.link}>{viewAll}</Link>
       </div>
       <ul className="product-grid">
-        {shelf.items.map((product) => <ProductCard key={product.id} product={product} orderingEnabled={orderingEnabled} headingLevel={3} />)}
+        {shelf.items.map((product) => <ProductCard key={product.id} product={product} orderingEnabled={orderingEnabled} headingLevel={3} startPhoto={start[product.id] ?? 0} />)}
       </ul>
     </section>
   );
@@ -99,8 +99,6 @@ export function HomePage() {
     staleTime: 60_000,
   });
   const filters = useQuery({ queryKey: ["catalog-filters"], queryFn: () => productApi.filters(), staleTime: 300_000 });
-  // New Arrivals is for plants: garden accessories (soil, fertiliser, tools) stay in their own category.
-  const newArrivals = (products.data?.items ?? savedFeatured ?? []).filter((item) => !NOT_IN_NEW_ARRIVALS.has(canonicalCategory(item.category)));
   const showingSaved = !products.data && Boolean(savedFeatured?.length);
   const savedCategories = useBootstrap
     ? Object.entries(bootstrap!.categoryCounts).map(([category, count]) => ({ category, categoryAr: bootstrap!.categoryLabelsAr[category] ?? null, count }))
@@ -112,24 +110,24 @@ export function HomePage() {
   const categoryLabel = (category: string) =>
     categoryName(category, isArabic ? "ar" : "en", filters.data?.categoryLabels?.[category] || savedCategories.find((entry) => entry.category === category)?.categoryAr);
 
-  // Featured, offers and the discovery shelves come from the published catalogue (all products, newest
-  // first). Each product appears on one shelf only: a shelf skips anything an earlier shelf already shows.
-  const entries = shownProducts ? sortCatalogue(shownProducts, "newest") : [];
-  const pick = (test: (product: CatalogueProduct) => boolean) =>
-    entries.filter(test).map((product) => catalogueProductToSummary(product, language));
-  const shown = new Set<string>();
-  const take = (items: ProductSummary[], limit = SHELF_SIZE) => {
-    const picked = items.filter((item) => !shown.has(item.id)).slice(0, limit);
-    picked.forEach((item) => shown.add(item.id));
-    return picked;
-  };
-  const featuredShelf: Shelf = { id: "featured", title: isArabic ? "منتجات مميزة" : "Featured plants", link: "/shop?sort=featured", items: take(pick((product) => Boolean(product.featured))) };
-  const newShelf: Shelf = { id: "new", title: t.featuredTitle, link: "/shop", items: take(newArrivals) };
-  const offersShelf: Shelf = { id: "offers", title: isArabic ? "عروض" : "Offers", link: "/shop", items: orderingEnabled ? take(pick((product) => Boolean(product.compareAtPriceQar && product.compareAtPriceQar > product.priceQar))) : [] };
-  const easyShelf: Shelf = { id: "easy", title: isArabic ? "نباتات سهلة العناية" : "Easy-care plants", link: "/shop", items: take(pick((product) => product.careLevel === "easy" && product.inStock), 4) };
-  const lowLightShelf: Shelf = { id: "low-light", title: isArabic ? "مناسبة للإضاءة المنخفضة" : "Happy in lower light", link: "/shop?light=" + encodeURIComponent("Low to bright indirect"), items: take(pick((product) => product.light === "Low to bright indirect" && product.inStock), 4) };
+  // Shelves vary per visitor (lib/home-shelves.ts): a seed for this browsing session, renewed daily, picks from
+  // the same pools the built-in data holds. Featured, offers and discovery come from the published catalogue; New
+  // Arrivals from the live newest list once it arrives (garden accessories never among them). No product twice.
+  const seed = useMemo(() => sessionSeed(), []);
+  const entries: Candidate[] = (shownProducts ? sortCatalogue(shownProducts, "newest") : []).map((product) => ({ ...product, summary: catalogueProductToSummary(product, language) }));
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  // A live product the saved catalogue knows keeps its English fields for the rules; its card shows the live data.
+  const newest: Candidate[] = products.data?.items.map((item) => ({ ...(byId.get(item.id) ?? item), summary: item })) ?? entries;
+  const picked = pickShelves(shelfPools(entries, newest), seed, { offers: orderingEnabled });
+  const summaries = (items: Candidate[]) => items.map((item) => item.summary);
+  const featuredShelf: Shelf = { id: "featured", title: isArabic ? "منتجات مميزة" : "Featured plants", link: "/shop?sort=featured", items: summaries(picked.featured) };
+  const newShelf: Shelf = { id: "new", title: t.featuredTitle, link: "/shop", items: summaries(picked.new) };
+  const offersShelf: Shelf = { id: "offers", title: isArabic ? "عروض" : "Offers", link: "/shop", items: summaries(picked.offers) };
+  const easyShelf: Shelf = { id: "easy", title: isArabic ? "نباتات سهلة العناية" : "Easy-care plants", link: "/shop", items: summaries(picked.easy) };
+  const lowLightShelf: Shelf = { id: "low-light", title: isArabic ? "مناسبة للإضاءة المنخفضة" : "Happy in lower light", link: "/shop?light=" + encodeURIComponent(LOW_LIGHT), items: summaries(picked.lowLight) };
   // Discovery shelves only make sense with a few products in them.
   const discovery = [easyShelf, lowLightShelf].map((shelf) => (shelf.items.length >= 2 ? shelf : { ...shelf, items: [] }));
+  const start = startPhotos([featuredShelf, newShelf, offersShelf, ...discovery].flatMap((shelf) => shelf.items), seed);
 
   return (
     <article className="home" data-testid="home-page">
@@ -163,7 +161,7 @@ export function HomePage() {
       ) : null}
       </div>
 
-      <ProductShelf shelf={featuredShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />
+      <ProductShelf shelf={featuredShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} start={start} />
 
       {/* New arrivals keep their own loading and error states: they are the shelf that must never be empty. */}
       {products.isError && !showingSaved ? (
@@ -177,11 +175,11 @@ export function HomePage() {
           <p role="status">{content.catalog.loading}</p>
         </section>
       ) : (
-        <ProductShelf shelf={newShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />
+        <ProductShelf shelf={newShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} start={start} />
       )}
 
-      <ProductShelf shelf={offersShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />
-      {discovery.map((shelf) => <ProductShelf key={shelf.id} shelf={shelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} />)}
+      <ProductShelf shelf={offersShelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} start={start} />
+      {discovery.map((shelf) => <ProductShelf key={shelf.id} shelf={shelf} orderingEnabled={orderingEnabled} viewAll={t.viewAll} start={start} />)}
 
       <section className="home-promises container" aria-label={t.promisesLabel}>
         <ul>

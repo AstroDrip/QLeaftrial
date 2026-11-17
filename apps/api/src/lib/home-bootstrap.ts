@@ -1,4 +1,4 @@
-import { canonicalCategory } from "./shop-categories.js";
+import { shelfPools } from "./home-shelves.js";
 import { catalogueSizePhotos } from "./product-photos.js";
 
 // The homepage bootstrap: a small, customer-safe cut of the public catalogue that ships inside the storefront's
@@ -30,30 +30,11 @@ export type HomeBootstrap = {
   products: BootstrapProduct[];
 };
 
-const FEATURED = 8;
-const NEWEST = 12;
-const OFFERS = 8;
-const DISCOVERY = 4;
-const NOT_NEW_ARRIVALS = new Set(["Garden Accessories"]);
-const LOW_LIGHT = "Low to bright indirect";
-
 export function buildHomeBootstrap(catalogue: { version: string; generatedAt: string; products: BootstrapSourceProduct[] }): HomeBootstrap {
   const newestFirst = [...catalogue.products].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "") || a.name.localeCompare(b.name));
+  // Every product any visitor's shelves could show (lib/home-shelves.ts picks from these pools in the browser).
   const chosen = new Map<string, BootstrapSourceProduct>();
-  const add = (products: BootstrapSourceProduct[], limit: number) => {
-    let added = 0;
-    for (const product of products) {
-      if (added >= limit) break;
-      if (!chosen.has(product.id)) { chosen.set(product.id, product); added += 1; }
-    }
-  };
-  // The same shelves the homepage builds, each with a little spare so a product claimed by an earlier shelf
-  // still leaves the next one full.
-  add(newestFirst.filter((product) => product.featured), FEATURED);
-  add(newestFirst.filter((product) => !NOT_NEW_ARRIVALS.has(canonicalCategory(product.category))), NEWEST);
-  add(newestFirst.filter((product) => product.compareAtPriceQar != null && product.compareAtPriceQar > product.priceQar), OFFERS);
-  add(newestFirst.filter((product) => product.careLevel === "easy" && product.inStock), DISCOVERY);
-  add(newestFirst.filter((product) => product.light === LOW_LIGHT && product.inStock), DISCOVERY);
+  for (const pool of Object.values(shelfPools(newestFirst))) for (const product of pool) chosen.set(product.id, product);
 
   const categoryCounts: Record<string, number> = {};
   const categoryLabelsAr: Record<string, string> = {};
