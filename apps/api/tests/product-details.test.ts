@@ -58,6 +58,37 @@ describe("product details, merchandising and pricing rules", () => {
     expect(tooShort.status).toBe(400);
   });
 
+  it("saves size details, shows them in the customer's language and filters by place and size", async () => {
+    const tall = await seededProduct("snake-plant");
+    const agent = await loggedInAgent();
+    const saved = await agent.patch(`/api/v1/admin/products/${tall.id}`).send({
+      heightCm: 150, potIncluded: false, placement: "indoor-outdoor",
+      sizeNote: "Tall floor plant", sizeNoteAr: "نبات أرضي طويل",
+      handlingNote: "Delivered upright by two people", handlingNoteAr: "يُوصَل واقفًا بواسطة شخصين",
+    });
+    expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject({ heightCm: 150, potIncluded: false, sizeNote: "Tall floor plant", handlingNoteAr: "يُوصَل واقفًا بواسطة شخصين" });
+
+    const arabic = await request(createApp()).get(`/api/v1/products/${tall.slug}?lang=ar`);
+    expect(arabic.body).toMatchObject({ heightCm: 150, potIncluded: false, sizeNote: "نبات أرضي طويل", handlingNote: "يُوصَل واقفًا بواسطة شخصين" });
+
+    const slugs = async (query: string) => (await request(createApp()).get(`/api/v1/products?${query}`)).body.items.map((item: { slug: string }) => item.slug);
+    expect(await slugs("size=large")).toEqual([tall.slug]);
+    expect(await slugs("size=small")).toEqual([]);
+    // A plant for indoors or outdoors is found by both choices.
+    expect(await slugs("placement=outdoor")).toContain(tall.slug);
+    expect(await slugs("placement=indoor")).toContain(tall.slug);
+    // An unknown value is ignored rather than refused.
+    expect((await request(createApp()).get("/api/v1/products?size=huge")).status).toBe(200);
+
+    const filters = await request(createApp()).get("/api/v1/products/filters");
+    expect(filters.body.sizes).toEqual(["large"]);
+    expect(filters.body.placements).toEqual(expect.arrayContaining(["indoor", "outdoor"]));
+
+    expect((await agent.patch(`/api/v1/admin/products/${tall.id}`).send({ heightCm: 0 })).status).toBe(400);
+    expect((await agent.patch(`/api/v1/admin/products/${tall.id}`).send({ heightCm: null, potIncluded: null })).body).toMatchObject({ heightCm: null, potIncluded: null });
+  });
+
   it("finds a plant by its botanical name and by its category", async () => {
     const product = await seededProduct("snake-plant");
     await prisma.product.update({ where: { id: product.id }, data: { scientificName: "Dracaena trifasciata" } });

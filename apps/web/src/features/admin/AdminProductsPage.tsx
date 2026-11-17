@@ -25,7 +25,9 @@ function useProductCacheUpdate() {
 
 type DetailsDraft = {
   name: string; category: string; light: string; description: string; costPrice: string; watering: string;
-  humidity: string; soil: string; temperature: string;
+  humidity: string; soil: string; temperature: string; sizeNote: string; handlingNote: string;
+  // English card only: shared, not translated.
+  heightCm: string; potIncluded: "" | "yes" | "no";
   // English card only: shared details that are not translated.
   scientificName: string; compareAt: string; careLevel: string; placement: string; reviewNote: string; searchAliases: string;
   featured: boolean; needsReview: boolean;
@@ -36,10 +38,11 @@ function draftFor(product: AdminProduct, language: SiteLanguage): DetailsDraft {
     costPrice: String(product.costPrice ?? ""), scientificName: product.scientificName ?? "", compareAt: product.compareAtPriceQar ? String(product.compareAtPriceQar) : "",
     careLevel: product.careLevel ?? "", placement: product.placement ?? "", reviewNote: product.reviewNote ?? "", searchAliases: product.searchAliases ?? "",
     featured: Boolean(product.featured), needsReview: Boolean(product.needsReview),
+    heightCm: product.heightCm ? String(product.heightCm) : "", potIncluded: (product.potIncluded == null ? "" : product.potIncluded ? "yes" : "no") as DetailsDraft["potIncluded"],
   };
   return language === "ar"
-    ? { ...shared, name: product.nameAr ?? "", category: product.categoryAr ?? "", light: product.lightAr ?? "", description: product.descriptionAr ?? "", watering: product.wateringAr ?? "", humidity: product.humidityAr ?? "", soil: product.soilAr ?? "", temperature: product.temperatureAr ?? "" }
-    : { ...shared, name: product.name, category: product.category, light: product.light ?? "", description: product.description, watering: product.watering ?? "", humidity: product.humidity ?? "", soil: product.soil ?? "", temperature: product.temperature ?? "" };
+    ? { ...shared, name: product.nameAr ?? "", category: product.categoryAr ?? "", light: product.lightAr ?? "", description: product.descriptionAr ?? "", watering: product.wateringAr ?? "", humidity: product.humidityAr ?? "", soil: product.soilAr ?? "", temperature: product.temperatureAr ?? "", sizeNote: product.sizeNoteAr ?? "", handlingNote: product.handlingNoteAr ?? "" }
+    : { ...shared, name: product.name, category: product.category, light: product.light ?? "", description: product.description, watering: product.watering ?? "", humidity: product.humidity ?? "", soil: product.soil ?? "", temperature: product.temperature ?? "", sizeNote: product.sizeNote ?? "", handlingNote: product.handlingNote ?? "" };
 }
 
 // Edits the language the card is currently showing: English fields (plus cost)
@@ -48,11 +51,11 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
   const { isArabic } = useSiteLanguage();
   const t = isArabic
     ? { title: language === "ar" ? "تعديل التفاصيل العربية" : "تعديل التفاصيل الإنجليزية", name: "الاسم", category: "الفئة", light: "الإضاءة (اتركها فارغة للإكسسوارات)", description: "الوصف", cost: "التكلفة (ر.ق)", save: "حفظ التفاصيل", saving: "جارٍ الحفظ…", saved: "تم حفظ التفاصيل", invalidCost: "يجب أن تكون التكلفة رقمًا صحيحًا غير سالب", nothing: "لا توجد تغييرات", failed: "تعذر حفظ التفاصيل",
-        watering: "الري", humidity: "الرطوبة", soil: "التربة", temperature: "درجة الحرارة", careHint: "اترك أي بند فارغًا إذا لم يكن مؤكدًا؛ البنود الفارغة لا تظهر للعملاء.", scientific: "الاسم العلمي", compareAt: "السعر قبل التخفيض (ر.ق، اختياري)", invalidCompare: "يجب أن يكون السعر قبل التخفيض رقمًا صحيحًا موجبًا", care: "مستوى العناية", placement: "المكان", none: "غير محدد",
+        watering: "الري", humidity: "الرطوبة", soil: "التربة", temperature: "درجة الحرارة", height: "الارتفاع مع الأصيص (سم)", invalidHeight: "يجب أن يكون الارتفاع رقمًا صحيحًا بين 1 و1000", sizeNote: "ملاحظة الحجم", handlingNote: "ملاحظة التوصيل والتعامل", pot: "الأصيص", potYes: "مشمول", potNo: "غير مشمول", careHint: "اترك أي بند فارغًا إذا لم يكن مؤكدًا؛ البنود الفارغة لا تظهر للعملاء.", scientific: "الاسم العلمي", compareAt: "السعر قبل التخفيض (ر.ق، اختياري)", invalidCompare: "يجب أن يكون السعر قبل التخفيض رقمًا صحيحًا موجبًا", care: "مستوى العناية", placement: "المكان", none: "غير محدد",
         careLevels: { easy: "سهل", moderate: "متوسط", demanding: "يحتاج عناية" }, placements: { indoor: "داخلي", outdoor: "خارجي", "indoor-outdoor": "داخلي وخارجي" },
         featured: "منتج مميز (يظهر في الصفحة الرئيسية)", needsReview: "يحتاج إلى مراجعة قبل النشر", reviewNote: "ملاحظة المراجعة (للإدارة فقط)", aliases: "كلمات بحث إضافية (أسماء أخرى أو تهجئات، تفصل بينها فواصل)" }
     : { title: language === "ar" ? "Edit Arabic details" : "Edit details", name: "Name", category: "Category", light: "Light (leave empty for accessories)", description: "Description", cost: "Cost (QAR)", save: "Save details", saving: "Saving…", saved: "Details saved", invalidCost: "Cost must be a non-negative whole number", nothing: "No changes to save", failed: "Could not save details",
-        watering: "Watering", humidity: "Humidity", soil: "Soil", temperature: "Temperature", careHint: "Leave any item empty unless it is confirmed; empty items are not shown to customers.", scientific: "Botanical name", compareAt: "Original price before a reduction (QAR, optional)", invalidCompare: "The original price must be a positive whole number", care: "Care level", placement: "Placement", none: "Not set",
+        watering: "Watering", humidity: "Humidity", soil: "Soil", temperature: "Temperature", height: "Height with pot (cm)", invalidHeight: "Height must be a whole number from 1 to 1000", sizeNote: "Size note", handlingNote: "Delivery and handling note", pot: "Pot", potYes: "Included", potNo: "Not included", careHint: "Leave any item empty unless it is confirmed; empty items are not shown to customers.", scientific: "Botanical name", compareAt: "Original price before a reduction (QAR, optional)", invalidCompare: "The original price must be a positive whole number", care: "Care level", placement: "Placement", none: "Not set",
         careLevels: { easy: "Easy", moderate: "Moderate", demanding: "Needs attention" }, placements: { indoor: "Indoor", outdoor: "Outdoor", "indoor-outdoor": "Indoor or outdoor" },
         featured: "Featured on the home page", needsReview: "Needs checking before publishing", reviewNote: "Review note (admin only)", aliases: "Extra search words (other names or spellings, separated by commas)" };
   const [draft, setDraft] = useState(() => draftFor(product, language));
@@ -73,6 +76,9 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
     if (draft.costPrice.trim() === "" || !Number.isInteger(cost) || cost < 0) return t.invalidCost;
     const compareAt = draft.compareAt.trim() === "" ? null : Number(draft.compareAt);
     if (compareAt !== null && (!Number.isInteger(compareAt) || compareAt <= 0)) return t.invalidCompare;
+    const height = draft.heightCm.trim() === "" ? null : Number(draft.heightCm);
+    if (height !== null && (!Number.isInteger(height) || height < 1 || height > 1000)) return t.invalidHeight;
+    const pot = draft.potIncluded === "" ? null : draft.potIncluded === "yes";
     const light = draft.light.trim() || null;
     const optional = (value: string) => value.trim() || null;
     const differs = (value: string | boolean | number | null, current: string | boolean | number | null | undefined) => value !== (current ?? null);
@@ -81,6 +87,10 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
       ...(differs(optional(draft.humidity), product.humidity) ? { humidity: optional(draft.humidity) } : {}),
       ...(differs(optional(draft.soil), product.soil) ? { soil: optional(draft.soil) } : {}),
       ...(differs(optional(draft.temperature), product.temperature) ? { temperature: optional(draft.temperature) } : {}),
+      ...(differs(optional(draft.sizeNote), product.sizeNote) ? { sizeNote: optional(draft.sizeNote) } : {}),
+      ...(differs(optional(draft.handlingNote), product.handlingNote) ? { handlingNote: optional(draft.handlingNote) } : {}),
+      ...(differs(height, product.heightCm) ? { heightCm: height } : {}),
+      ...(differs(pot, product.potIncluded) ? { potIncluded: pot } : {}),
       ...(differs(optional(draft.scientificName), product.scientificName) ? { scientificName: optional(draft.scientificName) } : {}),
       ...(differs(compareAt, product.compareAtPriceQar) ? { compareAtPriceQar: compareAt } : {}),
       ...(differs(optional(draft.careLevel), product.careLevel) ? { careLevel: optional(draft.careLevel) as AdminProductPatch["careLevel"] } : {}),
@@ -109,6 +119,8 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
       ...(changed(draft.humidity, product.humidityAr) ? { humidityAr: draft.humidity.trim() } : {}),
       ...(changed(draft.soil, product.soilAr) ? { soilAr: draft.soil.trim() } : {}),
       ...(changed(draft.temperature, product.temperatureAr) ? { temperatureAr: draft.temperature.trim() } : {}),
+      ...(changed(draft.sizeNote, product.sizeNoteAr) ? { sizeNoteAr: draft.sizeNote.trim() } : {}),
+      ...(changed(draft.handlingNote, product.handlingNoteAr) ? { handlingNoteAr: draft.handlingNote.trim() } : {}),
     };
   }
 
@@ -121,7 +133,7 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
     save.mutate(patch);
   }
 
-  const field = (key: Exclude<keyof DetailsDraft, "featured" | "needsReview">) => ({
+  const field = (key: Exclude<keyof DetailsDraft, "featured" | "needsReview" | "potIncluded">) => ({
     value: draft[key],
     onChange: (event: { target: { value: string } }) => setDraft((current) => ({ ...current, [key]: event.target.value })),
   });
@@ -143,6 +155,20 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
           <label>{t.humidity}<input maxLength={200} aria-label={`${product.name} ${suffix} humidity`} {...field("humidity")} /></label>
           <label>{t.soil}<input maxLength={200} aria-label={`${product.name} ${suffix} soil`} {...field("soil")} /></label>
           <label>{t.temperature}<input maxLength={200} aria-label={`${product.name} ${suffix} temperature`} {...field("temperature")} /></label>
+          {arabic ? null : (
+            <>
+              <label>{t.height}<input type="number" min="1" max="1000" step="1" aria-label={`${product.name} height`} {...field("heightCm")} /></label>
+              <label>{t.pot}
+                <select aria-label={`${product.name} pot included`} value={draft.potIncluded} onChange={(event) => setDraft((current) => ({ ...current, potIncluded: event.target.value as DetailsDraft["potIncluded"] }))}>
+                  <option value="">{t.none}</option>
+                  <option value="yes">{t.potYes}</option>
+                  <option value="no">{t.potNo}</option>
+                </select>
+              </label>
+            </>
+          )}
+          <label>{t.sizeNote}<input maxLength={200} aria-label={`${product.name} ${suffix} size note`} {...field("sizeNote")} /></label>
+          <label>{t.handlingNote}<input maxLength={300} aria-label={`${product.name} ${suffix} handling note`} {...field("handlingNote")} /></label>
           {arabic ? null : (
             <>
               <label>{t.scientific}<input maxLength={120} dir="ltr" aria-label={`${product.name} botanical name`} {...field("scientificName")} /></label>

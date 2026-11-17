@@ -94,6 +94,13 @@ model Product {
   careLevel   String?
   // "indoor" | "outdoor" | "indoor-outdoor"
   placement   String?
+  // Size and delivery details (mainly outdoor and large plants). Height in cm, with the pot.
+  heightCm       Int?
+  sizeNote       String?
+  sizeNoteAr     String?
+  potIncluded    Boolean?
+  handlingNote   String?
+  handlingNoteAr String?
   // Admin-only: an identification or detail the shop still has to confirm before publishing.
   needsReview Boolean        @default(false)
   reviewNote  String?

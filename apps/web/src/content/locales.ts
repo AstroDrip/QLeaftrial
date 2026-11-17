@@ -299,7 +299,7 @@ export const localeContent = {
       filterCategory: "الفئة",
       filterLight: "الإضاءة",
       filterAllCategories: "كل الفئات",
-      filterAllLights: "كل مستويات الإضاءة",
+      filterAllLights: "أي إضاءة",
       sortBy: "ترتيب حسب",
       sortNameAsc: "الاسم (أ–ي)",
       sortPriceAsc: "السعر (من الأقل إلى الأعلى)",

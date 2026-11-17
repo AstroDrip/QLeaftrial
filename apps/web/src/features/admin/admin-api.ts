@@ -30,6 +30,12 @@ export interface AdminProduct {
   temperature?: string | null;
   temperatureAr?: string | null;
   careLevel?: "easy" | "moderate" | "demanding" | null;
+  heightCm?: number | null;
+  sizeNote?: string | null;
+  sizeNoteAr?: string | null;
+  potIncluded?: boolean | null;
+  handlingNote?: string | null;
+  handlingNoteAr?: string | null;
   placement?: "indoor" | "outdoor" | "indoor-outdoor" | null;
   needsReview?: boolean;
   reviewNote?: string | null;
@@ -96,6 +102,12 @@ export type AdminProductPatch = Partial<{
   temperature: string | null;
   temperatureAr: string;
   careLevel: "easy" | "moderate" | "demanding" | null;
+  heightCm: number | null;
+  sizeNote: string | null;
+  sizeNoteAr: string | null;
+  potIncluded: boolean | null;
+  handlingNote: string | null;
+  handlingNoteAr: string | null;
   placement: "indoor" | "outdoor" | "indoor-outdoor" | null;
   needsReview: boolean;
   reviewNote: string | null;

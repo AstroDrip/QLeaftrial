@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { PLACEMENT_FILTERS, SIZE_FILTERS, inSize, placementValues } from "./product-size";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useSiteLanguage, useStoreSettings } from "../../app/providers";
@@ -80,6 +81,8 @@ export function CatalogPage() {
   const requestedCategory = searchParams.get("category");
   const category = requestedCategory ? canonicalCategory(requestedCategory) : undefined;
   const light = searchParams.get("light") || undefined;
+  const placement = PLACEMENT_FILTERS.find((value) => value === searchParams.get("placement"));
+  const size = SIZE_FILTERS.find((value) => value === searchParams.get("size"));
   const inStock = searchParams.get("inStock") === "1";
   const page = Number(searchParams.get("page") ?? 1) || 1;
 
@@ -87,6 +90,8 @@ export function CatalogPage() {
     q: searchParams.get("q") ?? undefined,
     category,
     light,
+    placement,
+    size,
     minPrice: orderingEnabled ? priceRange?.min : undefined,
     maxPrice: orderingEnabled ? priceRange?.max : undefined,
     inStock: inStock ? "1" : undefined,
@@ -134,6 +139,12 @@ export function CatalogPage() {
   const listed = Object.keys(counts).length ? counts : Object.fromEntries((filters?.categories ?? []).map((name) => [name, 0]));
   const categories = orderedCategoryCounts(listed).map((entry) => entry.category);
   const categoryLabels = filters?.categoryLabels ?? savedLabels;
+  // Where and size choices: only those that would find something (from the live filters, else the saved catalogue).
+  const placements = filters?.placements ?? PLACEMENT_FILTERS.filter((value) => catalogue.data?.products.some((product) => product.placement && placementValues(value).includes(product.placement)));
+  const sizes = filters?.sizes ?? SIZE_FILTERS.filter((value) => catalogue.data?.products.some((product) => product.heightCm != null && inSize(product.heightCm, value)));
+  const sizeCopy = isArabic
+    ? { place: "المكان", anyPlace: "أي مكان", size: "الارتفاع", anySize: "أي ارتفاع", placements: { indoor: "داخلي", outdoor: "خارجي" }, sizes: { small: "أقل من 50 سم", medium: "50–119 سم", large: "120 سم فأكثر" } }
+    : { place: "Where", anyPlace: "Any place", size: "Height", anySize: "Any height", placements: { indoor: "Indoor", outdoor: "Outdoor" }, sizes: { small: "Under 50 cm", medium: "50–119 cm", large: "120 cm+" } };
   // When the live list fails, the saved catalogue is shown with a note instead of an error page. A live list that
   // has not answered after a few seconds gets the same note: the products on screen are the saved ones, and the
   // customer should know prices are confirmed at checkout. (Not sooner, so the note does not flash on a normal load.)
@@ -168,6 +179,8 @@ export function CatalogPage() {
   const activeFilters = [
     params.q ? { key: "q", text: `“${params.q}”` } : null,
     params.light ? { key: "light", text: label(params.light, filters?.lightLabels) } : null,
+    placement ? { key: "placement", text: sizeCopy.placements[placement] } : null,
+    size ? { key: "size", text: `${sizeCopy.size}: ${sizeCopy.sizes[size]}` } : null,
     priceRange && orderingEnabled ? { key: "price", text: `${priceRange.min}${priceRange.max ? `–${priceRange.max}` : "+"} QAR` } : null,
     params.inStock ? { key: "inStock", text: t.inStockOnly } : null,
   ].filter((filter): filter is { key: string; text: string } => Boolean(filter));
@@ -229,6 +242,24 @@ export function CatalogPage() {
               <select value={params.light ?? ""} onChange={(event) => update({ light: event.target.value || undefined })} data-testid="light-filter" disabled={filtersPending}>
                 <option value="">{t.filterAllLights}</option>
                 {filters?.lights.map((light) => <option key={light} value={light}>{label(light, filters.lightLabels)}</option>)}
+              </select>
+            </label>
+          ) : null}
+          {placements.length || placement ? (
+            <label>
+              <span>{sizeCopy.place}</span>
+              <select value={placement ?? ""} onChange={(event) => update({ placement: event.target.value || undefined })} data-testid="placement-filter">
+                <option value="">{sizeCopy.anyPlace}</option>
+                {placements.map((value) => <option key={value} value={value}>{sizeCopy.placements[value]}</option>)}
+              </select>
+            </label>
+          ) : null}
+          {sizes.length || size ? (
+            <label>
+              <span>{sizeCopy.size}</span>
+              <select value={size ?? ""} onChange={(event) => update({ size: event.target.value || undefined })} data-testid="size-filter">
+                <option value="">{sizeCopy.anySize}</option>
+                {sizes.map((value) => <option key={value} value={value}>{sizeCopy.sizes[value]}</option>)}
               </select>
             </label>
           ) : null}

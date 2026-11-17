@@ -85,6 +85,7 @@ export function ProductCard({
         </Link>
       </Heading>
       {/* Pinned to the card bottom so prices and buttons line up across a row. */}
+      {product.heightCm ? <p className="product-card__size">{isArabic ? `الارتفاع نحو ${product.heightCm} سم` : `About ${product.heightCm} cm tall`}</p> : null}
       <div className="product-card__footer">
         <div className="product-card__meta">
           <span className="product-card__category">{localized.category}</span>

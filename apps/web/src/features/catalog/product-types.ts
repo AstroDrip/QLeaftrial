@@ -29,6 +29,12 @@ export interface ProductSummary {
   featured?: boolean;
   scientificName?: string | null;
   careLevel?: "easy" | "moderate" | "demanding" | string | null;
+  heightCm?: number | null;
+  sizeNote?: string | null;
+  sizeNoteAr?: string | null;
+  potIncluded?: boolean | null;
+  handlingNote?: string | null;
+  handlingNoteAr?: string | null;
   placement?: "indoor" | "outdoor" | "indoor-outdoor" | string | null;
   createdAt?: string;
   stock: number;
@@ -63,6 +69,8 @@ export interface ProductListParams {
   q?: string;
   category?: string;
   light?: string;
+  placement?: "indoor" | "outdoor";
+  size?: "small" | "medium" | "large";
   minPrice?: number;
   maxPrice?: number;
   inStock?: "1";

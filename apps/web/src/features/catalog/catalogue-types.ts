@@ -33,6 +33,12 @@ export interface CatalogueProduct {
   scientificName?: string | null;
   searchAliases?: string | null;
   careLevel?: string | null;
+  heightCm?: number | null;
+  sizeNote?: string | null;
+  sizeNoteAr?: string | null;
+  potIncluded?: boolean | null;
+  handlingNote?: string | null;
+  handlingNoteAr?: string | null;
   placement?: string | null;
   image: CatalogueMedia | null;
   media: CatalogueMedia[];

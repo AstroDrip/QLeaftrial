@@ -34,7 +34,7 @@
 .catalog__toolbar label { display: grid; gap: .25rem; flex: 1 1 160px; }
 .catalog__toolbar label > span { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; }
 html[lang="ar"] .catalog__toolbar label > span { letter-spacing: 0; }
-.catalog__toolbar select { min-height: 40px; padding-block: .4rem; }
+.catalog__toolbar select { min-height: 40px; padding-block: .4rem; padding-inline: .6rem; }
 .catalog__toolbar .catalog__check { display: flex; flex: 0 0 auto; align-items: center; gap: .5rem; min-height: 40px; color: var(--ink); font-size: .875rem; }
 .catalog__toolbar .catalog__check > span { font-size: .875rem; letter-spacing: 0; text-transform: none; }
 

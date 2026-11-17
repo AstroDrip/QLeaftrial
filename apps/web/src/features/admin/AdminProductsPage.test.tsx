@@ -275,6 +275,25 @@ describe("AdminProductsPage", () => {
     expect(adminApi.updateProduct).toHaveBeenLastCalledWith("plant-1", { soilAr: "خلطة جيدة التصريف" });
   });
 
+  it("edits height, pot and size notes, and refuses an impossible height", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+    const summary = await screen.findByText("Edit details");
+    (summary.parentElement as HTMLDetailsElement).open = true;
+    fireEvent(summary.parentElement!, new Event("toggle"));
+    const height = screen.getByRole("spinbutton", { name: /monstera height/i });
+    fireEvent.change(height, { target: { value: "0" } });
+    await act(async () => { fireEvent.submit(height.closest("form")!); });
+    expect(screen.getByText(/height must be a whole number/i)).toBeInTheDocument();
+    expect(adminApi.updateProduct).not.toHaveBeenCalled();
+
+    fireEvent.change(height, { target: { value: "150" } });
+    fireEvent.change(screen.getByRole("combobox", { name: /monstera pot included/i }), { target: { value: "no" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /monstera english size note/i }), { target: { value: "Tall floor plant" } });
+    await act(async () => { fireEvent.submit(height.closest("form")!); });
+    expect(adminApi.updateProduct).toHaveBeenCalledWith("plant-1", { sizeNote: "Tall floor plant", heightCm: 150, potIncluded: false });
+  });
+
   it("edits Arabic copy from a card shown in Arabic", async () => {
     vi.mocked(adminApi.products).mockResolvedValue([{ ...product, nameAr: null }]);
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

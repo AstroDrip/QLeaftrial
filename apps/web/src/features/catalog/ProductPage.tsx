@@ -7,6 +7,7 @@ import { AddToCartButton } from "../cart/AddToCartButton";
 import { ProductCard } from "./ProductCard";
 import { whatsappLink } from "../../content/contact";
 import { PlantCare } from "./PlantCare";
+import { sizeFacts } from "./size-facts";
 import { WhatsAppIcon } from "../../components/icons";
 import { Seo } from "../../components/Seo";
 import { ProductImage } from "../../components/ProductImage";
@@ -157,6 +158,11 @@ export function ProductPage() {
               <span>{care.titles.botanical}:</span> <i lang="la" dir="ltr">{product.scientificName}</i>
             </li>
           ) : null}
+          {sizeFacts(product, isArabic).map((fact) => (
+            <li key={fact.key} data-fact={fact.key}>
+              <span>{fact.label}:</span> {fact.value}
+            </li>
+          ))}
         </ul>
         {orderingEnabled ? <AddToCartButton product={product} className="product-detail__cart" /> : null}
         <a className="product-detail__ask" href={whatsappLink(isArabic ? `مرحبًا، أود الاستفسار عن ${localized.name}` : `Hi, I'd like to ask about ${product.name}`)} target="_blank" rel="noreferrer">

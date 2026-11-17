@@ -19,6 +19,13 @@ const productDetails = {
   temperature: englishText(2, 200).nullable().optional(),
   temperatureAr: z.string().trim().min(2).max(200).nullable().optional(),
   careLevel: z.enum(["easy", "moderate", "demanding"]).nullable().optional(),
+  // Size and delivery details, mainly for outdoor and large plants. Height is the plant with its pot, in cm.
+  heightCm: z.number().int().min(1).max(1000).nullable().optional(),
+  sizeNote: englishText(2, 200).nullable().optional(),
+  sizeNoteAr: z.string().trim().min(2).max(200).nullable().optional(),
+  potIncluded: z.boolean().nullable().optional(),
+  handlingNote: englishText(2, 300).nullable().optional(),
+  handlingNoteAr: z.string().trim().min(2).max(300).nullable().optional(),
   placement: z.enum(["indoor", "outdoor", "indoor-outdoor"]).nullable().optional(),
   needsReview: z.boolean().optional(),
   reviewNote: z.string().trim().max(500).nullable().optional(),

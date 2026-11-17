@@ -33,6 +33,12 @@ const adminProductSelection = {
   temperature: true,
   temperatureAr: true,
   careLevel: true,
+  heightCm: true,
+  sizeNote: true,
+  sizeNoteAr: true,
+  potIncluded: true,
+  handlingNote: true,
+  handlingNoteAr: true,
   placement: true,
   needsReview: true,
   reviewNote: true,
@@ -72,6 +78,12 @@ type AdminProductRecord = {
   temperature: string | null;
   temperatureAr: string | null;
   careLevel: string | null;
+  heightCm: number | null;
+  sizeNote: string | null;
+  sizeNoteAr: string | null;
+  potIncluded: boolean | null;
+  handlingNote: string | null;
+  handlingNoteAr: string | null;
   placement: string | null;
   needsReview: boolean;
   reviewNote: string | null;
@@ -112,6 +124,12 @@ export type AdminProduct = {
   temperature: string | null;
   temperatureAr: string | null;
   careLevel: string | null;
+  heightCm: number | null;
+  sizeNote: string | null;
+  sizeNoteAr: string | null;
+  potIncluded: boolean | null;
+  handlingNote: string | null;
+  handlingNoteAr: string | null;
   placement: string | null;
   needsReview: boolean;
   reviewNote: string | null;
@@ -153,6 +171,12 @@ type AdminProductCreateRepository = {
       temperature?: string | null;
       temperatureAr?: string | null;
       careLevel?: string | null;
+      heightCm?: number | null;
+      sizeNote?: string | null;
+      sizeNoteAr?: string | null;
+      potIncluded?: boolean | null;
+      handlingNote?: string | null;
+      handlingNoteAr?: string | null;
       placement?: string | null;
       needsReview?: boolean;
       reviewNote?: string | null;
@@ -195,6 +219,12 @@ type ProductUpdateData = {
   temperature?: string | null;
   temperatureAr?: string | null;
   careLevel?: string | null;
+  heightCm?: number | null;
+  sizeNote?: string | null;
+  sizeNoteAr?: string | null;
+  potIncluded?: boolean | null;
+  handlingNote?: string | null;
+  handlingNoteAr?: string | null;
   placement?: string | null;
   needsReview?: boolean;
   reviewNote?: string | null;
@@ -277,6 +307,12 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
     temperature: product.temperature,
     temperatureAr: product.temperatureAr,
     careLevel: product.careLevel,
+    heightCm: product.heightCm,
+    sizeNote: product.sizeNote,
+    sizeNoteAr: product.sizeNoteAr,
+    potIncluded: product.potIncluded,
+    handlingNote: product.handlingNote,
+    handlingNoteAr: product.handlingNoteAr,
     placement: product.placement,
     needsReview: product.needsReview,
     reviewNote: product.reviewNote,
@@ -423,7 +459,7 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         costPrice: input.costPrice,
         published: true,
         ...Object.fromEntries(
-          (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "humidity", "humidityAr", "soil", "soilAr", "temperature", "temperatureAr", "careLevel", "placement", "needsReview", "reviewNote", "searchAliases"] as const)
+          (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "humidity", "humidityAr", "soil", "soilAr", "temperature", "temperatureAr", "heightCm", "sizeNote", "sizeNoteAr", "potIncluded", "handlingNote", "handlingNoteAr", "careLevel", "placement", "needsReview", "reviewNote", "searchAliases"] as const)
             .filter((key) => input[key] !== undefined)
             .map((key) => [key, input[key]]),
         ),

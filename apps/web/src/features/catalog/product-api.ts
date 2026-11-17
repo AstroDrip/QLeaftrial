@@ -72,6 +72,8 @@ export const productApi = {
     categoryLabels?: Record<string, string>;
     lightLabels?: Record<string, string>;
     categoryCounts?: Record<string, number>;
+    placements?: Array<"indoor" | "outdoor">;
+    sizes?: Array<"small" | "medium" | "large">;
   }> => request("/products/filters"),
 };
 

@@ -268,6 +268,7 @@ html[lang="ar"] .product-card__category { letter-spacing: 0; }
 .product-card__link:focus-visible::after { outline: 2px solid var(--rust); outline-offset: 4px; }
 /* minmax(0, 1fr): a long single-line light label must not widen the column past the card. */
 .product-card__footer { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; margin-top: auto; }
+.product-card__size { margin: 0; color: var(--text-soft); font-size: .78rem; overflow-wrap: anywhere; }
 .product-card__meta { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; min-height: 1.5rem; color: var(--text-muted); font-size: .8rem; }
 .product-card__price { flex-shrink: 0; color: var(--ink); font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 /* Above the stretched product link so both cart buttons stay clickable. */

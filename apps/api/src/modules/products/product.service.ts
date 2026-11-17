@@ -1,3 +1,4 @@
+import { PLACEMENT_FILTERS, SIZE_FILTERS, inSize, placementValues, sizeRange } from "../../lib/product-size.js";
 import { prisma } from "../../lib/prisma.js";
 import type { ProductDetail, ProductQuery, ProductSummary } from "./product.schemas.js";
 import { searchPublishedProducts } from "./product-search-index.js";
@@ -29,6 +30,12 @@ const publicProductSelection = {
   temperature: true,
   temperatureAr: true,
   careLevel: true,
+  heightCm: true,
+  sizeNote: true,
+  sizeNoteAr: true,
+  potIncluded: true,
+  handlingNote: true,
+  handlingNoteAr: true,
   placement: true,
   createdAt: true,
   media: {
@@ -62,6 +69,12 @@ type PublicProductRecord = {
   temperature: string | null;
   temperatureAr: string | null;
   careLevel: string | null;
+  heightCm: number | null;
+  sizeNote: string | null;
+  sizeNoteAr: string | null;
+  potIncluded: boolean | null;
+  handlingNote: string | null;
+  handlingNoteAr: string | null;
   placement: string | null;
   createdAt: Date;
   media: Array<{
@@ -79,6 +92,8 @@ type PublicProductWhere = {
   published: boolean;
   category?: string;
   light?: string;
+  placement?: { in: string[] };
+  heightCm?: { gte?: number; lt?: number };
   priceQar?: { gte?: number; lte?: number };
   inventory?: { is: { quantity: { gt: number } } };
   featured?: boolean;
@@ -118,8 +133,8 @@ const productRepository = prisma.product as unknown as ProductRepository;
 type ProductFilterRepository = {
   findMany(args: {
     where: { published: boolean };
-    select: { category: true; categoryAr: true; light: true; lightAr: true };
-  }): Promise<Array<{ category: string; categoryAr: string | null; light: string | null; lightAr: string | null }>>;
+    select: { category: true; categoryAr: true; light: true; lightAr: true; placement: true; heightCm: true };
+  }): Promise<Array<{ category: string; categoryAr: string | null; light: string | null; lightAr: string | null; placement: string | null; heightCm: number | null }>>;
 };
 
 const productFilterRepository = prisma.product as unknown as ProductFilterRepository;
@@ -146,6 +161,12 @@ function toSummary(
     featured: product.featured,
     scientificName: product.scientificName,
     careLevel: product.careLevel,
+    heightCm: product.heightCm,
+    sizeNote: isArabic && product.sizeNoteAr?.trim() ? product.sizeNoteAr : product.sizeNote,
+    sizeNoteAr: product.sizeNoteAr,
+    potIncluded: product.potIncluded,
+    handlingNote: isArabic && product.handlingNoteAr?.trim() ? product.handlingNoteAr : product.handlingNote,
+    handlingNoteAr: product.handlingNoteAr,
     placement: product.placement,
     createdAt: product.createdAt.toISOString(),
     stock,
@@ -187,6 +208,8 @@ export async function listProducts(query: ProductQuery): Promise<{
     // Older names and the display name ("Tabletop Plants") lead to the stored category.
     ...(query.category ? { category: canonicalCategory(query.category) } : {}),
     ...(query.light ? { light: query.light } : {}),
+    ...(query.placement ? { placement: { in: placementValues(query.placement) } } : {}),
+    ...(query.size ? { heightCm: sizeRange(query.size) } : {}),
     ...(query.minPrice !== undefined || query.maxPrice !== undefined
       ? { priceQar: { ...(query.minPrice !== undefined ? { gte: query.minPrice } : {}), ...(query.maxPrice !== undefined ? { lte: query.maxPrice } : {}) } }
       : {}),
@@ -258,10 +281,12 @@ export async function listProductFilters(language: ProductQuery["lang"] = "en"):
   categoryLabels: Record<string, string>;
   lightLabels: Record<string, string>;
   categoryCounts: Record<string, number>;
+  placements: string[];
+  sizes: string[];
 }> {
   const products = await productFilterRepository.findMany({
     where: { published: true },
-    select: { category: true, categoryAr: true, light: true, lightAr: true },
+    select: { category: true, categoryAr: true, light: true, lightAr: true, placement: true, heightCm: true },
   });
   const label = (value: string, arabic: string | null) => language === "ar" && arabic?.trim() ? arabic : value;
   const categoryCounts: Record<string, number> = {};
@@ -275,6 +300,9 @@ export async function listProductFilters(language: ProductQuery["lang"] = "en"):
     categoryLabels: Object.fromEntries([...new Set(products.map((product) => product.category))].map((category) => [category, categoryName(category, "ar", products.find((product) => product.category === category)?.categoryAr)])),
     lightLabels: Object.fromEntries(products.flatMap((product) => product.light && product.lightAr ? [[product.light, product.lightAr]] : [])),
     categoryCounts,
+    // Only choices that would find something: "indoor" and "outdoor" (a plant for both counts for each).
+    placements: PLACEMENT_FILTERS.filter((value) => products.some((product) => product.placement && placementValues(value).includes(product.placement))),
+    sizes: SIZE_FILTERS.filter((value) => products.some((product) => product.heightCm != null && inSize(product.heightCm, value))),
   };
 }
 

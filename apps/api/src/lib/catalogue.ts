@@ -39,6 +39,12 @@ export interface PublicCatalogueProduct {
   // Extra search words set in admin, so the storefront can search its saved copy the way the API does.
   searchAliases: string | null;
   careLevel: string | null;
+  heightCm: number | null;
+  sizeNote: string | null;
+  sizeNoteAr: string | null;
+  potIncluded: boolean | null;
+  handlingNote: string | null;
+  handlingNoteAr: string | null;
   placement: string | null;
   watering: string | null;
   wateringAr: string | null;
@@ -89,6 +95,12 @@ const publicProductSelection = {
   scientificName: true,
   searchAliases: true,
   careLevel: true,
+  heightCm: true,
+  sizeNote: true,
+  sizeNoteAr: true,
+  potIncluded: true,
+  handlingNote: true,
+  handlingNoteAr: true,
   placement: true,
   watering: true,
   wateringAr: true,
@@ -126,6 +138,12 @@ function mapProduct(record: {
   scientificName: string | null;
   searchAliases: string | null;
   careLevel: string | null;
+  heightCm: number | null;
+  sizeNote: string | null;
+  sizeNoteAr: string | null;
+  potIncluded: boolean | null;
+  handlingNote: string | null;
+  handlingNoteAr: string | null;
   placement: string | null;
   watering: string | null;
   wateringAr: string | null;
@@ -174,6 +192,12 @@ function mapProduct(record: {
     scientificName: record.scientificName,
     searchAliases: record.searchAliases?.trim() || null,
     careLevel: record.careLevel,
+    heightCm: record.heightCm,
+    sizeNote: record.sizeNote,
+    sizeNoteAr: record.sizeNoteAr,
+    potIncluded: record.potIncluded,
+    handlingNote: record.handlingNote,
+    handlingNoteAr: record.handlingNoteAr,
     placement: record.placement,
     watering: record.watering,
     wateringAr: record.wateringAr,

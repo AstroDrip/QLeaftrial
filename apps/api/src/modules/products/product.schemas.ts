@@ -9,6 +9,8 @@ export const productQuerySchema = z.object({
   q: optionalFilter,
   category: optionalFilter,
   light: optionalFilter,
+  placement: z.enum(["indoor", "outdoor"]).optional().catch(undefined),
+  size: z.enum(["small", "medium", "large"]).optional().catch(undefined),
   lang: z.enum(["en", "ar"]).default("en"),
   minPrice: z.coerce.number().int().nonnegative().optional(),
   maxPrice: z.coerce.number().int().nonnegative().optional(),
@@ -44,6 +46,12 @@ export type ProductSummary = {
   featured: boolean;
   scientificName: string | null;
   careLevel: string | null;
+  heightCm: number | null;
+  sizeNote: string | null;
+  sizeNoteAr: string | null;
+  potIncluded: boolean | null;
+  handlingNote: string | null;
+  handlingNoteAr: string | null;
   placement: string | null;
   createdAt: string;
   stock: number;

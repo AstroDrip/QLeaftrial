@@ -10,7 +10,7 @@ export type BootstrapMedia = { url: string; altText: string; width: number | nul
 export type BootstrapSourceProduct = {
   id: string; slug: string; name: string; nameAr: string | null; category: string; categoryAr: string | null;
   light: string | null; lightAr: string | null; priceQar: number; compareAtPriceQar?: number | null;
-  featured?: boolean; careLevel?: string | null; stock: number; inStock: boolean; createdAt?: string;
+  featured?: boolean; careLevel?: string | null; heightCm?: number | null; stock: number; inStock: boolean; createdAt?: string;
   image: BootstrapMedia | null;
   /** All of the product's media rows; the bootstrap keeps only the card size of up to three distinct photographs. */
   media?: BootstrapMedia[];
@@ -72,7 +72,7 @@ export function buildHomeBootstrap(catalogue: { version: string; generatedAt: st
       id: product.id, slug: product.slug, name: product.name, nameAr: product.nameAr,
       category: product.category, categoryAr: product.categoryAr, light: product.light, lightAr: product.lightAr,
       priceQar: product.priceQar, compareAtPriceQar: product.compareAtPriceQar ?? null,
-      featured: Boolean(product.featured), careLevel: product.careLevel ?? null,
+      featured: Boolean(product.featured), careLevel: product.careLevel ?? null, heightCm: product.heightCm ?? null,
       stock: product.stock, inStock: product.inStock, createdAt: product.createdAt,
       image: product.image,
       // Cards change photographs before the API answers too: the card-size file of each distinct photograph.
