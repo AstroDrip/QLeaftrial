@@ -10,7 +10,7 @@ import { ProductCard } from "../catalog/ProductCard";
 import { CategoryRail } from "./CategoryRail";
 import { BotanicalHero } from "./BotanicalHero";
 import { ReviewStories } from "../reviews/ReviewStories";
-import { categoryCounts, useCatalogue } from "../catalog/catalogue-client";
+import { catalogueFreshness, categoryCounts, useCatalogue } from "../catalog/catalogue-client";
 import { catalogueListResponse, catalogueProductToSummary, sortCatalogue } from "../catalog/catalogue-view";
 import { friendlyError } from "../../lib/friendly-error";
 import type { ProductSummary } from "../catalog/product-types";
@@ -88,7 +88,7 @@ export function HomePage() {
   // inside its own HTML: no request, so no wait. A catalogue at least as new as the bootstrap replaces it.
   const catalogue = useCatalogue();
   const bootstrap = readHomeBootstrap();
-  const useBootstrap = Boolean(bootstrap) && (!catalogue.data || catalogue.data.version < bootstrap!.version);
+  const useBootstrap = Boolean(bootstrap) && (!catalogue.data || catalogueFreshness(catalogue.data) < catalogueFreshness(bootstrap));
   const shownProducts: CatalogueProduct[] | undefined = useBootstrap ? bootstrap!.products : catalogue.data?.products;
   const savedFeatured = shownProducts
     ? catalogueListResponse(shownProducts, { page: 1, sort: "newest", lang: language }).items

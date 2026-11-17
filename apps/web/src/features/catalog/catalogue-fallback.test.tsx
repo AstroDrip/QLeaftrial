@@ -89,6 +89,21 @@ describe("the saved catalogue", () => {
     expect(screen.getByRole("button", { name: /Outdoor Plants/ })).toBeEnabled();
   });
 
+  it("adds the checkout note when the live list has not answered after a few seconds", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => respond(snapshot)));
+    vi.mocked(productApi.list).mockImplementation(() => new Promise(() => undefined));
+    vi.mocked(productApi.filters).mockImplementation(() => new Promise(() => undefined));
+
+    render_(<CatalogPage />);
+
+    const grid = await screen.findByTestId("product-grid");
+    expect(within(grid).getAllByRole("heading")).toHaveLength(3);
+    // Not straight away: on a normal load the live list arrives well within this time.
+    expect(screen.queryByTestId("catalog-saved")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("catalog-saved", {}, { timeout: 6_000 })).toHaveTextContent(/confirmed at checkout/i);
+    expect(screen.queryByTestId("catalog-error")).not.toBeInTheDocument();
+  });
+
   it("fills the home page from the saved catalogue during an outage, without invented counts", async () => {
     vi.stubGlobal("fetch", vi.fn(() => respond(snapshot)));
     vi.mocked(productApi.list).mockRejectedValue(outage);

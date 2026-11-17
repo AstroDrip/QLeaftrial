@@ -43,6 +43,19 @@ function pageWindow(current: number, total: number): Array<number | "gap"> {
   return sorted.flatMap((page, index) => (index > 0 && page - sorted[index - 1] > 1 ? ["gap" as const, page] : [page]));
 }
 
+export const SLOW_LIST_MS = 4_000;
+
+/** True once `active` has stayed true for SLOW_LIST_MS; false again as soon as it turns false. */
+function useSlowPlaceholder(active: boolean): boolean {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!active) { setSlow(false); return; }
+    const timer = window.setTimeout(() => setSlow(true), SLOW_LIST_MS);
+    return () => window.clearTimeout(timer);
+  }, [active]);
+  return active && slow;
+}
+
 export function CatalogPage() {
   const { content, language, isArabic } = useSiteLanguage();
   const settings = useStoreSettings();
@@ -121,9 +134,12 @@ export function CatalogPage() {
   const listed = Object.keys(counts).length ? counts : Object.fromEntries((filters?.categories ?? []).map((name) => [name, 0]));
   const categories = orderedCategoryCounts(listed).map((entry) => entry.category);
   const categoryLabels = filters?.categoryLabels ?? savedLabels;
-  // When the live list fails, the saved catalogue is shown with a note instead of an error page.
-  const showingSaved = isError && Boolean(saved);
-  const shown = showingSaved ? saved : result;
+  // When the live list fails, the saved catalogue is shown with a note instead of an error page. A live list that
+  // has not answered after a few seconds gets the same note: the products on screen are the saved ones, and the
+  // customer should know prices are confirmed at checkout. (Not sooner, so the note does not flash on a normal load.)
+  const waitingTooLong = useSlowPlaceholder(isPlaceholderData && Boolean(saved));
+  const showingSaved = (isError || waitingTooLong) && Boolean(saved);
+  const shown = isError && saved ? saved : result;
   const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const label = (value: string, labels?: Record<string, string>) => categoryName(value, isArabic ? "ar" : "en", labels?.[value]);
   const totalPages = shown?.totalPages ?? 0;
