@@ -252,6 +252,29 @@ describe("AdminProductsPage", () => {
     expect(within(toggle).getByRole("button", { name: "عربي" })).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("edits humidity, soil and temperature in English and in Arabic", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+    const summary = await screen.findByText("Edit details");
+    (summary.parentElement as HTMLDetailsElement).open = true;
+    fireEvent(summary.parentElement!, new Event("toggle"));
+    expect(screen.getByText(/empty items are not shown to customers/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: /monstera english humidity/i }), { target: { value: "Average room humidity" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /monstera english temperature/i }), { target: { value: "18 to 30 °C" } });
+    await act(async () => { fireEvent.submit(screen.getByRole("textbox", { name: /monstera english soil/i }).closest("form")!); });
+    expect(adminApi.updateProduct).toHaveBeenCalledWith("plant-1", { humidity: "Average room humidity", temperature: "18 to 30 °C" });
+
+    const toggle = screen.getByRole("group", { name: /monstera card language/i });
+    fireEvent.click(within(toggle).getByRole("button", { name: "عربي" }));
+    const arabicSummary = screen.getByText("Edit Arabic details");
+    (arabicSummary.parentElement as HTMLDetailsElement).open = true;
+    fireEvent(arabicSummary.parentElement!, new Event("toggle"));
+    const soil = await screen.findByRole("textbox", { name: /monstera arabic soil/i });
+    fireEvent.change(soil, { target: { value: "خلطة جيدة التصريف" } });
+    await act(async () => { fireEvent.submit(soil.closest("form")!); });
+    expect(adminApi.updateProduct).toHaveBeenLastCalledWith("plant-1", { soilAr: "خلطة جيدة التصريف" });
+  });
+
   it("edits Arabic copy from a card shown in Arabic", async () => {
     vi.mocked(adminApi.products).mockResolvedValue([{ ...product, nameAr: null }]);
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

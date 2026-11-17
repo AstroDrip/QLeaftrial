@@ -26,6 +26,12 @@ const adminProductSelection = {
   scientificName: true,
   watering: true,
   wateringAr: true,
+  humidity: true,
+  humidityAr: true,
+  soil: true,
+  soilAr: true,
+  temperature: true,
+  temperatureAr: true,
   careLevel: true,
   placement: true,
   needsReview: true,
@@ -59,6 +65,12 @@ type AdminProductRecord = {
   scientificName: string | null;
   watering: string | null;
   wateringAr: string | null;
+  humidity: string | null;
+  humidityAr: string | null;
+  soil: string | null;
+  soilAr: string | null;
+  temperature: string | null;
+  temperatureAr: string | null;
   careLevel: string | null;
   placement: string | null;
   needsReview: boolean;
@@ -93,6 +105,12 @@ export type AdminProduct = {
   scientificName: string | null;
   watering: string | null;
   wateringAr: string | null;
+  humidity: string | null;
+  humidityAr: string | null;
+  soil: string | null;
+  soilAr: string | null;
+  temperature: string | null;
+  temperatureAr: string | null;
   careLevel: string | null;
   placement: string | null;
   needsReview: boolean;
@@ -128,6 +146,12 @@ type AdminProductCreateRepository = {
       scientificName?: string | null;
       watering?: string | null;
       wateringAr?: string | null;
+      humidity?: string | null;
+      humidityAr?: string | null;
+      soil?: string | null;
+      soilAr?: string | null;
+      temperature?: string | null;
+      temperatureAr?: string | null;
       careLevel?: string | null;
       placement?: string | null;
       needsReview?: boolean;
@@ -164,6 +188,12 @@ type ProductUpdateData = {
   scientificName?: string | null;
   watering?: string | null;
   wateringAr?: string | null;
+  humidity?: string | null;
+  humidityAr?: string | null;
+  soil?: string | null;
+  soilAr?: string | null;
+  temperature?: string | null;
+  temperatureAr?: string | null;
   careLevel?: string | null;
   placement?: string | null;
   needsReview?: boolean;
@@ -240,6 +270,12 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
     scientificName: product.scientificName,
     watering: product.watering,
     wateringAr: product.wateringAr,
+    humidity: product.humidity,
+    humidityAr: product.humidityAr,
+    soil: product.soil,
+    soilAr: product.soilAr,
+    temperature: product.temperature,
+    temperatureAr: product.temperatureAr,
     careLevel: product.careLevel,
     placement: product.placement,
     needsReview: product.needsReview,
@@ -387,7 +423,7 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         costPrice: input.costPrice,
         published: true,
         ...Object.fromEntries(
-          (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "careLevel", "placement", "needsReview", "reviewNote", "searchAliases"] as const)
+          (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "humidity", "humidityAr", "soil", "soilAr", "temperature", "temperatureAr", "careLevel", "placement", "needsReview", "reviewNote", "searchAliases"] as const)
             .filter((key) => input[key] !== undefined)
             .map((key) => [key, input[key]]),
         ),

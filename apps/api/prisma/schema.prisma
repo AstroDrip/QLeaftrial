@@ -83,6 +83,13 @@ model Product {
   scientificName String?
   watering    String?
   wateringAr  String?
+  // Plant care shown on the product page; empty means the item is left out (never a default).
+  humidity    String?
+  humidityAr  String?
+  soil        String?
+  soilAr      String?
+  temperature String?
+  temperatureAr String?
   // "easy" | "moderate" | "demanding"
   careLevel   String?
   // "indoor" | "outdoor" | "indoor-outdoor"

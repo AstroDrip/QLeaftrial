@@ -25,6 +25,7 @@ function useProductCacheUpdate() {
 
 type DetailsDraft = {
   name: string; category: string; light: string; description: string; costPrice: string; watering: string;
+  humidity: string; soil: string; temperature: string;
   // English card only: shared details that are not translated.
   scientificName: string; compareAt: string; careLevel: string; placement: string; reviewNote: string; searchAliases: string;
   featured: boolean; needsReview: boolean;
@@ -37,8 +38,8 @@ function draftFor(product: AdminProduct, language: SiteLanguage): DetailsDraft {
     featured: Boolean(product.featured), needsReview: Boolean(product.needsReview),
   };
   return language === "ar"
-    ? { ...shared, name: product.nameAr ?? "", category: product.categoryAr ?? "", light: product.lightAr ?? "", description: product.descriptionAr ?? "", watering: product.wateringAr ?? "" }
-    : { ...shared, name: product.name, category: product.category, light: product.light ?? "", description: product.description, watering: product.watering ?? "" };
+    ? { ...shared, name: product.nameAr ?? "", category: product.categoryAr ?? "", light: product.lightAr ?? "", description: product.descriptionAr ?? "", watering: product.wateringAr ?? "", humidity: product.humidityAr ?? "", soil: product.soilAr ?? "", temperature: product.temperatureAr ?? "" }
+    : { ...shared, name: product.name, category: product.category, light: product.light ?? "", description: product.description, watering: product.watering ?? "", humidity: product.humidity ?? "", soil: product.soil ?? "", temperature: product.temperature ?? "" };
 }
 
 // Edits the language the card is currently showing: English fields (plus cost)
@@ -47,11 +48,11 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
   const { isArabic } = useSiteLanguage();
   const t = isArabic
     ? { title: language === "ar" ? "تعديل التفاصيل العربية" : "تعديل التفاصيل الإنجليزية", name: "الاسم", category: "الفئة", light: "الإضاءة (اتركها فارغة للإكسسوارات)", description: "الوصف", cost: "التكلفة (ر.ق)", save: "حفظ التفاصيل", saving: "جارٍ الحفظ…", saved: "تم حفظ التفاصيل", invalidCost: "يجب أن تكون التكلفة رقمًا صحيحًا غير سالب", nothing: "لا توجد تغييرات", failed: "تعذر حفظ التفاصيل",
-        watering: "الري", scientific: "الاسم العلمي", compareAt: "السعر قبل التخفيض (ر.ق، اختياري)", invalidCompare: "يجب أن يكون السعر قبل التخفيض رقمًا صحيحًا موجبًا", care: "مستوى العناية", placement: "المكان", none: "غير محدد",
+        watering: "الري", humidity: "الرطوبة", soil: "التربة", temperature: "درجة الحرارة", careHint: "اترك أي بند فارغًا إذا لم يكن مؤكدًا؛ البنود الفارغة لا تظهر للعملاء.", scientific: "الاسم العلمي", compareAt: "السعر قبل التخفيض (ر.ق، اختياري)", invalidCompare: "يجب أن يكون السعر قبل التخفيض رقمًا صحيحًا موجبًا", care: "مستوى العناية", placement: "المكان", none: "غير محدد",
         careLevels: { easy: "سهل", moderate: "متوسط", demanding: "يحتاج عناية" }, placements: { indoor: "داخلي", outdoor: "خارجي", "indoor-outdoor": "داخلي وخارجي" },
         featured: "منتج مميز (يظهر في الصفحة الرئيسية)", needsReview: "يحتاج إلى مراجعة قبل النشر", reviewNote: "ملاحظة المراجعة (للإدارة فقط)", aliases: "كلمات بحث إضافية (أسماء أخرى أو تهجئات، تفصل بينها فواصل)" }
     : { title: language === "ar" ? "Edit Arabic details" : "Edit details", name: "Name", category: "Category", light: "Light (leave empty for accessories)", description: "Description", cost: "Cost (QAR)", save: "Save details", saving: "Saving…", saved: "Details saved", invalidCost: "Cost must be a non-negative whole number", nothing: "No changes to save", failed: "Could not save details",
-        watering: "Watering", scientific: "Botanical name", compareAt: "Original price before a reduction (QAR, optional)", invalidCompare: "The original price must be a positive whole number", care: "Care level", placement: "Placement", none: "Not set",
+        watering: "Watering", humidity: "Humidity", soil: "Soil", temperature: "Temperature", careHint: "Leave any item empty unless it is confirmed; empty items are not shown to customers.", scientific: "Botanical name", compareAt: "Original price before a reduction (QAR, optional)", invalidCompare: "The original price must be a positive whole number", care: "Care level", placement: "Placement", none: "Not set",
         careLevels: { easy: "Easy", moderate: "Moderate", demanding: "Needs attention" }, placements: { indoor: "Indoor", outdoor: "Outdoor", "indoor-outdoor": "Indoor or outdoor" },
         featured: "Featured on the home page", needsReview: "Needs checking before publishing", reviewNote: "Review note (admin only)", aliases: "Extra search words (other names or spellings, separated by commas)" };
   const [draft, setDraft] = useState(() => draftFor(product, language));
@@ -77,6 +78,9 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
     const differs = (value: string | boolean | number | null, current: string | boolean | number | null | undefined) => value !== (current ?? null);
     return {
       ...(differs(optional(draft.watering), product.watering) ? { watering: optional(draft.watering) } : {}),
+      ...(differs(optional(draft.humidity), product.humidity) ? { humidity: optional(draft.humidity) } : {}),
+      ...(differs(optional(draft.soil), product.soil) ? { soil: optional(draft.soil) } : {}),
+      ...(differs(optional(draft.temperature), product.temperature) ? { temperature: optional(draft.temperature) } : {}),
       ...(differs(optional(draft.scientificName), product.scientificName) ? { scientificName: optional(draft.scientificName) } : {}),
       ...(differs(compareAt, product.compareAtPriceQar) ? { compareAtPriceQar: compareAt } : {}),
       ...(differs(optional(draft.careLevel), product.careLevel) ? { careLevel: optional(draft.careLevel) as AdminProductPatch["careLevel"] } : {}),
@@ -102,6 +106,9 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
       ...(changed(draft.light, product.lightAr) ? { lightAr: draft.light.trim() } : {}),
       ...(changed(draft.description, product.descriptionAr) ? { descriptionAr: draft.description.trim() } : {}),
       ...(changed(draft.watering, product.wateringAr) ? { wateringAr: draft.watering.trim() } : {}),
+      ...(changed(draft.humidity, product.humidityAr) ? { humidityAr: draft.humidity.trim() } : {}),
+      ...(changed(draft.soil, product.soilAr) ? { soilAr: draft.soil.trim() } : {}),
+      ...(changed(draft.temperature, product.temperatureAr) ? { temperatureAr: draft.temperature.trim() } : {}),
     };
   }
 
@@ -131,7 +138,11 @@ function ProductDetailsEditor({ product, language }: { product: AdminProduct; la
           <label>{t.light}<input maxLength={80} aria-label={`${product.name} ${suffix} light`} {...field("light")} /></label>
           {arabic ? null : <label>{t.cost}<input type="number" min="0" step="1" aria-label={`${product.name} cost`} {...field("costPrice")} /></label>}
           <label className="admin-product-details-form__full">{t.description}<textarea required={!arabic} minLength={10} maxLength={2000} aria-label={`${product.name} ${suffix} description`} {...field("description")} /></label>
+          <p className="admin-product-details-form__full admin-product-details-form__hint">{t.careHint}</p>
           <label>{t.watering}<input maxLength={200} aria-label={`${product.name} ${suffix} watering`} {...field("watering")} /></label>
+          <label>{t.humidity}<input maxLength={200} aria-label={`${product.name} ${suffix} humidity`} {...field("humidity")} /></label>
+          <label>{t.soil}<input maxLength={200} aria-label={`${product.name} ${suffix} soil`} {...field("soil")} /></label>
+          <label>{t.temperature}<input maxLength={200} aria-label={`${product.name} ${suffix} temperature`} {...field("temperature")} /></label>
           {arabic ? null : (
             <>
               <label>{t.scientific}<input maxLength={120} dir="ltr" aria-label={`${product.name} botanical name`} {...field("scientificName")} /></label>

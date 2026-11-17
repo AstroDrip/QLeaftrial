@@ -57,4 +57,10 @@ export type ProductDetail = ProductSummary & {
   descriptionAr: string | null;
   watering: string | null;
   wateringAr: string | null;
+  humidity: string | null;
+  humidityAr: string | null;
+  soil: string | null;
+  soilAr: string | null;
+  temperature: string | null;
+  temperatureAr: string | null;
 };

@@ -23,6 +23,12 @@ export interface AdminProduct {
   scientificName?: string | null;
   watering?: string | null;
   wateringAr?: string | null;
+  humidity?: string | null;
+  humidityAr?: string | null;
+  soil?: string | null;
+  soilAr?: string | null;
+  temperature?: string | null;
+  temperatureAr?: string | null;
   careLevel?: "easy" | "moderate" | "demanding" | null;
   placement?: "indoor" | "outdoor" | "indoor-outdoor" | null;
   needsReview?: boolean;
@@ -83,6 +89,12 @@ export type AdminProductPatch = Partial<{
   scientificName: string | null;
   watering: string | null;
   wateringAr: string;
+  humidity: string | null;
+  humidityAr: string;
+  soil: string | null;
+  soilAr: string;
+  temperature: string | null;
+  temperatureAr: string;
   careLevel: "easy" | "moderate" | "demanding" | null;
   placement: "indoor" | "outdoor" | "indoor-outdoor" | null;
   needsReview: boolean;

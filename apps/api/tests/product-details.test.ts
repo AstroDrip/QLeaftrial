@@ -34,6 +34,30 @@ describe("product details, merchandising and pricing rules", () => {
     expect(featured.body.items.map((item: { id: string }) => item.id)).toEqual([product.id]);
   });
 
+  it("saves humidity, soil and temperature in both languages, shows them to customers and clears them with null", async () => {
+    const product = await seededProduct("snake-plant");
+    const agent = await loggedInAgent();
+    const care = {
+      humidity: "Average room humidity", humidityAr: "رطوبة الغرفة العادية",
+      soil: "Free-draining cactus mix", soilAr: "خلطة صبار جيدة التصريف",
+      temperature: "18 to 30 °C", temperatureAr: "من 18 إلى 30 درجة مئوية",
+    };
+
+    const saved = await agent.patch(`/api/v1/admin/products/${product.id}`).send(care);
+    expect(saved.status).toBe(200);
+    expect(saved.body).toMatchObject(care);
+
+    const english = await request(createApp()).get(`/api/v1/products/${product.slug}`);
+    expect(english.body).toMatchObject({ humidity: care.humidity, soil: care.soil, temperature: care.temperature });
+    const arabic = await request(createApp()).get(`/api/v1/products/${product.slug}?lang=ar`);
+    expect(arabic.body).toMatchObject({ humidity: care.humidityAr, soil: care.soilAr, temperature: care.temperatureAr, soilAr: care.soilAr });
+
+    const cleared = await agent.patch(`/api/v1/admin/products/${product.id}`).send({ soil: null, soilAr: null });
+    expect(cleared.body).toMatchObject({ soil: null, soilAr: null, humidity: care.humidity });
+    const tooShort = await agent.patch(`/api/v1/admin/products/${product.id}`).send({ temperature: "x" });
+    expect(tooShort.status).toBe(400);
+  });
+
   it("finds a plant by its botanical name and by its category", async () => {
     const product = await seededProduct("snake-plant");
     await prisma.product.update({ where: { id: product.id }, data: { scientificName: "Dracaena trifasciata" } });

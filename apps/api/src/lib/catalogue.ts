@@ -42,6 +42,12 @@ export interface PublicCatalogueProduct {
   placement: string | null;
   watering: string | null;
   wateringAr: string | null;
+  humidity: string | null;
+  humidityAr: string | null;
+  soil: string | null;
+  soilAr: string | null;
+  temperature: string | null;
+  temperatureAr: string | null;
   stock: number;
   inStock: boolean;
   createdAt: string;
@@ -86,6 +92,12 @@ const publicProductSelection = {
   placement: true,
   watering: true,
   wateringAr: true,
+  humidity: true,
+  humidityAr: true,
+  soil: true,
+  soilAr: true,
+  temperature: true,
+  temperatureAr: true,
   createdAt: true,
   updatedAt: true,
   media: {
@@ -117,6 +129,12 @@ function mapProduct(record: {
   placement: string | null;
   watering: string | null;
   wateringAr: string | null;
+  humidity: string | null;
+  humidityAr: string | null;
+  soil: string | null;
+  soilAr: string | null;
+  temperature: string | null;
+  temperatureAr: string | null;
   createdAt: Date;
   media: Array<{
     url: string;
@@ -159,6 +177,12 @@ function mapProduct(record: {
     placement: record.placement,
     watering: record.watering,
     wateringAr: record.wateringAr,
+    humidity: record.humidity,
+    humidityAr: record.humidityAr,
+    soil: record.soil,
+    soilAr: record.soilAr,
+    temperature: record.temperature,
+    temperatureAr: record.temperatureAr,
     stock,
     inStock: stock > 0,
     createdAt: record.createdAt.toISOString(),

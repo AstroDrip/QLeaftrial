@@ -6,6 +6,7 @@ import { localizeProduct } from "./localize-product";
 import { AddToCartButton } from "../cart/AddToCartButton";
 import { ProductCard } from "./ProductCard";
 import { whatsappLink } from "../../content/contact";
+import { PlantCare } from "./PlantCare";
 import { WhatsAppIcon } from "../../components/icons";
 import { Seo } from "../../components/Seo";
 import { ProductImage } from "../../components/ProductImage";
@@ -76,7 +77,6 @@ export function ProductPage() {
 
   const primaryImage = product.media[0] ?? product.image;
   const care = careLabels(isArabic);
-  const watering = isArabic ? product.wateringAr?.trim() || product.watering : product.watering;
   const localized = localizeProduct(product, isArabic);
   return (
     <article className="product-detail container" data-testid="product-page">
@@ -157,31 +157,12 @@ export function ProductPage() {
               <span>{care.titles.botanical}:</span> <i lang="la" dir="ltr">{product.scientificName}</i>
             </li>
           ) : null}
-          {localized.light ? (
-            <li>
-              <span>{content.product.lightNeeds}:</span> {localized.light}
-            </li>
-          ) : null}
-          {watering ? (
-            <li>
-              <span>{care.titles.watering}:</span> {watering}
-            </li>
-          ) : null}
-          {product.careLevel && care.careLevel[product.careLevel] ? (
-            <li>
-              <span>{care.titles.care}:</span> {care.careLevel[product.careLevel]}
-            </li>
-          ) : null}
-          {product.placement && care.placement[product.placement] ? (
-            <li>
-              <span>{care.titles.placement}:</span> {care.placement[product.placement]}
-            </li>
-          ) : null}
         </ul>
         {orderingEnabled ? <AddToCartButton product={product} className="product-detail__cart" /> : null}
         <a className="product-detail__ask" href={whatsappLink(isArabic ? `مرحبًا، أود الاستفسار عن ${localized.name}` : `Hi, I'd like to ask about ${product.name}`)} target="_blank" rel="noreferrer">
           <WhatsAppIcon /> {isArabic ? "اسأل عن هذا النبات" : "Ask about this plant"}
         </a>
+        <PlantCare product={product} isArabic={isArabic} />
       </div>
       </div>
 

@@ -22,6 +22,12 @@ const publicProductSelection = {
   scientificName: true,
   watering: true,
   wateringAr: true,
+  humidity: true,
+  humidityAr: true,
+  soil: true,
+  soilAr: true,
+  temperature: true,
+  temperatureAr: true,
   careLevel: true,
   placement: true,
   createdAt: true,
@@ -49,6 +55,12 @@ type PublicProductRecord = {
   scientificName: string | null;
   watering: string | null;
   wateringAr: string | null;
+  humidity: string | null;
+  humidityAr: string | null;
+  soil: string | null;
+  soilAr: string | null;
+  temperature: string | null;
+  temperatureAr: string | null;
   careLevel: string | null;
   placement: string | null;
   createdAt: Date;
@@ -153,6 +165,12 @@ function toDetail(
     descriptionAr: product.descriptionAr,
     watering: language === "ar" && product.wateringAr?.trim() ? product.wateringAr : product.watering,
     wateringAr: product.wateringAr,
+    humidity: language === "ar" && product.humidityAr?.trim() ? product.humidityAr : product.humidity,
+    humidityAr: product.humidityAr,
+    soil: language === "ar" && product.soilAr?.trim() ? product.soilAr : product.soil,
+    soilAr: product.soilAr,
+    temperature: language === "ar" && product.temperatureAr?.trim() ? product.temperatureAr : product.temperature,
+    temperatureAr: product.temperatureAr,
     media: product.media,
   };
 }
