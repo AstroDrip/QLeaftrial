@@ -4,6 +4,7 @@ import { useSiteLanguage } from "../app/providers";
 import { prefetchLikelyRoutes } from "../app/route-modules";
 import { FloatingCartBar } from "../features/cart/FloatingCartBar";
 import { FreeDeliveryFlyer } from "../features/cart/FreeDeliveryFlyer";
+import { PendingOrderNotice } from "../features/checkout/PendingOrderNotice";
 import { Footer } from "./Footer";
 import { SkipLink } from "./SkipLink";
 import { SiteHeader } from "./SiteHeader";
@@ -19,6 +20,7 @@ export function Layout({ children }: { children?: ReactNode }) {
       <SkipLink />
       <SiteHeader />
       <main id="main-content" className="main-content" dir={isArabic ? "rtl" : "ltr"} lang={isArabic ? "ar" : "en"}>
+        <PendingOrderNotice isArabic={isArabic} />
         {children ?? <Outlet />}
       </main>
       <FloatingCartBar footer={footer} />

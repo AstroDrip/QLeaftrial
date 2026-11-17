@@ -84,7 +84,10 @@ describe("HomePage", () => {
     vi.mocked(productApi.list).mockRejectedValue(new ApiClientError("The shop is briefly unavailable", "DATABASE_UNAVAILABLE", "req_1", 503));
     renderHome();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/briefly unavailable.*Reference: req_1/i);
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/briefly unavailable/i);
+    // No request references or codes on a customer's screen.
+    expect(alert).not.toHaveTextContent(/req_1|reference|DATABASE_UNAVAILABLE/i);
     expect(screen.queryByRole("button", { name: /add .* to cart/i })).not.toBeInTheDocument();
   });
 

@@ -3,21 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { Seo } from "../../components/Seo";
 import { useCartStore, cartSubtotal } from "../cart/cart-store";
-import { ApiClientError, errorFromResponse } from "../../lib/api-error";
-import { rememberOrderSummary, type OrderSummary } from "./order-summary";
+import { ApiClientError } from "../../lib/api-error";
+import { acknowledgeSubmission, resumePendingOrder, submitOrder, useOrderSubmission } from "./order-submission";
+import { OrderSubmissionPanel } from "./OrderSubmissionPanel";
+import { submissionCopy } from "./submission-copy";
 import { DeliveryLines } from "./DeliveryLines";
 import { LocationPicker, type ResolvedPlace } from "./LocationPicker";
 import { emptyLocation, isConfirmed, locationPayload, unconfirm, type DeliveryLocationState, type LocationDetails } from "./delivery-location";
 import { deliveryChargeToConfirm } from "../cart/delivery-rules";
 import { FreeDeliveryProgress } from "../cart/FreeDeliveryProgress";
 import { friendlyError } from "../../lib/friendly-error";
-
-type PlacedOrderResponse = {
-  orderNumber: string;
-  subtotalQar: number;
-  deliveryChargePending?: boolean;
-  items: Array<{ productId: string; productName: string; quantity: number; unitPriceQar: number }>;
-};
 
 const initialForm = {
   name: "",
@@ -28,16 +23,6 @@ const initialForm = {
   notes: "",
   payment: "cod",
 };
-
-// One key per checkout attempt for this cart. A retry after a timeout or a dropped connection sends the
-// same key, so the server returns the order it already saved instead of placing a second one. Changing
-// the cart starts a fresh attempt.
-function newAttemptKey(): string {
-  const random = typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-  return `checkout-${random}`;
-}
 
 /** The address line written from the pin and the details the customer gave: flat, building, street, zone, area. */
 export function composeAddressLine(details: LocationDetails, place: ResolvedPlace | null, isArabic: boolean): string {
@@ -56,10 +41,11 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const items = useCartStore((state) => state.items);
-  const clearCart = useCartStore((state) => state.clear);
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const attempt = useRef<{ cart: string; key: string } | null>(null);
+  // The order is sent, retried and recovered by the submission runner (order-submission.ts), which keeps it on this
+  // device until QLeaves confirms it. This page only starts it and shows where it stands.
+  const submission = useOrderSubmission();
+  const submitting = submission.phase === "sending" || submission.phase === "confirming" || submission.phase === "waiting";
   // Delivery location: a confirmed map pin is required, unless the map or address search is not working, in which
   // case the customer may continue with their written address (the order is marked for the team to check).
   const [location, setLocation] = useState<DeliveryLocationState>(emptyLocation);
@@ -120,64 +106,54 @@ export function CheckoutPage() {
     if (submitting) return;
     if (!locationConfirmed && !useWrittenAddress) {
       setLocationError(isArabic ? "يرجى تحديد موقع التوصيل على الخريطة وتأكيده." : "Please find your delivery location on the map and confirm it.");
-      locationSection.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      locationSection.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
       locationSection.current?.querySelector<HTMLInputElement>("input[role='combobox']")?.focus({ preventScroll: true });
       return;
     }
     setLocationError("");
-    const cart = JSON.stringify(items.map(({ id, quantity }) => [id, quantity]));
-    if (!attempt.current || attempt.current.cart !== cart) attempt.current = { cart, key: newAttemptKey() };
-    setSubmitting(true);
-    try {
-      const response = await fetch("/api/v1/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Idempotency-Key": attempt.current.key },
-        body: JSON.stringify({
-          customerName: form.name,
-          phone: form.phone,
-          email: form.email,
-          addressLine1: form.address,
-          area: form.area,
-          deliveryNotes: form.notes,
-          paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK",
-          items: items.map(({ id, quantity }) => ({ productId: id, quantity })),
-          ...(locationConfirmed ? { deliveryLocation: locationPayload(location) } : {}),
-          ...(useWrittenAddress ? { deliveryLocationManual: true } : {}),
-        }),
-      });
-      if (!response.ok) throw await errorFromResponse(response);
-      const body = await response.json() as PlacedOrderResponse;
-      const arabicNames = new Map(items.map((item) => [item.id, item.nameAr?.trim() || null]));
-      const summary: OrderSummary = {
-        orderNumber: body.orderNumber,
-        items: body.items.map((item) => ({
-          name: item.productName,
-          nameAr: arabicNames.get(item.productId) ?? null,
-          quantity: item.quantity,
-          unitPriceQar: item.unitPriceQar,
-        })),
-        subtotalQar: body.subtotalQar,
-        deliveryChargePending: body.deliveryChargePending === true,
-      };
-      rememberOrderSummary(summary);
-      attempt.current = null;
-      clearCart();
-      navigate(`/order/${body.orderNumber}`, { state: { order: summary } });
-    } catch (submissionError) {
-      // The server re-checks the pin: outside Qatar or confirmed too long ago means confirming it again.
-      if (submissionError instanceof ApiClientError && (submissionError.code === "LOCATION_OUTSIDE_QATAR" || submissionError.code === "LOCATION_CONFIRMATION_STALE")) {
-        setLocation((current) => unconfirm(current));
-        setLocationError(submissionError.code === "LOCATION_OUTSIDE_QATAR"
-          ? (isArabic ? "يجب أن يكون موقع التوصيل داخل قطر." : "The delivery location must be in Qatar.")
-          : (isArabic ? "يرجى تأكيد موقع التوصيل مرة أخرى." : "Please confirm your delivery location again."));
-        locationSection.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-      setError(friendlyError(submissionError, isArabic ? "ar" : "en"));
-    } finally {
-      setSubmitting(false);
-    }
+    const payload = {
+      customerName: form.name,
+      phone: form.phone,
+      email: form.email,
+      addressLine1: form.address,
+      area: form.area,
+      deliveryNotes: form.notes,
+      paymentMethod: form.payment === "cod" ? "COD" : "PAYMENT_LINK",
+      items: items.map(({ id, quantity }) => ({ productId: id, quantity })),
+      ...(locationConfirmed ? { deliveryLocation: locationPayload(location) } : {}),
+      ...(useWrittenAddress ? { deliveryLocationManual: true } : {}),
+    };
+    await submitOrder(payload, Object.fromEntries(items.map((item) => [item.id, item.nameAr?.trim() || null])));
   }
+
+  // An unfinished order saved on this device (a refresh, a reopened tab) is picked up and sent again.
+  useEffect(() => { void resumePendingOrder(); }, []);
+
+  // Confirmed by QLeaves: only now the confirmation page. (The runner has already emptied the cart.)
+  useEffect(() => {
+    if (submission.phase !== "accepted" || !submission.accepted) return;
+    const order = submission.accepted;
+    acknowledgeSubmission();
+    navigate(`/order/${order.orderNumber}`, { state: { order } });
+  }, [submission.phase, submission.accepted, navigate]);
+
+  // A definite answer that needs the customer: the details are still on the form and the cart is untouched.
+  useEffect(() => {
+    if (submission.phase !== "rejected" || !submission.rejection) return;
+    const rejection = submission.rejection;
+    acknowledgeSubmission();
+    // The server re-checks the pin: outside Qatar or confirmed too long ago means confirming it again.
+    if (rejection instanceof ApiClientError && (rejection.code === "LOCATION_OUTSIDE_QATAR" || rejection.code === "LOCATION_CONFIRMATION_STALE")) {
+      setLocation((current) => unconfirm(current));
+      setLocationError(rejection.code === "LOCATION_OUTSIDE_QATAR"
+        ? (isArabic ? "يجب أن يكون موقع التوصيل داخل قطر." : "The delivery location must be in Qatar.")
+        : (isArabic ? "يرجى تأكيد موقع التوصيل مرة أخرى." : "Please confirm your delivery location again."));
+      // Scrolling is a nicety: where it is not supported it must never break the page.
+      locationSection.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      return;
+    }
+    setError(friendlyError(rejection, isArabic ? "ar" : "en"));
+  }, [submission.phase, submission.rejection, isArabic]);
 
   return (
     <section className="page-shell checkout-page" data-testid="checkout-page">
@@ -310,9 +286,13 @@ export function CheckoutPage() {
           <DeliveryLines subtotalQar={cartSubtotal(items)} pending={deliveryChargeToConfirm(cartSubtotal(items))} />
         </div>
 
-        <button type="submit" className="primary-button" disabled={items.length === 0 || submitting} aria-busy={submitting || undefined}>
-          {submitting ? content.checkout.submitting : content.checkout.placeOrder}
-        </button>
+        {submission.phase === "confirming" || submission.phase === "waiting" ? (
+          <OrderSubmissionPanel isArabic={isArabic} />
+        ) : (
+          <button type="submit" className="primary-button" disabled={items.length === 0 || submitting} aria-busy={submitting || undefined}>
+            {submitting ? submissionCopy[isArabic ? "ar" : "en"].sending : content.checkout.placeOrder}
+          </button>
+        )}
         <p className="checkout-form__legal">
           {isArabic ? <>بإرسال الطلب، فإنك توافق على <Link to="/terms">الشروط والأحكام</Link> وتقر بالاطلاع على <Link to="/privacy">سياسة الخصوصية</Link> ومعلومات <Link to="/shipping-returns">الشحن والإرجاع</Link>.</> : <>By placing an order, you agree to the <Link to="/terms">Terms &amp; Conditions</Link> and acknowledge the <Link to="/privacy">Privacy Policy</Link> and <Link to="/shipping-returns">Shipping &amp; Returns</Link> information.</>}
         </p>

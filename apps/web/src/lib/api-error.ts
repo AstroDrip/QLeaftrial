@@ -15,11 +15,9 @@ export class ApiClientError extends Error {
     public readonly requestId?: string,
     public readonly status?: number,
   ) {
-    super(
-      code === "INTERNAL_SERVER_ERROR" && requestId
-        ? `${message} Reference: ${requestId}`
-        : message,
-    );
+    // The request reference stays on the error object (for logs and admin screens); it is never part of the
+    // message a customer may be shown.
+    super(message);
     this.name = "ApiClientError";
   }
 }

@@ -16,6 +16,7 @@ vi.mock("../map/QatarMap", () => {
   return { default: StubMap, QatarMap: StubMap };
 });
 import { useCartStore } from "../cart/cart-store";
+import { resetOrderSubmissionForTests } from "./order-submission";
 
 const plant = (priceQar: number, quantity = 1) => ({ id: "plant-1", slug: "plant", name: "Plant", priceQar, stock: 20, image: null, quantity });
 
@@ -44,6 +45,9 @@ describe("CheckoutPage", () => {
     cleanup();
     vi.unstubAllGlobals();
     useCartStore.setState({ items: [] });
+    // The runner keeps an unconfirmed order on purpose; each test starts as a fresh tab on a fresh device.
+    resetOrderSubmissionForTests();
+    localStorage.clear();
   });
 
   it("below 150 QAR, says the team will confirm the delivery charge and invents no price", async () => {
@@ -127,7 +131,7 @@ describe("CheckoutPage", () => {
     await confirmPin();
   }
 
-  it("sends one request for a double tap, and the same key when the customer retries after a failure", async () => {
+  it("sends one request for a double tap, then recovers a dropped answer with the same key, without asking the customer", async () => {
     useCartStore.setState({ items: [plant(20)] });
     let release: (value: unknown) => void = () => undefined;
     const fetchMock = vi.fn()
@@ -145,28 +149,39 @@ describe("CheckoutPage", () => {
     expect(await screen.findByRole("button", { name: /placing your order/i })).toBeDisabled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
+    // The connection drops: no error, no second order button; a calm "confirming" state while it retries by itself.
     release(undefined);
-    expect(await screen.findByRole("alert")).toHaveTextContent(/couldn't reach QLeaves/i);
-    await userEvent.click(screen.getByRole("button", { name: "Place order" }));
+    expect(await screen.findByTestId("order-submission")).toHaveTextContent(/confirming your order/i);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Place order" })).not.toBeInTheDocument();
+    expect(useCartStore.getState().items).toHaveLength(1);
 
-    await waitFor(() => expect(screen.getByText("Order placed")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Order placed")).toBeInTheDocument(), { timeout: 4_000 });
     const keys = fetchMock.mock.calls.map((call) => (call[1].headers as Record<string, string>)["Idempotency-Key"]);
+    expect(keys).toHaveLength(2);
     expect(keys[0]).toMatch(/^checkout-[\w-]{16,}$/);
     expect(keys[1]).toBe(keys[0]);
+    expect(fetchMock.mock.calls[1][1].body).toBe(fetchMock.mock.calls[0][1].body);
+    expect(useCartStore.getState().items).toHaveLength(0);
   });
 
-  it("explains a briefly unavailable shop instead of showing a raw error", async () => {
+  it("keeps a briefly unavailable shop calm: no error code, no reference, no second order, cart kept", async () => {
     useCartStore.setState({ items: [plant(20)] });
     const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
       status: 503,
-      json: async () => ({ error: { code: "DATABASE_UNAVAILABLE", message: "x", requestId: "req_9" } }),
+      headers: new Headers(),
+      json: async () => ({ error: { code: "DATABASE_UNAVAILABLE", message: "Database connection failed", requestId: "req_9" } }),
     });
     renderCheckout(fetchMock);
     await fillForm();
     await userEvent.click(screen.getByRole("button", { name: "Place order" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/briefly unavailable.*req_9/i);
+    const panel = await screen.findByTestId("order-submission");
+    expect(panel).toHaveTextContent(/confirming your order/i);
+    expect(document.body).not.toHaveTextContent(/req_9|DATABASE_UNAVAILABLE|Database connection failed|503/);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(useCartStore.getState().items).toHaveLength(1);
   });
 
   it("asks for a confirmed delivery location before sending the order", async () => {

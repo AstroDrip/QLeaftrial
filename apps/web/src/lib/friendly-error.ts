@@ -1,7 +1,7 @@
 import { ApiClientError } from "./api-error";
 
 // Turns any failure into a sentence a customer (or the shop owner) can act on, in their language.
-// Technical details stay in the server logs; the request reference is kept so support can find them.
+// Technical details (codes, request references, server wording) stay in the server logs and never reach the screen.
 
 export type ErrorKind =
   | "offline"
@@ -68,7 +68,5 @@ export function friendlyError(error: unknown, language: "en" | "ar"): string {
   const serverDetail = error instanceof ApiClientError && (kind === "conflict" || kind === "invalid" || kind === "not-found")
     ? error.message
     : null;
-  const reference = error instanceof ApiClientError && error.requestId ? error.requestId : null;
-  const base = language === "en" && serverDetail ? `${serverDetail}.`.replace(/\.\.$/, ".") : messages[language][kind];
-  return reference ? `${base} (${language === "ar" ? "المرجع" : "Reference"}: ${reference})` : base;
+  return language === "en" && serverDetail ? `${serverDetail}.`.replace(/\.\.$/, ".") : messages[language][kind];
 }

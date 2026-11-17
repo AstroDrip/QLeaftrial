@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ApiClientError, errorFromResponse } from "./api-error";
 
 describe("API client errors", () => {
-  it("includes a support reference for unexpected server failures", async () => {
+  it("keeps the support reference out of the message for unexpected server failures", async () => {
     const error = await errorFromResponse(new Response(JSON.stringify({
       error: {
         code: "INTERNAL_SERVER_ERROR",
@@ -12,7 +12,9 @@ describe("API client errors", () => {
     }), { status: 500, headers: { "Content-Type": "application/json" } }));
 
     expect(error).toBeInstanceOf(ApiClientError);
-    expect(error.message).toBe("An unexpected error occurred Reference: support_123");
+    // The reference is kept for logs and support, but never added to the message a customer might be shown.
+    expect(error.message).toBe("An unexpected error occurred");
+    expect(error.requestId).toBe("support_123");
     expect(error.requestId).toBe("support_123");
   });
 
