@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { localeContent, type SiteLanguage } from "../../content/locales";
 import { ApiClientError } from "../../lib/api-error";
 import { useSiteLanguage } from "../../app/providers";
-import { MAX_PRODUCT_PHOTOS, adminApi, photoFingerprint, type AdminProduct, type AdminProductPatch, type CreateAdminProductFields, type PhotoProgress } from "./admin-api";
+import { MAX_PRODUCT_PHOTOS, adminApi, photoFingerprint, type AdminProduct, type AdminProductPatch, type CreateAdminProductFields, type PhotoProgress, type ProductPageParams, type ProductView } from "./admin-api";
 import { ProductPhotosEditor, photosShortLabel } from "./ProductPhotosEditor";
 import { acceptedPhotoTypes, imageProblem } from "./product-photo-files";
 import { friendlyError } from "../../lib/friendly-error";
+import { AdminPager, updateCachedLists, useDebounced, type PageSize } from "./admin-list";
 
 const emptyForm: CreateAdminProductFields = {
   name: "", nameAr: "", slug: "", sku: "", description: "", descriptionAr: "", category: "Indoor", categoryAr: "داخلي", light: "", lightAr: "",
@@ -16,7 +17,8 @@ const emptyForm: CreateAdminProductFields = {
 function useProductCacheUpdate() {
   const queryClient = useQueryClient();
   return (updated: AdminProduct) => {
-    queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => items?.map((item) => item.id === updated.id ? updated : item));
+    // Every cached admin list (each page, and the full list the pickers use) shows the saved product.
+    updateCachedLists<AdminProduct>(queryClient, ["admin", "products"], (items) => items.map((item) => item.id === updated.id ? updated : item));
     void queryClient.invalidateQueries({ queryKey: ["products"] });
     void queryClient.invalidateQueries({ queryKey: ["product"] });
     void queryClient.invalidateQueries({ queryKey: ["catalog-filters"] });
@@ -223,10 +225,9 @@ function ProductRow({ product }: { product: AdminProduct }) {
       if (patch.stock !== undefined) setStock(String(updated.stock));
       if (patch.priceQar !== undefined) setPrice(String(updated.priceQar));
       setFieldErrors((errors) => ({ ...errors, ...(patch.stock !== undefined ? { stock: undefined } : {}), ...(patch.priceQar !== undefined ? { priceQar: undefined } : {}) }));
-      queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => items?.map((item) => item.id === updated.id ? updated : item));
-      void queryClient.invalidateQueries({ queryKey: ["products"] });
-      void queryClient.invalidateQueries({ queryKey: ["product"] });
-      void queryClient.invalidateQueries({ queryKey: ["catalog-filters"] });
+      applyUpdate(updated);
+      // Publishing or a price change can move the product between views: recount them.
+      if (patch.published !== undefined || patch.priceQar !== undefined) void queryClient.invalidateQueries({ queryKey: ["admin", "products", "page"] });
     },
     onError: (_error, patch) => setFieldErrors((errors) => ({ ...errors, ...(patch.stock !== undefined ? { stock: t.stockFail } : {}), ...(patch.priceQar !== undefined ? { priceQar: t.priceFail } : {}) })),
   });
@@ -234,7 +235,8 @@ function ProductRow({ product }: { product: AdminProduct }) {
   const remove = useMutation({
     mutationFn: () => adminApi.deleteProduct(product.id),
     onSuccess: () => {
-      queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => items?.filter((item) => item.id !== product.id));
+      updateCachedLists<AdminProduct>(queryClient, ["admin", "products"], (items) => items.filter((item) => item.id !== product.id));
+      void queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       void queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
@@ -361,19 +363,29 @@ function ProductRow({ product }: { product: AdminProduct }) {
 export function AdminProductsPage() {
   const { content, isArabic } = useSiteLanguage();
   const t = isArabic ? { add: "إضافة نبات", name: "الاسم", arabicName: "الاسم العربي", slug: "الرابط المختصر", sku: "رمز المنتج", category: "الفئة", arabicCategory: "الفئة العربية", light: "الإضاءة (اختياري، اتركها فارغة للأحواض والتربة والإكسسوارات)", arabicLight: "الإضاءة بالعربية (اختياري)", price: "السعر (ر.ق)", cost: "التكلفة (ر.ق)", stock: "المخزون", description: "الوصف", arabicDescription: "الوصف العربي", alt: "النص البديل للصورة", image: "صور النبات (من 1 إلى 3، الأولى هي الرئيسية)", preview: (n: number) => `الصورة المحددة ${n}`, tooMany: "اختر 3 صور كحد أقصى.", sameTwice: "اخترت الصورة نفسها مرتين.", step: (n: number, total: number) => `جارٍ إضافة الصورة ${n} من ${total}…`, partial: "أُضيف النبات، لكن تعذر رفع بعض الصور. أضفها من بطاقة المنتج.", unpricedHint: "بسعر 0 ر.ق يُحفظ النبات غير منشور حتى تحدد سعره.", adding: "جارٍ الإضافة…", product: "المنتج", status: "الحالة", loading: "جارٍ تحميل المنتجات…", loadError: "تعذر تحميل المنتجات.", imageRequired: "صورة النبات مطلوبة.", addError: "تعذر إضافة النبات", newPlant: "نبات جديد", close: "إغلاق النموذج" } : { add: "Add plant", name: "Name", arabicName: "Arabic name", slug: "Slug", sku: "SKU", category: "Category", arabicCategory: "Arabic category", light: "Light (optional, leave empty for pots, soil and accessories)", arabicLight: "Arabic light (optional)", price: "Price (QAR)", cost: "Cost (QAR)", stock: "Stock", description: "Description", arabicDescription: "Arabic description", alt: "Image alt text", image: "Plant photos (1 to 3, the first is the main one)", preview: (n: number) => `Selected photo ${n}`, tooMany: "Choose at most 3 photos.", sameTwice: "The same photo was chosen twice.", step: (n: number, total: number) => `Adding photo ${n} of ${total}…`, partial: "The plant was added, but some photos could not be uploaded. Add them from the product card.", unpricedHint: "At 0 QAR the plant is saved unpublished until you set its price.", adding: "Adding…", product: "Product", status: "Status", loading: "Loading products…", loadError: "Could not load products.", imageRequired: "A plant image is required.", addError: "Could not add plant", newPlant: "New plant", close: "Close form" };
-  const products = useQuery({ queryKey: ["admin", "products"], queryFn: adminApi.products });
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
   const [search, setSearch] = useState("");
-  const [view, setView] = useState<"all" | "drafts" | "review" | "featured">("all");
+  const [view, setView] = useState<ProductView>("all");
+  const [sort, setSort] = useState<NonNullable<ProductPageParams["sort"]>>("name");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(25);
+  const q = useDebounced(search.trim());
+  useEffect(() => { setPage(1); }, [q, view, sort, pageSize]);
+  // One page at a time from the server (search, view and sort happen there); the previous page stays on screen
+  // while the next one loads, so the list does not jump.
+  const params: ProductPageParams = { page, pageSize, q: q || undefined, view, sort };
+  const products = useQuery({ queryKey: ["admin", "products", "page", params], queryFn: () => adminApi.productsPage(params), placeholderData: keepPreviousData });
   const [formOpen, setFormOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [createStep, setCreateStep] = useState("");
   const imageInput = useRef<HTMLInputElement>(null);
-  const putInList = (product: AdminProduct) =>
-    queryClient.setQueryData<AdminProduct[]>(["admin", "products"], (items) => [...(items ?? []).filter((item) => item.id !== product.id), product].sort((a, b) => a.name.localeCompare(b.name)));
+  const putInList = (product: AdminProduct) => {
+    updateCachedLists<AdminProduct>(queryClient, ["admin", "products"], (items) => items.map((item) => item.id === product.id ? product : item));
+    void queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+  };
   // The product is made with its first photo; the others are then added one at a time. If an extra photo fails, the
   // product stays (it is complete with one photo) and the owner is told to add the rest from its card.
   const create = useMutation({
@@ -446,19 +458,14 @@ export function AdminProductsPage() {
     });
   }
 
-  const views = {
-    all: { label: isArabic ? "الكل" : "All", test: () => true },
-    drafts: { label: isArabic ? "غير منشور" : "Unpublished", test: (p: AdminProduct) => p.published === false },
-    review: { label: isArabic ? "يحتاج مراجعة" : "Needs review", test: (p: AdminProduct) => Boolean(p.needsReview) },
-    featured: { label: isArabic ? "مميز" : "Featured", test: (p: AdminProduct) => Boolean(p.featured) },
-  } as const;
-  const filteredProducts = (products.data ?? []).filter((p) =>
-    views[view].test(p) && (
-      search.trim() === "" ||
-      p.name.toLowerCase().includes(search.trim().toLowerCase()) ||
-      (p.nameAr ?? "").includes(search.trim()) ||
-      (p.scientificName ?? "").toLowerCase().includes(search.trim().toLowerCase()))
-  );
+  const views: Record<ProductView, string> = isArabic
+    ? { all: "الكل", drafts: "غير منشور", review: "يحتاج مراجعة", featured: "مميز", unpriced: "السعر غير مؤكد" }
+    : { all: "All", drafts: "Unpublished", review: "Needs review", featured: "Featured", unpriced: "Price not confirmed" };
+  const listCopy = isArabic
+    ? { search: "البحث في المنتجات", placeholder: "الاسم أو الرمز أو الاسم العلمي…", sort: "الترتيب", sorts: { name: "الاسم", newest: "الأحدث", "price-asc": "السعر: الأقل أولًا", "price-desc": "السعر: الأعلى أولًا", "stock-asc": "المخزون: الأقل أولًا" }, empty: "لا توجد منتجات مطابقة." }
+    : { search: "Search products", placeholder: "Name, SKU or botanical name…", sort: "Sort", sorts: { name: "Name", newest: "Newest", "price-asc": "Price: low to high", "price-desc": "Price: high to low", "stock-asc": "Stock: lowest first" }, empty: "No products match." };
+  const filteredProducts = products.data?.items ?? [];
+  const counts = products.data?.counts;
 
   return (
     <section className="page-shell admin-page" data-testid="admin-products-page">
@@ -509,34 +516,37 @@ export function AdminProductsPage() {
 
       <div className="table-card admin-products-panel">
         <div className="admin-products-search">
-          <label htmlFor="admin-products-search-input" className="admin-products-search__label">Search products</label>
+          <label htmlFor="admin-products-search-input" className="admin-products-search__label">{listCopy.search}</label>
           <input
             id="admin-products-search-input"
             type="search"
             className="admin-products-search__input"
-            placeholder="Filter by name…"
+            placeholder={listCopy.placeholder}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
+          <label className="admin-products-sort">
+            <span>{listCopy.sort}</span>
+            <select value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
+              {(Object.keys(listCopy.sorts) as Array<keyof typeof listCopy.sorts>).map((key) => <option key={key} value={key}>{listCopy.sorts[key]}</option>)}
+            </select>
+          </label>
           <div className="segmented admin-products-views" role="group" aria-label={isArabic ? "عرض المنتجات" : "Show products"}>
-            {(Object.keys(views) as Array<keyof typeof views>).map((key) => (
+            {(Object.keys(views) as ProductView[]).map((key) => (
               <button key={key} type="button" aria-pressed={view === key} onClick={() => setView(key)}>
-                {views[key].label} <span className="admin-products-views__count">{(products.data ?? []).filter(views[key].test).length}</span>
+                {views[key]} {counts ? <span className="admin-products-views__count">{counts[key]}</span> : null}
               </button>
             ))}
           </div>
-          {(search || view !== "all") && (
-            <p className="admin-products-search__count" aria-live="polite">
-              {filteredProducts.length} of {products.data?.length ?? 0} products
-            </p>
-          )}
         </div>
 
-        <ul className="admin-product-list">
+        <ul className="admin-product-list" aria-busy={products.isFetching || undefined}>
           {filteredProducts.map((product) => <ProductRow key={product.id} product={product} />)}
         </ul>
-        {filteredProducts.length === 0 && (search || view !== "all") && products.data && products.data.length > 0 ? (
-          <p className="admin-products-search__empty">{isArabic ? "لا توجد منتجات مطابقة." : search ? `No products match "${search}".` : "No products in this view."}</p>
+        {products.isSuccess && filteredProducts.length === 0 ? <p className="admin-products-search__empty">{listCopy.empty}</p> : null}
+        {products.data ? (
+          <AdminPager page={products.data.page} pageSize={products.data.pageSize} totalItems={products.data.totalItems} totalPages={products.data.totalPages}
+            isArabic={isArabic} busy={products.isFetching} onPage={(next) => { setPage(next); window.scrollTo({ top: 0, behavior: "smooth" }); }} onPageSize={setPageSize} />
         ) : null}
         {products.isPending ? <p>{t.loading}</p> : null}
         {products.isError ? <p role="alert">{t.loadError}</p> : null}

@@ -1,9 +1,10 @@
+import { AdminPager, restoreCachedLists, updateCachedLists, useDebounced, type PageSize } from "./admin-list";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { OrderStatusTabs, type StatusTab } from "./OrderStatusTabs";
 import { describeDraftChanges, whatsappText } from "./order-messages";
 import { useSiteLanguage } from "../../app/providers";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { OrderDeliveryAndSheet } from "./OrderDeliveryAndSheet";
 import { LocationStatusChip, OrderLocation } from "./OrderLocation";
 import {
@@ -12,6 +13,7 @@ import {
   type AdminOrderItem,
   type AdminProduct,
   type EditedOrderLine,
+  type OrderPageParams,
 } from "./admin-api";
 
 const tabs = [
@@ -395,10 +397,21 @@ function OrderCard({
 export function AdminOrdersPage() {
   const { content, isArabic } = useSiteLanguage();
   const t = isArabic ? { pending: "معلق", accepted: "مقبول", declined: "مرفوض", completed: "مكتمل", status: "حالة الطلب", loading: "جارٍ تحميل الطلبات…", loadError: "تعذر تحميل الطلبات.", deleteOrder: (number: string) => `هل تريد حذف الطلب ${number}؟ لا يمكن التراجع.` } : { pending: "Pending", accepted: "Accepted", declined: "Declined", completed: "Completed", status: "Order status", loading: "Loading orders…", loadError: "Could not load orders.", deleteOrder: (number: string) => `Delete order ${number}? This cannot be undone.` };
+  const listCopy = isArabic
+    ? { search: "البحث", placeholder: "رقم الطلب أو الاسم أو الهاتف…", sort: "الترتيب", sorts: { newest: "الأحدث أولًا", oldest: "الأقدم أولًا", "total-desc": "الأعلى قيمة" }, empty: "لا توجد طلبات هنا." }
+    : { search: "Search", placeholder: "Order number, name or phone…", sort: "Sort", sorts: { newest: "Newest first", oldest: "Oldest first", "total-desc": "Highest total" }, empty: "No orders here." };
   const tabLabels: Record<(typeof tabs)[number]["status"], string> = { PENDING: t.pending, CONFIRMED: t.accepted, CANCELLED: t.declined, DELIVERED: t.completed };
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["status"]>("PENDING");
-  const orders = useQuery({ queryKey: ["admin", "orders"], queryFn: adminApi.orders });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(25);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<NonNullable<OrderPageParams["sort"]>>("newest");
+  const q = useDebounced(search.trim());
+  useEffect(() => { setPage(1); }, [activeTab, q, sort, pageSize]);
+  // One page of one tab at a time from the server, with every tab's count; the old page stays while the next loads.
+  const params: OrderPageParams = { page, pageSize, tab: activeTab, q: q || undefined, sort };
+  const orders = useQuery({ queryKey: ["admin", "orders", "page", params], queryFn: () => adminApi.ordersPage(params), placeholderData: keepPreviousData });
   const products = useQuery({ queryKey: ["admin", "products"], queryFn: adminApi.products });
 
   function reconcileCommerceData() {
@@ -416,16 +429,13 @@ export function AdminOrdersPage() {
       adminApi.updateOrderStatus(id, status),
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: ["admin", "orders"] });
-      const previous = queryClient.getQueryData<AdminOrder[]>(["admin", "orders"]);
-      queryClient.setQueryData<AdminOrder[]>(["admin", "orders"], (current = []) =>
+      const previous = updateCachedLists<AdminOrder>(queryClient, ["admin", "orders"], (current) =>
         current.map((order) => order.id === id ? { ...order, status } : order),
       );
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["admin", "orders"], context.previous);
-      }
+      restoreCachedLists(queryClient, context?.previous);
     },
     onSettled: reconcileCommerceData,
   });
@@ -434,7 +444,7 @@ export function AdminOrdersPage() {
     mutationFn: ({ id, items }: { id: string; items: EditedOrderLine[] }) =>
       adminApi.acceptEditedOrder(id, items),
     onSuccess: (updated) => {
-      queryClient.setQueryData<AdminOrder[]>(["admin", "orders"], (current = []) =>
+      updateCachedLists<AdminOrder>(queryClient, ["admin", "orders"], (current) =>
         current.map((order) => order.id === updated.id ? updated : order),
       );
     },
@@ -446,16 +456,13 @@ export function AdminOrdersPage() {
       adminApi.updatePaymentStatus(id, paymentStatus),
     onMutate: async ({ id, paymentStatus }) => {
       await queryClient.cancelQueries({ queryKey: ["admin", "orders"] });
-      const previous = queryClient.getQueryData<AdminOrder[]>(["admin", "orders"]);
-      queryClient.setQueryData<AdminOrder[]>(["admin", "orders"], (current = []) =>
+      const previous = updateCachedLists<AdminOrder>(queryClient, ["admin", "orders"], (current) =>
         current.map((order) => order.id === id ? { ...order, paymentStatus } : order),
       );
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["admin", "orders"], context.previous);
-      }
+      restoreCachedLists(queryClient, context?.previous);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
@@ -468,16 +475,13 @@ export function AdminOrdersPage() {
     mutationFn: adminApi.deleteOrder,
     onMutate: async (id: string) => {
       await queryClient.cancelQueries({ queryKey: ["admin", "orders"] });
-      const previous = queryClient.getQueryData<AdminOrder[]>(["admin", "orders"]);
-      queryClient.setQueryData<AdminOrder[]>(["admin", "orders"], (current = []) =>
+      const previous = updateCachedLists<AdminOrder>(queryClient, ["admin", "orders"], (current) =>
         current.filter((order) => order.id !== id),
       );
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["admin", "orders"], context.previous);
-      }
+      restoreCachedLists(queryClient, context?.previous);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
@@ -486,25 +490,21 @@ export function AdminOrdersPage() {
     },
   });
 
-  const filteredOrders = useMemo(
-    () => orders.data?.filter((order) => tabForStatus(order.status) === activeTab) ?? [],
-    [activeTab, orders.data],
-  );
+  // A status change can move an order to another tab after the server answers; until then it stays in place.
+  const filteredOrders = useMemo(() => orders.data?.items ?? [], [orders.data]);
 
   const deleteVisibleOrders = useMutation({
-    mutationFn: () => adminApi.deleteOrders(filteredOrders.map((order) => order.id)),
+    // Clears the whole tab (every page), as the button says.
+    mutationFn: () => adminApi.clearOrderTab(activeTab as "CANCELLED" | "DELIVERED"),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["admin", "orders"] });
-      const previous = queryClient.getQueryData<AdminOrder[]>(["admin", "orders"]);
-      queryClient.setQueryData<AdminOrder[]>(["admin", "orders"], (current = []) =>
-        current.filter((order) => !filteredOrders.some((visible) => visible.id === order.id)),
+      const previous = updateCachedLists<AdminOrder>(queryClient, ["admin", "orders"], (current) =>
+        current.filter((order) => tabForStatus(order.status) !== activeTab),
       );
       return { previous };
     },
     onError: (_, __, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(["admin", "orders"], context.previous);
-      }
+      restoreCachedLists(queryClient, context?.previous);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
@@ -562,7 +562,7 @@ export function AdminOrdersPage() {
           tabs={tabs.map((tab) => ({
             value: tab.status,
             label: tabLabels[tab.status],
-            count: orders.data?.filter((order) => tabForStatus(order.status) === tab.status).length ?? 0,
+            count: orders.data?.counts?.[tab.status] ?? 0,
             tone: TAB_TONES[tab.status],
           }))}
         />
@@ -581,6 +581,19 @@ export function AdminOrdersPage() {
             {deleteVisibleOrders.isPending ? "Clearing…" : `Clear ${activeLabel}`}
           </button>
         ) : null}
+      </div>
+
+      <div className="admin-order-filters">
+        <label className="admin-order-filters__search">
+          <span>{listCopy.search}</span>
+          <input type="search" value={search} placeholder={listCopy.placeholder} onChange={(event) => setSearch(event.target.value)} />
+        </label>
+        <label>
+          <span>{listCopy.sort}</span>
+          <select value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
+            {(Object.keys(listCopy.sorts) as Array<keyof typeof listCopy.sorts>).map((key) => <option key={key} value={key}>{listCopy.sorts[key]}</option>)}
+          </select>
+        </label>
       </div>
 
       <div id="admin-order-panel" role="tabpanel" aria-labelledby={`admin-order-panel-tab-${activeTab}`} className="admin-order-panel">
@@ -605,12 +618,17 @@ export function AdminOrdersPage() {
               acceptEdited.isPending && acceptEdited.variables?.id === order.id
             }
             onDelete={(id) => {
-              const selected = orders.data?.find((item) => item.id === id);
+              const selected = filteredOrders.find((item) => item.id === id);
               if (selected) handleDelete(selected);
             }}
           />
         ))}
       </div>
+      {orders.isSuccess && filteredOrders.length === 0 ? <p className="admin-empty">{listCopy.empty}</p> : null}
+      {orders.data ? (
+        <AdminPager page={orders.data.page} pageSize={orders.data.pageSize} totalItems={orders.data.totalItems} totalPages={orders.data.totalPages}
+          isArabic={isArabic} busy={orders.isFetching} onPage={(next) => { setPage(next); window.scrollTo({ top: 0, behavior: "smooth" }); }} onPageSize={setPageSize} />
+      ) : null}
       </div>
     </section>
   );

@@ -29,7 +29,7 @@ describe("orders on PostgreSQL", () => {
     const [{ version }] = await db.$queryRawUnsafe("select version()");
     expect(version).toMatch(/^PostgreSQL 17\./);
     const [{ count }] = await db.$queryRawUnsafe("select count(*)::int as count from \"_prisma_migrations\" where finished_at is not null");
-    expect(count).toBe(11);
+    expect(count).toBe(12);
   });
 
   it("creates exactly one order when the same key arrives many times at once", async () => {
@@ -126,7 +126,7 @@ describe("orders on PostgreSQL", () => {
         return { code: failure.status, out: `${failure.stdout}${failure.stderr}` };
       }
     };
-    expect(run({})).toMatchObject({ code: 0, out: expect.stringContaining("all 11 migrations are applied") });
+    expect(run({})).toMatchObject({ code: 0, out: expect.stringContaining("all 12 migrations are applied") });
     // Pretend the newest migration was never applied.
     execFileSync(process.execPath, ["-e", `const pg=require("pg");const c=new pg.Client({connectionString:process.argv[1]});c.connect().then(()=>c.query("update \\"_prisma_migrations\\" set rolled_back_at=now() where migration_name='7_order_fingerprint_outbox_lease'")).then(()=>c.end())`, PG_TEST_URL], { cwd: fileURLToPath(new URL("../..", import.meta.url)) });
     try {

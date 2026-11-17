@@ -2,7 +2,7 @@ import { Router } from "express";
 import { requireAdmin } from "../auth/auth.middleware.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import { createAdminProductSchema, describeProductPhotoSchema, productPhotoSchema, productUploadMetadataSchema, reorderProductPhotosSchema, replaceProductImagesSchema, updateAdminProductSchema } from "./admin-product.schemas.js";
-import { createAdminProduct, deleteAdminProduct, getAdminProduct, listAdminProducts, replaceAdminProductImages, updateAdminProduct } from "./admin-product.service.js";
+import { adminProductPageSchema, createAdminProduct, deleteAdminProduct, getAdminProduct, listAdminProducts, listAdminProductsPage, replaceAdminProductImages, updateAdminProduct } from "./admin-product.service.js";
 import { addProductPhoto, describeProductPhoto, removeProductPhoto, reorderProductPhotos, replaceProductPhoto } from "./admin-product-photos.service.js";
 import { authorizeProductUpload } from "./product-upload.service.js";
 import { consumeRateLimit } from "../../lib/rate-limit.js";
@@ -44,9 +44,13 @@ adminProductRouter.post("/admin/product-uploads", async (request, response) => {
   response.status(201).json(await authorizeProductUpload(parsed.data));
 });
 
-adminProductRouter.get("/admin/products", async (_request, response) => {
+adminProductRouter.get("/admin/products", async (request, response) => {
   response.setHeader("Cache-Control", "no-store");
-  response.json({ items: await listAdminProducts() });
+  // With ?page=… one page (25, 50 or 100) with search, view and sort; without it every product (pickers).
+  if (request.query.page === undefined) return void response.json({ items: await listAdminProducts() });
+  const parsed = adminProductPageSchema.safeParse(request.query);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid list request");
+  response.json(await listAdminProductsPage(parsed.data));
 });
 
 adminProductRouter.post("/admin/products", async (request, response) => {

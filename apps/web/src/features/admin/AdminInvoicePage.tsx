@@ -111,8 +111,9 @@ export function AdminInvoicePage() {
   const { orderId } = useParams();
   const { language } = useSiteLanguage();
   const t = copy[language];
-  const orders = useQuery({ queryKey: ["admin", "orders"], queryFn: adminApi.orders });
-  const order = orders.data?.find((item) => item.id === orderId);
+  // Just this order, not the whole order list.
+  const orders = useQuery({ queryKey: ["admin", "orders", "one", orderId], queryFn: () => adminApi.order(orderId ?? ""), enabled: Boolean(orderId), retry: false });
+  const order = orders.data;
 
   return (
     <section className="page-shell admin-page invoice-page" data-testid="admin-invoice-page">

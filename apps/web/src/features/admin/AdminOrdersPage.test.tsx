@@ -1,13 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminOrdersPage } from "./AdminOrdersPage";
 import { adminApi, type AdminOrder } from "./admin-api";
+import { installPagedFakes } from "./test-pages";
 
 vi.mock("./admin-api", () => ({
-  adminApi: { orders: vi.fn(), products: vi.fn(), updateOrderStatus: vi.fn(), updatePaymentStatus: vi.fn(), acceptEditedOrder: vi.fn(), deleteOrder: vi.fn(), deleteOrders: vi.fn() },
+  adminApi: { orders: vi.fn(), products: vi.fn(), updateOrderStatus: vi.fn(), updatePaymentStatus: vi.fn(), acceptEditedOrder: vi.fn(), deleteOrder: vi.fn(), deleteOrders: vi.fn(), productsPage: vi.fn(), ordersPage: vi.fn(), invoicesPage: vi.fn(), order: vi.fn(), clearOrderTab: vi.fn(), },
 }));
 
 function order(orderNumber: string, status: string): AdminOrder {
@@ -23,6 +24,7 @@ describe("AdminOrdersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(adminApi.products).mockResolvedValue([]);
+    installPagedFakes(adminApi);
     vi.mocked(adminApi.orders).mockResolvedValue([
       order("QL-1", "CONFIRMED"),
       order("QL-2", "PREPARING"),
@@ -45,6 +47,26 @@ describe("AdminOrdersPage", () => {
     expect(within(screen.getByTestId("order-QL-3")).getByText("Out for delivery")).toBeInTheDocument();
     expect(within(screen.getByTestId("order-QL-3")).getByRole("button", { name: "Complete" })).toBeInTheDocument();
     expect(screen.queryByTestId("order-QL-4")).not.toBeInTheDocument();
+  });
+
+  it("asks the server for one page of the chosen tab, searches it and clears a whole finished tab", async () => {
+    vi.mocked(adminApi.orders).mockResolvedValue([order("QL-1", "PENDING"), order("QL-2", "PENDING"), order("QL-9", "DELIVERED")]);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><MemoryRouter><AdminOrdersPage /></MemoryRouter></QueryClientProvider>);
+
+    expect(await screen.findByTestId("order-QL-2")).toBeInTheDocument();
+    expect(adminApi.ordersPage).toHaveBeenLastCalledWith({ page: 1, pageSize: 25, tab: "PENDING", q: undefined, sort: "newest" });
+    await userEvent.type(screen.getByRole("searchbox"), "QL-1");
+    await waitFor(() => expect(screen.queryByTestId("order-QL-2")).not.toBeInTheDocument());
+    expect(adminApi.ordersPage).toHaveBeenLastCalledWith(expect.objectContaining({ q: "QL-1", tab: "PENDING" }));
+    expect(screen.getByText("1–1 of 1")).toBeInTheDocument();
+
+    await userEvent.clear(screen.getByRole("searchbox"));
+    await userEvent.click(screen.getByRole("tab", { name: /Completed/ }));
+    expect(await screen.findByTestId("order-QL-9")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Clear Completed" }));
+    await waitFor(() => expect(adminApi.clearOrderTab).toHaveBeenCalledWith("DELIVERED"));
   });
 
   it("links every non-declined order to its invoice", async () => {

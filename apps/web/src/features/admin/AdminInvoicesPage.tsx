@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { AdminPager, type PageSize } from "./admin-list";
+import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useSiteLanguage } from "../../app/providers";
 import { adminApi } from "./admin-api";
-import { filterInvoices, groupByDay, invoiceNumber, invoiceTotal, invoiceTotals, type PaymentFilter } from "./invoice-utils";
+import { groupByDay, invoiceNumber, invoiceTotal, type PaymentFilter } from "./invoice-utils";
 import "./invoice.css";
 
 const copy = {
@@ -31,10 +32,14 @@ export function AdminInvoicesPage() {
   const [payment, setPayment] = useState<PaymentFilter>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const orders = useQuery({ queryKey: ["admin", "orders"], queryFn: adminApi.orders });
-  const invoices = useMemo(() => filterInvoices(orders.data ?? [], { from: from || undefined, to: to || undefined, payment }), [orders.data, from, to, payment]);
-  const days = useMemo(() => groupByDay(invoices), [invoices]);
-  const totals = useMemo(() => invoiceTotals(invoices), [invoices]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(25);
+  useEffect(() => { setPage(1); }, [from, to, payment, pageSize]);
+  // One page of invoices from the server; the totals cover the whole filter and each day's total the whole day.
+  const params = { page, pageSize, from: from || undefined, to: to || undefined, payment };
+  const orders = useQuery({ queryKey: ["admin", "orders", "invoices", params], queryFn: () => adminApi.invoicesPage(params), placeholderData: keepPreviousData });
+  const days = useMemo(() => groupByDay(orders.data?.items ?? []).map((group) => ({ ...group, totalQar: orders.data?.dayTotals[group.day] ?? group.totalQar })), [orders.data]);
+  const totals = orders.data?.totals ?? { count: 0, totalQar: 0, paidQar: 0, unpaidQar: 0 };
   const metrics: Array<[string, string]> = [[t.invoices, String(totals.count)], [t.total, `QAR ${totals.totalQar}`], [t.paid, `QAR ${totals.paidQar}`], [t.unpaid, `QAR ${totals.unpaidQar}`]];
 
   return (
@@ -81,6 +86,8 @@ export function AdminInvoicesPage() {
               </ul>
             </section>
           ))}
+          <AdminPager page={orders.data.page} pageSize={orders.data.pageSize} totalItems={orders.data.totalItems} totalPages={orders.data.totalPages}
+            isArabic={language === "ar"} busy={orders.isFetching} onPage={(next) => { setPage(next); window.scrollTo({ top: 0, behavior: "smooth" }); }} onPageSize={setPageSize} />
         </>
       ) : null}
     </section>

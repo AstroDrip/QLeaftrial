@@ -450,3 +450,19 @@ html[lang="ar"] .admin-location__title { letter-spacing: 0; }
 .admin-product-details-form__hint { margin: 0; color: var(--admin-muted); font-size: .75rem; }
 .admin-flag--warning { background: rgba(240, 179, 165, .16); color: var(--admin-danger); }
 .admin-product-form__hint { color: var(--admin-muted); font-size: .75rem; font-weight: 400; }
+
+/* Paged lists: count, page numbers and page size each in their own box; the row wraps on narrow screens. */
+.admin-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--a-2) var(--a-4); padding-top: var(--a-3); border-top: 1px solid var(--admin-border); }
+.admin-pager__count { margin: 0; color: var(--admin-muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.admin-pager__pages { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a-1); margin: 0; padding: 0; list-style: none; }
+.admin-shell .admin-pager__pages button { min-width: 36px; min-height: 36px; padding: 0 var(--a-2); border: 1px solid var(--admin-border); border-radius: var(--admin-radius); background: transparent; color: var(--admin-text); font-size: .8rem; font-variant-numeric: tabular-nums; cursor: pointer; }
+.admin-shell .admin-pager__pages button[aria-current="page"] { border-color: var(--admin-accent); background: var(--admin-accent); color: #172019; font-weight: 700; }
+.admin-shell .admin-pager__pages button:disabled { opacity: .4; cursor: default; }
+.admin-pager__gap { padding: 0 var(--a-1); color: var(--admin-muted); }
+.admin-pager__size { display: flex; align-items: center; gap: var(--a-2); color: var(--admin-muted); font-size: .8rem; }
+.admin-shell .admin-pager__size select { width: auto; min-height: 36px; }
+.admin-products-sort, .admin-order-filters label { display: flex; align-items: center; gap: var(--a-2); min-width: 0; color: var(--admin-muted); font-size: .8rem; }
+.admin-shell .admin-products-sort select, .admin-shell .admin-order-filters select { width: auto; max-width: 100%; }
+.admin-order-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a-2) var(--a-4); margin-bottom: var(--a-4); }
+.admin-order-filters__search { flex: 1 1 240px; }
+.admin-shell .admin-order-filters__search input { flex: 1 1 auto; min-width: 0; }

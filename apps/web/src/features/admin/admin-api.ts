@@ -1,3 +1,4 @@
+import type { AdminPage } from "./admin-list";
 import { errorFromResponse } from "../../lib/api-error";
 import { createProductImageVariants, type ProductImageVariant } from "./product-image-variants";
 
@@ -382,6 +383,19 @@ async function photoPayload(file: File, imageAltText: string, directUpload: bool
   return { imageAltText, ...(contentHash ? { contentHash } : {}), ...images };
 }
 
+export type ProductView = "all" | "drafts" | "review" | "featured" | "unpriced";
+export type ProductPageParams = { page: number; pageSize: number; q?: string; view?: ProductView; sort?: "name" | "newest" | "price-asc" | "price-desc" | "stock-asc" };
+export type OrderTab = "PENDING" | "CONFIRMED" | "CANCELLED" | "DELIVERED";
+export type OrderPageParams = { page: number; pageSize: number; q?: string; tab: OrderTab; sort?: "newest" | "oldest" | "total-desc" };
+export type InvoicePageParams = { page: number; pageSize: number; q?: string; from?: string; to?: string; payment?: "all" | "paid" | "unpaid" };
+export type InvoiceTotals = { count: number; totalQar: number; paidQar: number; unpaidQar: number };
+
+function listQuery(params: Record<string, string | number | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) if (value !== undefined && value !== "") search.set(key, String(value));
+  return search.toString();
+}
+
 export const adminApi = {
   login: async (password: string): Promise<AdminSession> =>
     (await request<{ admin: AdminSession }>("/auth/login", {
@@ -393,6 +407,8 @@ export const adminApi = {
   logout: (): Promise<void> => request<void>("/auth/logout", { method: "POST" }),
   products: async (): Promise<AdminProduct[]> =>
     (await request<{ items: AdminProduct[] }>("/admin/products")).items,
+  productsPage: (params: ProductPageParams): Promise<AdminPage<AdminProduct, Record<ProductView, number>>> =>
+    request(`/admin/products?${listQuery(params)}`),
   createProduct: (input: CreateAdminProductInput): Promise<AdminProduct> =>
     request<AdminProduct>("/admin/products", {
       method: "POST",
@@ -429,6 +445,13 @@ export const adminApi = {
     request<void>(`/admin/products/${id}`, { method: "DELETE" }),
   orders: async (): Promise<AdminOrder[]> =>
     (await request<{ items: AdminOrder[] }>("/admin/orders")).items,
+  ordersPage: (params: OrderPageParams): Promise<AdminPage<AdminOrder, Record<OrderTab, number>>> =>
+    request(`/admin/orders?${listQuery(params)}`),
+  order: (id: string): Promise<AdminOrder> => request<AdminOrder>(`/admin/orders/${encodeURIComponent(id)}`),
+  clearOrderTab: (tab: "CANCELLED" | "DELIVERED"): Promise<{ deleted: number }> =>
+    request(`/admin/orders/clear-tab`, { method: "POST", body: JSON.stringify({ tab }) }),
+  invoicesPage: (params: InvoicePageParams): Promise<AdminPage<AdminOrder> & { totals: InvoiceTotals; dayTotals: Record<string, number> }> =>
+    request(`/admin/invoices?${listQuery(params)}`),
   updateOrderStatus: (id: string, status: string) =>
     request<AdminOrder>(`/admin/orders/${id}/status`, {
       method: "PATCH",

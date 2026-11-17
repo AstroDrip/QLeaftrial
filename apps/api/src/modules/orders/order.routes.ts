@@ -26,6 +26,7 @@ import type { Response } from "express";
 import { actorFrom, listAudit } from "../admin/audit.js";
 import { deliverForOrder, processOutbox } from "../notifications/outbox.js";
 import { afterResponse } from "../../lib/after-response.js";
+import { getAdminOrder, invoicePageSchema, listInvoicesPage, listOrdersPage, orderIdsInTab, orderPageSchema } from "./order-lists.js";
 
 export const orderRouter = Router();
 
@@ -84,11 +85,38 @@ orderRouter.post("/orders", async (req, res) => {
 
 orderRouter.use("/admin/orders", requireAdmin);
 
-orderRouter.get("/admin/orders", async (_req, res) => {
+orderRouter.get("/admin/orders", async (req, res) => {
   // An admin is looking: a good moment to catch up on emails and sheet rows that are due (after the answer).
   afterResponse("admin-sweep", () => processOutbox({ limit: 5, budgetMs: 15_000 }));
   res.setHeader("Cache-Control", "no-store");
-  res.json({ items: (await listOrders()).map(toAdminOrder) });
+  // With ?page=… one page of one status tab, searchable and sortable, with every tab's count; without it all orders.
+  if (req.query.page === undefined) return void res.json({ items: (await listOrders()).map(toAdminOrder) });
+  const parsed = orderPageSchema.safeParse(req.query);
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid list request");
+  const page = await listOrdersPage(parsed.data);
+  res.json({ ...page, items: page.items.map((order) => toAdminOrder(order as Parameters<typeof toAdminOrder>[0])) });
+});
+
+orderRouter.get("/admin/invoices", requireAdmin, async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const parsed = invoicePageSchema.safeParse({ page: 1, ...req.query });
+  if (!parsed.success) throw new ApiError(400, "VALIDATION_ERROR", "Invalid list request");
+  const page = await listInvoicesPage(parsed.data);
+  res.json({ ...page, items: page.items.map((order: unknown) => toAdminOrder(order as Parameters<typeof toAdminOrder>[0])) });
+});
+
+// "Clear" on the declined or completed tab: every order in it, not only the page on screen.
+orderRouter.post("/admin/orders/clear-tab", async (req, res) => {
+  const tab = req.body?.tab;
+  if (tab !== "CANCELLED" && tab !== "DELIVERED") throw new ApiError(400, "VALIDATION_ERROR", "Only declined or completed orders can be cleared");
+  const ids = await orderIdsInTab(tab);
+  for (let index = 0; index < ids.length; index += 100) await deleteOrders(ids.slice(index, index + 100), actorFrom(res.locals));
+  res.json({ deleted: ids.length });
+});
+
+orderRouter.get("/admin/orders/:id", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json(toAdminOrder(await getAdminOrder(req.params.id)));
 });
 
 orderRouter.delete("/admin/orders", async (req, res) => {

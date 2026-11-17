@@ -1,12 +1,13 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminInvoicePage } from "./AdminInvoicePage";
 import { AdminInvoicesPage } from "./AdminInvoicesPage";
 import { adminApi, type AdminOrder } from "./admin-api";
+import { installPagedFakes } from "./test-pages";
 
-vi.mock("./admin-api", () => ({ adminApi: { orders: vi.fn() } }));
+vi.mock("./admin-api", () => ({ adminApi: { orders: vi.fn(), products: vi.fn(), productsPage: vi.fn(), ordersPage: vi.fn(), invoicesPage: vi.fn(), order: vi.fn(), clearOrderTab: vi.fn(), } }));
 
 function order(id: string, overrides: Partial<AdminOrder> = {}): AdminOrder {
   return {
@@ -23,6 +24,7 @@ function client() {
 }
 
 describe("admin invoices", () => {
+  beforeEach(() => { installPagedFakes(adminApi); });
   beforeEach(() => vi.mocked(adminApi.orders).mockResolvedValue([
     order("a"), order("b", { paymentStatus: "PENDING", createdAt: "2026-10-27T10:00:00Z" }), order("c", { status: "CANCELLED" }),
   ]));
@@ -37,11 +39,12 @@ describe("admin invoices", () => {
     expect(screen.getAllByRole("region").length).toBe(2);
 
     fireEvent.click(screen.getByRole("button", { name: "Unpaid" }));
-    expect(screen.queryByText("INV-QL-a")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("INV-QL-a")).not.toBeInTheDocument());
     expect(screen.getByText("INV-QL-b")).toBeInTheDocument();
+    expect(adminApi.invoicesPage).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, payment: "unpaid" }));
 
     fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-10-28" } });
-    expect(screen.getByText("No invoices match these filters.")).toBeInTheDocument();
+    expect(await screen.findByText("No invoices match these filters.")).toBeInTheDocument();
   });
 
   it("shows a printable invoice with business details, items and totals", async () => {

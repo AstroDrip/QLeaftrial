@@ -712,3 +712,6 @@ export async function salesReport(from?: Date, to?: Date) {
       .map(([date, values]) => ({ date, ...values })),
   };
 }
+
+/** The order shape the admin lists show (shared with order-lists.ts). */
+export const ADMIN_ORDER_INCLUDE_FOR_LISTS = ADMIN_ORDER_INCLUDE;

@@ -5,12 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminProductsPage } from "./AdminProductsPage";
 import { createHash } from "node:crypto";
 import { adminApi, type AdminPhoto } from "./admin-api";
+import { installPagedFakes } from "./test-pages";
 
 vi.mock("./admin-api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./admin-api")>()),
   adminApi: {
     login: vi.fn(), session: vi.fn(), logout: vi.fn(), products: vi.fn(), updateProduct: vi.fn(), replaceProductImage: vi.fn(), createProduct: vi.fn(), createProductWithImage: vi.fn(),
     addPhoto: vi.fn(), replacePhoto: vi.fn(), removePhoto: vi.fn(), reorderPhotos: vi.fn(), describePhoto: vi.fn(),
+    productsPage: vi.fn(), ordersPage: vi.fn(), invoicesPage: vi.fn(), order: vi.fn(), clearOrderTab: vi.fn(),
   },
 }));
 
@@ -27,6 +29,7 @@ describe("AdminProductsPage", () => {
     vi.clearAllMocks();
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.mocked(adminApi.products).mockResolvedValue([product]);
+    installPagedFakes(adminApi);
     vi.mocked(adminApi.updateProduct).mockImplementation(async (_id, patch) => ({ ...product, ...patch }));
   });
   afterEach(async () => {
@@ -327,8 +330,10 @@ describe("AdminProductsPage", () => {
   });
 
   it("toggles publishing from the status badge", async () => {
-    vi.mocked(adminApi.updateProduct).mockImplementation(async (_id, patch) => ({ ...product, ...patch }));
-    vi.mocked(adminApi.products).mockResolvedValue([{ ...product, published: true }]);
+    // The list answers with what was last saved, as the server would.
+    let saved: Awaited<ReturnType<typeof adminApi.updateProduct>> = { ...product, published: true } as never;
+    vi.mocked(adminApi.updateProduct).mockImplementation(async (_id, patch) => (saved = { ...saved, ...patch }));
+    vi.mocked(adminApi.products).mockImplementation(async () => [saved]);
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
 

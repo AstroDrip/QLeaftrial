@@ -12,12 +12,15 @@ import { invoiceRouter } from "./modules/orders/invoice.routes.js";
 import { reviewRouter } from "./modules/reviews/review.routes.js";
 
 import { notificationRouter } from "./modules/notifications/notification.routes.js";
+import { requireSameOrigin } from "./middleware/same-origin.js";
 
 export const apiRouter = Router();
 export const siteRouter = Router();
 
 siteRouter.use(sitemapRouter);
 
+// Admin and sign-in changes only from the QLeaves site (middleware/same-origin.ts).
+apiRouter.use(requireSameOrigin);
 apiRouter.use(authRouter);
 apiRouter.use(adminProductRouter);
 apiRouter.use(productRouter);

@@ -1,4 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
+import { z } from "zod";
+import { containsText, pageOf, pageQuerySchema, skipFor } from "../../lib/paging.js";
 import { ApiError } from "../../middleware/error-handler.js";
 import type { CreateAdminProductInput, ReplaceProductImagesInput, UpdateAdminProductInput } from "./admin-product.schemas.js";
 import { removeStoredProductImage, storagePathFromPublicUrl, storeProductImage } from "./product-image-storage.js";
@@ -336,6 +338,37 @@ export async function listAdminProducts(): Promise<AdminProduct[]> {
     orderBy: { name: "asc" },
   });
   return products.map(toAdminProduct);
+}
+
+export const adminProductPageSchema = pageQuerySchema.extend({
+  view: z.enum(["all", "drafts", "review", "featured", "unpriced"]).default("all"),
+  sort: z.enum(["name", "newest", "price-asc", "price-desc", "stock-asc"]).default("name"),
+});
+
+const VIEWS = {
+  all: {},
+  drafts: { published: false },
+  review: { needsReview: true },
+  featured: { featured: true },
+  unpriced: { priceQar: { lte: 0 } },
+} as const;
+
+/** One page of products for the admin list, with the count of every view for the tabs. */
+export async function listAdminProductsPage(query: z.infer<typeof adminProductPageSchema>) {
+  const db = prisma as any;
+  const search = query.q ? { OR: [{ name: containsText(query.q) }, { nameAr: containsText(query.q) }, { scientificName: containsText(query.q) }, { slug: containsText(query.q) }, { sku: containsText(query.q) }] } : {};
+  const where = { ...VIEWS[query.view], ...search };
+  const orderBy = {
+    name: [{ name: "asc" }], newest: [{ createdAt: "desc" }, { name: "asc" }], "price-asc": [{ priceQar: "asc" }, { name: "asc" }],
+    "price-desc": [{ priceQar: "desc" }, { name: "asc" }], "stock-asc": [{ inventory: { quantity: "asc" } }, { name: "asc" }],
+  }[query.sort];
+  const views = Object.keys(VIEWS) as Array<keyof typeof VIEWS>;
+  const [items, totalItems, ...viewCounts] = await Promise.all([
+    db.product.findMany({ where, select: adminProductSelection, orderBy, skip: skipFor(query.page, query.pageSize), take: query.pageSize }),
+    db.product.count({ where }),
+    ...views.map((view) => db.product.count({ where: { ...VIEWS[view], ...search } })),
+  ]);
+  return { ...pageOf((items as AdminProductRecord[]).map(toAdminProduct), query.page, query.pageSize, totalItems), counts: Object.fromEntries(views.map((view, index) => [view, viewCounts[index]])) };
 }
 
 /** One product as admin sees it (after a photo change, for example). */

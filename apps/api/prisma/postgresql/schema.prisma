@@ -60,6 +60,8 @@ model Session {
   expiresAt   DateTime
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([expiresAt])
 }
 
 model Product {
@@ -189,6 +191,10 @@ model Order {
   notifications   NotificationOutbox[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  // Admin lists: one status tab newest first, and date ranges for invoices.
+  @@index([status, createdAt])
+  @@index([createdAt])
 }
 
 // Who changed what on an order's money or state. Kept even when the order or the admin account is later deleted,
@@ -278,6 +284,9 @@ model OrderItem {
   unitPriceQar Int
   quantity     Int
   createdAt    DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 // A customer's story shown in the homepage carousel. Only published rows are public; the shop manages
