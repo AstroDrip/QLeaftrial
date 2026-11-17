@@ -9,10 +9,15 @@
    next card shows at the edge, and a few pixels of padding keep a lifted card and its focus ring unclipped. */
 /* A scrolling row's own width must never count toward its parent's minimum width, or on a phone the whole page lays out as wide as the row. */
 .home > * { min-width: 0; }
-.rail__scroller { --rail-card: clamp(200px, 20vw, 280px); margin: -6px calc(var(--gutter) * -1); padding: 6px var(--gutter); overflow-x: auto; overscroll-behavior-x: contain; contain: inline-size; scrollbar-width: none; scroll-padding-inline: var(--gutter); }
+/* The rail shows whole cards only: each card is sized from the rail's own width (container units), so a fixed number
+   fits exactly, two on phones and tablets, four on wider screens. Every resting position (auto-glide, arrows, a
+   swipe that snaps) is a card edge, so no card is ever left cut in half. The rail stays inside the page margins. */
+.rail__scroller { --rail-cols: 4; --rail-gap: var(--space-4); container-type: inline-size; margin: -6px 0; padding: 6px 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x mandatory; scroll-padding-inline: 0; }
+/* While the rail glides by itself, snapping would fight each animation frame; it is switched back on at rest. */
+.rail__scroller[data-gliding] { scroll-snap-type: none; }
 .rail__scroller::-webkit-scrollbar { display: none; }
-.home-categories { display: flex; width: max-content; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
-.home-categories li { flex: 0 0 var(--rail-card); width: var(--rail-card); }
+.home-categories { display: flex; width: max-content; gap: var(--rail-gap); margin: 0; padding: 0; list-style: none; }
+.home-categories li { --rail-card: calc((100cqi - (var(--rail-cols) - 1) * var(--rail-gap)) / var(--rail-cols)); flex: 0 0 var(--rail-card); width: var(--rail-card); min-width: 0; scroll-snap-align: start; }
 .home-categories a { display: grid; gap: .2rem; }
 .section-head__aside { display: flex; align-items: center; gap: var(--space-4); }
 .rail__controls { display: flex; gap: var(--space-2); }
@@ -21,14 +26,17 @@
 .rail__arrow:active { transform: scale(.94); }
 .rail__arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 [dir="rtl"] .rail__arrow svg, html[lang="ar"] .rail__arrow svg { transform: scaleX(-1); }
+@media (max-width: 1023px) {
+  /* Phones and tablets: two whole cards side by side. */
+  .rail__scroller { --rail-cols: 2; }
+}
 @media (max-width: 720px) {
-  /* Phones swipe; the next card peeks in from the edge to say so. */
-  .rail__scroller { --rail-card: min(72vw, 250px); }
+  /* Phones swipe instead of using the arrows. */
   .rail__controls { display: none; }
 }
 .home-categories img { width: 100%; height: auto; aspect-ratio: 1; margin-bottom: .5rem; border-radius: var(--radius-lg); background: #fff; object-fit: cover; transition: transform 500ms var(--ease-out); }
 .home-categories a:hover img { transform: translateY(-3px); }
-.home-categories__name { font-weight: 600; }
+.home-categories__name { font-weight: 600; overflow-wrap: anywhere; text-wrap: balance; }
 .home-categories__count { color: var(--text-soft); font-size: .85rem; }
 
 .home__notice { padding: var(--space-4); border-radius: var(--radius-md); background: var(--surface-sunk); }

@@ -68,11 +68,13 @@ export function CategoryRail({
     const children = row.children;
     // With copies present, one row is the distance between the first card and its first clone (the sign
     // flips when the row runs right to left).
+    // Exact (fractional) widths: cards are sized from the rail's width, and whole-pixel rounding would make every
+    // glide land a fraction off a card edge.
     const contentWidth = children.length > items.length
-      ? Math.abs((children[items.length] as HTMLElement).offsetLeft - (children[0] as HTMLElement).offsetLeft) - gap
+      ? Math.abs((children[items.length] as HTMLElement).getBoundingClientRect().left - (children[0] as HTMLElement).getBoundingClientRect().left) - gap
       : row.scrollWidth;
     const overflows = contentWidth > frame.clientWidth + 2;
-    setLoop(overflows ? Math.round(contentWidth + gap) : null);
+    setLoop(overflows ? contentWidth + gap : null);
   }, [items.length]);
 
   useLayoutEffect(() => {
@@ -115,9 +117,16 @@ export function CategoryRail({
     let timer = 0;
     const recentre = () => {
       if (holds.current.touch) return;
-      const position = Math.abs(frame.scrollLeft);
-      if (position < loop) frame.scrollLeft = sign() * (position + loop);
-      else if (position >= loop * 2) frame.scrollLeft = sign() * (position - loop);
+      let position = Math.abs(frame.scrollLeft);
+      if (position < loop) position += loop;
+      else if (position >= loop * 2) position -= loop;
+      if (position !== Math.abs(frame.scrollLeft)) frame.scrollLeft = sign() * position;
+      // Wherever a person left it (a wheel or trackpad flick, a scroll that cut into a glide), it comes to rest on a
+      // card edge, so no card is left cut in half.
+      const size = cardStep();
+      if (!size) return;
+      const edge = Math.round(position / size) * size;
+      if (Math.abs(edge - position) > 1) frame.scrollTo({ left: sign() * edge, behavior: reduced ? "auto" : "smooth" });
     };
     const onScroll = () => {
       window.clearTimeout(timer);
@@ -125,14 +134,14 @@ export function CategoryRail({
     };
     frame.addEventListener("scroll", onScroll, { passive: true });
     return () => { frame.removeEventListener("scroll", onScroll); window.clearTimeout(timer); };
-  }, [loop]);
+  }, [loop, reduced]);
 
   // One card plus the gap after it: the distance of one glide or one arrow press.
   const cardStep = () => {
     const row = list.current;
     const card = row?.children[0] as HTMLElement | undefined;
     if (!row || !card) return 0;
-    return card.offsetWidth + (parseFloat(getComputedStyle(row).columnGap) || 0);
+    return card.getBoundingClientRect().width + (parseFloat(getComputedStyle(row).columnGap) || 0);
   };
 
   const drifting = looping && !reduced && inView && !pageHidden;
@@ -150,8 +159,9 @@ export function CategoryRail({
       const hold = holds.current;
       const actual = frame.scrollLeft;
       // Anything other than our own last write means a person moved it: let go, follow them, then wait.
-      if (Math.abs(actual - written) > 1.5) { glide = null; nextAt = time + RESUME_AFTER; written = actual; }
+      if (Math.abs(actual - written) > 1.5) { glide = null; nextAt = time + RESUME_AFTER; written = actual; delete frame.dataset.gliding; }
       if (hold.hover || hold.touch || hold.focus || time < hold.until) {
+        if (glide) delete frame.dataset.gliding;
         glide = null;
         written = actual;
         nextAt = Math.max(nextAt, Math.max(time, hold.until) + AFTER_HOLD);
@@ -167,14 +177,15 @@ export function CategoryRail({
         // Past the middle copy, step back one full row first: it looks identical, so nobody sees the jump.
         if (to > loop * 2) { from -= loop; to -= loop; }
         glide = { from, to, start: time };
+        frame.dataset.gliding = "";
       }
       const progress = Math.min((time - glide.start) / GLIDE_MS, 1);
       frame.scrollLeft = direction * (glide.from + (glide.to - glide.from) * easeInOut(progress));
       written = frame.scrollLeft;
-      if (progress >= 1) { glide = null; nextAt = time + DWELL_MS; }
+      if (progress >= 1) { glide = null; nextAt = time + DWELL_MS; delete frame.dataset.gliding; }
     };
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); delete frame.dataset.gliding; };
   }, [drifting, loop]);
 
   // Arrow presses glide too; pressing again mid-glide carries on from where that glide was heading.
@@ -191,11 +202,12 @@ export function CategoryRail({
     const to = (nudging.current ? nudging.current.to : from) + delta;
     if (nudging.current) cancelAnimationFrame(nudging.current.raf);
     const start = performance.now();
+    frame.dataset.gliding = "";
     const run = (time: number) => {
       const progress = Math.min(Math.max((time - start) / NUDGE_MS, 0), 1);
       frame.scrollLeft = from + (to - from) * easeOut(progress);
       if (progress < 1) nudging.current = { raf: requestAnimationFrame(run), to };
-      else nudging.current = null;
+      else { nudging.current = null; delete frame.dataset.gliding; }
     };
     nudging.current = { raf: requestAnimationFrame(run), to };
   }
@@ -246,7 +258,7 @@ export function CategoryRail({
             return (
               <li key={`${copy}-${item.key}`} aria-hidden={real ? undefined : true}>
                 <Link to={item.to} onMouseEnter={onIntent} tabIndex={real ? undefined : -1}>
-                  <img src={item.image} srcSet={item.srcSet} sizes={item.srcSet ? "(max-width: 600px) 70vw, 280px" : undefined} alt="" width={640} height={640} loading="lazy" decoding="async" draggable={false} />
+                  <img src={item.image} srcSet={item.srcSet} sizes={item.srcSet ? "(max-width: 1023px) 50vw, 25vw" : undefined} alt="" width={640} height={640} loading="lazy" decoding="async" draggable={false} />
                   <span className="home-categories__name">{item.name}</span>
                   {item.count ? <span className="home-categories__count">{item.count}</span> : null}
                 </Link>

@@ -26,9 +26,23 @@ function stubLayout(frameWidth: number, direction: 1 | -1 = 1) {
   HTMLElement.prototype.scrollBy = function (this: HTMLElement & { _left?: number }, options?: ScrollToOptions | number) {
     this._left = (this._left ?? 0) + (typeof options === "object" ? options.left ?? 0 : 0);
   } as typeof HTMLElement.prototype.scrollBy;
+  HTMLElement.prototype.scrollTo = function (this: HTMLElement & { _left?: number }, options?: ScrollToOptions | number) {
+    if (typeof options === "object" && options.left !== undefined) this._left = options.left;
+  } as typeof HTMLElement.prototype.scrollTo;
+  // The rail measures cards exactly (fractional widths), from their boxes.
+  Element.prototype.getBoundingClientRect = function (this: HTMLElement) {
+    const left = this.tagName === "LI" ? this.offsetLeft : 0;
+    const width = this.tagName === "LI" ? CARD : this.classList?.contains("rail__scroller") ? frameWidth : 0;
+    return { left, right: left + width, width, top: 0, bottom: 0, height: 0, x: left, y: 0, toJSON: () => ({}) } as DOMRect;
+  };
 }
 
+const originalRect = Element.prototype.getBoundingClientRect;
+const originalScrollTo = HTMLElement.prototype.scrollTo;
+
 function restoreLayout() {
+  Element.prototype.getBoundingClientRect = originalRect;
+  HTMLElement.prototype.scrollTo = originalScrollTo;
   for (const [name, target] of [["clientWidth", HTMLElement.prototype], ["scrollWidth", Element.prototype], ["offsetLeft", HTMLElement.prototype], ["offsetWidth", HTMLElement.prototype]] as const) {
     const saved = original[name];
     if (saved) Object.defineProperty(target, name, saved);
@@ -198,11 +212,12 @@ describe("CategoryRail", () => {
     act(() => { vi.advanceTimersByTime(20000); });
     expect(frame.scrollLeft).toBe(start);
 
-    // Scrolled by hand into the first copy, it is put back on the middle one once it has stopped.
+    // Scrolled by hand into the first copy and left a third of the way into a card, it is put back on the middle
+    // copy and settles on the nearest card edge once it has stopped, so no card is left cut in half.
     frame.scrollLeft = 100;
     fireEvent.scroll(frame);
     act(() => { vi.advanceTimersByTime(300); });
-    expect(frame.scrollLeft).toBe(100 + 5 * CARD);
+    expect(frame.scrollLeft).toBe(5 * CARD);
     expect(screen.getByRole("button", { name: "Next categories" })).toBeInTheDocument();
   });
 });
