@@ -276,6 +276,9 @@ function ProductRow({ product }: { product: AdminProduct }) {
   const shownDescription = isArabic ? product.descriptionAr?.trim() || product.description : product.description;
   const isPublished = product.published ?? true;
   const photosShort = photosShortLabel(product, adminIsArabic);
+  // 0 QAR means the price is not confirmed: such a product stays unpublished until it has a price.
+  const unpriced = product.priceQar <= 0;
+  const unpricedText = adminIsArabic ? "السعر غير مؤكد: لا يمكن نشره قبل تحديد سعر" : "Price not confirmed: cannot be published until it has a price";
   const errorMessage = [fieldErrors.stock, fieldErrors.priceQar].filter(Boolean).join(". ");
   const statusText = errorMessage
     ? <span role="alert">{errorMessage}</span>
@@ -296,16 +299,17 @@ function ProductRow({ product }: { product: AdminProduct }) {
             type="button"
             className={`admin-product-status-pill admin-product-status-pill--${isPublished ? "published" : "draft"}`}
             aria-pressed={isPublished}
-            title={isPublished ? t.unpublish : t.publish}
-            disabled={save.isPending}
+            title={isPublished ? t.unpublish : unpriced ? unpricedText : t.publish}
+            disabled={save.isPending || (!isPublished && unpriced)}
             onClick={() => save.mutate({ published: !isPublished })}
           >
             {isPublished ? t.published : t.draft}
           </button>
         </div>
 
-        {product.featured || product.needsReview || photosShort ? (
+        {product.featured || product.needsReview || photosShort || unpriced ? (
           <p className="admin-product-card__flags">
+            {unpriced ? <span className="admin-flag admin-flag--warning" role="note">{unpricedText}</span> : null}
             {photosShort ? <span className="admin-flag admin-flag--review">{photosShort}</span> : null}
             {product.featured ? <span className="admin-flag admin-flag--featured">{adminIsArabic ? "مميز" : "Featured"}</span> : null}
             {product.needsReview ? (
@@ -356,7 +360,7 @@ function ProductRow({ product }: { product: AdminProduct }) {
 
 export function AdminProductsPage() {
   const { content, isArabic } = useSiteLanguage();
-  const t = isArabic ? { add: "إضافة نبات", name: "الاسم", arabicName: "الاسم العربي", slug: "الرابط المختصر", sku: "رمز المنتج", category: "الفئة", arabicCategory: "الفئة العربية", light: "الإضاءة (اختياري، اتركها فارغة للأحواض والتربة والإكسسوارات)", arabicLight: "الإضاءة بالعربية (اختياري)", price: "السعر (ر.ق)", cost: "التكلفة (ر.ق)", stock: "المخزون", description: "الوصف", arabicDescription: "الوصف العربي", alt: "النص البديل للصورة", image: "صور النبات (من 1 إلى 3، الأولى هي الرئيسية)", preview: (n: number) => `الصورة المحددة ${n}`, tooMany: "اختر 3 صور كحد أقصى.", sameTwice: "اخترت الصورة نفسها مرتين.", step: (n: number, total: number) => `جارٍ إضافة الصورة ${n} من ${total}…`, partial: "أُضيف النبات، لكن تعذر رفع بعض الصور. أضفها من بطاقة المنتج.", adding: "جارٍ الإضافة…", product: "المنتج", status: "الحالة", loading: "جارٍ تحميل المنتجات…", loadError: "تعذر تحميل المنتجات.", imageRequired: "صورة النبات مطلوبة.", addError: "تعذر إضافة النبات", newPlant: "نبات جديد", close: "إغلاق النموذج" } : { add: "Add plant", name: "Name", arabicName: "Arabic name", slug: "Slug", sku: "SKU", category: "Category", arabicCategory: "Arabic category", light: "Light (optional, leave empty for pots, soil and accessories)", arabicLight: "Arabic light (optional)", price: "Price (QAR)", cost: "Cost (QAR)", stock: "Stock", description: "Description", arabicDescription: "Arabic description", alt: "Image alt text", image: "Plant photos (1 to 3, the first is the main one)", preview: (n: number) => `Selected photo ${n}`, tooMany: "Choose at most 3 photos.", sameTwice: "The same photo was chosen twice.", step: (n: number, total: number) => `Adding photo ${n} of ${total}…`, partial: "The plant was added, but some photos could not be uploaded. Add them from the product card.", adding: "Adding…", product: "Product", status: "Status", loading: "Loading products…", loadError: "Could not load products.", imageRequired: "A plant image is required.", addError: "Could not add plant", newPlant: "New plant", close: "Close form" };
+  const t = isArabic ? { add: "إضافة نبات", name: "الاسم", arabicName: "الاسم العربي", slug: "الرابط المختصر", sku: "رمز المنتج", category: "الفئة", arabicCategory: "الفئة العربية", light: "الإضاءة (اختياري، اتركها فارغة للأحواض والتربة والإكسسوارات)", arabicLight: "الإضاءة بالعربية (اختياري)", price: "السعر (ر.ق)", cost: "التكلفة (ر.ق)", stock: "المخزون", description: "الوصف", arabicDescription: "الوصف العربي", alt: "النص البديل للصورة", image: "صور النبات (من 1 إلى 3، الأولى هي الرئيسية)", preview: (n: number) => `الصورة المحددة ${n}`, tooMany: "اختر 3 صور كحد أقصى.", sameTwice: "اخترت الصورة نفسها مرتين.", step: (n: number, total: number) => `جارٍ إضافة الصورة ${n} من ${total}…`, partial: "أُضيف النبات، لكن تعذر رفع بعض الصور. أضفها من بطاقة المنتج.", unpricedHint: "بسعر 0 ر.ق يُحفظ النبات غير منشور حتى تحدد سعره.", adding: "جارٍ الإضافة…", product: "المنتج", status: "الحالة", loading: "جارٍ تحميل المنتجات…", loadError: "تعذر تحميل المنتجات.", imageRequired: "صورة النبات مطلوبة.", addError: "تعذر إضافة النبات", newPlant: "نبات جديد", close: "إغلاق النموذج" } : { add: "Add plant", name: "Name", arabicName: "Arabic name", slug: "Slug", sku: "SKU", category: "Category", arabicCategory: "Arabic category", light: "Light (optional, leave empty for pots, soil and accessories)", arabicLight: "Arabic light (optional)", price: "Price (QAR)", cost: "Cost (QAR)", stock: "Stock", description: "Description", arabicDescription: "Arabic description", alt: "Image alt text", image: "Plant photos (1 to 3, the first is the main one)", preview: (n: number) => `Selected photo ${n}`, tooMany: "Choose at most 3 photos.", sameTwice: "The same photo was chosen twice.", step: (n: number, total: number) => `Adding photo ${n} of ${total}…`, partial: "The plant was added, but some photos could not be uploaded. Add them from the product card.", unpricedHint: "At 0 QAR the plant is saved unpublished until you set its price.", adding: "Adding…", product: "Product", status: "Status", loading: "Loading products…", loadError: "Could not load products.", imageRequired: "A plant image is required.", addError: "Could not add plant", newPlant: "New plant", close: "Close form" };
   const products = useQuery({ queryKey: ["admin", "products"], queryFn: adminApi.products });
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
@@ -479,7 +483,9 @@ export function AdminProductsPage() {
           <label>{t.arabicCategory}<input dir="rtl" required value={form.categoryAr} onChange={(event) => updateField("categoryAr", event.target.value)} /></label>
           <label>{t.light}<input value={form.light} onChange={(event) => updateField("light", event.target.value)} /></label>
           <label>{t.arabicLight}<input dir="rtl" value={form.lightAr} onChange={(event) => updateField("lightAr", event.target.value)} /></label>
-          <label>{t.price}<input required type="number" min="0" step="1" value={form.priceQar} onChange={(event) => updateField("priceQar", Number(event.target.value))} /></label>
+          <label>{t.price}<input required type="number" min="0" step="1" value={form.priceQar} onChange={(event) => updateField("priceQar", Number(event.target.value))} />
+            {Number(form.priceQar) <= 0 ? <span className="admin-product-form__hint">{t.unpricedHint}</span> : null}
+          </label>
           <label>{t.cost}<input required type="number" min="0" step="1" value={form.costPrice} onChange={(event) => updateField("costPrice", Number(event.target.value))} /></label>
           <label>{t.stock}<input required type="number" min="0" step="1" value={form.stock} onChange={(event) => updateField("stock", Number(event.target.value))} /></label>
           <label className="admin-product-form__full">{t.description}<textarea required minLength={10} value={form.description} onChange={(event) => updateField("description", event.target.value)} /></label>

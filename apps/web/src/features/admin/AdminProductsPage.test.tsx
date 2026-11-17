@@ -294,6 +294,17 @@ describe("AdminProductsPage", () => {
     expect(adminApi.updateProduct).toHaveBeenCalledWith("plant-1", { sizeNote: "Tall floor plant", heightCm: 150, potIncluded: false });
   });
 
+  it("warns about a product priced 0 QAR and does not offer to publish it", async () => {
+    vi.mocked(adminApi.products).mockResolvedValue([{ ...product, priceQar: 0, published: false }]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><AdminProductsPage /></QueryClientProvider>);
+    expect(await screen.findByText(/price not confirmed: cannot be published until it has a price/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Unpublished" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "+ New plant" }));
+    expect(screen.getByText(/at 0 qar the plant is saved unpublished/i)).toBeInTheDocument();
+  });
+
   it("edits Arabic copy from a card shown in Arabic", async () => {
     vi.mocked(adminApi.products).mockResolvedValue([{ ...product, nameAr: null }]);
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

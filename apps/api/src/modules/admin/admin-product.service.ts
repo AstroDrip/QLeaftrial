@@ -427,7 +427,10 @@ function mediaRows(
 }
 
 export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
-  assertSellable({ published: true, priceQar: input.priceQar, compareAtPriceQar: input.compareAtPriceQar });
+  // A product without a confirmed price (0 QAR) is kept as an unpublished draft instead of being refused; it can be
+  // published once it has a price.
+  const published = input.priceQar > 0;
+  assertSellable({ published, priceQar: input.priceQar, compareAtPriceQar: input.compareAtPriceQar });
   const usesPostgreSql = process.env.QLEAVES_DATABASE_PROVIDER === "postgresql";
   if (usesPostgreSql && input.imageDataUrl) {
     throw new ApiError(400, "VALIDATION_ERROR", "Production product creation requires staged image variants");
@@ -457,7 +460,7 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
         ...(input.lightAr !== undefined ? { lightAr: input.lightAr } : {}),
         priceQar: input.priceQar,
         costPrice: input.costPrice,
-        published: true,
+        published,
         ...Object.fromEntries(
           (["compareAtPriceQar", "featured", "scientificName", "watering", "wateringAr", "humidity", "humidityAr", "soil", "soilAr", "temperature", "temperatureAr", "heightCm", "sizeNote", "sizeNoteAr", "potIncluded", "handlingNote", "handlingNoteAr", "careLevel", "placement", "needsReview", "reviewNote", "searchAliases"] as const)
             .filter((key) => input[key] !== undefined)

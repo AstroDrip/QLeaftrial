@@ -398,8 +398,8 @@
 /* Product flags and the product list views (all, unpublished, needs review, featured). */
 .admin-product-card__flags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
 .admin-flag { display: inline-flex; align-items: center; min-height: 24px; max-width: 100%; padding: 2px 10px; border-radius: var(--radius-full); font-size: .75rem; font-weight: 700; overflow-wrap: anywhere; }
-.admin-flag--featured { background: rgba(63, 135, 11, .14); color: #2d5f09; }
-.admin-flag--review { background: rgba(176, 96, 58, .14); color: #8a4423; }
+.admin-flag--featured { background: rgba(63, 135, 11, .22); color: #bfe5a3; }
+.admin-flag--review { background: rgba(176, 96, 58, .22); color: #f2c9a4; }
 .admin-products-views { display: flex; flex-wrap: wrap; gap: 4px; }
 .admin-products-views__count { opacity: .7; font-variant-numeric: tabular-nums; }
 .admin-product-details-form__check { display: flex !important; flex-direction: row !important; align-items: center; gap: var(--space-2); }
@@ -448,3 +448,5 @@ html[lang="ar"] .admin-location__title { letter-spacing: 0; }
 .admin-location__note--warn { color: #f2c66d; }
 .admin-location__source { color: var(--admin-muted); font-size: .72rem; }
 .admin-product-details-form__hint { margin: 0; color: var(--admin-muted); font-size: .75rem; }
+.admin-flag--warning { background: rgba(240, 179, 165, .16); color: var(--admin-danger); }
+.admin-product-form__hint { color: var(--admin-muted); font-size: .75rem; font-weight: 400; }
