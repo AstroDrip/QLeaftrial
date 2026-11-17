@@ -18,12 +18,13 @@ product".
 - 41 Sparkle Plante products have no QLeaves product of the same name; nothing is assigned for them.
 - No photo is used for two products.
 
-## Not changed, needs your decision
+## Uncertain identifications: owner's decision
 
 The photo report (`photo-report.md`) lists 39 products whose plant identification was uncertain. All 39 are
-published on qleaves.qa today (they were published together with the other drafts, at the demo price of 99 QAR).
-The brief asks to keep uncertain products unpublished until confirmed. Unpublishing changes the live shop, so it is
-left to you: confirm the names, or tell me to unpublish the ones you have not confirmed.
+published on qleaves.qa (they were published together with the other drafts, at the demo price of 99 QAR).
+
+Decision (owner, 2026-11-18): keep all 39 live. They are not unpublished; their names can be corrected in admin as
+they are confirmed.
 
 ## Products with a QLeaves match
 
