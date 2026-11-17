@@ -1,4 +1,5 @@
 import { canonicalCategory } from "./shop-categories.js";
+import { catalogueSizePhotos } from "./product-photos.js";
 
 // The homepage bootstrap: a small, customer-safe cut of the public catalogue that ships inside the storefront's
 // own HTML, so a first-time visitor sees categories and products without waiting for any request. It is built by
@@ -11,6 +12,8 @@ export type BootstrapSourceProduct = {
   light: string | null; lightAr: string | null; priceQar: number; compareAtPriceQar?: number | null;
   featured?: boolean; careLevel?: string | null; stock: number; inStock: boolean; createdAt?: string;
   image: BootstrapMedia | null;
+  /** All of the product's media rows; the bootstrap keeps only the card size of up to three distinct photographs. */
+  media?: BootstrapMedia[];
 };
 
 export type BootstrapProduct = BootstrapSourceProduct & { description: ""; descriptionAr: null; media: BootstrapMedia[] };
@@ -72,7 +75,8 @@ export function buildHomeBootstrap(catalogue: { version: string; generatedAt: st
       featured: Boolean(product.featured), careLevel: product.careLevel ?? null,
       stock: product.stock, inStock: product.inStock, createdAt: product.createdAt,
       image: product.image,
-      description: "", descriptionAr: null, media: product.image ? [product.image] : [],
+      // Cards change photographs before the API answers too: the card-size file of each distinct photograph.
+      description: "", descriptionAr: null, media: catalogueSizePhotos(product.media?.length ? product.media : product.image ? [product.image] : []),
     })),
   };
 }

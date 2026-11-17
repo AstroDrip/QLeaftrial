@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useReducedMotion } from "../../lib/use-reduced-motion";
 
 export type RailItem = { key: string; to: string; image: string; srcSet?: string; name: string; count?: string };
 
@@ -19,19 +20,6 @@ const easeOut = (t: number) => 1 - (1 - t) ** 4;
 // Three copies of the row (the middle one is the real one): a drift or a swipe can go either way for
 // at least one full row before anyone could reach an edge, and the jump back to the middle is invisible.
 const COPIES = 3;
-
-function useReducedMotion(): boolean {
-  const query = "(prefers-reduced-motion: reduce)";
-  const [reduced, setReduced] = useState(() => typeof window !== "undefined" && Boolean(window.matchMedia?.(query).matches));
-  useEffect(() => {
-    const media = window.matchMedia?.(query);
-    if (!media) return;
-    const update = () => setReduced(media.matches);
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-  return reduced;
-}
 
 export function CategoryRail({
   items,

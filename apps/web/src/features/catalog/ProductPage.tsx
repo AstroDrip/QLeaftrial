@@ -154,7 +154,7 @@ export function ProductPage() {
           </li>
           {product.scientificName ? (
             <li>
-              <span>{care.titles.botanical}:</span> <i lang="la">{product.scientificName}</i>
+              <span>{care.titles.botanical}:</span> <i lang="la" dir="ltr">{product.scientificName}</i>
             </li>
           ) : null}
           {localized.light ? (

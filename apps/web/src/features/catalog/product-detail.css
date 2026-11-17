@@ -15,6 +15,8 @@
 .product-detail__description { max-width: 62ch; color: var(--text-muted); white-space: pre-line; }
 .product-detail__facts { display: grid; gap: .5rem; line-height: 1.8; margin: 0; padding: var(--space-4); list-style: none; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
 .product-detail__facts span { color: var(--text-soft); font-weight: 600; }
+/* Label and value each in their own box: a long botanical name wraps under its label instead of overlapping it. */
+.product-detail__facts li { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .35em; }
 .product-detail__meta .add-to-cart__controls { --cart-control-height: 52px; max-width: 420px; }
 .product-detail__ask { display: inline-flex; align-items: center; gap: .5rem; justify-self: start; color: var(--moss); font-weight: 600; }
 .product-detail__ask:hover { color: var(--ink); }
@@ -28,7 +30,18 @@
 
 /* Photo gallery: the main photo and, when there are several, a row of thumbnails beneath it. */
 .product-gallery { display: grid; gap: var(--space-3); min-width: 0; }
-.product-gallery__thumbs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+/* The main photo's box has a fixed shape (from the first photograph), so changing photographs never moves the page. */
+.product-gallery__stage { position: relative; aspect-ratio: 1; overflow: hidden; }
+.product-gallery__stage[data-orientation="portrait"] { aspect-ratio: 4 / 5; }
+.product-gallery__stage picture { display: block; width: 100%; height: 100%; }
+.product-gallery__stage img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; }
+/* Previous and next sit beside the thumbnails, never over the photo. */
+.product-gallery__controls { display: flex; align-items: center; gap: var(--space-2); min-width: 0; padding: 0 var(--space-3) var(--space-3); }
+.product-gallery__thumbs { display: flex; flex: 1 1 auto; flex-wrap: wrap; justify-content: center; gap: var(--space-2); min-width: 0; }
+.product-gallery__step { display: inline-grid; flex: 0 0 auto; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--line-strong); border-radius: var(--radius-full); background: #fff; color: var(--ink); cursor: pointer; }
+.product-gallery__step:hover { border-color: var(--moss); background: var(--surface-sunk); }
+.product-gallery__step svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+[dir="rtl"] .product-gallery__step svg, html[lang="ar"] .product-gallery__step svg { transform: scaleX(-1); }
 .product-gallery__thumb { width: 72px; height: 72px; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: var(--radius-md); background: #fff; cursor: pointer; }
 .product-gallery__thumb[aria-pressed="true"] { border-color: var(--moss); }
 .product-gallery__thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }

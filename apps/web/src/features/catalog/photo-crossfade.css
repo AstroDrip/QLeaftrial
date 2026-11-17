@@ -1,0 +1,10 @@
+/* Product photographs that change by crossfade (PhotoCrossfade.tsx). The box takes its size from its container; each
+   photograph is a layer filling it, the newest on top. */
+.photo-crossfade { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.photo-crossfade__layer { position: absolute; inset: 0; opacity: 0; transition: opacity 650ms cubic-bezier(.33, 0, .2, 1); }
+.photo-crossfade__layer[data-shown] { opacity: 1; }
+.photo-crossfade__layer picture { display: block; width: 100%; height: 100%; }
+.photo-crossfade__layer img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (prefers-reduced-motion: reduce) {
+  .photo-crossfade__layer { transition: none; }
+}
