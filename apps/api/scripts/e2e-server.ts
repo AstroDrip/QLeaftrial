@@ -86,8 +86,26 @@ storage.post(/^\/storage\/v1\/object\/upload\/sign\/.+/, (request, response) => 
   const path = objectPath(request, "/storage/v1/object/upload/sign/");
   response.json({ url: `/object/upload/sign/${path}?token=e2e-${Date.now()}` });
 });
+// The admin page sends the file inside a multipart form (as Supabase accepts it): keep the file part only.
+function filePart(body: Buffer, contentType: string): { type: string; bytes: Buffer } {
+  const boundary = /boundary=(?:"([^"]+)"|([^;]+))/.exec(contentType);
+  if (!contentType.startsWith("multipart/form-data") || !boundary) return { type: contentType || "application/octet-stream", bytes: body };
+  const delimiter = Buffer.from(`--${boundary[1] ?? boundary[2]}`);
+  let start = body.indexOf(delimiter);
+  while (start !== -1) {
+    const next = body.indexOf(delimiter, start + delimiter.length);
+    if (next === -1) break;
+    const part = body.subarray(start + delimiter.length + 2, next - 2);
+    const split = part.indexOf("\r\n\r\n");
+    const headers = part.subarray(0, split).toString("utf8");
+    const type = /content-type:\s*([^\r\n]+)/i.exec(headers)?.[1]?.trim();
+    if (type) return { type, bytes: Buffer.from(part.subarray(split + 4)) };
+    start = next;
+  }
+  return { type: "application/octet-stream", bytes: Buffer.alloc(0) };
+}
 storage.put(/^\/storage\/v1\/object\/upload\/sign\/.+/, express.raw({ type: () => true, limit: "25mb" }), (request, response) => {
-  objects.set(objectPath(request, "/storage/v1/object/upload/sign/"), { type: request.get("content-type") ?? "application/octet-stream", bytes: request.body as Buffer });
+  objects.set(objectPath(request, "/storage/v1/object/upload/sign/"), filePart(request.body as Buffer, request.get("content-type") ?? ""));
   response.json({ Key: objectPath(request, "/storage/v1/object/upload/sign/") });
 });
 storage.get(/^\/storage\/v1\/object\/public\/.+/, (request, response) => {
