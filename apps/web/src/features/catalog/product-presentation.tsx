@@ -8,6 +8,10 @@ import type { ProductMedia } from "./product-types";
 
 // Shared pieces for product cards and the product page: honest prices, care labels and the photo gallery.
 
+export const priceComingSoon = (isArabic: boolean) => (isArabic ? "السعر قريبًا" : "Price coming soon");
+/** A plant customers can order: priced above 0 QAR (a 0 price is shown as "Price coming soon"). */
+export const forSale = (product: { priceQar: number }) => product.priceQar > 0;
+
 /** "Was" price and percentage only for a genuine reduction (the server already drops anything else). */
 export function ProductPrice({ priceQar, compareAtPriceQar, isArabic, className = "" }: {
   priceQar: number;
@@ -15,6 +19,8 @@ export function ProductPrice({ priceQar, compareAtPriceQar, isArabic, className 
   isArabic: boolean;
   className?: string;
 }) {
+  // 0 QAR means the price is not set yet: the plant is shown, but not for sale.
+  if (priceQar <= 0) return <span className={`product-price product-price--soon ${className}`.trim()}>{priceComingSoon(isArabic)}</span>;
   const reduced = compareAtPriceQar != null && compareAtPriceQar > priceQar;
   const percent = reduced ? Math.round(((compareAtPriceQar - priceQar) / compareAtPriceQar) * 100) : 0;
   return (

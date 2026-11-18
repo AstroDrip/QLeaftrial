@@ -24,7 +24,7 @@ export type ShelfProduct = {
   careLevel?: string | null; light?: string | null; inStock: boolean;
 };
 
-const isOffer = (product: ShelfProduct) => product.compareAtPriceQar != null && product.compareAtPriceQar > product.priceQar;
+const isOffer = (product: ShelfProduct) => product.priceQar > 0 && product.compareAtPriceQar != null && product.compareAtPriceQar > product.priceQar;
 const isPlant = (product: ShelfProduct) => !NOT_NEW_ARRIVALS.has(canonicalCategory(product.category));
 
 /** Every candidate for each shelf, newest first (the input must already be newest first). */

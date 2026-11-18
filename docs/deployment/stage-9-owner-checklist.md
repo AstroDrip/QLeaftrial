@@ -3,11 +3,19 @@
 Written 2026-11-18. Everything below is either a check in your dashboards or a script you run yourself; no secret
 is ever typed into the chat. Scripts ask for connection strings with hidden typing and clear them afterwards.
 
-## 1. Before pushing this branch: database migrations 8 to 11
+## 1. Before pushing this branch: database migrations 8 to 9c
 
-All four only add (two photo columns and an index, six care columns, six size columns, five indexes). The live site
-keeps working before and after. Run `qleaves-migrations-8-11.ps1` (in the session scratchpad); it shows what is
-pending, asks before applying, and checks the result. The Vercel build refuses to deploy while a migration is missing.
+Folders are named 8, 9, 9a, 9b, 9c (not 10, 11, 12) because Prisma applies them in text order and "10_" would run
+before "2_"; `tests/migrations-order.test.ts` keeps it that way.
+
+- 8, 9, 9a, 9b only add (photo columns and an index, care columns, size columns, list indexes).
+- 9c is the data change you asked for on 2026-11-18: every product at 99 QAR goes to 0 QAR, published or not stays
+  as it is, other prices untouched. Customers then see "Price coming soon" and cannot order those plants until a
+  price is set in admin. Push the branch right after applying it (today's live code would show "0 QAR").
+
+Run `qleaves-migrations-8-9c.ps1` (in the session scratchpad): it shows what is pending and the price counts, asks
+before applying, then shows the counts again (none left at 99 QAR, the same number published). The Vercel build
+refuses to deploy while a migration is missing.
 
 ## 2. Vercel environment variables to confirm (names only; values stay in Vercel)
 

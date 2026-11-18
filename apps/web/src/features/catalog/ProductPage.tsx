@@ -13,7 +13,7 @@ import { Seo } from "../../components/Seo";
 import { ProductImage } from "../../components/ProductImage";
 import "./product-detail.css";
 import { friendlyError } from "../../lib/friendly-error";
-import { ProductGallery, ProductPrice, careLabels } from "./product-presentation";
+import { ProductGallery, ProductPrice, careLabels, forSale } from "./product-presentation";
 
 export function ProductPage() {
   const { content, language, isArabic } = useSiteLanguage();
@@ -92,7 +92,7 @@ export function ProductPage() {
           name: localized.name,
           description: localized.description,
           image: product.media.map((media) => new URL(media.url, "https://qleaves.qa").toString()),
-          ...(orderingEnabled ? {
+          ...(orderingEnabled && forSale(product) ? {
             offers: {
               "@type": "Offer",
               priceCurrency: "QAR",
@@ -164,7 +164,7 @@ export function ProductPage() {
             </li>
           ))}
         </ul>
-        {orderingEnabled ? <AddToCartButton product={product} className="product-detail__cart" /> : null}
+        {orderingEnabled && forSale(product) ? <AddToCartButton product={product} className="product-detail__cart" /> : null}
         <a className="product-detail__ask" href={whatsappLink(isArabic ? `مرحبًا، أود الاستفسار عن ${localized.name}` : `Hi, I'd like to ask about ${product.name}`)} target="_blank" rel="noreferrer">
           <WhatsAppIcon /> {isArabic ? "اسأل عن هذا النبات" : "Ask about this plant"}
         </a>

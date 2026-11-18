@@ -157,7 +157,7 @@ function toSummary(
     light: isArabic && product.lightAr?.trim() ? product.lightAr : product.light,
     lightAr: product.lightAr,
     priceQar: product.priceQar,
-    compareAtPriceQar: product.compareAtPriceQar && product.compareAtPriceQar > product.priceQar ? product.compareAtPriceQar : null,
+    compareAtPriceQar: product.compareAtPriceQar && product.priceQar > 0 && product.compareAtPriceQar > product.priceQar ? product.compareAtPriceQar : null,
     featured: product.featured,
     scientificName: product.scientificName,
     careLevel: product.careLevel,

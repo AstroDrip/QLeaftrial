@@ -374,6 +374,9 @@ describe("Google Sheets in the API", () => {
     const agent = await loggedInAgent();
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/payment`).send({ paymentStatus: "PAID" }).expect(200);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "CONFIRMED" }).expect(200);
+    // Let the sheet jobs of the changes above finish first: one still holding its lease would make the next change's
+    // job wait (correctly), and the timeout below would then never be tried (this test failed now and then under load).
+    await settleBackgroundWork();
     vi.stubGlobal("fetch", vi.fn(async () => { throw new DOMException("The operation timed out.", "TimeoutError"); }));
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
     await agent.patch(`/api/v1/admin/orders/${created.body.id}/status`).send({ status: "DELIVERED" }).expect(200);

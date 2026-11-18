@@ -322,12 +322,10 @@ function toAdminProduct(product: AdminProductRecord): AdminProduct {
   };
 }
 
-// A listing customers can buy must have a real price; a "was" price only makes sense above the current one.
+// A product priced 0 QAR may be published (the owner's choice, 2026-11-18): customers see "Price coming soon" and
+// cannot order it (orders only accept products priced above 0). A "was" price only makes sense above a real price.
 function assertSellable(state: { published: boolean; priceQar: number; compareAtPriceQar: number | null | undefined }): void {
-  if (state.published && state.priceQar <= 0) {
-    throw new ApiError(400, "PRICE_REQUIRED", "Set a price above 0 QAR before publishing this product");
-  }
-  if (state.compareAtPriceQar != null && state.compareAtPriceQar <= state.priceQar) {
+  if (state.compareAtPriceQar != null && (state.priceQar <= 0 || state.compareAtPriceQar <= state.priceQar)) {
     throw new ApiError(400, "INVALID_COMPARE_AT_PRICE", "The original price must be higher than the current price");
   }
 }

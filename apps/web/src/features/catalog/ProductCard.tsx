@@ -8,7 +8,7 @@ import { AddToCartButton } from "../cart/AddToCartButton";
 import { localizeProduct } from "./localize-product";
 import { productApi } from "./product-api";
 import type { ProductMedia, ProductSummary } from "./product-types";
-import { ProductPrice } from "./product-presentation";
+import { ProductPrice, forSale } from "./product-presentation";
 import { PhotoCrossfade } from "./PhotoCrossfade";
 import { useAutoAdvance } from "./photo-autoplay";
 import { distinctPhotos } from "./product-photos";
@@ -75,7 +75,7 @@ export function ProductCard({
           <ProductImage media={photos[0] ?? product.image} alt={alt} loading={eager ? "eager" : "lazy"} sizes={CARD_SIZES} />
         )}
         {orderingEnabled && !product.inStock ? <span className="product-card__badge">{content.product.outOfStock}</span> : null}
-        {orderingEnabled && product.inStock && product.compareAtPriceQar && product.compareAtPriceQar > product.priceQar ? (
+        {orderingEnabled && product.inStock && forSale(product) && product.compareAtPriceQar && product.compareAtPriceQar > product.priceQar ? (
           <span className="product-card__badge product-card__badge--offer">{isArabic ? "عرض" : "Offer"}</span>
         ) : null}
       </div>
@@ -91,7 +91,7 @@ export function ProductCard({
           <span className="product-card__category">{localized.category}</span>
           {orderingEnabled ? <ProductPrice className="product-card__price" priceQar={product.priceQar} compareAtPriceQar={product.compareAtPriceQar} isArabic={isArabic} /> : null}
         </div>
-        {orderingEnabled ? <AddToCartButton product={product} className="product-card__cart" /> : null}
+        {orderingEnabled && forSale(product) ? <AddToCartButton product={product} className="product-card__cart" /> : null}
       </div>
     </li>
   );

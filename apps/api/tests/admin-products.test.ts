@@ -121,7 +121,7 @@ describe("admin product management", () => {
       .toMatchObject({ published: true, media: [{ altText: "New fern in a pot" }] });
   });
 
-  it("keeps a new product without a price (0 QAR) as an unpublished draft that cannot be published until priced", async () => {
+  it("keeps a new product without a price (0 QAR) as an unpublished draft; published at 0 it is shown but cannot be ordered", async () => {
     const agent = await loggedInAgent();
     const response = await agent.post("/api/v1/admin/products").send({
       name: "Unpriced Fern", slug: "unpriced-fern", sku: "QL-UF-009",
@@ -133,10 +133,14 @@ describe("admin product management", () => {
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({ slug: "unpriced-fern", priceQar: 0, published: false });
 
+    expect((await request(createApp()).get("/api/v1/products?q=unpriced")).body.items).toEqual([]);
     const publish = await agent.patch(`/api/v1/admin/products/${response.body.id}`).send({ published: true });
-    expect(publish.body.error.code).toBe("PRICE_REQUIRED");
+    expect(publish.body).toMatchObject({ priceQar: 0, published: true });
     const publicList = await request(createApp()).get("/api/v1/products?q=unpriced");
-    expect(publicList.body.items).toEqual([]);
+    expect(publicList.body.items.map((item: { slug: string; priceQar: number }) => [item.slug, item.priceQar])).toEqual([["unpriced-fern", 0]]);
+    const order = await request(createApp()).post("/api/v1/orders").set("Idempotency-Key", `test-${crypto.randomUUID()}`)
+      .send(validOrder({ items: [{ productId: response.body.id, quantity: 1 }] }));
+    expect(order.status).toBe(400);
     const priced = await agent.patch(`/api/v1/admin/products/${response.body.id}`).send({ priceQar: 45, published: true });
     expect(priced.body).toMatchObject({ priceQar: 45, published: true });
   });

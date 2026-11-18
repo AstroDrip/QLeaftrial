@@ -97,7 +97,7 @@ describe("product details, merchandising and pricing rules", () => {
     expect(botanical.body.items.map((item: { slug: string }) => item.slug)).toContain("snake-plant");
   });
 
-  it("refuses an original price that is not higher than the price, and publishing without a price", async () => {
+  it("refuses an original price that is not above a real price, and lets a 0 QAR plant be published (shown, not sold)", async () => {
     const product = await seededProduct("snake-plant");
     const agent = await loggedInAgent();
 
@@ -108,8 +108,12 @@ describe("product details, merchandising and pricing rules", () => {
     const pricedAndPublished = await agent.patch(`/api/v1/admin/products/${product.id}`).send({ priceQar: 55, published: true });
 
     expect(notHigher.body.error.code).toBe("INVALID_COMPARE_AT_PRICE");
-    expect(zeroPrice.body.error.code).toBe("PRICE_REQUIRED");
-    expect(publishDraft.body.error.code).toBe("PRICE_REQUIRED");
+    // Owner's decision (2026-11-18): a published plant may sit at 0 QAR ("Price coming soon"); it just cannot be ordered.
+    expect(zeroPrice.status).toBe(200);
+    expect(zeroPrice.body).toMatchObject({ priceQar: 0, published: true });
+    expect(publishDraft.status).toBe(200);
+    const wasPriceAtZero = await agent.patch(`/api/v1/admin/products/${product.id}`).send({ priceQar: 0, compareAtPriceQar: 120 });
+    expect(wasPriceAtZero.body.error.code).toBe("INVALID_COMPARE_AT_PRICE");
     expect(pricedAndPublished.status).toBe(200);
     expect(pricedAndPublished.body).toMatchObject({ priceQar: 55, published: true });
   });

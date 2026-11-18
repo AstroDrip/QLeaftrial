@@ -56,7 +56,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:3000",
+      // The browser journeys point this at their own test API (QLEAVES_API_PROXY, see playwright.config.ts).
+      "/api": process.env.QLEAVES_API_PROXY || "http://localhost:3000",
     },
   },
   // MapLibre loads its worker from a file next to its own module; serving the package as-is keeps that file in reach.

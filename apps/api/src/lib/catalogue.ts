@@ -187,7 +187,7 @@ function mapProduct(record: {
     light: record.light,
     lightAr: record.lightAr,
     priceQar: record.priceQar,
-    compareAtPriceQar: record.compareAtPriceQar && record.compareAtPriceQar > record.priceQar ? record.compareAtPriceQar : null,
+    compareAtPriceQar: record.compareAtPriceQar && record.priceQar > 0 && record.compareAtPriceQar > record.priceQar ? record.compareAtPriceQar : null,
     featured: record.featured,
     scientificName: record.scientificName,
     searchAliases: record.searchAliases?.trim() || null,
