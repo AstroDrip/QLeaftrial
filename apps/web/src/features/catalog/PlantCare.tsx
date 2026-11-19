@@ -1,9 +1,11 @@
 import type { ReactNode, SVGProps } from "react";
+import { careGuide } from "./care-guides";
 import { careLabels } from "./product-presentation";
 import type { ProductDetail } from "./product-types";
 
 // "Plant care" on the product page: one row per item the shop has filled in for this plant. An empty item is left
-// out, never replaced by a general default, and the section disappears when nothing is known.
+// out, never replaced by a general default, and the section disappears when nothing is known. A row whose value is
+// one of the shop's standard phrases also gets a few lines of advice explaining it (care-guides.ts).
 type IconProps = SVGProps<SVGSVGElement>;
 const base = { viewBox: "0 0 24 24", "aria-hidden": true, focusable: false, fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 
@@ -22,7 +24,7 @@ const copy = {
 
 type CareFields = Pick<ProductDetail, "light" | "lightAr" | "watering" | "wateringAr" | "humidity" | "humidityAr" | "soil" | "soilAr" | "temperature" | "temperatureAr" | "careLevel" | "placement">;
 
-export function careRows(product: CareFields, isArabic: boolean): Array<{ key: string; icon: ReactNode; label: string; value: string }> {
+export function careRows(product: CareFields, isArabic: boolean): Array<{ key: string; icon: ReactNode; label: string; value: string; guide: string | null }> {
   const labels = careLabels(isArabic);
   const t = copy[isArabic ? "ar" : "en"];
   // The Arabic page uses the Arabic text when there is one, otherwise the English (as elsewhere on the site).
@@ -36,7 +38,9 @@ export function careRows(product: CareFields, isArabic: boolean): Array<{ key: s
     { key: "care", icon: <HandIcon />, label: labels.titles.care, value: product.careLevel ? labels.careLevel[product.careLevel] ?? "" : "" },
     { key: "placement", icon: <PlaceIcon />, label: labels.titles.placement, value: product.placement ? labels.placement[product.placement] ?? "" : "" },
   ];
-  return rows.filter((row) => row.value);
+  // The advice is looked up from the English wording (light, watering) or the fixed value (care level, placement).
+  const source: Record<string, string | null | undefined> = { light: product.light, watering: product.watering, care: product.careLevel, placement: product.placement };
+  return rows.filter((row) => row.value).map((row) => ({ ...row, guide: careGuide(row.key, source[row.key], isArabic) }));
 }
 
 export function PlantCare({ product, isArabic }: { product: CareFields; isArabic: boolean }) {
@@ -50,7 +54,10 @@ export function PlantCare({ product, isArabic }: { product: CareFields; isArabic
           <div key={row.key} className="plant-care__item" data-care={row.key}>
             <span className="plant-care__icon">{row.icon}</span>
             <dt>{row.label}</dt>
-            <dd>{row.value}</dd>
+            <dd>
+              <span className="plant-care__value">{row.value}</span>
+              {row.guide ? <p className="plant-care__guide">{row.guide}</p> : null}
+            </dd>
           </div>
         ))}
       </dl>

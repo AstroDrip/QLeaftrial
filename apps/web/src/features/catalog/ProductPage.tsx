@@ -168,9 +168,10 @@ export function ProductPage() {
         <a className="product-detail__ask" href={whatsappLink(isArabic ? `مرحبًا، أود الاستفسار عن ${localized.name}` : `Hi, I'd like to ask about ${product.name}`)} target="_blank" rel="noreferrer">
           <WhatsAppIcon /> {isArabic ? "اسأل عن هذا النبات" : "Ask about this plant"}
         </a>
-        <PlantCare product={product} isArabic={isArabic} />
       </div>
       </div>
+
+      <PlantCare product={product} isArabic={isArabic} />
 
       {related.data && related.data.items.some((item) => item.id !== product.id) ? (
         <section className="product-detail__related" aria-labelledby="related-heading">

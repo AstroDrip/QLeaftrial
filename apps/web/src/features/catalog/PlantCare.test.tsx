@@ -40,3 +40,39 @@ describe("PlantCare", () => {
     expect(values).toMatchObject({ light: "ضوء ساطع غير مباشر", humidity: "رطوبة الغرفة العادية", temperature: "من 18 إلى 30 درجة مئوية", watering: "When the top soil is dry", soil: "Free-draining mix", care: "سهل العناية", placement: "داخلي" });
   });
 });
+
+describe("PlantCare advice", () => {
+  afterEach(cleanup);
+  const standard = {
+    light: "Bright indirect", lightAr: "إضاءة ساطعة غير مباشرة",
+    watering: "Water when the top few centimetres of soil are dry", wateringAr: null,
+    humidity: "Average room humidity", humidityAr: null, soil: null, soilAr: null, temperature: null, temperatureAr: null,
+    careLevel: "demanding" as const, placement: "indoor-outdoor" as const,
+  };
+
+  it("adds a few lines of advice under each of the shop's standard phrases, in English and Arabic", () => {
+    const en = Object.fromEntries(careRows(standard, false).map((row) => [row.key, row.guide]));
+    expect(en.light).toMatch(/south- or west-facing window/);
+    expect(en.watering).toMatch(/second knuckle/);
+    expect(en.care).toMatch(/air-conditioning/);
+    expect(en.placement).toMatch(/gradually/);
+    const ar = Object.fromEntries(careRows(standard, true).map((row) => [row.key, row.guide]));
+    for (const key of ["light", "watering", "care", "placement"]) expect(ar[key]).toMatch(/[؀-ۿ]/);
+    for (const text of [...Object.values(en), ...Object.values(ar)]) if (text) expect(text.length).toBeGreaterThan(150);
+  });
+
+  it("gives no advice for wording that is not a standard phrase, and still shows the value", () => {
+    render(<PlantCare product={standard} isArabic={false} />);
+    const humidity = screen.getByText("Average room humidity").closest(".plant-care__item")!;
+    expect(humidity.querySelector(".plant-care__guide")).toBeNull();
+    expect(careRows({ ...standard, light: "Bright indirect light" }, false).find((row) => row.key === "light")!.guide).toBeNull();
+    expect(document.querySelectorAll(".plant-care__guide")).toHaveLength(4);
+  });
+
+  it("finds the advice when the Arabic page receives the shop's Arabic wording in place of the English", () => {
+    const arabicAnswer = { ...standard, light: "شمس كاملة", watering: "اسقِ باعتدال واترك التربة تجف تمامًا بين الريّات" };
+    const rows = Object.fromEntries(careRows(arabicAnswer, true).map((row) => [row.key, row.guide]));
+    expect(rows.light).toMatch(/الشمس المباشرة/);
+    expect(rows.watering).toMatch(/يخزن هذا النبات الماء/);
+  });
+});
